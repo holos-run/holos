@@ -71,11 +71,10 @@ clean: ## Clean executables.
 
 .PHONY: test
 test: ## Run tests.
-	go test ./...
+	go test -coverpkg=./... -coverprofile=coverage.out ./...
 
 .PHONY: coverage
-coverage:  ## Test coverage profile.
-	go test -coverprofile=coverage.out ./...
+coverage: test  ## Test coverage profile.
 	go tool cover   -html=coverage.out
 
 .PHONY: snapshot
