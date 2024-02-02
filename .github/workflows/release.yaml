@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  pull_request:
+  push:
+    # Run only against tags
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: [self-hosted, k8s]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Import GPG key
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_CODE_SIGNING_SECRETKEY }}
+          passphrase: ${{ secrets.GPG_CODE_SIGNING_PASSPHRASE }}
+      - name: List keys
+        run: gpg -K
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

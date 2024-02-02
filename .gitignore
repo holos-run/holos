@@ -2,3 +2,5 @@ bin
 /vendor
 /.idea
 coverage.out
+
+dist/
