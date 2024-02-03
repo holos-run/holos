@@ -1,0 +1,27 @@
+name: Unit Tests
+
+on:
+  push:
+    branches:
+      - main
+      - test
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: [self-hosted, k8s]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Test
+        run: ./scripts/test

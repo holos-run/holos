@@ -61,7 +61,6 @@ type Config struct {
 	level     string
 	format    string
 	dropAttrs stringSlice
-	logger    *slog.Logger
 	flagSet   *flag.FlagSet
 }
 

@@ -71,7 +71,7 @@ clean: ## Clean executables.
 
 .PHONY: test
 test: ## Run tests.
-	go test -coverpkg=./... -coverprofile=coverage.out ./...
+	scripts/test
 
 .PHONY: coverage
 coverage: test  ## Test coverage profile.

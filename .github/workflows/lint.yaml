@@ -1,0 +1,27 @@
+# https://github.com/golangci/golangci-lint-action?tab=readme-ov-file#how-to-use
+name: Lint
+on:
+  push:
+    branches:
+      - main
+      - test
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  golangci:
+    name: lint
+    runs-on: [self-hosted, k8s]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
