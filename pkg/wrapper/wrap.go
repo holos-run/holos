@@ -82,19 +82,3 @@ func Log(log *slog.Logger, ctx context.Context, level slog.Level, err error, msg
 	}
 	log.Log(ctx, level, msg, args...)
 }
-
-// LogError logs an error as a top level error handler
-func LogError(ctx context.Context, err error, args ...any) {
-	var errAt *ErrorAt
-	if ok := errors.As(err, &errAt); ok {
-		args = append(args,
-			slog.String("loc", errAt.Source.Loc()),
-		)
-	} else {
-		if _, file, line, ok := runtime.Caller(1); ok {
-			source := Source{file, line}
-			args = append(args, slog.String("loc", source.Loc()))
-		}
-	}
-	slog.Log(ctx, slog.LevelError, err.Error(), args...)
-}

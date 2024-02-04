@@ -8,13 +8,17 @@ import (
 	"github.com/holos-run/holos/pkg/version"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/lmittmann/tint"
+	"github.com/mattn/go-isatty"
 	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"time"
 )
+
+const ErrKey = "err"
 
 var validLogLevels = []string{"debug", "info", "warn", "error"}
 var validLogFormats = []string{"text", "json"}
@@ -87,7 +91,48 @@ func (c *Config) ReplaceAttr(groups []string, a slog.Attr) slog.Attr {
 	if slices.Contains(c.dropAttrs, a.Key) {
 		return slog.Attr{}
 	}
+	// Check if err
+	if a.Key == ErrKey {
+		if err, ok := a.Value.Any().(error); ok {
+			return tint.Err(err)
+		}
+		if err, ok := a.Value.Any().(string); ok {
+			return tint.Err(fmt.Errorf(err))
+		}
+	} else if a.Key == slog.SourceKey {
+		source := a.Value.Any().(*slog.Source)
+		source.File = filepath.Base(source.File)
+	}
 	return a
+}
+
+// NewTopLevelLogger returns a *slog.Logs configured by c *Config which writes
+// to w without source information. Useful as a top level logger where the
+// source is know and the error is wrapped with a location attribute.
+func (c *Config) NewTopLevelLogger(w io.Writer) *slog.Logger {
+	level := c.GetLogLevel()
+	var handler slog.Handler
+	if c.format == "text" {
+		noColor := true
+		if file, ok := w.(*os.File); ok {
+			noColor = !isatty.IsTerminal(file.Fd())
+		}
+		handler = tint.NewHandler(w, &tint.Options{
+			Level:       level,
+			TimeFormat:  time.Kitchen,
+			AddSource:   false,
+			ReplaceAttr: c.ReplaceAttr,
+			NoColor:     noColor,
+		})
+	} else {
+		handler = slog.NewJSONHandler(w, &slog.HandlerOptions{
+			Level:       level,
+			AddSource:   false,
+			ReplaceAttr: c.ReplaceAttr,
+		})
+	}
+
+	return slog.New(handler).With("version", version.Version)
 }
 
 // NewLogger returns a *slog.Logs configured by c *Config which writes to w
@@ -95,11 +140,16 @@ func (c *Config) NewLogger(w io.Writer) *slog.Logger {
 	level := c.GetLogLevel()
 	var handler slog.Handler
 	if c.format == "text" {
+		noColor := true
+		if file, ok := w.(*os.File); ok {
+			noColor = !isatty.IsTerminal(file.Fd())
+		}
 		handler = tint.NewHandler(w, &tint.Options{
 			Level:       level,
 			TimeFormat:  time.Kitchen,
-			AddSource:   level == slog.LevelDebug,
+			AddSource:   true,
 			ReplaceAttr: c.ReplaceAttr,
+			NoColor:     noColor,
 		})
 	} else {
 		handler = slog.NewJSONHandler(w, &slog.HandlerOptions{

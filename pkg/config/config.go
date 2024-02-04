@@ -8,7 +8,7 @@ import (
 	"log/slog"
 )
 
-// New returns a new Config
+// New returns a new top level cli Config.
 func New(stdout io.Writer, stderr io.Writer) *Config {
 	return &Config{
 		logConfig: logger.NewConfig(),
@@ -57,6 +57,12 @@ func (c *Config) Logger() *slog.Logger {
 		return c.logger
 	}
 	return c.logConfig.NewLogger(c.stderr)
+}
+
+// NewTopLevelLogger returns a *slog.Logger with a handler that filters source
+// attributes. Useful as a top level error logger in main().
+func (c *Config) NewTopLevelLogger() *slog.Logger {
+	return c.logConfig.NewTopLevelLogger(c.stderr)
 }
 
 func (c *Config) Stderr() io.Writer {

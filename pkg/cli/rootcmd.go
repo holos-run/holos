@@ -8,6 +8,7 @@ import (
 	"log/slog"
 )
 
+// New returns a new root *cobra.Command for command line execution.
 func New(cfg *config.Config) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     "holos",
@@ -38,5 +39,9 @@ func New(cfg *config.Config) *cobra.Command {
 	rootCmd.SetOut(cfg.Stderr())
 	rootCmd.Flags().SortFlags = false
 	rootCmd.Flags().AddGoFlagSet(cfg.LogFlagSet())
+
+	// build subcommand
+	rootCmd.AddCommand(newBuildCmd(cfg))
+
 	return rootCmd
 }
