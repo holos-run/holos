@@ -15,10 +15,7 @@ type Builder struct {
 
 // Options are options for a Builder.
 // A zero Options consists entirely of default values.
-type Options struct {
-	// dir is the directory to build
-	dir string
-}
+type Options struct{}
 
 // New returns a new *Builder with opts Options.
 func New(opts Options) *Builder {

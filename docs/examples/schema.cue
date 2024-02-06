@@ -6,6 +6,8 @@ import (
 	"encoding/yaml"
 )
 
+_apiVersion: "holos.run/v1alpha1"
+
 // #Name defines the name: string key value pair used all over the place.
 #Name: name: string
 
@@ -60,14 +62,41 @@ import (
 // _PlatformData stores the values of the primary lookup table.
 _Platform: #Platform
 
-// #ComponentOutput is the output schema of a single component.
-#ComponentOutput: {
-	// objects holds a list of the kubernetes api objects to configure.
-	objects: [...metav1.#TypeMeta] | *[]
-	// out holds the rendered yaml stream of kubernetes api objects.
-	out: yaml.MarshalStream(objects)
-	// platform returns the platform data structure for visibility / troubleshooting.
-	platform: _Platform
+// #OutputTypeMeta is shared among all output types
+#OutputTypeMeta: {
+	// apiVersion is the output api version
+	apiVersion: _apiVersion
+	// kind is a discriminator of the type of output
+	kind: #PlatformSpec.kind | #KubernetesObjects.kind | #ChartValues.kind
+	// out holds the text output
+	out: string | *""
 	// debug returns arbitrary debug output.
 	debug?: _
 }
+
+// #KubernetesObjectOutput is the output schema of a single component.
+#KubernetesObjects: {
+	#OutputTypeMeta
+	// kind KubernetesObjects provides a yaml text stream of kubernetes api objects in the out field.
+	kind: "KubernetesObjects"
+	// objects holds a list of the kubernetes api objects to configure.
+	objects: [...metav1.#TypeMeta] | *[]
+	// out holds the rendered yaml text stream of kubernetes api objects.
+	out: yaml.MarshalStream(objects)
+	// platform returns the platform data structure for visibility / troubleshooting.
+	platform: _Platform
+}
+
+// #ChartValues is the output schema of a holos component which produces values for a helm chart.
+#ChartValues: {
+	#OutputTypeMeta
+	kind: "ChartValues"
+}
+
+// #PlatformSpec is the output schema of a platform specification.
+#PlatformSpec: {
+	#OutputTypeMeta
+	kind: "PlatformSpec"
+}
+
+#Output: #PlatformSpec | #KubernetesObjects | #ChartValues

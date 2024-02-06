@@ -1,4 +1,4 @@
 package holos
 
-// Component output schema.
-{} & #ComponentOutput
+// Output schema
+{} & #KubernetesObjects
