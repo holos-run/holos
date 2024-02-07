@@ -29,8 +29,7 @@ func newCmd(name string) *cobra.Command {
 
 // build is the internal implementation of the build cli command
 func build(cmd *cobra.Command, args []string) error {
-	opts := builder.Options{Entrypoints: args}
-	build := builder.New(opts)
+	build := builder.New(builder.Entrypoints(args))
 	return build.Run(cmd.Context())
 }
 
