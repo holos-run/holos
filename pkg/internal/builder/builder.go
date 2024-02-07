@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/holos-run/holos/pkg/wrapper"
+	"os"
+	"path/filepath"
 
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
@@ -50,7 +52,28 @@ type out struct {
 func (b *Builder) Run(ctx context.Context) error {
 	cueCtx := cuecontext.New()
 
-	instances := load.Instances(b.cfg.args, nil)
+	dir, err := b.findCueMod()
+	if err != nil {
+		return wrapper.Wrap(err)
+	}
+
+	cfg := load.Config{Dir: dir}
+
+	// Make args relative to the module directory
+	args := make([]string, len(b.cfg.args))
+	for idx, path := range b.cfg.args {
+		target, err := filepath.Abs(path)
+		if err != nil {
+			return wrapper.Wrap(fmt.Errorf("could not find absolute path: %w", err))
+		}
+		relPath, err := filepath.Rel(dir, target)
+		if err != nil {
+			return wrapper.Wrap(fmt.Errorf("invalid argument, must be relative to cue.mod: %w", err))
+		}
+		args[idx] = "./" + relPath
+	}
+
+	instances := load.Instances(args, &cfg)
 
 	for _, instance := range instances {
 		var info buildInfo
@@ -82,4 +105,33 @@ func (b *Builder) Run(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// findCueMod returns the root module location containing the cue.mod file or
+// directory or an error if the builder arguments do not share a common root
+// module.
+func (b *Builder) findCueMod() (dir string, err error) {
+	for _, origPath := range b.cfg.args {
+		var path string
+		if path, err = filepath.Abs(origPath); err != nil {
+			return
+		}
+		for {
+			if _, err := os.Stat(filepath.Join(path, "cue.mod")); err == nil {
+				if dir != "" && dir != path {
+					return "", fmt.Errorf("multiple modules not supported: %v is not %v", dir, path)
+				}
+				dir = path
+				break
+			} else if !os.IsNotExist(err) {
+				return "", err
+			}
+			parentPath := filepath.Dir(path)
+			if parentPath == path {
+				return "", fmt.Errorf("no cue.mod from root to leaf: %v", origPath)
+			}
+			path = parentPath
+		}
+	}
+	return dir, nil
 }
