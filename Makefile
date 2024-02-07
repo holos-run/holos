@@ -73,6 +73,10 @@ clean: ## Clean executables.
 test: ## Run tests.
 	scripts/test
 
+.PHONY: lint
+lint: ## Run linters.
+	golangci-lint run
+
 .PHONY: coverage
 coverage: test  ## Test coverage profile.
 	go tool cover   -html=coverage.out
