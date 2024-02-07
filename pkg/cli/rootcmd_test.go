@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"github.com/holos-run/holos/pkg/config"
 	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/pkg/version"
 	"github.com/spf13/cobra"
-	"os"
 	"strings"
 	"testing"
 )
 
 func newCommand() (*cobra.Command, *bytes.Buffer) {
 	var b bytes.Buffer
-	cmd := New(config.New(os.Stdout, &b))
+	cmd := New(config.New(config.Stderr(&b)))
 	return cmd, &b
 }
 
@@ -87,7 +87,7 @@ func TestInvalidArgs(t *testing.T) {
 	}
 	for _, args := range invalidArgs {
 		var b bytes.Buffer
-		cmd := New(config.New(os.Stdout, &b))
+		cmd := New(config.New(config.Stdout(&b)))
 		cmd.SetArgs(args)
 		err := cmd.Execute()
 		if err == nil {
@@ -108,5 +108,19 @@ func TestLoggerFromContext(t *testing.T) {
 	if !strings.Contains(have, want) {
 		t.Fatalf("want: %v have: %v", want, have)
 	}
+}
 
+func TestVersion(t *testing.T) {
+	var b bytes.Buffer
+	cmd := New(config.New(config.Stdout(&b)))
+	cmd.SetOut(&b)
+	cmd.SetArgs([]string{"--version"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("could not execute: %v", err)
+	}
+	want := version.Version + "\n"
+	have := b.String()
+	if want != have {
+		t.Fatalf("want: %v have: %v", want, have)
+	}
 }

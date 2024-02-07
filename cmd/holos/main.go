@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	cfg := config.New(os.Stdout, os.Stderr)
+	cfg := config.New()
 	slog.SetDefault(cfg.Logger())
 	ctx := context.Background()
 	if err := cli.New(cfg).ExecuteContext(ctx); err != nil {

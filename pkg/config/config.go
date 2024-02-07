@@ -6,14 +6,39 @@ import (
 	"github.com/holos-run/holos/pkg/logger"
 	"io"
 	"log/slog"
+	"os"
 )
 
+// An Option configures a Config
+type Option func(o *options)
+
+type options struct {
+	stdout io.Writer
+	stderr io.Writer
+}
+
+// Stdout redirects standard output to w
+func Stdout(w io.Writer) Option {
+	return func(o *options) { o.stdout = w }
+}
+
+// Stderr redirects standard error to w
+func Stderr(w io.Writer) Option {
+	return func(o *options) { o.stderr = w }
+}
+
 // New returns a new top level cli Config.
-func New(stdout io.Writer, stderr io.Writer) *Config {
+func New(opts ...Option) *Config {
+	o := &options{
+		stdout: os.Stdout,
+		stderr: os.Stderr,
+	}
+	for _, f := range opts {
+		f(o)
+	}
 	return &Config{
 		logConfig: logger.NewConfig(),
-		stdout:    stdout,
-		stderr:    stderr,
+		options:   o,
 	}
 }
 
@@ -21,8 +46,7 @@ func New(stdout io.Writer, stderr io.Writer) *Config {
 type Config struct {
 	logConfig *logger.Config
 	logger    *slog.Logger
-	stdout    io.Writer
-	stderr    io.Writer
+	options   *options
 	finalized bool
 }
 
@@ -56,15 +80,15 @@ func (c *Config) Logger() *slog.Logger {
 	if c.logger != nil {
 		return c.logger
 	}
-	return c.logConfig.NewLogger(c.stderr)
+	return c.logConfig.NewLogger(c.options.stderr)
 }
 
 // NewTopLevelLogger returns a *slog.Logger with a handler that filters source
 // attributes. Useful as a top level error logger in main().
 func (c *Config) NewTopLevelLogger() *slog.Logger {
-	return c.logConfig.NewTopLevelLogger(c.stderr)
+	return c.logConfig.NewTopLevelLogger(c.options.stderr)
 }
 
 func (c *Config) Stderr() io.Writer {
-	return c.stderr
+	return c.options.stderr
 }

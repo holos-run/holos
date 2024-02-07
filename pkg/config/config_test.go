@@ -2,13 +2,12 @@ package config
 
 import (
 	"bytes"
-	"os"
 	"testing"
 )
 
 func newConfig() (*Config, *bytes.Buffer) {
 	var b bytes.Buffer
-	c := New(os.Stdout, &b)
+	c := New(Stdout(&b))
 	return c, &b
 }
 

@@ -36,7 +36,7 @@ func New(cfg *config.Config) *cobra.Command {
 			return nil
 		},
 	}
-	rootCmd.SetOut(cfg.Stderr())
+	rootCmd.SetVersionTemplate("{{.Version}}\n")
 	rootCmd.Flags().SortFlags = false
 	rootCmd.Flags().AddGoFlagSet(cfg.LogFlagSet())
 
