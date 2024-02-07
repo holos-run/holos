@@ -12,33 +12,48 @@ import (
 	"cuelang.org/go/cue/load"
 )
 
-// A BuilderOption configures a Builder
-type BuilderOption func(b *Builder)
+// An Option configures a Builder
+type Option func(*config)
 
-type Builder struct {
+type config struct {
 	args []string
 }
 
-// Entrypoints are the leaf directories or files built by cue.
-func Entrypoints(args []string) BuilderOption {
-	return func(b *Builder) { b.args = args }
+type Builder struct {
+	cfg config
 }
 
-// New returns a new *Builder with opts Options.
-func New(opts ...BuilderOption) *Builder {
-	b := &Builder{}
-	for _, option := range opts {
-		option(b)
+// New returns a new *Builder configured by opts Option.
+func New(opts ...Option) *Builder {
+	var cfg config
+	for _, f := range opts {
+		f(&cfg)
 	}
+	b := &Builder{cfg: cfg}
 	return b
+}
+
+// Entrypoints configures the leaf directories Builder builds.
+func Entrypoints(args []string) Option {
+	return func(cfg *config) { cfg.args = args }
+}
+
+type buildInfo struct {
+	APIVersion string `json:"apiVersion,omitempty"`
+	Kind       string `json:"kind,omitempty"`
+}
+
+type out struct {
+	Out string `json:"out,omitempty"`
 }
 
 func (b *Builder) Run(ctx context.Context) error {
 	cueCtx := cuecontext.New()
 
-	instances := load.Instances(b.args, nil)
+	instances := load.Instances(b.cfg.args, nil)
 
 	for _, instance := range instances {
+		var info buildInfo
 		if err := instance.Err; err != nil {
 			return wrapper.Wrap(fmt.Errorf("could not load: %w", err))
 		}
@@ -50,8 +65,20 @@ func (b *Builder) Run(ctx context.Context) error {
 			return wrapper.Wrap(fmt.Errorf("could not validate: %w", err))
 		}
 
-		// Output in cue format
-		fmt.Println(value)
+		if err := value.Decode(&info); err != nil {
+			return wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
+		}
+
+		switch kind := info.Kind; kind {
+		case "KubernetesObjects":
+			var out out
+			if err := value.Decode(&out); err != nil {
+				return wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
+			}
+			fmt.Printf(out.Out)
+		default:
+			return wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
+		}
 	}
 
 	return nil
