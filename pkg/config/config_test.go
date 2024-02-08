@@ -5,10 +5,10 @@ import (
 	"testing"
 )
 
+// newConfig returns a new *Config with stderr wired to *bytes.Buffer.
 func newConfig() (*Config, *bytes.Buffer) {
 	var b bytes.Buffer
-	c := New(Stdout(&b))
-	return c, &b
+	return New(Stderr(&b)), &b
 }
 
 func TestConfigFinalize(t *testing.T) {
@@ -22,11 +22,22 @@ func TestConfigFinalize(t *testing.T) {
 }
 
 func TestConfigFinalizeTwice(t *testing.T) {
-	cfg, _ := newConfig()
+	cfg, stderr := newConfig()
 	if err := cfg.Finalize(); err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("want: %#v have: %#v", nil, err)
 	}
 	if err := cfg.Finalize(); err == nil {
-		t.Fatalf("want error got nil")
+		t.Fatalf("want: error have: %#v", err)
+	} else {
+		want := "could not finalize: already finalized"
+		have := err.Error()
+		if want != have {
+			t.Fatalf("want: %#v have: %#v", want, have)
+		}
+	}
+	want := ""
+	have := stderr.String()
+	if want != have {
+		t.Fatalf("want: %#v have: %#v", want, have)
 	}
 }
