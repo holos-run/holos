@@ -4,33 +4,27 @@ import (
 	"fmt"
 	"github.com/holos-run/holos/pkg/config"
 	"github.com/holos-run/holos/pkg/internal/builder"
-	"github.com/holos-run/holos/pkg/version"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
+	"strings"
 )
-
-// newCmd returns a new subcommand
-func newCmd(name string) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     name,
-		Version: version.Version,
-		Args:    cobra.NoArgs,
-		CompletionOptions: cobra.CompletionOptions{
-			HiddenDefaultCmd: true,
-		},
-		RunE: func(c *cobra.Command, args []string) error {
-			return wrapper.Wrap(fmt.Errorf("could not run %v: not implemented", c.Name()))
-		},
-		SilenceUsage:  true,
-		SilenceErrors: true,
-	}
-	return cmd
-}
 
 // build is the internal implementation of the build cli command
 func build(cmd *cobra.Command, args []string) error {
 	build := builder.New(builder.Entrypoints(args))
-	return build.Run(cmd.Context())
+	results, err := build.Run(cmd.Context())
+	if err != nil {
+		return err
+	}
+	outs := make([]string, 0, len(results))
+	for _, result := range results {
+		outs = append(outs, result.Output)
+	}
+	out := strings.Join(outs, "---\n")
+	if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {
+		return wrapper.Wrap(err)
+	}
+	return nil
 }
 
 // newBuildCmd returns the build subcommand for the root command

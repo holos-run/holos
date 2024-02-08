@@ -36,23 +36,46 @@ func New(opts ...Option) *Config {
 	for _, f := range opts {
 		f(o)
 	}
-	return &Config{
-		logConfig: logger.NewConfig(),
-		options:   o,
+	writeFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
+	clusterFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
+	cfg := &Config{
+		logConfig:      logger.NewConfig(),
+		writeTo:        getenv("HOLOS_WRITE_TO", "deploy"),
+		clusterName:    getenv("HOLOS_CLUSTER_NAME", ""),
+		writeFlagSet:   writeFlagSet,
+		clusterFlagSet: clusterFlagSet,
+		options:        o,
 	}
+	writeFlagSet.StringVar(&cfg.writeTo, "write-to", cfg.writeTo, "write to directory")
+	clusterFlagSet.StringVar(&cfg.clusterName, "cluster-name", cfg.clusterName, "cluster name")
+	return cfg
 }
 
 // Config holds configuration for the whole program, used by main()
 type Config struct {
-	logConfig *logger.Config
-	logger    *slog.Logger
-	options   *options
-	finalized bool
+	logConfig      *logger.Config
+	writeTo        string
+	clusterName    string
+	logger         *slog.Logger
+	options        *options
+	finalized      bool
+	writeFlagSet   *flag.FlagSet
+	clusterFlagSet *flag.FlagSet
 }
 
 // LogFlagSet returns the logging *flag.FlagSet
 func (c *Config) LogFlagSet() *flag.FlagSet {
 	return c.logConfig.FlagSet()
+}
+
+// WriteFlagSet returns a *flag.FlagSet wired to c *Config.  Useful for commands that write files.
+func (c *Config) WriteFlagSet() *flag.FlagSet {
+	return c.writeFlagSet
+}
+
+// ClusterFlagSet returns a *flag.FlagSet wired to c *Config.  Useful for commands scoped to one cluster.
+func (c *Config) ClusterFlagSet() *flag.FlagSet {
+	return c.clusterFlagSet
 }
 
 // Finalize validates the config and finalizes the startup lifecycle based on user configuration.
@@ -89,6 +112,25 @@ func (c *Config) NewTopLevelLogger() *slog.Logger {
 	return c.logConfig.NewTopLevelLogger(c.options.stderr)
 }
 
+// Stderr should be used instead of os.Stderr to capture output for tests.
 func (c *Config) Stderr() io.Writer {
 	return c.options.stderr
+}
+
+// Stdout should be used instead of os.Stdout to capture output for tests.
+func (c *Config) Stdout() io.Writer {
+	return c.options.stdout
+}
+
+// WriteTo returns the write to path configured by flags.
+func (c *Config) WriteTo() string {
+	return c.writeTo
+}
+
+// getenv is equivalent to os.Getenv() with a default value
+func getenv(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return defaultValue
 }

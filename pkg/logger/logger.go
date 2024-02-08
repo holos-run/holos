@@ -166,9 +166,9 @@ func (c *Config) NewLogger(w io.Writer) *slog.Logger {
 func NewConfig() *Config {
 	f := flag.NewFlagSet("", flag.ContinueOnError)
 	c := &Config{flagSet: f}
-	f.StringVar(&c.level, "log-level", "info", fmt.Sprintf("Log Level (%s)", strings.Join(validLogLevels, "|")))
-	f.StringVar(&c.format, "log-format", "text", fmt.Sprintf("Log format (%s)", strings.Join(validLogFormats, "|")))
-	f.Var(&c.dropAttrs, "log-drop", "Log attributes to drop, e.g. \"user-agent,version\"")
+	f.StringVar(&c.level, "log-level", getenv("HOLOS_LOG_LEVEL", "info"), fmt.Sprintf("log level (%s)", strings.Join(validLogLevels, "|")))
+	f.StringVar(&c.format, "log-format", getenv("HOLOS_LOG_FORMAT", "text"), fmt.Sprintf("log format (%s)", strings.Join(validLogFormats, "|")))
+	f.Var(&c.dropAttrs, "log-drop", "log attributes to drop (example \"user-agent,version\")")
 	return c
 }
 
@@ -206,4 +206,12 @@ func (c *Config) vetFormat() error {
 	}
 	err := fmt.Errorf("invalid log format: %s is not one of %s", c.format, strings.Join(validLogFormats, ", "))
 	return wrapper.Wrap(err)
+}
+
+// getenv is equivalent to os.Getenv() with a default value
+func getenv(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return defaultValue
 }

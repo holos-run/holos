@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-// newConfig returns a new *Config with stderr wired to *bytes.Buffer.
-func newConfig() (*Config, *bytes.Buffer) {
+// newConfig returns a new *Config with stderr wired to a bytes.Buffer.
+func newConfig() (cfg *Config, stderr *bytes.Buffer) {
 	var b bytes.Buffer
 	return New(Stderr(&b)), &b
 }

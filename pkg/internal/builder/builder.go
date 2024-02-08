@@ -50,13 +50,20 @@ type out struct {
 	Out string `json:"out,omitempty"`
 }
 
-func (b *Builder) Run(ctx context.Context) error {
+// Result is the build result for display or writing
+type Result struct {
+	Output  string `json:"output,omitempty"`
+	Cluster string `json:"cluster,omitempty"`
+}
+
+func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
 	log := logger.FromContext(ctx)
 	cueCtx := cuecontext.New()
+	results := make([]*Result, 0, len(b.cfg.args))
 
 	dir, err := b.findCueMod()
 	if err != nil {
-		return wrapper.Wrap(err)
+		return nil, wrapper.Wrap(err)
 	}
 
 	cfg := load.Config{Dir: dir}
@@ -66,11 +73,11 @@ func (b *Builder) Run(ctx context.Context) error {
 	for idx, path := range b.cfg.args {
 		target, err := filepath.Abs(path)
 		if err != nil {
-			return wrapper.Wrap(fmt.Errorf("could not find absolute path: %w", err))
+			return nil, wrapper.Wrap(fmt.Errorf("could not find absolute path: %w", err))
 		}
 		relPath, err := filepath.Rel(dir, target)
 		if err != nil {
-			return wrapper.Wrap(fmt.Errorf("invalid argument, must be relative to cue.mod: %w", err))
+			return nil, wrapper.Wrap(fmt.Errorf("invalid argument, must be relative to cue.mod: %w", err))
 		}
 		relPath = "./" + relPath
 		args[idx] = relPath
@@ -82,34 +89,36 @@ func (b *Builder) Run(ctx context.Context) error {
 
 	for _, instance := range instances {
 		var info buildInfo
+		var result Result
+		results = append(results, &result)
 		if err := instance.Err; err != nil {
-			return wrapper.Wrap(fmt.Errorf("could not load: %w", err))
+			return nil, wrapper.Wrap(fmt.Errorf("could not load: %w", err))
 		}
 		value := cueCtx.BuildInstance(instance)
 		if err := value.Err(); err != nil {
-			return wrapper.Wrap(fmt.Errorf("could not build: %w", err))
+			return nil, wrapper.Wrap(fmt.Errorf("could not build: %w", err))
 		}
 		if err := value.Validate(); err != nil {
-			return wrapper.Wrap(fmt.Errorf("could not validate: %w", err))
+			return nil, wrapper.Wrap(fmt.Errorf("could not validate: %w", err))
 		}
 
 		if err := value.Decode(&info); err != nil {
-			return wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
+			return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 		}
 
 		switch kind := info.Kind; kind {
 		case "KubernetesObjects":
 			var out out
 			if err := value.Decode(&out); err != nil {
-				return wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
+				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 			}
-			fmt.Printf(out.Out)
+			result.Output = out.Out
 		default:
-			return wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
+			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
 		}
 	}
 
-	return nil
+	return results, nil
 }
 
 // findCueMod returns the root module location containing the cue.mod file or
