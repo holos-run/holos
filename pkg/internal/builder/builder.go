@@ -6,6 +6,7 @@ package builder
 import (
 	"context"
 	"fmt"
+	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"os"
 	"path/filepath"
@@ -50,6 +51,7 @@ type out struct {
 }
 
 func (b *Builder) Run(ctx context.Context) error {
+	log := logger.FromContext(ctx)
 	cueCtx := cuecontext.New()
 
 	dir, err := b.findCueMod()
@@ -70,7 +72,10 @@ func (b *Builder) Run(ctx context.Context) error {
 		if err != nil {
 			return wrapper.Wrap(fmt.Errorf("invalid argument, must be relative to cue.mod: %w", err))
 		}
-		args[idx] = "./" + relPath
+		relPath = "./" + relPath
+		args[idx] = relPath
+		equiv := fmt.Sprintf("(cd %v && cue export --out text -e out %v)", dir, relPath)
+		log.Debug("equivalent command", "cue", equiv)
 	}
 
 	instances := load.Instances(args, &cfg)
