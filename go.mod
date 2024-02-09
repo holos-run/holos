@@ -4,7 +4,6 @@ go 1.21.5
 
 require (
 	cuelang.org/go v0.7.0
-	github.com/lmittmann/tint v1.0.4
 	github.com/mattn/go-isatty v0.0.20
 	github.com/spf13/cobra v1.7.0
 )
