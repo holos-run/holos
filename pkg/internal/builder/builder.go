@@ -82,7 +82,7 @@ func (r *Result) Save(ctx context.Context, path string) error {
 		log.WarnContext(ctx, "could not write", "path", path, "err", err)
 		return wrapper.Wrap(err)
 	}
-	log.DebugContext(ctx, "wrote file", "action", "mkdir", "path", dir, "status", "ok")
+	log.DebugContext(ctx, "wrote "+path, "action", "mkdir", "path", path, "status", "ok")
 	return nil
 }
 
@@ -111,8 +111,8 @@ func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
 		}
 		relPath = "./" + relPath
 		args[idx] = relPath
-		equiv := fmt.Sprintf("(cd %v && cue export --out text -e content %v)", dir, relPath)
-		log.Debug("equivalent command", "cue", equiv)
+		equiv := fmt.Sprintf("cue export --out yaml %v", relPath)
+		log.Debug(equiv)
 	}
 
 	instances := load.Instances(args, &cfg)

@@ -27,7 +27,7 @@ func makeRenderRunFunc(cfg *config.Config) runFunc {
 			if err := result.Save(ctx, path); err != nil {
 				return wrapper.Wrap(err)
 			}
-			log.InfoContext(ctx, "wrote", "status", "ok", "action", "save", "path", path)
+			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "save", "path", path, "name", result.Name())
 		}
 		return nil
 	}

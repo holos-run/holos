@@ -11,9 +11,10 @@ import (
 )
 
 func newCommand() (*cobra.Command, *bytes.Buffer) {
-	var b bytes.Buffer
-	cmd := New(config.New(config.Stderr(&b)))
-	return cmd, &b
+	var b1, b2 bytes.Buffer
+	// discard stdout for now, it's a bunch of usage messages.
+	cmd := New(config.New(config.Stdout(&b1), config.Stderr(&b2)))
+	return cmd, &b2
 }
 
 func TestNewRoot(t *testing.T) {
@@ -61,9 +62,10 @@ func TestLogOutput(t *testing.T) {
 	if err := cmd.Execute(); err != nil {
 		t.Fatalf("could not execute: %v", err)
 	}
-	stderr := b.String()
-	if !strings.Contains(stderr, "config lifecycle") {
-		t.Fatalf("lifecycle message missing: stderr: %v", stderr)
+	have := strings.TrimSpace(b.String())
+	want := "finalized config from flags"
+	if !strings.Contains(have, want) {
+		t.Fatalf("have does not contain want\n\thave: %#v\n\twant: %#v", have, want)
 	}
 }
 

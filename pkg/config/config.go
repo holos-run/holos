@@ -88,7 +88,7 @@ func (c *Config) Finalize() error {
 	}
 	l := c.Logger()
 	c.logger = l
-	l.Debug("config lifecycle", "state", "finalized")
+	l.Debug("finalized config from flags", "state", "finalized")
 	c.finalized = true
 	return nil
 }
