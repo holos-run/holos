@@ -1,6 +1,7 @@
-bin
-/vendor
-/.idea
+bin/
+vendor/
+.idea/
 coverage.out
-
 dist/
+*.hold/
+/deploy/

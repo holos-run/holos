@@ -46,10 +46,44 @@ type buildInfo struct {
 	Kind       string `json:"kind,omitempty"`
 }
 
-// Result is the build result for display or writing
+// Metadata represents the standard metadata fields of the cue output
+type Metadata struct {
+	Name string `json:"name,omitempty"`
+}
+
+// Result is the build result for display or writing.
 type Result struct {
-	Content string `json:"content,omitempty"`
-	Cluster string `json:"cluster,omitempty"`
+	Metadata Metadata `json:"metadata,omitempty"`
+	Content  string   `json:"content,omitempty"`
+}
+
+// Name returns the metadata name of the result. Equivalent to the
+// OrderedComponent name specified in platform.yaml in the holos prototype.
+func (r *Result) Name() string {
+	return r.Metadata.Name
+}
+
+func (r *Result) Filename(writeTo string, cluster string) string {
+	return filepath.Join(writeTo, "clusters", cluster, "components", r.Name(), r.Name()+".gen.yaml")
+}
+
+// Save writes the content to the filesystem for git ops.
+func (r *Result) Save(ctx context.Context, path string) error {
+	if r.Name() == "" {
+		return wrapper.Wrap(fmt.Errorf("missing name from cue result"))
+	}
+	log := logger.FromContext(ctx)
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, os.FileMode(0775)); err != nil {
+		log.WarnContext(ctx, "could not mkdir", "path", dir, "err", err)
+		return wrapper.Wrap(err)
+	}
+	if err := os.WriteFile(path, []byte(r.Content), os.FileMode(0644)); err != nil {
+		log.WarnContext(ctx, "could not write", "path", path, "err", err)
+		return wrapper.Wrap(err)
+	}
+	log.DebugContext(ctx, "wrote file", "action", "mkdir", "path", dir, "status", "ok")
+	return nil
 }
 
 func (b *Builder) Run(ctx context.Context) ([]*Result, error) {

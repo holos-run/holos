@@ -39,6 +39,8 @@ func (e *ErrorAt) Error() string {
 
 // Wrap wraps err in a ErrorAt or returns err if err is nil, already a
 // ErrorAt, or caller info is not available.
+//
+// XXX: Refactor to wrap.Err(error, ...slog.Attr).  Often want to add attributes for the top level logger.
 func Wrap(err error) error {
 	// Nothing to do
 	if err == nil {

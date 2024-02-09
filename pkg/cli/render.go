@@ -4,27 +4,32 @@ import (
 	"fmt"
 	"github.com/holos-run/holos/pkg/config"
 	"github.com/holos-run/holos/pkg/internal/builder"
+	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 func makeRenderRunFunc(cfg *config.Config) runFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		if cfg.ClusterName() == "" {
+			return wrapper.Wrap(fmt.Errorf("missing cluster name"))
+		}
+
+		ctx := cmd.Context()
+		log := logger.FromContext(ctx)
 		build := builder.New(builder.Entrypoints(args))
 		results, err := build.Run(cmd.Context())
 		if err != nil {
-			return err
-		}
-		outs := make([]string, 0, len(results))
-		for _, result := range results {
-			outs = append(outs, result.Content)
-		}
-		out := strings.Join(outs, "---\n")
-		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {
 			return wrapper.Wrap(err)
 		}
-		return wrapper.Wrap(fmt.Errorf("write the output to: %+v", cfg.WriteTo()))
+		for _, result := range results {
+			path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
+			if err := result.Save(ctx, path); err != nil {
+				return wrapper.Wrap(err)
+			}
+			log.InfoContext(ctx, "wrote", "status", "ok", "action", "save", "path", path)
+		}
+		return nil
 	}
 }
 

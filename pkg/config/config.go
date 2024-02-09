@@ -29,12 +29,12 @@ func Stderr(w io.Writer) Option {
 
 // New returns a new top level cli Config.
 func New(opts ...Option) *Config {
-	o := &options{
+	cfgOptions := &options{
 		stdout: os.Stdout,
 		stderr: os.Stderr,
 	}
-	for _, f := range opts {
-		f(o)
+	for _, option := range opts {
+		option(cfgOptions)
 	}
 	writeFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	clusterFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
@@ -44,7 +44,7 @@ func New(opts ...Option) *Config {
 		clusterName:    getenv("HOLOS_CLUSTER_NAME", ""),
 		writeFlagSet:   writeFlagSet,
 		clusterFlagSet: clusterFlagSet,
-		options:        o,
+		options:        cfgOptions,
 	}
 	writeFlagSet.StringVar(&cfg.writeTo, "write-to", cfg.writeTo, "write to directory")
 	clusterFlagSet.StringVar(&cfg.clusterName, "cluster-name", cfg.clusterName, "cluster name")
@@ -125,6 +125,11 @@ func (c *Config) Stdout() io.Writer {
 // WriteTo returns the write to path configured by flags.
 func (c *Config) WriteTo() string {
 	return c.writeTo
+}
+
+// ClusterName returns the configured cluster name
+func (c *Config) ClusterName() string {
+	return c.clusterName
 }
 
 // getenv is equivalent to os.Getenv() with a default value
