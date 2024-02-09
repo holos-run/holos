@@ -18,7 +18,7 @@ func makeRenderRunFunc(cfg *config.Config) runFunc {
 		}
 		outs := make([]string, 0, len(results))
 		for _, result := range results {
-			outs = append(outs, result.Output)
+			outs = append(outs, result.Content)
 		}
 		out := strings.Join(outs, "---\n")
 		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {

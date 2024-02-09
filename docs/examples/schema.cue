@@ -69,9 +69,11 @@ _Platform: #Platform
 	// kind is a discriminator of the type of output
 	kind: #PlatformSpec.kind | #KubernetesObjects.kind | #ChartValues.kind
 	// name holds a unique name suitable for a filename
-	name: string
-	// out holds the text output
-	out: string | *""
+	metadata: name: string
+	// contentType is the standard MIME type indicating the content type of the content field
+	contentType: *"application/yaml" | "application/json"
+	// content holds the content text output
+	content: string | *""
 	// debug returns arbitrary debug output.
 	debug?: _
 }
@@ -84,7 +86,7 @@ _Platform: #Platform
 	// objects holds a list of the kubernetes api objects to configure.
 	objects: [...metav1.#TypeMeta] | *[]
 	// out holds the rendered yaml text stream of kubernetes api objects.
-	out: yaml.MarshalStream(objects)
+	content: yaml.MarshalStream(objects)
 	// platform returns the platform data structure for visibility / troubleshooting.
 	platform: _Platform
 }

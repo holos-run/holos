@@ -46,13 +46,9 @@ type buildInfo struct {
 	Kind       string `json:"kind,omitempty"`
 }
 
-type out struct {
-	Out string `json:"out,omitempty"`
-}
-
 // Result is the build result for display or writing
 type Result struct {
-	Output  string `json:"output,omitempty"`
+	Content string `json:"content,omitempty"`
 	Cluster string `json:"cluster,omitempty"`
 }
 
@@ -81,7 +77,7 @@ func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
 		}
 		relPath = "./" + relPath
 		args[idx] = relPath
-		equiv := fmt.Sprintf("(cd %v && cue export --out text -e out %v)", dir, relPath)
+		equiv := fmt.Sprintf("(cd %v && cue export --out text -e content %v)", dir, relPath)
 		log.Debug("equivalent command", "cue", equiv)
 	}
 
@@ -108,11 +104,9 @@ func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
 
 		switch kind := info.Kind; kind {
 		case "KubernetesObjects":
-			var out out
-			if err := value.Decode(&out); err != nil {
+			if err := value.Decode(&result); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 			}
-			result.Output = out.Out
 		default:
 			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
 		}
