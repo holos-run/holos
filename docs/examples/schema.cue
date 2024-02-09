@@ -30,7 +30,7 @@ _apiVersion: "holos.run/v1alpha1"
 	// cluster is usually the only key necessary when working with a component on the command line.
 	cluster: string @tag(cluster, type=string)
 	// stage is usually set by the platform or project.
-	stage: string @tag(stage, type=string)
+	stage: *"prod" | string @tag(stage, type=string)
 	// project is usually set by the platform or project.
 	project: string @tag(project, type=string)
 	// service is usually set by the component.
@@ -68,6 +68,8 @@ _Platform: #Platform
 	apiVersion: _apiVersion
 	// kind is a discriminator of the type of output
 	kind: #PlatformSpec.kind | #KubernetesObjects.kind | #ChartValues.kind
+	// name holds a unique name suitable for a filename
+	name: string
 	// out holds the text output
 	out: string | *""
 	// debug returns arbitrary debug output.
