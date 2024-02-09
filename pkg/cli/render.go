@@ -36,7 +36,7 @@ func makeRenderRunFunc(cfg *config.Config) runFunc {
 			if err := result.Save(ctx, path, result.KsContent); err != nil {
 				return wrapper.Wrap(err)
 			}
-			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "save", "path", path, "name", result.Name())
+			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered", "name", result.Name())
 		}
 		return nil
 	}
