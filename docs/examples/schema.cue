@@ -2,6 +2,7 @@ package holos
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	ksv1 "kustomize.toolkit.fluxcd.io/kustomization/v1"
 	corev1 "k8s.io/api/core/v1"
 	"encoding/yaml"
 )
@@ -10,6 +11,9 @@ _apiVersion: "holos.run/v1alpha1"
 
 // #Name defines the name: string key value pair used all over the place.
 #Name: name: string
+
+// #InstanceName is the name of the holos component instance being managed varying by stage, project, and component names.
+#InstanceName: "\(#InputKeys.stage)-\(#InputKeys.project)-\(#InputKeys.component)"
 
 // #NamespaceMeta defines standard metadata for namespaces.
 // Refer to https://kubernetes.io/docs/reference/labels-annotations-taints/#kubernetes-io-metadata-name
@@ -24,6 +28,25 @@ _apiVersion: "holos.run/v1alpha1"
 // Kubernetes API Objects
 #Namespace: corev1.#Namespace & #NamespaceMeta
 #ConfigMap: corev1.#ConfigMap
+#Kustomization: ksv1.#Kustomization & {
+	metadata: {
+		name: #InstanceName,
+		namespace: string | *"flux-system",
+	}
+	spec: ksv1.#KustomizationSpec & {
+		interval: string | *"30m0s"
+		path: string | *"deploy/clusters/\(#InputKeys.cluster)/components/\(#InstanceName)"
+		prune: bool | *true
+		retryInterval: string | *"2m0s"
+		sourceRef: {
+			kind: string | *"GitRepository"
+			name: string | *"flux-system"
+		}
+		timeout: string | *"3m0s"
+		wait: bool | *true
+	}
+}
+
 
 // #InputKeys defines the set of cue tags required to build a cue holos component. The values are used as lookup keys into the _Platform data.
 #InputKeys: {
@@ -35,6 +58,8 @@ _apiVersion: "holos.run/v1alpha1"
 	project: string @tag(project, type=string)
 	// service is usually set by the component.
 	service: string @tag(service, type=string)
+	// component is the name of the component
+	component: string @tag(component, type=string)
 }
 
 // #Platform defines the primary lookup table for the platform.  Lookup keys should be limited to those defined in #KeyTags.
@@ -87,6 +112,10 @@ _Platform: #Platform
 	objects: [...metav1.#TypeMeta] | *[]
 	// out holds the rendered yaml text stream of kubernetes api objects.
 	content: yaml.MarshalStream(objects)
+	// ksObjects holds the flux Kustomization objects for gitops
+	ksObjects: [...#Kustomization] | *[]
+	// ksContent is the yaml representation of kustomization
+	ksContent: yaml.MarshalStream(ksObjects)
 	// platform returns the platform data structure for visibility / troubleshooting.
 	platform: _Platform
 }

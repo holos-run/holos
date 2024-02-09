@@ -17,14 +17,23 @@ func makeRenderRunFunc(cfg *config.Config) runFunc {
 
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx)
-		build := builder.New(builder.Entrypoints(args))
+		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
 		results, err := build.Run(cmd.Context())
 		if err != nil {
 			return wrapper.Wrap(err)
 		}
+		// TODO: Avoid accidental over-writes if to holos component instances result in
+		// the same file path. Write files into a blank temporary directory, error if a
+		// file exists, then move the directory into place.
 		for _, result := range results {
+			// API Objects
 			path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
-			if err := result.Save(ctx, path); err != nil {
+			if err := result.Save(ctx, path, result.Content); err != nil {
+				return wrapper.Wrap(err)
+			}
+			// Kustomization
+			path = result.KustomizationFilename(cfg.WriteTo(), cfg.ClusterName())
+			if err := result.Save(ctx, path, result.KsContent); err != nil {
 				return wrapper.Wrap(err)
 			}
 			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "save", "path", path, "name", result.Name())

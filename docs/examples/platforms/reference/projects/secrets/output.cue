@@ -1,7 +1,9 @@
 package holos
 
 // Output schema
-{} & #KubernetesObjects
+{} & #KubernetesObjects & {
+	ksObjects: [#Kustomization]
+}
 
 #InputKeys: {
 	project: "secrets"

@@ -1,7 +1,8 @@
 package holos
 
-// e.g. prod-secrets-namespaces
-metadata: name: "\(#InputKeys.stage)-\(#InputKeys.project)-namespaces"
+#InputKeys: component: "namespaces"
+
+metadata: name: #InstanceName
 objects: [
 	#Namespace & {
 		metadata: name: "external-secrets"

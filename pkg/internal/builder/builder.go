@@ -19,7 +19,8 @@ import (
 type Option func(*config)
 
 type config struct {
-	args []string
+	args    []string
+	cluster string
 }
 
 type Builder struct {
@@ -41,6 +42,11 @@ func Entrypoints(args []string) Option {
 	return func(cfg *config) { cfg.args = args }
 }
 
+// Cluster configures the cluster name for the holos component instance.
+func Cluster(name string) Option {
+	return func(cfg *config) { cfg.cluster = name }
+}
+
 type buildInfo struct {
 	APIVersion string `json:"apiVersion,omitempty"`
 	Kind       string `json:"kind,omitempty"`
@@ -53,8 +59,9 @@ type Metadata struct {
 
 // Result is the build result for display or writing.
 type Result struct {
-	Metadata Metadata `json:"metadata,omitempty"`
-	Content  string   `json:"content,omitempty"`
+	Metadata  Metadata `json:"metadata,omitempty"`
+	Content   string   `json:"content,omitempty"`
+	KsContent string   `json:"ksContent,omitempty"`
 }
 
 // Name returns the metadata name of the result. Equivalent to the
@@ -67,23 +74,30 @@ func (r *Result) Filename(writeTo string, cluster string) string {
 	return filepath.Join(writeTo, "clusters", cluster, "components", r.Name(), r.Name()+".gen.yaml")
 }
 
+func (r *Result) KustomizationFilename(writeTo string, cluster string) string {
+	return filepath.Join(writeTo, "clusters", cluster, "holos", "components", r.Name()+"-kustomization.gen.yaml")
+}
+
 // Save writes the content to the filesystem for git ops.
-func (r *Result) Save(ctx context.Context, path string) error {
-	if r.Name() == "" {
-		return wrapper.Wrap(fmt.Errorf("missing name from cue result"))
-	}
+func (r *Result) Save(ctx context.Context, path string, content string) error {
 	log := logger.FromContext(ctx)
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, os.FileMode(0775)); err != nil {
 		log.WarnContext(ctx, "could not mkdir", "path", dir, "err", err)
 		return wrapper.Wrap(err)
 	}
-	if err := os.WriteFile(path, []byte(r.Content), os.FileMode(0644)); err != nil {
+	// Write the kube api objects
+	if err := os.WriteFile(path, []byte(content), os.FileMode(0644)); err != nil {
 		log.WarnContext(ctx, "could not write", "path", path, "err", err)
 		return wrapper.Wrap(err)
 	}
-	log.DebugContext(ctx, "wrote "+path, "action", "mkdir", "path", path, "status", "ok")
+	log.DebugContext(ctx, "wrote "+path, "action", "write", "path", path, "status", "ok")
 	return nil
+}
+
+// Cluster returns the cluster name of the component instance being built.
+func (b *Builder) Cluster() string {
+	return b.cfg.cluster
 }
 
 func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
@@ -111,9 +125,13 @@ func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
 		}
 		relPath = "./" + relPath
 		args[idx] = relPath
-		equiv := fmt.Sprintf("cue export --out yaml %v", relPath)
+		equiv := fmt.Sprintf("cue export --out yaml -t cluster=%v %v", b.Cluster(), relPath)
 		log.Debug(equiv)
 	}
+
+	// Refer to https://github.com/cue-lang/cue/blob/v0.7.0/cmd/cue/cmd/common.go#L429
+	cfg.Tags = append(cfg.Tags, "cluster="+b.Cluster())
+	log.DebugContext(ctx, fmt.Sprintf("configured cue tags: %v", cfg.Tags))
 
 	instances := load.Instances(args, &cfg)
 
