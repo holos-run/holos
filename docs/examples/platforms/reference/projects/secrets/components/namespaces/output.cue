@@ -4,8 +4,3 @@ package holos
 {} & #KubernetesObjects & {
 	ksObjects: [#Kustomization]
 }
-
-#InputKeys: {
-	project: "secrets"
-	service: "eso"
-}

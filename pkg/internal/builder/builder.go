@@ -15,6 +15,15 @@ import (
 	"cuelang.org/go/cue/load"
 )
 
+const (
+	// Kube is the value of the kind field of holos build output indicating
+	// kubernetes api objects.
+	Kube = "KubernetesObjects"
+	// Helm is the value of the kind field of holos build output indicating helm
+	// values and helm command information.
+	Helm = "ChartValues"
+)
+
 // An Option configures a Builder
 type Option func(*config)
 
@@ -155,10 +164,12 @@ func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
 		}
 
 		switch kind := info.Kind; kind {
-		case "KubernetesObjects":
+		case Kube:
 			if err := value.Decode(&result); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 			}
+		case Helm:
+			return nil, wrapper.Wrap(fmt.Errorf("helm not implemented"))
 		default:
 			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
 		}

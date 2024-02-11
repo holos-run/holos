@@ -124,6 +124,12 @@ _Platform: #Platform
 #ChartValues: {
 	#OutputTypeMeta
 	kind: "ChartValues"
+	// ksObjects holds the flux Kustomization objects for gitops
+	ksObjects: [...#Kustomization] | *[]
+	// ksContent is the yaml representation of kustomization
+	ksContent: yaml.MarshalStream(ksObjects)
+	// platform returns the platform data structure for visibility / troubleshooting.
+	platform: _Platform
 }
 
 // #PlatformSpec is the output schema of a platform specification.
