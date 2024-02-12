@@ -1,6 +1,5 @@
 package holos
 
-// Output schema
-{} & #ChartValues & {
-	ksObjects: [#Kustomization]
+#ChartValues & {
+	values: installCrds: true
 }

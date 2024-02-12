@@ -138,17 +138,26 @@ _Platform: #Platform
 	#OutputTypeMeta
 	kind: "ChartValues"
 	// ksObjects holds the flux Kustomization objects for gitops.
-	ksObjects: [...#Kustomization] | *[]
+	ksObjects: [...#Kustomization] | *[#Kustomization]
 	// ksContent is the yaml representation of kustomization.
 	ksContent: yaml.MarshalStream(ksObjects)
 	// repositories defines upstream chart repositories.
 	repositories: [...#ChartRepository]
 	// charts defines charts to provide values to.
 	charts: [...#Chart]
-	// values holds the chart values object.
-	values: {}
+	// values holds the chart values.
+	values: {...}
+	// valuesObject mixes platform and component instance data into the helm values.
+	valuesObject: {
+		values
+		// global values avoids problems with upstream charts that specify openapi schema of their values.
+		global: {
+			platform: _Platform
+			instance: #InputKeys
+		}
+	}
 	// valuesContent holds the values yaml
-	valuesContent: yaml.Marshal(values)
+	valuesContent: yaml.Marshal(valuesObject)
 	// platform returns the platform data structure for visibility / troubleshooting.
 	platform: _Platform
 }
