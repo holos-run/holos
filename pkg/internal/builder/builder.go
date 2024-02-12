@@ -4,6 +4,7 @@
 package builder
 
 import (
+	"bytes"
 	"context"
 	"cuelang.org/go/cue/build"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"cuelang.org/go/cue/cuecontext"
@@ -23,7 +25,7 @@ const (
 	Kube = "KubernetesObjects"
 	// Helm is the value of the kind field of holos build output indicating helm
 	// values and helm command information.
-	Helm = "ChartValues"
+	Helm = "HelmChart"
 )
 
 // An Option configures a Builder
@@ -81,19 +83,20 @@ type Repository struct {
 }
 
 type Chart struct {
-	Name       string `json:"name"`
-	Version    string `json:"version"`
-	Repository string `json:"repository"`
+	Name       string     `json:"name"`
+	Version    string     `json:"version"`
+	Repository Repository `json:"repository"`
 }
 
-// A ChartValues represents a helm command to provide chart values in order to render kubernetes api objects.
-type ChartValues struct {
-	APIVersion   string       `json:"apiVersion"`
-	Kind         string       `json:"kind"`
-	Metadata     Metadata     `json:"metadata"`
-	KsContent    string       `json:"ksContent"`
-	Repositories []Repository `json:"repositories"`
-	Charts       []Chart      `json:"charts"`
+// A HelmChart represents a helm command to provide chart values in order to render kubernetes api objects.
+type HelmChart struct {
+	APIVersion    string   `json:"apiVersion"`
+	Kind          string   `json:"kind"`
+	Metadata      Metadata `json:"metadata"`
+	KsContent     string   `json:"ksContent"`
+	Namespace     string   `json:"namespace"`
+	Chart         Chart    `json:"chart"`
+	ValuesContent string   `json:"valuesContent"`
 }
 
 // Name returns the metadata name of the result. Equivalent to the
@@ -158,12 +161,12 @@ func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
 		relPath = "./" + relPath
 		args[idx] = relPath
 		equiv := fmt.Sprintf("cue export --out yaml -t cluster=%v %v", b.Cluster(), relPath)
-		log.Debug(equiv)
+		log.Debug("cue: equivalent command: " + equiv)
 	}
 
 	// Refer to https://github.com/cue-lang/cue/blob/v0.7.0/cmd/cue/cmd/common.go#L429
 	cfg.Tags = append(cfg.Tags, "cluster="+b.Cluster())
-	log.DebugContext(ctx, fmt.Sprintf("configured cue tags: %v", cfg.Tags))
+	log.DebugContext(ctx, fmt.Sprintf("cue: tags %v", cfg.Tags))
 
 	return load.Instances(args, &cfg), nil
 }
@@ -171,6 +174,7 @@ func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
 func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 	results = make([]*Result, 0, len(b.cfg.args))
 	cueCtx := cuecontext.New()
+	logger.FromContext(ctx).DebugContext(ctx, "cue: building instances")
 	instances, err := b.Instances(ctx)
 	if err != nil {
 		return results, err
@@ -179,35 +183,46 @@ func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 	for _, instance := range instances {
 		var info buildInfo
 		var result Result
+		log := logger.FromContext(ctx).With("dir", instance.Dir)
 		results = append(results, &result)
 		if err := instance.Err; err != nil {
 			return nil, wrapper.Wrap(fmt.Errorf("could not load: %w", err))
 		}
+		log.DebugContext(ctx, "cue: building instance")
 		value := cueCtx.BuildInstance(instance)
 		if err := value.Err(); err != nil {
 			return nil, wrapper.Wrap(fmt.Errorf("could not build: %w", err))
 		}
+		log.DebugContext(ctx, "cue: validating instance")
 		if err := value.Validate(); err != nil {
 			return nil, wrapper.Wrap(fmt.Errorf("could not validate: %w", err))
 		}
-
+		log.DebugContext(ctx, "cue: decoding holos component build info")
 		if err := value.Decode(&info); err != nil {
 			return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 		}
 
+		log.DebugContext(ctx, "cue: processing holos component kind "+info.Kind)
 		switch kind := info.Kind; kind {
 		case Kube:
-			// TODO: Decode into a intermediate struct
+			// CUE directly provides the kubernetes api objects in result.Content
 			if err := value.Decode(&result); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 			}
 		case Helm:
-			var chartValues ChartValues
-			if err := value.Decode(&chartValues); err != nil {
+			var helmChart HelmChart
+			// First decode into the result.  Helm will populate the api objects later.
+			if err := value.Decode(&result); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 			}
-			fmt.Printf("%#v\n\n", chartValues)
-			return nil, wrapper.Wrap(fmt.Errorf("helm not implemented"))
+			// Decode again into the helm chart struct to get the values content to provide to helm.
+			if err := value.Decode(&helmChart); err != nil {
+				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
+			}
+			// runHelm populates result.Content from helm template output.
+			if err := runHelm(ctx, &helmChart, &result); err != nil {
+				return nil, err
+			}
 		default:
 			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
 		}
@@ -244,4 +259,79 @@ func (b *Builder) findCueMod() (dir holos.PathCueMod, err error) {
 		}
 	}
 	return dir, nil
+}
+
+type runResult struct {
+	stdout *bytes.Buffer
+	stderr *bytes.Buffer
+}
+
+func runCmd(ctx context.Context, name string, args ...string) (result runResult, err error) {
+	result = runResult{
+		stdout: new(bytes.Buffer),
+		stderr: new(bytes.Buffer),
+	}
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Stdout = result.stdout
+	cmd.Stderr = result.stderr
+	log := logger.FromContext(ctx)
+	log.DebugContext(ctx, "running: "+name, "name", name, "args", args)
+	err = cmd.Run()
+	return
+}
+
+// runHelm provides the values produced by CUE to helm template and returns
+// the rendered kubernetes api objects in the result.
+func runHelm(ctx context.Context, hc *HelmChart, r *Result) error {
+	log := logger.FromContext(ctx).With("chart", hc.Chart.Name)
+	// Add repositories
+	repo := hc.Chart.Repository
+	out, err := runCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL)
+	if err != nil {
+		log.ErrorContext(ctx, "could not run helm", "stderr", out.stderr.String(), "stdout", out.stdout.String())
+		return wrapper.Wrap(fmt.Errorf("could not run helm repo add: %w", err))
+	}
+	out, err = runCmd(ctx, "helm", "repo", "update", repo.Name)
+	if err != nil {
+		log.ErrorContext(ctx, "could not run helm", "stderr", out.stderr.String(), "stdout", out.stdout.String())
+		return wrapper.Wrap(fmt.Errorf("could not run helm repo update: %w", err))
+	}
+
+	// Write values file
+	tempDir, err := os.MkdirTemp("", "holos")
+	if err != nil {
+		return wrapper.Wrap(fmt.Errorf("could not make temp dir: %w", err))
+	}
+	defer remove(ctx, tempDir)
+
+	// Write values file
+	valuesPath := filepath.Join(tempDir, "values.yaml")
+	if err := os.WriteFile(valuesPath, []byte(hc.ValuesContent), 0644); err != nil {
+		return wrapper.Wrap(fmt.Errorf("could not write values: %w", err))
+	}
+	log.DebugContext(ctx, "wrote values", "path", valuesPath)
+
+	// TODO: Cache the chart
+
+	// Run charts
+	chart := hc.Chart
+	chartPath := fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
+	helmOut, err := runCmd(ctx, "helm", "template", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Name, chartPath)
+	if err != nil {
+		return wrapper.Wrap(fmt.Errorf("could not run helm template: %w", err))
+	}
+
+	r.Content = helmOut.stdout.String()
+
+	return nil
+}
+
+// remove cleans up path, useful for temporary directories.
+func remove(ctx context.Context, path string) {
+	log := logger.FromContext(ctx)
+	if err := os.RemoveAll(path); err != nil {
+		log.WarnContext(ctx, "could not remove", "err", err, "path", path)
+	} else {
+		log.DebugContext(ctx, "removed", "path", path)
+	}
 }

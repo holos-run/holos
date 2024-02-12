@@ -25,6 +25,9 @@ _apiVersion: "holos.run/v1alpha1"
 	...
 }
 
+// #TargetNamespace is the target namespace for a holos component.
+#TargetNamespace: string
+
 // Kubernetes API Objects
 #Namespace: corev1.#Namespace & #NamespaceMeta
 #ConfigMap: corev1.#ConfigMap
@@ -92,7 +95,7 @@ _Platform: #Platform
 	// apiVersion is the output api version
 	apiVersion: _apiVersion
 	// kind is a discriminator of the type of output
-	kind: #PlatformSpec.kind | #KubernetesObjects.kind | #ChartValues.kind
+	kind: #PlatformSpec.kind | #KubernetesObjects.kind | #HelmChart.kind
 	// name holds a unique name suitable for a filename
 	metadata: name: string
 	// contentType is the standard MIME type indicating the content type of the content field
@@ -120,46 +123,36 @@ _Platform: #Platform
 	platform: _Platform
 }
 
-// #ChartRepository defines an upstream helm chart repository.
-#ChartRepository: {
-	name: string
-	url: string
-}
-
-// #Chart defines a helm chart
+// #Chart defines an upstream helm chart
 #Chart: {
 	name: string
 	version: string
-	repository: string
+	repository: {
+		name: string
+		url: string
+	}
 }
 
-// #ChartValues is the output schema of a holos component which produces values for a helm chart.
-#ChartValues: {
+// #HelmChart is a holos component which produces kubernetes api objects from cue values provided to the helm template command.
+#HelmChart: {
 	#OutputTypeMeta
-	kind: "ChartValues"
+	kind: "HelmChart"
 	// ksObjects holds the flux Kustomization objects for gitops.
 	ksObjects: [...#Kustomization] | *[#Kustomization]
 	// ksContent is the yaml representation of kustomization.
 	ksContent: yaml.MarshalStream(ksObjects)
-	// repositories defines upstream chart repositories.
-	repositories: [...#ChartRepository]
-	// charts defines charts to provide values to.
-	charts: [...#Chart]
-	// values holds the chart values.
+	// namespace defines the value passed to the helm --namespace flag
+	namespace: #TargetNamespace
+	// chart defines the upstream helm chart to process.
+	chart: #Chart
+	// values represents the helm values to provide to the chart.
 	values: {...}
-	// valuesObject mixes platform and component instance data into the helm values.
-	valuesObject: {
-		values
-		// global values avoids problems with upstream charts that specify openapi schema of their values.
-		global: {
-			platform: _Platform
-			instance: #InputKeys
-		}
-	}
 	// valuesContent holds the values yaml
-	valuesContent: yaml.Marshal(valuesObject)
+	valuesContent: yaml.Marshal(values)
 	// platform returns the platform data structure for visibility / troubleshooting.
 	platform: _Platform
+	// instance returns the key values of the holos component instance.
+	instance: #InputKeys
 }
 
 // #PlatformSpec is the output schema of a platform specification.
@@ -168,4 +161,4 @@ _Platform: #Platform
 	kind: "PlatformSpec"
 }
 
-#Output: #PlatformSpec | #KubernetesObjects | #ChartValues
+#Output: #PlatformSpec | #KubernetesObjects | #HelmChart

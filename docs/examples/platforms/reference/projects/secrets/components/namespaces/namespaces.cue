@@ -5,6 +5,6 @@ package holos
 metadata: name: #InstanceName
 objects: [
 	#Namespace & {
-		metadata: name: "external-secrets"
+		metadata: name: #TargetNamespace
 	}
 ]
