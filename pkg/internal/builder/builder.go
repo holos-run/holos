@@ -5,7 +5,9 @@ package builder
 
 import (
 	"context"
+	"cuelang.org/go/cue/build"
 	"fmt"
+	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"os"
@@ -73,6 +75,27 @@ type Result struct {
 	KsContent string   `json:"ksContent,omitempty"`
 }
 
+type Repository struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}
+
+type Chart struct {
+	Name       string `json:"name"`
+	Version    string `json:"version"`
+	Repository string `json:"repository"`
+}
+
+// A ChartValues represents a helm command to provide chart values in order to render kubernetes api objects.
+type ChartValues struct {
+	APIVersion   string       `json:"apiVersion"`
+	Kind         string       `json:"kind"`
+	Metadata     Metadata     `json:"metadata"`
+	KsContent    string       `json:"ksContent"`
+	Repositories []Repository `json:"repositories"`
+	Charts       []Chart      `json:"charts"`
+}
+
 // Name returns the metadata name of the result. Equivalent to the
 // OrderedComponent name specified in platform.yaml in the holos prototype.
 func (r *Result) Name() string {
@@ -109,15 +132,15 @@ func (b *Builder) Cluster() string {
 	return b.cfg.cluster
 }
 
-func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
+// Instances returns the cue build instances being built.
+func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
 	log := logger.FromContext(ctx)
-	cueCtx := cuecontext.New()
-	results := make([]*Result, 0, len(b.cfg.args))
 
-	dir, err := b.findCueMod()
+	mod, err := b.findCueMod()
 	if err != nil {
 		return nil, wrapper.Wrap(err)
 	}
+	dir := string(mod)
 
 	cfg := load.Config{Dir: dir}
 
@@ -142,7 +165,16 @@ func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
 	cfg.Tags = append(cfg.Tags, "cluster="+b.Cluster())
 	log.DebugContext(ctx, fmt.Sprintf("configured cue tags: %v", cfg.Tags))
 
-	instances := load.Instances(args, &cfg)
+	return load.Instances(args, &cfg), nil
+}
+
+func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
+	results = make([]*Result, 0, len(b.cfg.args))
+	cueCtx := cuecontext.New()
+	instances, err := b.Instances(ctx)
+	if err != nil {
+		return results, err
+	}
 
 	for _, instance := range instances {
 		var info buildInfo
@@ -165,10 +197,16 @@ func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
 
 		switch kind := info.Kind; kind {
 		case Kube:
+			// TODO: Decode into a intermediate struct
 			if err := value.Decode(&result); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 			}
 		case Helm:
+			var chartValues ChartValues
+			if err := value.Decode(&chartValues); err != nil {
+				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
+			}
+			fmt.Printf("%#v\n\n", chartValues)
 			return nil, wrapper.Wrap(fmt.Errorf("helm not implemented"))
 		default:
 			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
@@ -181,14 +219,15 @@ func (b *Builder) Run(ctx context.Context) ([]*Result, error) {
 // findCueMod returns the root module location containing the cue.mod file or
 // directory or an error if the builder arguments do not share a common root
 // module.
-func (b *Builder) findCueMod() (dir string, err error) {
+func (b *Builder) findCueMod() (dir holos.PathCueMod, err error) {
 	for _, origPath := range b.cfg.args {
-		var path string
-		if path, err = filepath.Abs(origPath); err != nil {
-			return
+		absPath, err := filepath.Abs(origPath)
+		if err != nil {
+			return "", err
 		}
+		path := holos.PathCueMod(absPath)
 		for {
-			if _, err := os.Stat(filepath.Join(path, "cue.mod")); err == nil {
+			if _, err := os.Stat(filepath.Join(string(path), "cue.mod")); err == nil {
 				if dir != "" && dir != path {
 					return "", fmt.Errorf("multiple modules not supported: %v is not %v", dir, path)
 				}
@@ -197,7 +236,7 @@ func (b *Builder) findCueMod() (dir string, err error) {
 			} else if !os.IsNotExist(err) {
 				return "", err
 			}
-			parentPath := filepath.Dir(path)
+			parentPath := holos.PathCueMod(filepath.Dir(string(path)))
 			if parentPath == path {
 				return "", fmt.Errorf("no cue.mod from root to leaf: %v", origPath)
 			}

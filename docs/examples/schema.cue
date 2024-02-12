@@ -120,14 +120,35 @@ _Platform: #Platform
 	platform: _Platform
 }
 
+// #ChartRepository defines an upstream helm chart repository.
+#ChartRepository: {
+	name: string
+	url: string
+}
+
+// #Chart defines a helm chart
+#Chart: {
+	name: string
+	version: string
+	repository: string
+}
+
 // #ChartValues is the output schema of a holos component which produces values for a helm chart.
 #ChartValues: {
 	#OutputTypeMeta
 	kind: "ChartValues"
-	// ksObjects holds the flux Kustomization objects for gitops
+	// ksObjects holds the flux Kustomization objects for gitops.
 	ksObjects: [...#Kustomization] | *[]
-	// ksContent is the yaml representation of kustomization
+	// ksContent is the yaml representation of kustomization.
 	ksContent: yaml.MarshalStream(ksObjects)
+	// repositories defines upstream chart repositories.
+	repositories: [...#ChartRepository]
+	// charts defines charts to provide values to.
+	charts: [...#Chart]
+	// values holds the chart values object.
+	values: {}
+	// valuesContent holds the values yaml
+	valuesContent: yaml.Marshal(values)
 	// platform returns the platform data structure for visibility / troubleshooting.
 	platform: _Platform
 }

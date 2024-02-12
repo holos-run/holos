@@ -9,7 +9,8 @@ import (
 	"os"
 )
 
-// An Option configures a Config
+// An Option configures a Config using [functional
+// options](https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html).
 type Option func(o *options)
 
 type options struct {
@@ -17,12 +18,12 @@ type options struct {
 	stderr io.Writer
 }
 
-// Stdout redirects standard output to w
+// Stdout redirects standard output to w, useful for test capture.
 func Stdout(w io.Writer) Option {
 	return func(o *options) { o.stdout = w }
 }
 
-// Stderr redirects standard error to w
+// Stderr redirects standard error to w, useful for test capture.
 func Stderr(w io.Writer) Option {
 	return func(o *options) { o.stderr = w }
 }
@@ -51,7 +52,9 @@ func New(opts ...Option) *Config {
 	return cfg
 }
 
-// Config holds configuration for the whole program, used by main()
+// Config holds configuration for the whole program, used by main(). The config
+// should be initialized early at a well known location in the program lifecycle
+// then remain immutable.
 type Config struct {
 	logConfig      *logger.Config
 	writeTo        string
@@ -63,7 +66,7 @@ type Config struct {
 	clusterFlagSet *flag.FlagSet
 }
 
-// LogFlagSet returns the logging *flag.FlagSet
+// LogFlagSet returns the logging *flag.FlagSet for use by the command handler.
 func (c *Config) LogFlagSet() *flag.FlagSet {
 	return c.logConfig.FlagSet()
 }
@@ -93,12 +96,12 @@ func (c *Config) Finalize() error {
 	return nil
 }
 
-// Vet validates the config
+// Vet validates the config.
 func (c *Config) Vet() error {
 	return c.logConfig.Vet()
 }
 
-// Logger returns a *slog.Logger configured by the user
+// Logger returns a *slog.Logger configured by the user.
 func (c *Config) Logger() *slog.Logger {
 	if c.logger != nil {
 		return c.logger
@@ -127,12 +130,12 @@ func (c *Config) WriteTo() string {
 	return c.writeTo
 }
 
-// ClusterName returns the configured cluster name
+// ClusterName returns the cluster name configured by flags.
 func (c *Config) ClusterName() string {
 	return c.clusterName
 }
 
-// getenv is equivalent to os.Getenv() with a default value
+// getenv is equivalent to os.LookupEnv with a default value.
 func getenv(key, defaultValue string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
