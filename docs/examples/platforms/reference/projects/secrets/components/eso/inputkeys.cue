@@ -6,6 +6,3 @@ package holos
 	project: "secrets"
 	service: "eso"
 }
-
-// Holos component name
-metadata: name: #InstanceName

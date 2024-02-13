@@ -164,3 +164,6 @@ _Platform: #Platform
 }
 
 #Output: #PlatformSpec | #KubernetesObjects | #HelmChart
+
+// Holos component name
+metadata: name: #InstanceName
