@@ -14,6 +14,8 @@ _apiVersion: "holos.run/v1alpha1"
 
 // #InstanceName is the name of the holos component instance being managed varying by stage, project, and component names.
 #InstanceName: "\(#InputKeys.stage)-\(#InputKeys.project)-\(#InputKeys.component)"
+// #InstancePrefix is the stage and project without the component name.  Useful for dependency management among multiple components for a project stage.
+#InstancePrefix: "\(#InputKeys.stage)-\(#InputKeys.project)"
 
 // #NamespaceMeta defines standard metadata for namespaces.
 // Refer to https://kubernetes.io/docs/reference/labels-annotations-taints/#kubernetes-io-metadata-name
@@ -116,7 +118,7 @@ _Platform: #Platform
 	// out holds the rendered yaml text stream of kubernetes api objects.
 	content: yaml.MarshalStream(objects)
 	// ksObjects holds the flux Kustomization objects for gitops
-	ksObjects: [...#Kustomization] | *[]
+	ksObjects: [...#Kustomization] | *[#Kustomization]
 	// ksContent is the yaml representation of kustomization
 	ksContent: yaml.MarshalStream(ksObjects)
 	// platform returns the platform data structure for visibility / troubleshooting.
