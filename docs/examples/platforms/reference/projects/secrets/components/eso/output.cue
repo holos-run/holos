@@ -1,6 +1,6 @@
 package holos
 
-#Kustomization: spec: dependsOn: [{name: "\(#InstancePrefix)-namespaces"}]
+#Kustomization: spec: dependsOn: [{name: #InstancePrefix+"-namespaces"}]
 
 #HelmChart & {
 	values: installCrds: true

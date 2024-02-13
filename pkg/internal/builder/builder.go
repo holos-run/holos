@@ -26,6 +26,8 @@ const (
 	// Helm is the value of the kind field of holos build output indicating helm
 	// values and helm command information.
 	Helm = "HelmChart"
+	// ChartDir is the chart cache directory name.
+	ChartDir = "vendor"
 )
 
 // An Option configures a Builder
@@ -126,7 +128,7 @@ func (r *Result) Save(ctx context.Context, path string, content string) error {
 		log.WarnContext(ctx, "could not write", "path", path, "err", err)
 		return wrapper.Wrap(err)
 	}
-	log.DebugContext(ctx, "wrote "+path, "action", "write", "path", path, "status", "ok")
+	log.DebugContext(ctx, "out: wrote "+path, "action", "write", "path", path, "status", "ok")
 	return nil
 }
 
@@ -220,7 +222,7 @@ func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 			}
 			// runHelm populates result.Content from helm template output.
-			if err := runHelm(ctx, &helmChart, &result); err != nil {
+			if err := runHelm(ctx, &helmChart, &result, holos.PathComponent(instance.Dir)); err != nil {
 				return nil, err
 			}
 		default:
@@ -275,26 +277,35 @@ func runCmd(ctx context.Context, name string, args ...string) (result runResult,
 	cmd.Stdout = result.stdout
 	cmd.Stderr = result.stderr
 	log := logger.FromContext(ctx)
-	log.DebugContext(ctx, "running: "+name, "name", name, "args", args)
+	log.DebugContext(ctx, "run: "+name, "name", name, "args", args)
 	err = cmd.Run()
 	return
 }
 
 // runHelm provides the values produced by CUE to helm template and returns
 // the rendered kubernetes api objects in the result.
-func runHelm(ctx context.Context, hc *HelmChart, r *Result) error {
+func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathComponent) error {
 	log := logger.FromContext(ctx).With("chart", hc.Chart.Name)
-	// Add repositories
-	repo := hc.Chart.Repository
-	out, err := runCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL)
-	if err != nil {
-		log.ErrorContext(ctx, "could not run helm", "stderr", out.stderr.String(), "stdout", out.stdout.String())
-		return wrapper.Wrap(fmt.Errorf("could not run helm repo add: %w", err))
-	}
-	out, err = runCmd(ctx, "helm", "repo", "update", repo.Name)
-	if err != nil {
-		log.ErrorContext(ctx, "could not run helm", "stderr", out.stderr.String(), "stdout", out.stdout.String())
-		return wrapper.Wrap(fmt.Errorf("could not run helm repo update: %w", err))
+
+	cachedChartPath := filepath.Join(string(path), ChartDir, hc.Chart.Name)
+	if isNotExist(cachedChartPath) {
+		// Add repositories
+		repo := hc.Chart.Repository
+		out, err := runCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL)
+		if err != nil {
+			log.ErrorContext(ctx, "could not run helm", "stderr", out.stderr.String(), "stdout", out.stdout.String())
+			return wrapper.Wrap(fmt.Errorf("could not run helm repo add: %w", err))
+		}
+		// Update repository
+		out, err = runCmd(ctx, "helm", "repo", "update", repo.Name)
+		if err != nil {
+			log.ErrorContext(ctx, "could not run helm", "stderr", out.stderr.String(), "stdout", out.stdout.String())
+			return wrapper.Wrap(fmt.Errorf("could not run helm repo update: %w", err))
+		}
+		// Cache the chart
+		if err := cacheChart(ctx, path, ChartDir, hc.Chart); err != nil {
+			return fmt.Errorf("could not cache chart: %w", err)
+		}
 	}
 
 	// Write values file
@@ -304,19 +315,15 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result) error {
 	}
 	defer remove(ctx, tempDir)
 
-	// Write values file
 	valuesPath := filepath.Join(tempDir, "values.yaml")
 	if err := os.WriteFile(valuesPath, []byte(hc.ValuesContent), 0644); err != nil {
 		return wrapper.Wrap(fmt.Errorf("could not write values: %w", err))
 	}
-	log.DebugContext(ctx, "wrote values", "path", valuesPath)
-
-	// TODO: Cache the chart
+	log.DebugContext(ctx, "helm: wrote values", "path", valuesPath, "bytes", len(hc.ValuesContent))
 
 	// Run charts
 	chart := hc.Chart
-	chartPath := fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
-	helmOut, err := runCmd(ctx, "helm", "template", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Name, chartPath)
+	helmOut, err := runCmd(ctx, "helm", "template", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Name, cachedChartPath)
 	if err != nil {
 		return wrapper.Wrap(fmt.Errorf("could not run helm template: %w", err))
 	}
@@ -330,8 +337,39 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result) error {
 func remove(ctx context.Context, path string) {
 	log := logger.FromContext(ctx)
 	if err := os.RemoveAll(path); err != nil {
-		log.WarnContext(ctx, "could not remove", "err", err, "path", path)
+		log.WarnContext(ctx, "tmp: could not remove", "err", err, "path", path)
 	} else {
-		log.DebugContext(ctx, "removed", "path", path)
+		log.DebugContext(ctx, "tmp: removed", "path", path)
 	}
+}
+
+func isNotExist(path string) bool {
+	_, err := os.Stat(path)
+	return os.IsNotExist(err)
+}
+
+// cacheChart stores a cached copy of Chart in the chart sub-directory of path.
+func cacheChart(ctx context.Context, path holos.PathComponent, chartDir string, chart Chart) error {
+	log := logger.FromContext(ctx)
+
+	cacheTemp, err := os.MkdirTemp(string(path), chartDir)
+	if err != nil {
+		return wrapper.Wrap(fmt.Errorf("could not make temp dir: %w", err))
+	}
+	defer remove(ctx, cacheTemp)
+
+	chartName := fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
+	helmOut, err := runCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, chartName)
+	if err != nil {
+		return wrapper.Wrap(fmt.Errorf("could not run helm pull: %w", err))
+	}
+	log.Debug("helm pull", "stdout", helmOut.stdout, "stderr", helmOut.stderr)
+
+	cachePath := filepath.Join(string(path), chartDir)
+	if err := os.Rename(cacheTemp, cachePath); err != nil {
+		return wrapper.Wrap(fmt.Errorf("could not rename: %w", err))
+	}
+	log.InfoContext(ctx, "cached", "chart", chart.Name, "version", chart.Version, "path", cachePath)
+
+	return nil
 }
