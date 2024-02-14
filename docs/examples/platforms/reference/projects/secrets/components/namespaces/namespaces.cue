@@ -6,5 +6,5 @@ metadata: name: #InstanceName
 objects: [
 	#Namespace & {
 		metadata: name: #TargetNamespace
-	}
+	},
 ]

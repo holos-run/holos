@@ -4,6 +4,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ksv1 "kustomize.toolkit.fluxcd.io/kustomization/v1"
 	corev1 "k8s.io/api/core/v1"
+	es "external-secrets.io/externalsecret/v1beta1"
+	ss "external-secrets.io/secretstore/v1beta1"
 	"encoding/yaml"
 )
 
@@ -14,6 +16,7 @@ _apiVersion: "holos.run/v1alpha1"
 
 // #InstanceName is the name of the holos component instance being managed varying by stage, project, and component names.
 #InstanceName: "\(#InputKeys.stage)-\(#InputKeys.project)-\(#InputKeys.component)"
+
 // #InstancePrefix is the stage and project without the component name.  Useful for dependency management among multiple components for a project stage.
 #InstancePrefix: "\(#InputKeys.stage)-\(#InputKeys.project)"
 
@@ -33,27 +36,67 @@ _apiVersion: "holos.run/v1alpha1"
 // Kubernetes API Objects
 #Namespace: corev1.#Namespace & #NamespaceMeta
 #ConfigMap: corev1.#ConfigMap
+
+// Flux Kustomization CRDs
 #Kustomization: ksv1.#Kustomization & {
 	metadata: {
-		name: #InstanceName,
-		namespace: string | *"flux-system",
+		name:      #InstanceName
+		namespace: string | *"flux-system"
 	}
 	spec: ksv1.#KustomizationSpec & {
-		interval: string | *"30m0s"
-		path: string | *"deploy/clusters/\(#InputKeys.cluster)/components/\(#InstanceName)"
-		prune: bool | *true
+		interval:      string | *"30m0s"
+		path:          string | *"deploy/clusters/\(#InputKeys.cluster)/components/\(#InstanceName)"
+		prune:         bool | *true
 		retryInterval: string | *"2m0s"
 		sourceRef: {
 			kind: string | *"GitRepository"
 			name: string | *"flux-system"
 		}
 		timeout: string | *"3m0s"
-		wait: bool | *true
+		wait:    bool | *true
 	}
 }
 
+// External Secrets CRDs
+#ExternalSecret: es.#ExternalSecret & {
+	_name: string
+	metadata: {
+		namespace: string | *"default"
+		name:      _name
+	}
+	spec: {
+		dataFrom: [{extract: key: "ns/" + metadata.namespace + "/" + _name}]
+		refreshInterval: string | *"1h"
+		secretStoreRef: {
+			kind: string | *"SecretStore"
+			name: string | *"default"
+		}
+		target: {
+			creationPolicy: string | *"Owner"
+		}
+	}
+}
 
-// #InputKeys defines the set of cue tags required to build a cue holos component. The values are used as lookup keys into the _Platform data.
+#SecretStore: ss.#SecretStore & {
+	metadata: {
+		name:      string | *"default"
+		namespace: string | *#TargetNamespace
+	}
+	spec: provider: {
+		vault: {
+			auth: kubernetes: {
+				mountPath: #InputKeys.cluster
+				role:      string | *"default"
+				serviceAccountRef: name: string | *"default"
+			}
+			path:    string | *"kv/k8s"
+			server:  "https://vault.core." + #Platform.org.domain
+			version: string | *"v2"
+		}
+	}
+}
+
+// #InputKeys defines the set of cue tags required to build a cue holos component. The values are used as lookup keys into the #Platform data.
 #InputKeys: {
 	// cluster is usually the only key necessary when working with a component on the command line.
 	cluster: string @tag(cluster, type=string)
@@ -71,11 +114,11 @@ _apiVersion: "holos.run/v1alpha1"
 #Platform: {
 	// org holds user defined values scoped organization wide.  A platform has one and only one organization.
 	org: {
-		name: string
+		name:   string
 		domain: string
 	}
 	clusters: [ID=_]: {
-		name: string & ID
+		name:    string & ID
 		region?: string
 	}
 	stages: [ID=_]: {
@@ -89,8 +132,6 @@ _apiVersion: "holos.run/v1alpha1"
 		name: string & ID
 	}
 }
-// _PlatformData stores the values of the primary lookup table.
-_Platform: #Platform
 
 // #OutputTypeMeta is shared among all output types
 #OutputTypeMeta: {
@@ -111,6 +152,7 @@ _Platform: #Platform
 // #KubernetesObjectOutput is the output schema of a single component.
 #KubernetesObjects: {
 	#OutputTypeMeta
+
 	// kind KubernetesObjects provides a yaml text stream of kubernetes api objects in the out field.
 	kind: "KubernetesObjects"
 	// objects holds a list of the kubernetes api objects to configure.
@@ -122,16 +164,16 @@ _Platform: #Platform
 	// ksContent is the yaml representation of kustomization
 	ksContent: yaml.MarshalStream(ksObjects)
 	// platform returns the platform data structure for visibility / troubleshooting.
-	platform: _Platform
+	platform: #Platform
 }
 
 // #Chart defines an upstream helm chart
 #Chart: {
-	name: string
+	name:    string
 	version: string
 	repository: {
 		name: string
-		url: string
+		url:  string
 	}
 }
 
@@ -152,7 +194,7 @@ _Platform: #Platform
 	// valuesContent holds the values yaml
 	valuesContent: yaml.Marshal(values)
 	// platform returns the platform data structure for visibility / troubleshooting.
-	platform: _Platform
+	platform: #Platform
 	// instance returns the key values of the holos component instance.
 	instance: #InputKeys
 }
