@@ -9,22 +9,24 @@ import (
 	"strings"
 )
 
-// build is the internal implementation of the build cli command
-func build(cmd *cobra.Command, args []string) error {
-	build := builder.New(builder.Entrypoints(args))
-	results, err := build.Run(cmd.Context())
-	if err != nil {
-		return err
+// makeBuildRunFunc returns the internal implementation of the build cli command
+func makeBuildRunFunc(cfg *config.Config) runFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
+		results, err := build.Run(cmd.Context())
+		if err != nil {
+			return err
+		}
+		outs := make([]string, 0, len(results))
+		for _, result := range results {
+			outs = append(outs, result.Content)
+		}
+		out := strings.Join(outs, "---\n")
+		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {
+			return wrapper.Wrap(err)
+		}
+		return nil
 	}
-	outs := make([]string, 0, len(results))
-	for _, result := range results {
-		outs = append(outs, result.Content)
-	}
-	out := strings.Join(outs, "---\n")
-	if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {
-		return wrapper.Wrap(err)
-	}
-	return nil
 }
 
 // newBuildCmd returns the build subcommand for the root command
@@ -32,6 +34,7 @@ func newBuildCmd(cfg *config.Config) *cobra.Command {
 	cmd := newCmd("build [directory...]")
 	cmd.Args = cobra.MinimumNArgs(1)
 	cmd.Short = "build kubernetes api objects from a directory"
-	cmd.RunE = build
+	cmd.RunE = makeBuildRunFunc(cfg)
+	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
 	return cmd
 }
