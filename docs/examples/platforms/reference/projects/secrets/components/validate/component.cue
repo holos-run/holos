@@ -4,7 +4,10 @@ package holos
 
 objects: [
 	#SecretStore,
-	#ExternalSecret & {_name: "validate"},
+	#ExternalSecret & {
+		_name: "validate"
+		spec: dataFrom: [{extract: key: "ns/" + #TargetNamespace + "/test"}]
+	}
 ]
 
 {} & #KubernetesObjects

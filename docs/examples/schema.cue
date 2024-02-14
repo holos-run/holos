@@ -65,7 +65,6 @@ _apiVersion: "holos.run/v1alpha1"
 		name:      _name
 	}
 	spec: {
-		dataFrom: [{extract: key: "ns/" + metadata.namespace + "/" + _name}]
 		refreshInterval: string | *"1h"
 		secretStoreRef: {
 			kind: string | *"SecretStore"
