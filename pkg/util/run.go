@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"context"
+	"os"
 	"os/exec"
 
 	"github.com/holos-run/holos/pkg/logger"
@@ -39,4 +40,17 @@ func RunCmd(ctx context.Context, name string, args ...string) (result RunResult,
 	log.DebugContext(ctx, "running: "+name, "name", name, "args", args)
 	err = cmd.Run()
 	return result, err
+}
+
+// RunInteractiveCmd runs a command within a context but allows the command to
+// accept stdin interactively from the user. The caller is expected to handle
+// errors.
+func RunInteractiveCmd(ctx context.Context, name string, args ...string) error {
+	cmd := exec.CommandContext(ctx, name, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	log := logger.FromContext(ctx)
+	log.DebugContext(ctx, "running: "+name, "name", name, "args", args)
+	return cmd.Run()
 }
