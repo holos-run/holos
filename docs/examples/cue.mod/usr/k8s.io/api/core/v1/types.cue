@@ -9,3 +9,8 @@ package v1
   apiVersion: "v1"
   kind: "ConfigMap"
 }
+
+#ServiceAccount: {
+  apiVersion: "v1"
+  kind: "ServiceAccount"
+}

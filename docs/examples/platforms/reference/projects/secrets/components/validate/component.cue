@@ -7,7 +7,7 @@ objects: [
 	#ExternalSecret & {
 		_name: "validate"
 		spec: dataFrom: [{extract: key: "ns/" + #TargetNamespace + "/test"}]
-	}
+	},
 ]
 
 {} & #KubernetesObjects

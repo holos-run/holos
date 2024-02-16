@@ -1,0 +1,47 @@
+# Pod to try out the gcloud cli using workload identity federation.
+# Refer to: https://cloud.google.com/iam/docs/workload-identity-federation-with-kubernetes#kubernetes
+#
+# Use gcloud auth print-access-token to test that login worked ok.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: eso-creds-refresher
+spec:
+  serviceAccountName: eso-creds-refresher
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+    runAsNonRoot: true
+    runAsUser: 1000
+  containers:
+    - name: gcloud
+      image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+      securityContext:
+        capabilities:
+          drop: [ALL]
+        allowPrivilegeEscalation: false
+      command: ["/bin/bash"]
+      args: ["/config/entrypoint"]
+      env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: "/config/credential-configuration.json"
+        - name: CLOUDSDK_CORE_PROJECT
+          value: "$PROJECT_ID"
+      volumeMounts:
+        - name: config
+          mountPath: "/config"
+          readOnly: true
+        - name: token
+          mountPath: "/var/run/service-account"
+          readOnly: true
+  volumes:
+    - name: token
+      projected:
+        sources:
+          - serviceAccountToken:
+              path: token
+              expirationSeconds: 3600
+              audience: //iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/holos/providers/k8s-$HOLOS_CLUSTER_NAME
+    - name: config
+      configMap:
+        name: eso-creds-refresher

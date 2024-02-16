@@ -4,6 +4,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ksv1 "kustomize.toolkit.fluxcd.io/kustomization/v1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	es "external-secrets.io/externalsecret/v1beta1"
 	ss "external-secrets.io/secretstore/v1beta1"
 	"encoding/yaml"
@@ -14,31 +15,53 @@ _apiVersion: "holos.run/v1alpha1"
 // #Name defines the name: string key value pair used all over the place.
 #Name: name: string
 
+// #TargetNamespace is the target namespace for a holos component.
+#TargetNamespace: string
+
 // #InstanceName is the name of the holos component instance being managed varying by stage, project, and component names.
 #InstanceName: "\(#InputKeys.stage)-\(#InputKeys.project)-\(#InputKeys.component)"
 
 // #InstancePrefix is the stage and project without the component name.  Useful for dependency management among multiple components for a project stage.
 #InstancePrefix: "\(#InputKeys.stage)-\(#InputKeys.project)"
 
-// #NamespaceMeta defines standard metadata for namespaces.
-// Refer to https://kubernetes.io/docs/reference/labels-annotations-taints/#kubernetes-io-metadata-name
-#NamespaceMeta: {
-	metadata: {
-		name: string
-		labels: "kubernetes.io/metadata.name": name
+// TypeMeta indicates a kubernetes api object
+#TypeMeta: metav1.#TypeMeta
+
+// #CommonLabels are mixed into every kubernetes api object.
+#CommonLabels: {
+	"holos.run/stage.name":     #InputKeys.stage
+	"holos.run/project.name":   #InputKeys.project
+	"holos.run/component.name": #InputKeys.component
+	...
+}
+
+#ClusterObject: {
+	metadata: metav1.#ObjectMeta & {
+		labels: #CommonLabels
 	}
 	...
 }
 
-// #TargetNamespace is the target namespace for a holos component.
-#TargetNamespace: string
+#NamespaceObject: #ClusterObject & {
+	metadata: namespace: string
+}
 
 // Kubernetes API Objects
-#Namespace: corev1.#Namespace & #NamespaceMeta
-#ConfigMap: corev1.#ConfigMap
+#Namespace: corev1.#Namespace & #ClusterObject & {
+	metadata: {
+		name: string
+		labels: "kubernetes.io/metadata.name": name
+	}
+}
+#ClusterRole:        #ClusterObject & rbacv1.#ClusterRole
+#ClusterRoleBinding: #ClusterObject & rbacv1.#ClusterRoleBinding
+#ConfigMap:          #NamespaceObject & corev1.#ConfigMap
+#ServiceAccount:     #NamespaceObject & corev1.#ServiceAccount
+#Role:               #NamespaceObject & rbacv1.#Role
+#RoleBinding:        #NamespaceObject & rbacv1.#RoleBinding
 
 // Flux Kustomization CRDs
-#Kustomization: ksv1.#Kustomization & {
+#Kustomization: #NamespaceObject & ksv1.#Kustomization & {
 	metadata: {
 		name:      #InstanceName
 		namespace: string | *"flux-system"
@@ -58,7 +81,7 @@ _apiVersion: "holos.run/v1alpha1"
 }
 
 // External Secrets CRDs
-#ExternalSecret: es.#ExternalSecret & {
+#ExternalSecret: #NamespaceObject & es.#ExternalSecret & {
 	_name: string
 	metadata: {
 		namespace: string | *"default"
@@ -76,7 +99,7 @@ _apiVersion: "holos.run/v1alpha1"
 	}
 }
 
-#SecretStore: ss.#SecretStore & {
+#SecretStore: #NamespaceObject & ss.#SecretStore & {
 	metadata: {
 		name:      string | *"default"
 		namespace: string | *#TargetNamespace
@@ -107,6 +130,10 @@ _apiVersion: "holos.run/v1alpha1"
 	service: string @tag(service, type=string)
 	// component is the name of the component
 	component: string @tag(component, type=string)
+
+	// GCP Project Info used for the Provisioner Cluster
+	gcpProjectID:     string @tag(gcpProjectID, type=string)
+	gcpProjectNumber: string @tag(gcpProjectNumber, type=string)
 }
 
 // #Platform defines the primary lookup table for the platform.  Lookup keys should be limited to those defined in #KeyTags.
@@ -208,3 +235,11 @@ _apiVersion: "holos.run/v1alpha1"
 
 // Holos component name
 metadata: name: #InstanceName
+
+// PlatformNamespace is a namespace to manage for Secret provisioning, SecretStore, etc...
+#PlatformNamespace: {
+	name: string
+}
+
+// #PlatformNamespaces is a list of namespaces to manage across the platform.
+#PlatformNamespaces: [...#PlatformNamespace]

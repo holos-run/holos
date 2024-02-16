@@ -473,7 +473,7 @@ import (
 
 	// lastPhaseTransitionTime is the time the phase transitioned from one to another
 	// and automatically resets to current time everytime a volume phase transitions.
-	// This is an alpha field and requires enabling PersistentVolumeLastPhaseTransitionTime feature.
+	// This is a beta field and requires the PersistentVolumeLastPhaseTransitionTime feature to be enabled (enabled by default).
 	// +featureGate=PersistentVolumeLastPhaseTransitionTime
 	// +optional
 	lastPhaseTransitionTime?: null | metav1.#Time @go(LastPhaseTransitionTime,*metav1.Time) @protobuf(4,bytes,opt)
