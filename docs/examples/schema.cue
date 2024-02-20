@@ -235,11 +235,3 @@ _apiVersion: "holos.run/v1alpha1"
 
 // Holos component name
 metadata: name: #InstanceName
-
-// PlatformNamespace is a namespace to manage for Secret provisioning, SecretStore, etc...
-#PlatformNamespace: {
-	name: string
-}
-
-// #PlatformNamespaces is a list of namespaces to manage across the platform.
-#PlatformNamespaces: [...#PlatformNamespace]
