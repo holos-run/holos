@@ -2164,7 +2164,7 @@ import (
 
 	// serviceAccountToken is information about the serviceAccountToken data to project
 	// +optional
-	serviceAccountToken?: null | #ServiceAccountTokenProjection @go(ServiceAccountToken,*ServiceAccountTokenProjection) @protobuf(4,bytes,opt)
+	serviceAccountToken?: #ServiceAccountTokenProjection @go(ServiceAccountToken,*ServiceAccountTokenProjection) @protobuf(4,bytes,opt)
 
 	// ClusterTrustBundle allows a pod to access the `.spec.trustBundle` field
 	// of ClusterTrustBundle objects in an auto-updating file.

@@ -16,6 +16,10 @@ package holos
 	namespace: "holos-system"
 	// project is the gcp project id hosting the provisioner cluster.
 	project: #InputKeys.gcpProjectID
+	// projectNumber is the gcp project number hosting the provisioner cluster.
+	projectNumber: #InputKeys.gcpProjectNumber
 	// iamsa is the iam service account email address.
 	iamServiceAccount: name + "@" + project + ".iam.gserviceaccount.com"
+	// region is the region of the provisioner cluster
+	region: string | *"us-central1" @tag(region, type=string)
 }

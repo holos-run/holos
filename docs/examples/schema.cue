@@ -55,10 +55,11 @@ _apiVersion: "holos.run/v1alpha1"
 }
 #ClusterRole:        #ClusterObject & rbacv1.#ClusterRole
 #ClusterRoleBinding: #ClusterObject & rbacv1.#ClusterRoleBinding
-#ConfigMap:          #NamespaceObject & corev1.#ConfigMap
-#ServiceAccount:     #NamespaceObject & corev1.#ServiceAccount
 #Role:               #NamespaceObject & rbacv1.#Role
 #RoleBinding:        #NamespaceObject & rbacv1.#RoleBinding
+#ConfigMap:          #NamespaceObject & corev1.#ConfigMap
+#ServiceAccount:     #NamespaceObject & corev1.#ServiceAccount
+#Pod:                #NamespaceObject & corev1.#Pod
 
 // Flux Kustomization CRDs
 #Kustomization: #NamespaceObject & ksv1.#Kustomization & {
@@ -133,7 +134,7 @@ _apiVersion: "holos.run/v1alpha1"
 
 	// GCP Project Info used for the Provisioner Cluster
 	gcpProjectID:     string @tag(gcpProjectID, type=string)
-	gcpProjectNumber: string @tag(gcpProjectNumber, type=string)
+	gcpProjectNumber: int    @tag(gcpProjectNumber, type=int)
 }
 
 // #Platform defines the primary lookup table for the platform.  Lookup keys should be limited to those defined in #KeyTags.
