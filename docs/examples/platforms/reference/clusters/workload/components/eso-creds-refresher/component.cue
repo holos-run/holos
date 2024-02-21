@@ -15,7 +15,7 @@ objects: #CredsRefresherService.objects
 
 #TargetNamespace: #CredsRefresher.namespace
 
-let SA_NAME = #CredsRefresher.name
+let NAME = #CredsRefresher.name
 let AUD = "//iam.googleapis.com/projects/\(#InputKeys.gcpProjectNumber)/locations/global/workloadIdentityPools/holos/providers/k8s-\(#InputKeys.cluster)"
 let MOUNT = "/var/run/service-account"
 let EMAIL = #CredsRefresher.iamServiceAccount
@@ -41,9 +41,6 @@ set -xeuo pipefail
 
 cd "$HOME"
 
-# Try and get secrets from the local cluster.
-kubectl get secrets -A
-
 gcloud config set disable_usage_reporting true
 gcloud auth login --cred-file $GOOGLE_APPLICATION_CREDENTIALS
 
@@ -52,11 +49,8 @@ export KUBECONFIG="${HOME}/kubeconfig.provisioner"
 # Log into k8s.
 gcloud container clusters get-credentials provisioner --region=\(REGION)
 
-# Check access.
-kubectl version --output=yaml
-
-#Try and get service accounts from the provisioner cluster
-kubectl get serviceaccounts -A
+# Get a list of the service accounts to issue tokens for.
+kubectl get serviceaccount -A --selector=holos.run/job.name=\(NAME) --output=json > serviceaccounts.json
 
 sleep 3600
 """
@@ -98,7 +92,7 @@ sleep 3600
 			subjects: [
 				{
 					kind:      "ServiceAccount"
-					name:      SA_NAME
+					name:      NAME
 					namespace: #CredsRefresher.namespace
 				},
 			]
@@ -125,7 +119,7 @@ sleep 3600
 
 // #PodSpec is the pod spec field of the eso-creds-refresher job
 #PodSpec: {
-	serviceAccountName: SA_NAME
+	serviceAccountName: NAME
 	securityContext: {
 		seccompProfile: type: "RuntimeDefault"
 		runAsNonRoot: true

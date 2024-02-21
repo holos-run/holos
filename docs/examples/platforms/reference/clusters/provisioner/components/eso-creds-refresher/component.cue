@@ -45,6 +45,11 @@ ksObjects: []
 				resources: ["namespaces"]
 				verbs: ["list"]
 			},
+			{
+				apiGroups: [""]
+				resources: ["serviceaccounts"]
+				verbs: ["list", "get"]
+			},
 		]
 	}
 	binding: #ClusterRoleBinding & {
