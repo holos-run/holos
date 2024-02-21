@@ -14,6 +14,7 @@ import "list"
 objects: list.FlattenN(_objects, 1)
 
 _objects: [
+	#CredsRefresherIAM.role,
 	#CredsRefresherIAM.binding,
 	for ns in #PlatformNamespaces {(#PlatformNamespaceObjects & {_ns: ns}).objects},
 ]
@@ -26,24 +27,36 @@ ksObjects: []
 #InputKeys: {
 	cluster:   "provisioner"
 	project:   "secrets"
-	component: "namespaces"
+	component: "eso-creds-refresher"
 }
 
 // #CredsRefresherIAM defines the rbac policy for the job that refreshes credentials used by eso SecretStore resources in clusters other than the provisioner cluster.
 #CredsRefresherIAM: {
+	let _name = #CredsRefresher.name
+
 	// Allow the IAM Service Account to determine which service account tokens to refresh.
 	// List namespaces.
 	// List service accounts.
+	role: #ClusterRole & {
+		metadata: name: _name
+		rules: [
+			{
+				apiGroups: [""]
+				resources: ["namespaces"]
+				verbs: ["list"]
+			},
+		]
+	}
 	binding: #ClusterRoleBinding & {
-		metadata: name: #CredsRefresher.name
+		metadata: name: _name
 		roleRef: {
 			apiGroup: "rbac.authorization.k8s.io"
 			kind:     "ClusterRole"
-			name:     "view"
+			name:     _name
 		}
 		subjects: [
 			{
-				apiGroup: "rbac.authorization.k8s.io"
+				apiGroup: ""
 				kind:     "User"
 				name:     #CredsRefresher.iamServiceAccount
 			},
@@ -115,9 +128,8 @@ ksObjects: []
 		}
 		subjects: [
 			{
-				apiGroup: "rbac.authorization.k8s.io"
-				kind:     "User"
-				name:     #CredsRefresher.iamServiceAccount
+				kind: "User"
+				name: #CredsRefresher.iamServiceAccount
 			},
 		]
 	}
@@ -171,7 +183,6 @@ ksObjects: []
 		}
 		subjects: [
 			{
-				apiGroup:  "rbac.authorization.k8s.io"
 				kind:      "ServiceAccount"
 				name:      _name
 				namespace: _namespace
