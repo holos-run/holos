@@ -5,6 +5,7 @@ import (
 	ksv1 "kustomize.toolkit.fluxcd.io/kustomization/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	es "external-secrets.io/externalsecret/v1beta1"
 	ss "external-secrets.io/secretstore/v1beta1"
 	"encoding/yaml"
@@ -60,6 +61,8 @@ _apiVersion: "holos.run/v1alpha1"
 #ConfigMap:          #NamespaceObject & corev1.#ConfigMap
 #ServiceAccount:     #NamespaceObject & corev1.#ServiceAccount
 #Pod:                #NamespaceObject & corev1.#Pod
+#Job:                #NamespaceObject & batchv1.#Job
+#CronJob:            #NamespaceObject & batchv1.#CronJob
 
 // Flux Kustomization CRDs
 #Kustomization: #NamespaceObject & ksv1.#Kustomization & {
