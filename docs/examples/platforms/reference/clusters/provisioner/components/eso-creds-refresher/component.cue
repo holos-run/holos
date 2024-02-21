@@ -149,6 +149,8 @@ ksObjects: []
 			name:      _name
 			namespace: _namespace
 			annotations: "holos.run/description": "Used by SecretStores in other clusters to sync secrets with the provisioner cluster."
+			// This label is important, the Job running on the other clusters selects this label to determine which service accounts to issue tokens for.
+			labels: "holos.run/job.name": #CredsRefresher.name
 		}
 	}
 
