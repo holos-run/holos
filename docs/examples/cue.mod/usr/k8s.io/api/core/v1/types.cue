@@ -9,3 +9,13 @@ package v1
   apiVersion: "v1"
   kind: "ConfigMap"
 }
+
+#ServiceAccount: {
+  apiVersion: "v1"
+  kind: "ServiceAccount"
+}
+
+#Pod: {
+  apiVersion: "v1"
+  kind: "Pod"
+}

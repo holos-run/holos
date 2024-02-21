@@ -1,0 +1,10 @@
+namespace: holos-system
+resources:
+  - pod.yaml
+  - serviceaccount.yaml
+
+configMapGenerator:
+  - name: eso-creds-refresher
+    files:
+      - entrypoint
+      - credential-configuration.json
