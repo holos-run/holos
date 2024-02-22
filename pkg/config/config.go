@@ -11,13 +11,21 @@ import (
 	"path/filepath"
 )
 
+const DefaultProvisionerNamespace = "secrets"
+
 // An Option configures a Config using [functional
 // options](https://commandcenter.blogspot.com/2014/01/self-referential-functions-and-design.html).
 type Option func(o *options)
 
 type options struct {
+	stdin  io.Reader
 	stdout io.Writer
 	stderr io.Writer
+}
+
+// Stdin redirects standard input to r, useful for test capture.
+func Stdin(r io.Reader) Option {
+	return func(o *options) { o.stdin = r }
 }
 
 // Stdout redirects standard output to w, useful for test capture.
@@ -33,6 +41,7 @@ func Stderr(w io.Writer) Option {
 // New returns a new top level cli Config.
 func New(opts ...Option) *Config {
 	cfgOptions := &options{
+		stdin:  os.Stdin,
 		stdout: os.Stdout,
 		stderr: os.Stderr,
 	}
@@ -42,6 +51,7 @@ func New(opts ...Option) *Config {
 	writeFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	clusterFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	kvFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
+	txFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	cfg := &Config{
 		logConfig:      logger.NewConfig(),
 		writeTo:        getenv("HOLOS_WRITE_TO", "deploy"),
@@ -50,6 +60,7 @@ func New(opts ...Option) *Config {
 		clusterFlagSet: clusterFlagSet,
 		options:        cfgOptions,
 		kvFlagSet:      kvFlagSet,
+		txtarFlagSet:   txFlagSet,
 	}
 	writeFlagSet.StringVar(&cfg.writeTo, "write-to", cfg.writeTo, "write to directory")
 	clusterFlagSet.StringVar(&cfg.clusterName, "cluster-name", cfg.clusterName, "cluster name")
@@ -57,8 +68,11 @@ func New(opts ...Option) *Config {
 	if home := homedir.HomeDir(); home != "" {
 		kvDefault = filepath.Join(home, ".holos", "kubeconfig.provisioner")
 	}
-	kvDefault = getenv("HOLOS_KUBECONFIG_PROVISIONER", kvDefault)
-	cfg.kvKubeconfig = kvFlagSet.String("kubeconfig-provisioner", kvDefault, "absolute path to the provisioner cluster kubeconfig file")
+	kvDefault = getenv("HOLOS_PROVISIONER_KUBECONFIG", kvDefault)
+	cfg.kvKubeconfig = kvFlagSet.String("provisioner-kubeconfig", kvDefault, "absolute path to the provisioner cluster kubeconfig file")
+	ns := getenv("HOLOS_PROVISIONER_NAMESPACE", DefaultProvisionerNamespace)
+	cfg.kvNamespace = kvFlagSet.String("provisioner-namespace", ns, "namespace in the provisioner cluster")
+	cfg.txtarIndex = txFlagSet.Int("index", 0, "file number to print if not 0")
 	return cfg
 }
 
@@ -75,7 +89,10 @@ type Config struct {
 	writeFlagSet   *flag.FlagSet
 	clusterFlagSet *flag.FlagSet
 	kvKubeconfig   *string
+	kvNamespace    *string
 	kvFlagSet      *flag.FlagSet
+	txtarIndex     *int
+	txtarFlagSet   *flag.FlagSet
 }
 
 // LogFlagSet returns the logging *flag.FlagSet for use by the command handler.
@@ -96,6 +113,11 @@ func (c *Config) ClusterFlagSet() *flag.FlagSet {
 // KVFlagSet returns the *flag.FlagSet for kv related commands.
 func (c *Config) KVFlagSet() *flag.FlagSet {
 	return c.kvFlagSet
+}
+
+// TxtarFlagSet returns the *flag.FlagSet for txtar related commands.
+func (c *Config) TxtarFlagSet() *flag.FlagSet {
+	return c.txtarFlagSet
 }
 
 // Finalize validates the config and finalizes the startup lifecycle based on user configuration.
@@ -132,14 +154,19 @@ func (c *Config) NewTopLevelLogger() *slog.Logger {
 	return c.logConfig.NewTopLevelLogger(c.options.stderr)
 }
 
-// Stderr should be used instead of os.Stderr to capture output for tests.
-func (c *Config) Stderr() io.Writer {
-	return c.options.stderr
+// Stdin should be used instead of os.Stdin to capture input from tests.
+func (c *Config) Stdin() io.Reader {
+	return c.options.stdin
 }
 
 // Stdout should be used instead of os.Stdout to capture output for tests.
 func (c *Config) Stdout() io.Writer {
 	return c.options.stdout
+}
+
+// Stderr should be used instead of os.Stderr to capture output for tests.
+func (c *Config) Stderr() io.Writer {
+	return c.options.stderr
 }
 
 // WriteTo returns the write to path configured by flags.
@@ -179,6 +206,22 @@ func (c *Config) KVKubeconfig() string {
 		panic("kubeconfig not set")
 	}
 	return *c.kvKubeconfig
+}
+
+// KVNamespace returns the configured namespace to operate against in the provisioner cluster.
+func (c *Config) KVNamespace() string {
+	if c.kvNamespace == nil {
+		return DefaultProvisionerNamespace
+	}
+	return *c.kvNamespace
+}
+
+// TxtarIndex returns the
+func (c *Config) TxtarIndex() int {
+	if c.txtarIndex == nil {
+		return 0
+	}
+	return *c.txtarIndex
 }
 
 // getenv is equivalent to os.LookupEnv with a default value.

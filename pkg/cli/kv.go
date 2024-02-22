@@ -57,7 +57,7 @@ func makeKVGetRunFunc(cfg *config.Config) runFunc {
 			opts := metav1.ListOptions{
 				LabelSelector: NameLabel + "=" + name,
 			}
-			list, err := clientset.CoreV1().Secrets("secrets").List(ctx, opts)
+			list, err := clientset.CoreV1().Secrets(cfg.KVNamespace()).List(ctx, opts)
 			if err != nil {
 				return wrapper.Wrap(err)
 			}
@@ -87,11 +87,4 @@ func makeKVGetRunFunc(cfg *config.Config) runFunc {
 		}
 		return nil
 	}
-}
-
-func ensureNewline(b []byte) []byte {
-	if len(b) > 0 && b[len(b)-1] != '\n' {
-		b = append(b, '\n')
-	}
-	return b
 }

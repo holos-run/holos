@@ -48,6 +48,7 @@ func New(cfg *config.Config) *cobra.Command {
 	rootCmd.AddCommand(newBuildCmd(cfg))
 	rootCmd.AddCommand(newRenderCmd(cfg))
 	rootCmd.AddCommand(newKVRootCmd(cfg))
+	rootCmd.AddCommand(newTxtarCmd(cfg))
 
 	return rootCmd
 }
@@ -68,4 +69,11 @@ func newCmd(name string) *cobra.Command {
 		SilenceErrors: true,
 	}
 	return cmd
+}
+
+func ensureNewline(b []byte) []byte {
+	if len(b) > 0 && b[len(b)-1] != '\n' {
+		b = append(b, '\n')
+	}
+	return b
 }
