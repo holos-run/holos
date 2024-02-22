@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/holos-run/holos/pkg/logger"
 	"io"
+	"k8s.io/client-go/util/homedir"
 	"log/slog"
 	"os"
+	"path/filepath"
 )
 
 // An Option configures a Config using [functional
@@ -39,6 +41,7 @@ func New(opts ...Option) *Config {
 	}
 	writeFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	clusterFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
+	kvFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	cfg := &Config{
 		logConfig:      logger.NewConfig(),
 		writeTo:        getenv("HOLOS_WRITE_TO", "deploy"),
@@ -46,9 +49,16 @@ func New(opts ...Option) *Config {
 		writeFlagSet:   writeFlagSet,
 		clusterFlagSet: clusterFlagSet,
 		options:        cfgOptions,
+		kvFlagSet:      kvFlagSet,
 	}
 	writeFlagSet.StringVar(&cfg.writeTo, "write-to", cfg.writeTo, "write to directory")
 	clusterFlagSet.StringVar(&cfg.clusterName, "cluster-name", cfg.clusterName, "cluster name")
+	kvDefault := ""
+	if home := homedir.HomeDir(); home != "" {
+		kvDefault = filepath.Join(home, ".holos", "kubeconfig.provisioner")
+	}
+	kvDefault = getenv("HOLOS_KUBECONFIG_PROVISIONER", kvDefault)
+	cfg.kvKubeconfig = kvFlagSet.String("kubeconfig-provisioner", kvDefault, "absolute path to the provisioner cluster kubeconfig file")
 	return cfg
 }
 
@@ -64,6 +74,8 @@ type Config struct {
 	finalized      bool
 	writeFlagSet   *flag.FlagSet
 	clusterFlagSet *flag.FlagSet
+	kvKubeconfig   *string
+	kvFlagSet      *flag.FlagSet
 }
 
 // LogFlagSet returns the logging *flag.FlagSet for use by the command handler.
@@ -79,6 +91,11 @@ func (c *Config) WriteFlagSet() *flag.FlagSet {
 // ClusterFlagSet returns a *flag.FlagSet wired to c *Config.  Useful for commands scoped to one cluster.
 func (c *Config) ClusterFlagSet() *flag.FlagSet {
 	return c.clusterFlagSet
+}
+
+// KVFlagSet returns the *flag.FlagSet for kv related commands.
+func (c *Config) KVFlagSet() *flag.FlagSet {
+	return c.kvFlagSet
 }
 
 // Finalize validates the config and finalizes the startup lifecycle based on user configuration.
@@ -130,9 +147,38 @@ func (c *Config) WriteTo() string {
 	return c.writeTo
 }
 
+// Printf calls fmt.Fprintf with the configured Stdout.  Errors are logged.
+func (c *Config) Printf(format string, a ...any) {
+	if _, err := fmt.Fprintf(c.Stdout(), format, a...); err != nil {
+		c.Logger().Error("could not Fprintf", "err", err)
+	}
+}
+
+// Println calls fmt.Fprintln with the configured Stdout.  Errors are logged.
+func (c *Config) Println(a ...any) {
+	if _, err := fmt.Fprintln(c.Stdout(), a...); err != nil {
+		c.Logger().Error("could not Fprintln", "err", err)
+	}
+}
+
+// Write writes to Stdout.  Errors are logged.
+func (c *Config) Write(p []byte) {
+	if _, err := c.Stdout().Write(p); err != nil {
+		c.Logger().Error("could not write", "err", err)
+	}
+}
+
 // ClusterName returns the cluster name configured by flags.
 func (c *Config) ClusterName() string {
 	return c.clusterName
+}
+
+// KVKubeconfig returns the provisioner cluster kubeconfig path.
+func (c *Config) KVKubeconfig() string {
+	if c.kvKubeconfig == nil {
+		panic("kubeconfig not set")
+	}
+	return *c.kvKubeconfig
 }
 
 // getenv is equivalent to os.LookupEnv with a default value.

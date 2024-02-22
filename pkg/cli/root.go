@@ -47,6 +47,7 @@ func New(cfg *config.Config) *cobra.Command {
 	// subcommands
 	rootCmd.AddCommand(newBuildCmd(cfg))
 	rootCmd.AddCommand(newRenderCmd(cfg))
+	rootCmd.AddCommand(newKVRootCmd(cfg))
 
 	return rootCmd
 }
