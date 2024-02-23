@@ -29,16 +29,20 @@ func New(cfg *config.Config) *cobra.Command {
 
 func makeRunFunc(cfg *config.Config) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
+		// extract an archive
 		if len(args) == 0 {
 			return extract(cfg)
 		}
+		// create an archive
 		a := &txtar.Archive{}
 		for _, name := range args {
 			if err := filepath.WalkDir(name, makeWalkFunc(a)); err != nil {
 				return wrapper.Wrap(err)
 			}
 		}
-		cfg.Write(txtar.Format(a))
+		if _, err := cfg.Stdout().Write(txtar.Format(a)); err != nil {
+			return wrapper.Wrap(err)
+		}
 		return nil
 	}
 }
