@@ -1,4 +1,4 @@
-package cli
+package build
 
 import (
 	"fmt"
@@ -30,8 +30,8 @@ func makeBuildRunFunc(cfg *config.Config) command.RunFunc {
 	}
 }
 
-// newBuildCmd returns the build subcommand for the root command
-func newBuildCmd(cfg *config.Config) *cobra.Command {
+// New returns the build subcommand for the root command
+func New(cfg *config.Config) *cobra.Command {
 	cmd := command.New("build [directory...]")
 	cmd.Args = cobra.MinimumNArgs(1)
 	cmd.Short = "build kubernetes api objects from a directory"
