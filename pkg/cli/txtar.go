@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"fmt"
+	"github.com/holos-run/holos/pkg/cli/command"
 	"github.com/holos-run/holos/pkg/config"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
@@ -14,7 +15,7 @@ import (
 )
 
 func newTxtarCmd(cfg *config.Config) *cobra.Command {
-	cmd := newCmd("txtar")
+	cmd := command.New("txtar")
 	cmd.Short = "trivial text-based file archives"
 	cmd.Long = "writes arguments to stdout otherwise extracts"
 	cmd.Args = cobra.MinimumNArgs(0)
@@ -24,7 +25,7 @@ func newTxtarCmd(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func makeTxtarRun(cfg *config.Config) runFunc {
+func makeTxtarRun(cfg *config.Config) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return txExtract(cfg)
@@ -78,12 +79,12 @@ func txExtract(cfg *config.Config) error {
 	// Print one file to stdout
 	idx := cfg.TxtarIndex()
 	if idx > 0 {
-		cfg.Write(ensureNewline(archive.Files[idx-1].Data))
+		cfg.Write(command.EnsureNewline(archive.Files[idx-1].Data))
 		return nil
 	}
 	if idx < 0 {
 		tail := len(archive.Files)
-		cfg.Write(ensureNewline(archive.Files[tail+idx].Data))
+		cfg.Write(command.EnsureNewline(archive.Files[tail+idx].Data))
 		return nil
 	}
 

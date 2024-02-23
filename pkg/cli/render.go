@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/holos-run/holos/pkg/cli/command"
 	"github.com/holos-run/holos/pkg/config"
 	"github.com/holos-run/holos/pkg/internal/builder"
 	"github.com/holos-run/holos/pkg/logger"
@@ -9,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func makeRenderRunFunc(cfg *config.Config) runFunc {
+func makeRenderRunFunc(cfg *config.Config) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if cfg.ClusterName() == "" {
 			return wrapper.Wrap(fmt.Errorf("missing cluster name"))
@@ -44,7 +45,7 @@ func makeRenderRunFunc(cfg *config.Config) runFunc {
 
 // newRenderCmd returns the render subcommand for the root command
 func newRenderCmd(cfg *config.Config) *cobra.Command {
-	cmd := newCmd("render [directory...]")
+	cmd := command.New("render [directory...]")
 	cmd.Args = cobra.MinimumNArgs(1)
 	cmd.Short = "write kubernetes api objects to the filesystem"
 	cmd.Flags().SortFlags = false

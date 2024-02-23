@@ -1,6 +1,7 @@
-package cli
+package kv
 
 import (
+	"github.com/holos-run/holos/pkg/cli/command"
 	"github.com/holos-run/holos/pkg/config"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/wrapper"
@@ -13,9 +14,9 @@ import (
 
 const NameLabel = "holos.run/secret.name"
 
-// newKVRootCmd returns the kv root command for the cli
-func newKVRootCmd(cfg *config.Config) *cobra.Command {
-	cmd := newCmd("kv")
+// New returns the kv root command for the cli
+func New(cfg *config.Config) *cobra.Command {
+	cmd := command.New("kv")
 	cmd.Short = "work with secrets in the provisioner cluster"
 	cmd.Flags().SortFlags = false
 	cmd.RunE = func(c *cobra.Command, args []string) error {
@@ -30,7 +31,7 @@ func newKVRootCmd(cfg *config.Config) *cobra.Command {
 }
 
 func newKVGetCmd(cfg *config.Config) *cobra.Command {
-	cmd := newCmd("get")
+	cmd := command.New("get")
 	cmd.Args = cobra.MinimumNArgs(1)
 	cmd.Short = "print secret data in txtar format"
 	cmd.Flags().SortFlags = false
@@ -39,7 +40,7 @@ func newKVGetCmd(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func makeKVGetRunFunc(cfg *config.Config) runFunc {
+func makeKVGetRunFunc(cfg *config.Config) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx)
@@ -82,7 +83,7 @@ func makeKVGetRunFunc(cfg *config.Config) runFunc {
 			}
 			for k, v := range secret.Data {
 				cfg.Printf("-- %s --\n", k)
-				cfg.Write(ensureNewline(v))
+				cfg.Write(command.EnsureNewline(v))
 			}
 		}
 		return nil

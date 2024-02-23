@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/holos-run/holos/pkg/cli/command"
 	"github.com/holos-run/holos/pkg/config"
 	"github.com/holos-run/holos/pkg/internal/builder"
 	"github.com/holos-run/holos/pkg/wrapper"
@@ -10,7 +11,7 @@ import (
 )
 
 // makeBuildRunFunc returns the internal implementation of the build cli command
-func makeBuildRunFunc(cfg *config.Config) runFunc {
+func makeBuildRunFunc(cfg *config.Config) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
 		results, err := build.Run(cmd.Context())
@@ -31,7 +32,7 @@ func makeBuildRunFunc(cfg *config.Config) runFunc {
 
 // newBuildCmd returns the build subcommand for the root command
 func newBuildCmd(cfg *config.Config) *cobra.Command {
-	cmd := newCmd("build [directory...]")
+	cmd := command.New("build [directory...]")
 	cmd.Args = cobra.MinimumNArgs(1)
 	cmd.Short = "build kubernetes api objects from a directory"
 	cmd.RunE = makeBuildRunFunc(cfg)
