@@ -13,6 +13,7 @@ func newListCmd(cfg *config.Config) *cobra.Command {
 	cmd.Args = cobra.NoArgs
 	cmd.Short = "list secrets"
 	cmd.Flags().SortFlags = false
+	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
 	cmd.RunE = makeListRunFunc(cfg)
 
 	return cmd

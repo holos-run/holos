@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/holos-run/holos/pkg/cli/command"
 	"github.com/holos-run/holos/pkg/config"
+	"github.com/holos-run/holos/pkg/util"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
 	"golang.org/x/tools/txtar"
 	"io"
-	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -36,7 +36,7 @@ func makeRunFunc(cfg *config.Config) command.RunFunc {
 		// create an archive
 		a := &txtar.Archive{}
 		for _, name := range args {
-			if err := filepath.WalkDir(name, makeWalkFunc(a)); err != nil {
+			if err := filepath.WalkDir(name, util.MakeWalkFunc(a)); err != nil {
 				return wrapper.Wrap(err)
 			}
 		}
@@ -45,30 +45,6 @@ func makeRunFunc(cfg *config.Config) command.RunFunc {
 		}
 		return nil
 	}
-}
-
-func makeWalkFunc(a *txtar.Archive) fs.WalkDirFunc {
-	return func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return wrapper.Wrap(err)
-		}
-
-		if !d.IsDir() {
-			if file, err := file(path); err != nil {
-				return wrapper.Wrap(err)
-			} else {
-				a.Files = append(a.Files, file)
-			}
-		}
-
-		return nil
-	}
-}
-
-func file(path string) (file txtar.File, err error) {
-	file.Name = path
-	file.Data, err = os.ReadFile(path)
-	return
 }
 
 // extract files from the configured Stdin to Stdout or the filesystem.

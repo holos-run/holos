@@ -10,6 +10,8 @@ import (
 )
 
 const NameLabel = "holos.run/secret.name"
+const OwnerLabel = "holos.run/secret.owner"
+const ClusterLabel = "holos.run/cluster.name"
 
 // New returns the kv root command for the cli
 func New(cfg *config.Config) *cobra.Command {
@@ -25,6 +27,7 @@ func New(cfg *config.Config) *cobra.Command {
 	// subcommands
 	cmd.AddCommand(newGetCmd(cfg))
 	cmd.AddCommand(newListCmd(cfg))
+	cmd.AddCommand(newPutCmd(cfg))
 	return cmd
 }
 
