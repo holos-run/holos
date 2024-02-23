@@ -1,4 +1,4 @@
-package cli
+package render
 
 import (
 	"fmt"
@@ -43,8 +43,8 @@ func makeRenderRunFunc(cfg *config.Config) command.RunFunc {
 	}
 }
 
-// newRenderCmd returns the render subcommand for the root command
-func newRenderCmd(cfg *config.Config) *cobra.Command {
+// New returns the render subcommand for the root command
+func New(cfg *config.Config) *cobra.Command {
 	cmd := command.New("render [directory...]")
 	cmd.Args = cobra.MinimumNArgs(1)
 	cmd.Short = "write kubernetes api objects to the filesystem"
