@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/holos-run/holos/pkg/cli/kv"
+	"github.com/holos-run/holos/pkg/cli/txtar"
 	"github.com/holos-run/holos/pkg/config"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/version"
@@ -45,7 +46,7 @@ func New(cfg *config.Config) *cobra.Command {
 	rootCmd.AddCommand(newBuildCmd(cfg))
 	rootCmd.AddCommand(newRenderCmd(cfg))
 	rootCmd.AddCommand(kv.New(cfg))
-	rootCmd.AddCommand(newTxtarCmd(cfg))
+	rootCmd.AddCommand(txtar.New(cfg))
 
 	return rootCmd
 }

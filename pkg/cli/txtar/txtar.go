@@ -1,4 +1,4 @@
-package cli
+package txtar
 
 import (
 	"bytes"
@@ -14,7 +14,8 @@ import (
 	"path/filepath"
 )
 
-func newTxtarCmd(cfg *config.Config) *cobra.Command {
+// New returns a new txtar command.
+func New(cfg *config.Config) *cobra.Command {
 	cmd := command.New("txtar")
 	cmd.Short = "trivial text-based file archives"
 	cmd.Long = "writes arguments to stdout otherwise extracts"
