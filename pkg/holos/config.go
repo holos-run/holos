@@ -1,10 +1,13 @@
-package config
+package holos
 
 import (
 	"flag"
 	"fmt"
 	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/pkg/wrapper"
 	"io"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 	"log/slog"
 	"os"
@@ -80,19 +83,20 @@ func New(opts ...Option) *Config {
 // should be initialized early at a well known location in the program lifecycle
 // then remain immutable.
 type Config struct {
-	logConfig      *logger.Config
-	writeTo        string
-	clusterName    string
-	logger         *slog.Logger
-	options        *options
-	finalized      bool
-	writeFlagSet   *flag.FlagSet
-	clusterFlagSet *flag.FlagSet
-	kvKubeconfig   *string
-	kvNamespace    *string
-	kvFlagSet      *flag.FlagSet
-	txtarIndex     *int
-	txtarFlagSet   *flag.FlagSet
+	logConfig            *logger.Config
+	writeTo              string
+	clusterName          string
+	logger               *slog.Logger
+	options              *options
+	finalized            bool
+	writeFlagSet         *flag.FlagSet
+	clusterFlagSet       *flag.FlagSet
+	kvKubeconfig         *string
+	kvNamespace          *string
+	kvFlagSet            *flag.FlagSet
+	txtarIndex           *int
+	txtarFlagSet         *flag.FlagSet
+	provisionerClientset *kubernetes.Clientset
 }
 
 // LogFlagSet returns the logging *flag.FlagSet for use by the command handler.
@@ -222,6 +226,22 @@ func (c *Config) TxtarIndex() int {
 		return 0
 	}
 	return *c.txtarIndex
+}
+
+// ProvisionerClientset returns a kubernetes client set for the provisioner cluster.
+func (c *Config) ProvisionerClientset() (*kubernetes.Clientset, error) {
+	if c.provisionerClientset == nil {
+		kcfg, err := clientcmd.BuildConfigFromFlags("", c.KVKubeconfig())
+		if err != nil {
+			return nil, wrapper.Wrap(err)
+		}
+		clientset, err := kubernetes.NewForConfig(kcfg)
+		if err != nil {
+			return nil, wrapper.Wrap(err)
+		}
+		c.provisionerClientset = clientset
+	}
+	return c.provisionerClientset, nil
 }
 
 // getenv is equivalent to os.LookupEnv with a default value.

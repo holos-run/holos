@@ -2,7 +2,7 @@ package cli
 
 import (
 	"bytes"
-	"github.com/holos-run/holos/pkg/config"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/version"
 	"github.com/spf13/cobra"
@@ -13,7 +13,7 @@ import (
 func newCommand() (*cobra.Command, *bytes.Buffer) {
 	var b1, b2 bytes.Buffer
 	// discard stdout for now, it's a bunch of usage messages.
-	cmd := New(config.New(config.Stdout(&b1), config.Stderr(&b2)))
+	cmd := New(holos.New(holos.Stdout(&b1), holos.Stderr(&b2)))
 	return cmd, &b2
 }
 
@@ -89,7 +89,7 @@ func TestInvalidArgs(t *testing.T) {
 	}
 	for _, args := range invalidArgs {
 		var b bytes.Buffer
-		cmd := New(config.New(config.Stdout(&b)))
+		cmd := New(holos.New(holos.Stdout(&b)))
 		cmd.SetArgs(args)
 		err := cmd.Execute()
 		if err == nil {
@@ -114,7 +114,7 @@ func TestLoggerFromContext(t *testing.T) {
 
 func TestVersion(t *testing.T) {
 	var b bytes.Buffer
-	cmd := New(config.New(config.Stdout(&b)))
+	cmd := New(holos.New(holos.Stdout(&b)))
 	cmd.SetOut(&b)
 	cmd.SetArgs([]string{"--version"})
 	if err := cmd.Execute(); err != nil {

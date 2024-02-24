@@ -1,4 +1,4 @@
-package config
+package holos
 
 import (
 	"bytes"

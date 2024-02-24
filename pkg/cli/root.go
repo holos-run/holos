@@ -2,10 +2,11 @@ package cli
 
 import (
 	"github.com/holos-run/holos/pkg/cli/build"
+	"github.com/holos-run/holos/pkg/cli/create"
 	"github.com/holos-run/holos/pkg/cli/kv"
 	"github.com/holos-run/holos/pkg/cli/render"
 	"github.com/holos-run/holos/pkg/cli/txtar"
-	"github.com/holos-run/holos/pkg/config"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/version"
 	"github.com/spf13/cobra"
@@ -13,7 +14,7 @@ import (
 )
 
 // New returns a new root *cobra.Command for command line execution.
-func New(cfg *config.Config) *cobra.Command {
+func New(cfg *holos.Config) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     "holos",
 		Short:   "holos manages a holistic integrated software development platform",
@@ -47,8 +48,13 @@ func New(cfg *config.Config) *cobra.Command {
 	// subcommands
 	rootCmd.AddCommand(build.New(cfg))
 	rootCmd.AddCommand(render.New(cfg))
-	rootCmd.AddCommand(kv.New(cfg))
+	rootCmd.AddCommand(create.New(cfg))
+
+	// Maybe not needed?
 	rootCmd.AddCommand(txtar.New(cfg))
+
+	// Deprecated, remove?
+	rootCmd.AddCommand(kv.New(cfg))
 
 	return rootCmd
 }

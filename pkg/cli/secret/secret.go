@@ -1,0 +1,133 @@
+package secret
+
+import (
+	"flag"
+	"fmt"
+	"github.com/holos-run/holos/pkg/cli/command"
+	"github.com/holos-run/holos/pkg/holos"
+	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/pkg/wrapper"
+	"github.com/spf13/cobra"
+	"io/fs"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/kubectl/pkg/util/hash"
+	"os"
+	"path/filepath"
+	"sigs.k8s.io/yaml"
+	"strings"
+)
+
+const NameLabel = "holos.run/secret.name"
+const OwnerLabel = "holos.run/secret.owner"
+const ClusterLabel = "holos.run/cluster.name"
+
+type secretData map[string][]byte
+
+type config struct {
+	files     holos.StringSlice
+	dryRun    *bool
+	cluster   *string
+	namespace *string
+}
+
+func NewCreateCmd(hc *holos.Config) *cobra.Command {
+	cmd := command.New("secret NAME [--from-file=source]")
+	cmd.Args = cobra.ExactArgs(1)
+	cmd.Short = "Create a holos secret from files or directories"
+	cmd.Flags().SortFlags = false
+
+	cfg := &config{}
+	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
+	flagSet.Var(&cfg.files, "from-file", "store files as keys in the secret")
+	cfg.namespace = flagSet.String("namespace", holos.DefaultProvisionerNamespace, "namespace in the provisioner cluster where the secret is created")
+	cfg.cluster = flagSet.String("cluster-name", "", "cluster name")
+	cfg.dryRun = flagSet.Bool("dry-run", false, "dry run")
+	cmd.Flags().AddGoFlagSet(flagSet)
+	cmd.RunE = makeCreateRunFunc(hc, cfg)
+	return cmd
+
+}
+
+func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
+	return func(cmd *cobra.Command, args []string) error {
+		secretName := args[0]
+		secret := &v1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   secretName,
+				Labels: map[string]string{NameLabel: secretName},
+			},
+			Data: make(secretData),
+		}
+
+		for _, file := range cfg.files {
+			if err := filepath.WalkDir(file, makeWalkFunc(secret.Data, file)); err != nil {
+				return wrapper.Wrap(err)
+			}
+		}
+
+		if owner := os.Getenv("USER"); owner != "" {
+			secret.Labels[OwnerLabel] = owner
+		}
+		if *cfg.cluster != "" {
+			secret.Labels[ClusterLabel] = *cfg.cluster
+		}
+
+		if secretHash, err := hash.SecretHash(secret); err != nil {
+			return wrapper.Wrap(err)
+		} else {
+			secret.Name = fmt.Sprintf("%s-%s", secret.Name, secretHash)
+		}
+
+		if *cfg.dryRun {
+			out, err := yaml.Marshal(secret)
+			if err != nil {
+				return wrapper.Wrap(err)
+			}
+			hc.Write(out)
+			return nil
+		}
+
+		cs, err := hc.ProvisionerClientset()
+		if err != nil {
+			return wrapper.Wrap(err)
+		}
+		ctx := cmd.Context()
+		secret, err = cs.CoreV1().
+			Secrets(*cfg.namespace).
+			Create(ctx, secret, metav1.CreateOptions{})
+		if err != nil {
+			return wrapper.Wrap(err)
+		}
+
+		log := logger.FromContext(ctx)
+		log.InfoContext(ctx, "created: "+secret.Name, "secret", secret.Name, "name", secretName, "namespace", secret.Namespace)
+		return nil
+	}
+}
+
+func makeWalkFunc(data secretData, root string) fs.WalkDirFunc {
+	return func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Depth is the count of path separators from the root
+		depth := strings.Count(path[len(root):], string(filepath.Separator))
+
+		if depth > 1 {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+		}
+
+		if !d.IsDir() {
+			key := filepath.Base(path)
+			if data[key], err = os.ReadFile(path); err != nil {
+				return wrapper.Wrap(err)
+			}
+		}
+
+		return nil
+	}
+}

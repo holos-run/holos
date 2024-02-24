@@ -4,7 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/holos-run/holos/pkg/cli/command"
-	"github.com/holos-run/holos/pkg/config"
+	"github.com/holos-run/holos/pkg/cli/secret"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
@@ -16,7 +17,7 @@ type getConfig struct {
 	file *string
 }
 
-func newGetCmd(cfg *config.Config) *cobra.Command {
+func newGetCmd(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("get")
 	cmd.Args = cobra.MinimumNArgs(1)
 	cmd.Short = "print secret data in txtar format"
@@ -33,7 +34,7 @@ func newGetCmd(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func makeGetRunFunc(cfg *config.Config, cf getConfig) command.RunFunc {
+func makeGetRunFunc(cfg *holos.Config, cf getConfig) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx)
@@ -44,12 +45,12 @@ func makeGetRunFunc(cfg *config.Config, cf getConfig) command.RunFunc {
 		}
 
 		for _, name := range args {
-			nlog := log.With(NameLabel, name)
+			nlog := log.With(secret.NameLabel, name)
 			opts := metav1.ListOptions{
-				LabelSelector: NameLabel + "=" + name,
+				LabelSelector: secret.NameLabel + "=" + name,
 			}
 			if name := cfg.ClusterName(); name != "" {
-				opts.LabelSelector += fmt.Sprintf(",%s=%s", ClusterLabel, name)
+				opts.LabelSelector += fmt.Sprintf(",%s=%s", secret.ClusterLabel, name)
 			}
 			list, err := cs.CoreV1().Secrets(cfg.KVNamespace()).List(ctx, opts)
 			if err != nil {

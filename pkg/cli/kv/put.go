@@ -6,7 +6,8 @@ import (
 	"flag"
 	"fmt"
 	"github.com/holos-run/holos/pkg/cli/command"
-	"github.com/holos-run/holos/pkg/config"
+	"github.com/holos-run/holos/pkg/cli/secret"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
@@ -28,7 +29,7 @@ type putConfig struct {
 	dryRun     *bool
 }
 
-func newPutCmd(cfg *config.Config) *cobra.Command {
+func newPutCmd(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("put")
 	cmd.Args = cobra.MinimumNArgs(0)
 	cmd.Short = "put a secret from stdin or file args"
@@ -47,7 +48,7 @@ func newPutCmd(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func makePutRunFunc(cfg *config.Config, pcfg putConfig) command.RunFunc {
+func makePutRunFunc(cfg *holos.Config, pcfg putConfig) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		a := &txtar.Archive{}
 
@@ -133,18 +134,18 @@ func makePutRunFunc(cfg *config.Config, pcfg putConfig) command.RunFunc {
 	}
 }
 
-func createSecret(ctx context.Context, cfg *config.Config, pcfg putConfig, a *txtar.Archive, secretName string) (*v1.Secret, error) {
+func createSecret(ctx context.Context, cfg *holos.Config, pcfg putConfig, a *txtar.Archive, secretName string) (*v1.Secret, error) {
 	secretData := make(map[string][]byte)
 	for _, file := range a.Files {
 		secretData[file.Name] = file.Data
 	}
 
-	labels := map[string]string{NameLabel: secretName}
+	labels := map[string]string{secret.NameLabel: secretName}
 	if owner := os.Getenv("USER"); owner != "" {
-		labels[OwnerLabel] = owner
+		labels[secret.OwnerLabel] = owner
 	}
 	if cluster := cfg.ClusterName(); cluster != "" {
-		labels[ClusterLabel] = cluster
+		labels[secret.ClusterLabel] = cluster
 	}
 
 	secret := &v1.Secret{

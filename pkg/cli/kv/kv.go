@@ -2,19 +2,15 @@ package kv
 
 import (
 	"github.com/holos-run/holos/pkg/cli/command"
-	"github.com/holos-run/holos/pkg/config"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-const NameLabel = "holos.run/secret.name"
-const OwnerLabel = "holos.run/secret.owner"
-const ClusterLabel = "holos.run/cluster.name"
-
 // New returns the kv root command for the cli
-func New(cfg *config.Config) *cobra.Command {
+func New(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("kv")
 	cmd.Short = "work with secrets in the provisioner cluster"
 	cmd.Flags().SortFlags = false
@@ -31,7 +27,7 @@ func New(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func newClientSet(cfg *config.Config) (*kubernetes.Clientset, error) {
+func newClientSet(cfg *holos.Config) (*kubernetes.Clientset, error) {
 	kcfg, err := clientcmd.BuildConfigFromFlags("", cfg.KVKubeconfig())
 	if err != nil {
 		return nil, wrapper.Wrap(err)

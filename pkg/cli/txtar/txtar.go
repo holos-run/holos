@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/holos-run/holos/pkg/cli/command"
-	"github.com/holos-run/holos/pkg/config"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/util"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
@@ -16,7 +16,7 @@ import (
 )
 
 // New returns a new txtar command.
-func New(cfg *config.Config) *cobra.Command {
+func New(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("txtar")
 	cmd.Short = "trivial text-based file archives"
 	cmd.Long = "writes arguments to stdout otherwise extracts"
@@ -27,7 +27,7 @@ func New(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func makeRunFunc(cfg *config.Config) command.RunFunc {
+func makeRunFunc(cfg *holos.Config) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		// extract an archive
 		if len(args) == 0 {
@@ -48,7 +48,7 @@ func makeRunFunc(cfg *config.Config) command.RunFunc {
 }
 
 // extract files from the configured Stdin to Stdout or the filesystem.
-func extract(cfg *config.Config) error {
+func extract(cfg *holos.Config) error {
 	input, err := io.ReadAll(cfg.Stdin())
 	if err != nil {
 		return wrapper.Wrap(fmt.Errorf("could not read stdin: %w", err))

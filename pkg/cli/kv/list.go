@@ -2,13 +2,14 @@ package kv
 
 import (
 	"github.com/holos-run/holos/pkg/cli/command"
-	"github.com/holos-run/holos/pkg/config"
+	"github.com/holos-run/holos/pkg/cli/secret"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func newListCmd(cfg *config.Config) *cobra.Command {
+func newListCmd(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("list")
 	cmd.Args = cobra.NoArgs
 	cmd.Short = "list secrets"
@@ -19,21 +20,21 @@ func newListCmd(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func makeListRunFunc(cfg *config.Config) command.RunFunc {
+func makeListRunFunc(cfg *holos.Config) command.RunFunc {
 	return func(cmd *cobra.Command, _ []string) error {
 		ctx := cmd.Context()
 		cs, err := newClientSet(cfg)
 		if err != nil {
 			return err
 		}
-		selector := metav1.ListOptions{LabelSelector: NameLabel}
+		selector := metav1.ListOptions{LabelSelector: secret.NameLabel}
 		secrets, err := cs.CoreV1().Secrets(cfg.KVNamespace()).List(ctx, selector)
 		if err != nil {
 			return wrapper.Wrap(err)
 		}
 		labels := make(map[string]bool)
-		for _, secret := range secrets.Items {
-			if value, ok := secret.Labels[NameLabel]; ok {
+		for _, s := range secrets.Items {
+			if value, ok := s.Labels[secret.NameLabel]; ok {
 				labels[value] = true
 			}
 		}
