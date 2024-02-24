@@ -18,6 +18,7 @@ type config struct {
 	dryRun    *bool
 	cluster   *string
 	namespace *string
+	extractTo *string
 }
 
 func newConfig() (*config, *flag.FlagSet) {

@@ -47,10 +47,12 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 			Data: make(secretData),
 		}
 
-		clusterPrefix := fmt.Sprintf("%s-", *cfg.cluster)
-		if !strings.HasPrefix(secretName, clusterPrefix) {
-			const msg = "missing cluster name prefix"
-			log.WarnContext(ctx, msg, "have", secretName, "want", clusterPrefix)
+		if *cfg.cluster != "" {
+			clusterPrefix := fmt.Sprintf("%s-", *cfg.cluster)
+			if !strings.HasPrefix(secretName, clusterPrefix) {
+				const msg = "missing cluster name prefix"
+				log.WarnContext(ctx, msg, "have", secretName, "want", clusterPrefix)
+			}
 		}
 
 		for _, file := range cfg.files {

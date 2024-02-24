@@ -21,9 +21,11 @@ const DefaultProvisionerNamespace = "secrets"
 type Option func(o *options)
 
 type options struct {
-	stdin  io.Reader
-	stdout io.Writer
-	stderr io.Writer
+	stdin                io.Reader
+	stdout               io.Writer
+	stderr               io.Writer
+	provisionerClientset kubernetes.Interface
+	clientset            kubernetes.Interface
 }
 
 // Stdin redirects standard input to r, useful for test capture.
@@ -41,6 +43,16 @@ func Stderr(w io.Writer) Option {
 	return func(o *options) { o.stderr = w }
 }
 
+// ProvisionerClientset sets the kubernetes Clientset, useful for test fake.
+func ProvisionerClientset(clientset kubernetes.Interface) Option {
+	return func(o *options) { o.provisionerClientset = clientset }
+}
+
+// ClusterClientset sets the kubernetes Clientset, useful for test fake.
+func ClusterClientset(clientset *kubernetes.Clientset) Option {
+	return func(o *options) { o.clientset = clientset }
+}
+
 // New returns a new top level cli Config.
 func New(opts ...Option) *Config {
 	cfgOptions := &options{
@@ -56,14 +68,15 @@ func New(opts ...Option) *Config {
 	kvFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	txFlagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	cfg := &Config{
-		logConfig:      logger.NewConfig(),
-		writeTo:        getenv("HOLOS_WRITE_TO", "deploy"),
-		clusterName:    getenv("HOLOS_CLUSTER_NAME", ""),
-		writeFlagSet:   writeFlagSet,
-		clusterFlagSet: clusterFlagSet,
-		options:        cfgOptions,
-		kvFlagSet:      kvFlagSet,
-		txtarFlagSet:   txFlagSet,
+		logConfig:            logger.NewConfig(),
+		writeTo:              getenv("HOLOS_WRITE_TO", "deploy"),
+		clusterName:          getenv("HOLOS_CLUSTER_NAME", ""),
+		writeFlagSet:         writeFlagSet,
+		clusterFlagSet:       clusterFlagSet,
+		options:              cfgOptions,
+		kvFlagSet:            kvFlagSet,
+		txtarFlagSet:         txFlagSet,
+		provisionerClientset: cfgOptions.provisionerClientset,
 	}
 	writeFlagSet.StringVar(&cfg.writeTo, "write-to", cfg.writeTo, "write to directory")
 	clusterFlagSet.StringVar(&cfg.clusterName, "cluster-name", cfg.clusterName, "cluster name")
@@ -96,7 +109,7 @@ type Config struct {
 	kvFlagSet            *flag.FlagSet
 	txtarIndex           *int
 	txtarFlagSet         *flag.FlagSet
-	provisionerClientset *kubernetes.Clientset
+	provisionerClientset kubernetes.Interface
 }
 
 // LogFlagSet returns the logging *flag.FlagSet for use by the command handler.
@@ -229,7 +242,7 @@ func (c *Config) TxtarIndex() int {
 }
 
 // ProvisionerClientset returns a kubernetes client set for the provisioner cluster.
-func (c *Config) ProvisionerClientset() (*kubernetes.Clientset, error) {
+func (c *Config) ProvisionerClientset() (kubernetes.Interface, error) {
 	if c.provisionerClientset == nil {
 		kcfg, err := clientcmd.BuildConfigFromFlags("", c.KVKubeconfig())
 		if err != nil {

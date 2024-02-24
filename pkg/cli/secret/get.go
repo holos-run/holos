@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
+	"path/filepath"
 	"sort"
 )
 
@@ -25,6 +26,7 @@ func NewGetCmd(hc *holos.Config) *cobra.Command {
 	flagSet.Var(&cfg.files, "to-file", "extract files from the secret")
 	cfg.printFile = flagSet.String(printFlagName, "", "print one key from the secret")
 	cfg.extract = flagSet.Bool("extract-all", false, "extract all files from the secret")
+	cfg.extractTo = flagSet.String("extract-to", ".", "extract to directory")
 
 	cmd.Flags().SortFlags = false
 	cmd.Flags().AddGoFlagSet(flagSet)
@@ -109,10 +111,11 @@ func makeGetRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 					err := fmt.Errorf("%s not found in %v", name, keys)
 					return wrapper.Wrap(err)
 				}
-				if err := os.WriteFile(name, data, 0666); err != nil {
-					return wrapper.Wrap(fmt.Errorf("could not write %s: %w", name, err))
+				path := filepath.Join(*cfg.extractTo, name)
+				if err := os.WriteFile(path, data, 0666); err != nil {
+					return wrapper.Wrap(fmt.Errorf("could not write %s: %w", path, err))
 				}
-				log.InfoContext(ctx, "wrote: "+name, "bytes", len(data))
+				log.InfoContext(ctx, "wrote: "+path, "name", name, "bytes", len(data))
 			}
 		}
 
