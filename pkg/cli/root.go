@@ -3,6 +3,7 @@ package cli
 import (
 	"github.com/holos-run/holos/pkg/cli/build"
 	"github.com/holos-run/holos/pkg/cli/create"
+	"github.com/holos-run/holos/pkg/cli/get"
 	"github.com/holos-run/holos/pkg/cli/kv"
 	"github.com/holos-run/holos/pkg/cli/render"
 	"github.com/holos-run/holos/pkg/cli/txtar"
@@ -48,6 +49,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	// subcommands
 	rootCmd.AddCommand(build.New(cfg))
 	rootCmd.AddCommand(render.New(cfg))
+	rootCmd.AddCommand(get.New(cfg))
 	rootCmd.AddCommand(create.New(cfg))
 
 	// Maybe not needed?
