@@ -15,6 +15,10 @@ objects: #CredsRefresherService.objects
 
 #TargetNamespace: #CredsRefresher.namespace
 
+#Kustomization: spec: {
+	dependsOn: [{name: #InstancePrefix + "-namespaces"}]
+}
+
 let NAME = #CredsRefresher.name
 let AUD = "//iam.googleapis.com/projects/\(#InputKeys.gcpProjectNumber)/locations/global/workloadIdentityPools/holos/providers/k8s-\(#InputKeys.cluster)"
 let MOUNT = "/var/run/service-account"

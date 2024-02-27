@@ -90,7 +90,7 @@ _apiVersion: "holos.run/v1alpha1"
 #ExternalSecret: #NamespaceObject & es.#ExternalSecret & {
 	_name: string
 	metadata: {
-		namespace: string | *"default"
+		namespace: string
 		name:      _name
 	}
 	spec: {
