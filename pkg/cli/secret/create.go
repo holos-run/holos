@@ -40,6 +40,10 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 		log := logger.FromContext(ctx)
 		secretName := args[0]
 		secret := &v1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: "v1",
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:   secretName,
 				Labels: map[string]string{NameLabel: secretName},
@@ -109,9 +113,7 @@ func makeWalkFunc(data secretData, root string) fs.WalkDirFunc {
 		depth := strings.Count(path[len(root):], string(filepath.Separator))
 
 		if depth > 1 {
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
+			return filepath.SkipDir
 		}
 
 		if !d.IsDir() {
