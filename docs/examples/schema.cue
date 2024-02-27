@@ -79,10 +79,10 @@ _apiVersion: "holos.run/v1alpha1"
 			kind: string | *"GitRepository"
 			name: string | *"flux-system"
 		}
-		suspend?: bool
+		suspend?:         bool
 		targetNamespace?: string
-		timeout: string | *"3m0s"
-		wait:    bool | *true
+		timeout:          string | *"3m0s"
+		wait:             bool | *true
 	}
 }
 
@@ -102,6 +102,10 @@ _apiVersion: "holos.run/v1alpha1"
 		target: {
 			creationPolicy: string | *"Owner"
 		}
+		data: [{
+			remoteRef: key: _name
+			secretKey: _name
+		}]
 	}
 }
 
@@ -115,11 +119,11 @@ _apiVersion: "holos.run/v1alpha1"
 			remoteNamespace: #TargetNamespace
 			auth: token: bearerToken: {
 				name: string | *"eso-reader"
-				key: string | *"token"
+				key:  string | *"token"
 			}
 			server: {
 				caBundle: #InputKeys.provisionerCABundle
-				url: #InputKeys.provisionerURL
+				url:      #InputKeys.provisionerURL
 			}
 		}
 	}
@@ -142,9 +146,9 @@ _apiVersion: "holos.run/v1alpha1"
 	gcpProjectID:     string @tag(gcpProjectID, type=string)
 	gcpProjectNumber: int    @tag(gcpProjectNumber, type=int)
 
-  // Same as cluster certificate-authority-data field in ~/.holos/kubeconfig.provisioner
+	// Same as cluster certificate-authority-data field in ~/.holos/kubeconfig.provisioner
 	provisionerCABundle: string @tag(provisionerCABundle, type=string)
-  // Same as the cluster server field in ~/.holos/kubeconfig.provisioner
+	// Same as the cluster server field in ~/.holos/kubeconfig.provisioner
 	provisionerURL: string @tag(provisionerURL, type=string)
 }
 
