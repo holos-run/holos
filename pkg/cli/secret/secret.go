@@ -12,13 +12,14 @@ const ClusterLabel = "holos.run/cluster.name"
 type secretData map[string][]byte
 
 type config struct {
-	files     holos.StringSlice
-	printFile *string
-	extract   *bool
-	dryRun    *bool
-	cluster   *string
-	namespace *string
-	extractTo *string
+	files      holos.StringSlice
+	printFile  *string
+	extract    *bool
+	dryRun     *bool
+	appendHash *bool
+	cluster    *string
+	namespace  *string
+	extractTo  *string
 }
 
 func newConfig() (*config, *flag.FlagSet) {

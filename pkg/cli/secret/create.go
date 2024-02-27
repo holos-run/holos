@@ -26,6 +26,7 @@ func NewCreateCmd(hc *holos.Config) *cobra.Command {
 	cfg, flagSet := newConfig()
 	flagSet.Var(&cfg.files, "from-file", "store files as keys in the secret")
 	cfg.dryRun = flagSet.Bool("dry-run", false, "dry run")
+	cfg.appendHash = flagSet.Bool("append-hash", true, "append hash to kubernetes secret name")
 
 	cmd.Flags().SortFlags = false
 	cmd.Flags().AddGoFlagSet(flagSet)
@@ -72,10 +73,12 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 			secret.Labels[ClusterLabel] = *cfg.cluster
 		}
 
-		if secretHash, err := hash.SecretHash(secret); err != nil {
-			return wrapper.Wrap(err)
-		} else {
-			secret.Name = fmt.Sprintf("%s-%s", secret.Name, secretHash)
+		if *cfg.appendHash {
+			if secretHash, err := hash.SecretHash(secret); err != nil {
+				return wrapper.Wrap(err)
+			} else {
+				secret.Name = fmt.Sprintf("%s-%s", secret.Name, secretHash)
+			}
 		}
 
 		if *cfg.dryRun {
