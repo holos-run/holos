@@ -79,6 +79,8 @@ _apiVersion: "holos.run/v1alpha1"
 			kind: string | *"GitRepository"
 			name: string | *"flux-system"
 		}
+		suspend?: bool
+		targetNamespace?: string
 		timeout: string | *"3m0s"
 		wait:    bool | *true
 	}
