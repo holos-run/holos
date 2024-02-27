@@ -922,7 +922,7 @@ import (
 		kubernetes?: {
 			// Auth configures how secret-manager authenticates with a
 			// Kubernetes instance.
-			auth: struct.MaxFields(1) & {
+			auth: {
 				// has both clientCert and clientKey as secretKeySelector
 				cert?: {
 					// A reference to a specific 'key' within a Secret resource,

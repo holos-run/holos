@@ -1,0 +1,16 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="render platform" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="holos" />
+    <working_directory value="$PROJECT_DIR$/../holos-infra" />
+    <parameters value="render --cluster-name=k2 $PROJECT_DIR$/docs/examples/platforms/reference/clusters/workload/..." />
+    <envs>
+      <env name="DEBUG" value="1" />
+    </envs>
+    <kind value="DIRECTORY" />
+    <package value="github.com/holos-run/holos" />
+    <directory value="$PROJECT_DIR$/cmd/holos" />
+    <filePath value="$PROJECT_DIR$" />
+    <output_directory value="$PROJECT_DIR$/bin" />
+    <method v="2" />
+  </configuration>
+</component>

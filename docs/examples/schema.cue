@@ -90,7 +90,7 @@ _apiVersion: "holos.run/v1alpha1"
 #ExternalSecret: #NamespaceObject & es.#ExternalSecret & {
 	_name: string
 	metadata: {
-		namespace: string
+		namespace: #TargetNamespace
 		name:      _name
 	}
 	spec: {
@@ -108,18 +108,19 @@ _apiVersion: "holos.run/v1alpha1"
 #SecretStore: #NamespaceObject & ss.#SecretStore & {
 	metadata: {
 		name:      string | *"default"
-		namespace: string | *#TargetNamespace
+		namespace: #TargetNamespace
 	}
 	spec: provider: {
-		vault: {
-			auth: kubernetes: {
-				mountPath: #InputKeys.cluster
-				role:      string | *"default"
-				serviceAccountRef: name: string | *"default"
+		kubernetes: {
+			remoteNamespace: #TargetNamespace
+			auth: token: bearerToken: {
+				name: string | *"eso-reader"
+				key: string | *"token"
 			}
-			path:    string | *"kv/k8s"
-			server:  "https://vault.core." + #Platform.org.domain
-			version: string | *"v2"
+			server: {
+				caBundle: #InputKeys.provisionerCABundle
+				url: #InputKeys.provisionerURL
+			}
 		}
 	}
 }
@@ -140,6 +141,11 @@ _apiVersion: "holos.run/v1alpha1"
 	// GCP Project Info used for the Provisioner Cluster
 	gcpProjectID:     string @tag(gcpProjectID, type=string)
 	gcpProjectNumber: int    @tag(gcpProjectNumber, type=int)
+
+  // Same as cluster certificate-authority-data field in ~/.holos/kubeconfig.provisioner
+	provisionerCABundle: string @tag(provisionerCABundle, type=string)
+  // Same as the cluster server field in ~/.holos/kubeconfig.provisioner
+	provisionerURL: string @tag(provisionerURL, type=string)
 }
 
 // #Platform defines the primary lookup table for the platform.  Lookup keys should be limited to those defined in #KeyTags.

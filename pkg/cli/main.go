@@ -2,7 +2,8 @@ package cli
 
 import (
 	"context"
-	"errors"
+	"cuelang.org/go/cue/errors"
+	"fmt"
 	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"log/slog"
@@ -24,12 +25,18 @@ func MakeMain(options ...holos.Option) func() int {
 // handleError is the top level error handler that unwraps and logs errors.
 func handleError(ctx context.Context, err error, hc *holos.Config) (exitCode int) {
 	log := hc.NewTopLevelLogger()
+	var cueErr errors.Error
 	var errAt *wrapper.ErrorAt
 	const msg = "could not execute"
-	if ok := errors.As(err, &errAt); ok {
+	if errors.As(err, &errAt) {
 		log.ErrorContext(ctx, msg, "err", errAt.Unwrap(), "loc", errAt.Source.Loc())
 	} else {
 		log.ErrorContext(ctx, msg, "err", err)
+	}
+	// cue errors are bundled up as a list and refer to multiple files / lines.
+	if errors.As(err, &cueErr) {
+		msg := errors.Details(cueErr, nil)
+		_, _ = fmt.Fprint(hc.Stderr(), msg)
 	}
 	return 1
 }

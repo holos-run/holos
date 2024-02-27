@@ -15,8 +15,7 @@ objects: [
 	#SecretStore,
 	#ExternalSecret & {
 		_name: "validate"
-		metadata: namespace: #TargetNamespace
-		spec: dataFrom: [{extract: key: "ns/" + #TargetNamespace + "/test"}]
+		spec: data: [{remoteRef: key: _name}]
 	},
 ]
 
