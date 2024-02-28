@@ -7,6 +7,7 @@ import (
 	"github.com/holos-run/holos/pkg/cli/secret"
 	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/pkg/util"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -77,7 +78,7 @@ func makeGetRunFunc(cfg *holos.Config, cf getConfig) command.RunFunc {
 			//  Print one file to stdout
 			if key := *cf.file; key != "" {
 				if data, found := secret.Data[key]; found {
-					cfg.Write(command.EnsureNewline(data))
+					cfg.Write(util.EnsureNewline(data))
 					return nil
 				}
 				return wrapper.Wrap(fmt.Errorf("not found: %s have %#v", key, keys))
@@ -89,7 +90,7 @@ func makeGetRunFunc(cfg *holos.Config, cf getConfig) command.RunFunc {
 
 			for k, v := range secret.Data {
 				cfg.Printf("-- %s --\n", k)
-				cfg.Write(command.EnsureNewline(v))
+				cfg.Write(util.EnsureNewline(v))
 			}
 		}
 		return nil

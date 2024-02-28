@@ -67,9 +67,9 @@ func printFile(w io.Writer, idx int, a *txtar.Archive) (err error) {
 		return wrapper.Wrap(fmt.Errorf("idx cannot be 0"))
 	}
 	if idx > 0 {
-		_, err = w.Write(command.EnsureNewline(a.Files[idx-1].Data))
+		_, err = w.Write(util.EnsureNewline(a.Files[idx-1].Data))
 	} else {
-		_, err = w.Write(command.EnsureNewline(a.Files[len(a.Files)+idx].Data))
+		_, err = w.Write(util.EnsureNewline(a.Files[len(a.Files)+idx].Data))
 	}
 	return
 }

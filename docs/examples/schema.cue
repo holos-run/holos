@@ -199,8 +199,9 @@ _apiVersion: "holos.run/v1alpha1"
 	kind: "KubernetesObjects"
 	// objects holds a list of the kubernetes api objects to configure.
 	objects: [...metav1.#TypeMeta] | *[]
-	// out holds the rendered yaml text stream of kubernetes api objects.
+	// content holds the rendered yaml text stream of kubernetes api objects.
 	content: yaml.MarshalStream(objects)
+	contentType: "application/yaml"
 	// ksObjects holds the flux Kustomization objects for gitops
 	ksObjects: [...#Kustomization] | *[#Kustomization]
 	// ksContent is the yaml representation of kustomization
@@ -219,6 +220,9 @@ _apiVersion: "holos.run/v1alpha1"
 	}
 }
 
+// #ChartValues represent the values provided to a helm chart.  Existing values may be imorted using cue import values.yaml -p holos then wrapping the values.cue content in #Values: {}
+#ChartValues: {...}
+
 // #HelmChart is a holos component which produces kubernetes api objects from cue values provided to the helm template command.
 #HelmChart: {
 	#OutputTypeMeta
@@ -232,13 +236,18 @@ _apiVersion: "holos.run/v1alpha1"
 	// chart defines the upstream helm chart to process.
 	chart: #Chart
 	// values represents the helm values to provide to the chart.
-	values: {...}
+	values: #ChartValues
 	// valuesContent holds the values yaml
 	valuesContent: yaml.Marshal(values)
 	// platform returns the platform data structure for visibility / troubleshooting.
 	platform: #Platform
 	// instance returns the key values of the holos component instance.
 	instance: #InputKeys
+	// objects holds a list of the kubernetes api objects to configure.
+	objects: [...metav1.#TypeMeta] | *[]
+	// content holds the rendered yaml text stream of kubernetes api objects.
+	content: yaml.MarshalStream(objects)
+	contentType: "application/yaml"
 }
 
 // #PlatformSpec is the output schema of a platform specification.

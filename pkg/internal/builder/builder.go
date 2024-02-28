@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/pkg/util"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"os"
 	"os/exec"
@@ -74,9 +75,10 @@ type Metadata struct {
 
 // Result is the build result for display or writing.
 type Result struct {
-	Metadata  Metadata `json:"metadata,omitempty"`
-	Content   string   `json:"content,omitempty"`
-	KsContent string   `json:"ksContent,omitempty"`
+	Metadata    Metadata `json:"metadata,omitempty"`
+	Content     string   `json:"content,omitempty"`
+	ContentType string   `json:"contentType"`
+	KsContent   string   `json:"ksContent,omitempty"`
 }
 
 type Repository struct {
@@ -99,6 +101,8 @@ type HelmChart struct {
 	Namespace     string   `json:"namespace"`
 	Chart         Chart    `json:"chart"`
 	ValuesContent string   `json:"valuesContent"`
+	ContentType   string   `json:"contentType"`
+	Content       string   `json:"content"`
 }
 
 // Name returns the metadata name of the result. Equivalent to the
@@ -225,6 +229,16 @@ func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 			if err := runHelm(ctx, &helmChart, &result, holos.PathComponent(instance.Dir)); err != nil {
 				return nil, err
 			}
+			// Append any cue api objects defined alongside the helm holos component.
+			if helmChart.Content != "" && helmChart.ContentType == "application/yaml" {
+				buf := []byte(result.Content)
+				util.EnsureNewline(buf)
+				buf = append(buf, []byte("---\n# Source: holos component overlay objects\n")...)
+				buf = append(buf, []byte(helmChart.Content)...)
+				log.DebugContext(ctx, "added additional api objects", "bytes", len(buf))
+				result.Content = string(buf)
+			}
+
 		default:
 			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
 		}
