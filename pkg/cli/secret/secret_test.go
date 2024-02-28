@@ -55,11 +55,12 @@ func cmdHolos(ts *testscript.TestScript, neg bool, args []string) {
 	cmd := cli.New(cfg)
 	cmd.SetArgs(args)
 	err := cmd.Execute()
+
 	if neg {
 		if err == nil {
-			ts.Fatalf("want: error\nhave: %v", err)
+			ts.Fatalf("\nwant: error\nhave: %v", err)
 		} else {
-			ts.Logf("want: error\nhave: %v", err)
+			cli.HandleError(cmd.Context(), err, cfg)
 		}
 	} else {
 		ts.Check(err)

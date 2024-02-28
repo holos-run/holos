@@ -63,7 +63,7 @@ func makeGetRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 
 			log.DebugContext(ctx, "results", "len", len(list.Items))
 			if len(list.Items) < 1 {
-				continue
+				return wrapper.Wrap(fmt.Errorf("not found: %v", secretName))
 			}
 
 			// Sort oldest first.

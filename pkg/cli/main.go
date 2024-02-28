@@ -16,14 +16,14 @@ func MakeMain(options ...holos.Option) func() int {
 		slog.SetDefault(cfg.Logger())
 		ctx := context.Background()
 		if err := New(cfg).ExecuteContext(ctx); err != nil {
-			return handleError(ctx, err, cfg)
+			return HandleError(ctx, err, cfg)
 		}
 		return 0
 	}
 }
 
-// handleError is the top level error handler that unwraps and logs errors.
-func handleError(ctx context.Context, err error, hc *holos.Config) (exitCode int) {
+// HandleError is the top level error handler that unwraps and logs errors.
+func HandleError(ctx context.Context, err error, hc *holos.Config) (exitCode int) {
 	log := hc.NewTopLevelLogger()
 	var cueErr errors.Error
 	var errAt *wrapper.ErrorAt
