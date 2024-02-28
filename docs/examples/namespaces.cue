@@ -3,6 +3,7 @@ package holos
 // PlatformNamespace is a namespace to manage for Secret provisioning, SecretStore, etc...
 #PlatformNamespace: {
 	name: string
+	labels?: {[string]: string}
 }
 
 // #PlatformNamespaces is a list of namespaces to manage across the platform.

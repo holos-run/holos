@@ -200,7 +200,7 @@ _apiVersion: "holos.run/v1alpha1"
 	// objects holds a list of the kubernetes api objects to configure.
 	objects: [...metav1.#TypeMeta] | *[]
 	// content holds the rendered yaml text stream of kubernetes api objects.
-	content: yaml.MarshalStream(objects)
+	content:     yaml.MarshalStream(objects)
 	contentType: "application/yaml"
 	// ksObjects holds the flux Kustomization objects for gitops
 	ksObjects: [...#Kustomization] | *[#Kustomization]
@@ -246,7 +246,7 @@ _apiVersion: "holos.run/v1alpha1"
 	// objects holds a list of the kubernetes api objects to configure.
 	objects: [...metav1.#TypeMeta] | *[]
 	// content holds the rendered yaml text stream of kubernetes api objects.
-	content: yaml.MarshalStream(objects)
+	content:     yaml.MarshalStream(objects)
 	contentType: "application/yaml"
 }
 

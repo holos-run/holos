@@ -6,7 +6,10 @@ package holos
 	{name: "external-secrets"},
 	{name: "holos-system"},
 	{name: "flux-system"},
-	{name: "ceph-system"},
+	{
+		name: "ceph-system"
+		labels: "pod-security.kubernetes.io/enforce": "privileged"
+	},
 	{name: "istio-system"},
 	{name: "istio-ingress"},
 	{name: "cert-manager"},

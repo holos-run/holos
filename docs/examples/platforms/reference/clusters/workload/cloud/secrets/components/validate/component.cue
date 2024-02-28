@@ -13,7 +13,7 @@ package holos
 
 objects: [
 	#SecretStore,
-	#ExternalSecret & { _name: "validate" },
+	#ExternalSecret & {_name: "validate"},
 ]
 
 {} & #KubernetesObjects

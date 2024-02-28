@@ -1,14 +1,14 @@
 package holos
 
 #Input: {
-	config : {
-		  // (required) String representing a Ceph cluster to provision storage from.
-		  // Should be unique across all Ceph clusters in use for provisioning,
-		  // cannot be greater than 36 bytes in length, and should remain immutable for
-		  // the lifetime of the StorageClass in use.
-			clusterID: string
-			// (required) []String list of ceph monitor "address:port" values.
-			monitors: [...string]
+	config: {
+		// (required) String representing a Ceph cluster to provision storage from.
+		// Should be unique across all Ceph clusters in use for provisioning,
+		// cannot be greater than 36 bytes in length, and should remain immutable for
+		// the lifetime of the StorageClass in use.
+		clusterID: string
+		// (required) []String list of ceph monitor "address:port" values.
+		monitors: [...string]
 	}
 }
 

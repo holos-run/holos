@@ -25,5 +25,8 @@ package holos
 			url:  "https://ceph.github.io/csi-charts"
 		}
 	}
-	objects: [#ExternalSecret & { _name: "ceph-csi-rbd" }]
+	objects: [
+		#SecretStore,
+		#ExternalSecret & {_name: "ceph-csi-rbd"},
+	]
 }
