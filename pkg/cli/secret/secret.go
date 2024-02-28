@@ -17,6 +17,7 @@ type config struct {
 	extract    *bool
 	dryRun     *bool
 	appendHash *bool
+	dataStdin  *bool
 	cluster    *string
 	namespace  *string
 	extractTo  *string

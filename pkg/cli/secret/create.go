@@ -7,6 +7,7 @@ import (
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
+	"io"
 	"io/fs"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,6 +28,7 @@ func NewCreateCmd(hc *holos.Config) *cobra.Command {
 	flagSet.Var(&cfg.files, "from-file", "store files as keys in the secret")
 	cfg.dryRun = flagSet.Bool("dry-run", false, "dry run")
 	cfg.appendHash = flagSet.Bool("append-hash", true, "append hash to kubernetes secret name")
+	cfg.dataStdin = flagSet.Bool("data-stdin", false, "read data field as json from stdin if")
 
 	cmd.Flags().SortFlags = false
 	cmd.Flags().AddGoFlagSet(flagSet)
@@ -46,8 +48,9 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 				APIVersion: "v1",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   secretName,
-				Labels: map[string]string{NameLabel: secretName},
+				Name:      secretName,
+				Namespace: *cfg.namespace,
+				Labels:    map[string]string{NameLabel: secretName},
 			},
 			Data: make(secretData),
 		}
@@ -57,6 +60,22 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 			if !strings.HasPrefix(secretName, clusterPrefix) {
 				const msg = "missing cluster name prefix"
 				log.WarnContext(ctx, msg, "have", secretName, "want", clusterPrefix)
+			}
+		}
+
+		if *cfg.dataStdin {
+			log.InfoContext(ctx, "reading data keys from stdin...")
+			var obj map[string]string
+			data, err := io.ReadAll(hc.Stdin())
+			if err != nil {
+				return wrapper.Wrap(err)
+			}
+			err = yaml.Unmarshal(data, &obj)
+			if err != nil {
+				return wrapper.Wrap(err)
+			}
+			for k, v := range obj {
+				secret.Data[k] = []byte(v)
 			}
 		}
 
