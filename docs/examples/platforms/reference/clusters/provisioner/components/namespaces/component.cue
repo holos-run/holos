@@ -1,7 +1,5 @@
 package holos
 
-import "list"
-
 #TargetNamespace: "default"
 
 #InputKeys: {
@@ -20,12 +18,14 @@ import "list"
 	]
 }
 
-objects: list.FlattenN(_objects, 1)
-
-_objects: [
-	for ns in #PlatformNamespaces {
-		(#PlatformNamespaceObjects & {_ns: ns}).objects
-	},
-]
-
-{} & #KubernetesObjects
+#KubernetesObjects & {
+	apiObjects: {
+		for ns in #PlatformNamespaces {
+			for obj in (#PlatformNamespaceObjects & {_ns: ns}).objects {
+				let Kind = obj.kind
+				let Name = obj.metadata.name
+				"\(Kind)": "\(Name)": obj
+			}
+		}
+	}
+}

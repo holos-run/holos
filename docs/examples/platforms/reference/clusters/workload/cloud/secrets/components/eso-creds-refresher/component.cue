@@ -2,11 +2,16 @@ package holos
 
 import "encoding/json"
 
-// objects are kubernetes api objects to apply
-objects: #CredsRefresherService.objects
-
 // output kubernetes api objects for holos
-{} & #KubernetesObjects
+#KubernetesObjects & {
+	apiObjects: {
+		for obj in #CredsRefresherService.objects {
+			let Kind = obj.kind
+			let Name = obj.metadata.name
+			"\(Kind)": "\(Name)": obj
+		}
+	}
+}
 
 #InputKeys: {
 	project:   "secrets"

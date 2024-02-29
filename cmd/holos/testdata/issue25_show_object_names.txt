@@ -1,0 +1,22 @@
+# Want api object kind and name in errors
+! exec holos build .
+stderr 'apiObjects.secretstore.default.foo: field not allowed'
+
+-- cue.mod --
+package holos
+-- component.cue --
+package holos
+
+apiVersion: "holos.run/v1alpha1"
+kind: "KubernetesObjects"
+cluster: string @tag(cluster, string)
+
+#SecretStore: {
+    metadata: name: string
+}
+
+apiObjects: {
+  secretstore: {
+    default: #SecretStore & { foo: "not allowed" }
+  }
+}

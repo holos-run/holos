@@ -8,21 +8,24 @@ package holos
 // - Namespace
 // - ServiceAccount eso-reader, eso-writer
 
-import "list"
-
-// objects are kubernetes api objects to apply.
-objects: list.FlattenN(_objects, 1)
-
-_objects: [
-	#CredsRefresherIAM.role,
-	#CredsRefresherIAM.binding,
-	for ns in #PlatformNamespaces {(#PlatformNamespaceObjects & {_ns: ns}).objects},
-]
-
 // No flux kustomization
 ksObjects: []
 
-{} & #KubernetesObjects
+#KubernetesObjects & {
+	apiObjects: {
+		let role = #CredsRefresherIAM.role
+		let binding = #CredsRefresherIAM.binding
+		ClusterRole: "\(role.metadata.name)":           role
+		ClusterRoleBinding: "\(binding.metadata.name)": binding
+		for ns in #PlatformNamespaces {
+			for obj in (#PlatformNamespaceObjects & {_ns: ns}).objects {
+				let Kind = obj.kind
+				let Name = obj.metadata.name
+				"\(Kind)": "\(ns.name)/\(Name)": obj
+			}
+		}
+	}
+}
 
 #InputKeys: {
 	cluster:   "provisioner"

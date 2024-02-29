@@ -1,7 +1,7 @@
 # Want cue errors to show files and lines
 ! exec holos build .
-stderr 'could not decode: content: cannot convert non-concrete value string'
-stderr '/component.cue:6:1$'
+stderr '^apiObjectMap.foo.bar: cannot convert non-concrete value string'
+stderr '/component.cue:7:20$'
 
 -- cue.mod --
 package holos
@@ -11,5 +11,6 @@ package holos
 apiVersion: "holos.run/v1alpha1"
 kind: "KubernetesObjects"
 cluster: string @tag(cluster, string)
-content: foo
-foo: string
+
+apiObjectMap: foo: bar: baz
+baz: string

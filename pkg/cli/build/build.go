@@ -20,7 +20,7 @@ func makeBuildRunFunc(cfg *holos.Config) command.RunFunc {
 		}
 		outs := make([]string, 0, len(results))
 		for _, result := range results {
-			outs = append(outs, result.Content)
+			outs = append(outs, result.FinalOutput())
 		}
 		out := strings.Join(outs, "---\n")
 		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {

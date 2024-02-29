@@ -12,6 +12,7 @@ import (
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/util"
 	"github.com/holos-run/holos/pkg/wrapper"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -73,12 +74,16 @@ type Metadata struct {
 	Name string `json:"name,omitempty"`
 }
 
+// apiObjectMap is the shape of marshalled api objects returned from cue to the
+// holos cli. A map is used to improve the clarity of error messages from cue.
+type apiObjectMap map[string]map[string]string
+
 // Result is the build result for display or writing.
 type Result struct {
-	Metadata    Metadata `json:"metadata,omitempty"`
-	Content     string   `json:"content,omitempty"`
-	ContentType string   `json:"contentType"`
-	KsContent   string   `json:"ksContent,omitempty"`
+	Metadata     Metadata     `json:"metadata,omitempty"`
+	KsContent    string       `json:"ksContent,omitempty"`
+	APIObjectMap apiObjectMap `json:"apiObjectMap,omitempty"`
+	finalOutput  string
 }
 
 type Repository struct {
@@ -94,15 +99,14 @@ type Chart struct {
 
 // A HelmChart represents a helm command to provide chart values in order to render kubernetes api objects.
 type HelmChart struct {
-	APIVersion    string   `json:"apiVersion"`
-	Kind          string   `json:"kind"`
-	Metadata      Metadata `json:"metadata"`
-	KsContent     string   `json:"ksContent"`
-	Namespace     string   `json:"namespace"`
-	Chart         Chart    `json:"chart"`
-	ValuesContent string   `json:"valuesContent"`
-	ContentType   string   `json:"contentType"`
-	Content       string   `json:"content"`
+	APIVersion    string       `json:"apiVersion"`
+	Kind          string       `json:"kind"`
+	Metadata      Metadata     `json:"metadata"`
+	KsContent     string       `json:"ksContent"`
+	Namespace     string       `json:"namespace"`
+	Chart         Chart        `json:"chart"`
+	ValuesContent string       `json:"valuesContent"`
+	APIObjectMap  apiObjectMap `json:"APIObjectMap"`
 }
 
 // Name returns the metadata name of the result. Equivalent to the
@@ -117,6 +121,26 @@ func (r *Result) Filename(writeTo string, cluster string) string {
 
 func (r *Result) KustomizationFilename(writeTo string, cluster string) string {
 	return filepath.Join(writeTo, "clusters", cluster, "holos", "components", r.Name()+"-kustomization.gen.yaml")
+}
+
+// FinalOutput returns the final rendered output.
+func (r *Result) FinalOutput() string {
+	return r.finalOutput
+}
+
+// addAPIObjects adds the overlay api objects to finalOutput.
+func (r *Result) addOverlayObjects(log *slog.Logger) {
+	b := []byte(r.FinalOutput())
+	for kind, v := range r.APIObjectMap {
+		for name, yamlString := range v {
+			log.Debug(fmt.Sprintf("%s/%s", kind, name), "kind", kind, "name", name)
+			util.EnsureNewline(b)
+			header := fmt.Sprintf("---\n# Source: holos component cue api objects %s/%s\n", kind, name)
+			b = append(b, []byte(header+yamlString)...)
+			util.EnsureNewline(b)
+		}
+	}
+	r.finalOutput = string(b)
 }
 
 // Save writes the content to the filesystem for git ops.
@@ -215,6 +239,7 @@ func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 			if err := value.Decode(&result); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 			}
+			result.addOverlayObjects(log)
 		case Helm:
 			var helmChart HelmChart
 			// First decode into the result.  Helm will populate the api objects later.
@@ -229,15 +254,7 @@ func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 			if err := runHelm(ctx, &helmChart, &result, holos.PathComponent(instance.Dir)); err != nil {
 				return nil, err
 			}
-			// Append any cue api objects defined alongside the helm holos component.
-			if helmChart.Content != "" && helmChart.ContentType == "application/yaml" {
-				buf := []byte(result.Content)
-				util.EnsureNewline(buf)
-				buf = append(buf, []byte("---\n# Source: holos component overlay objects\n")...)
-				buf = append(buf, []byte(helmChart.Content)...)
-				log.DebugContext(ctx, "added additional api objects", "bytes", len(buf))
-				result.Content = string(buf)
-			}
+			result.addOverlayObjects(log)
 
 		default:
 			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
@@ -300,6 +317,10 @@ func runCmd(ctx context.Context, name string, args ...string) (result runResult,
 // the rendered kubernetes api objects in the result.
 func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathComponent) error {
 	log := logger.FromContext(ctx).With("chart", hc.Chart.Name)
+	if hc.Chart.Name == "" {
+		log.WarnContext(ctx, "skipping helm: no chart name specified, use a different component type")
+		return nil
+	}
 
 	cachedChartPath := filepath.Join(string(path), ChartDir, hc.Chart.Name)
 	if isNotExist(cachedChartPath) {
@@ -342,7 +363,7 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 		return wrapper.Wrap(fmt.Errorf("could not run helm template: %w", err))
 	}
 
-	r.Content = helmOut.stdout.String()
+	r.finalOutput = helmOut.stdout.String()
 
 	return nil
 }

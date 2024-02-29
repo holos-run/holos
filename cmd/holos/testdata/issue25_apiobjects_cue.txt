@@ -1,0 +1,57 @@
+# Want kube api objects in the apiObjects output.
+exec holos build .
+stdout '^kind: SecretStore$'
+stdout '# Source: holos component cue api objects SecretStore/default'
+
+-- cue.mod --
+package holos
+-- component.cue --
+package holos
+
+apiVersion: "holos.run/v1alpha1"
+kind: "KubernetesObjects"
+cluster: string @tag(cluster, string)
+
+#SecretStore: {
+    kind: string
+    metadata: name: string
+}
+
+#APIObjects & {
+  apiObjects: {
+    SecretStore: {
+      default: #SecretStore & { metadata: name: "default" }
+    }
+  }
+}
+
+
+-- schema.cue --
+package holos
+
+// #APIObjects is the output type for api objects produced by cue.  A map is used to aid debugging and clarity.
+import "encoding/yaml"
+
+#APIObjects: {
+	// apiObjects holds each the api objects produced by cue.
+	apiObjects: {
+		[Kind=_]: {
+			[Name=_]: {
+				kind: Kind
+				metadata: name: Name
+			}
+		}
+	}
+
+	// apiObjectsContent holds the marshalled representation of apiObjects
+	apiObjectMap: {
+		for kind, v in apiObjects {
+			"\(kind)": {
+				for name, obj in v {
+				  "\(name)": yaml.Marshal(obj)
+			  }
+			}
+		}
+	}
+}
+

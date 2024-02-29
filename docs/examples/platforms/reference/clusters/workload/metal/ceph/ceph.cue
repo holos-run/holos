@@ -27,8 +27,11 @@ package holos
 			url:  "https://ceph.github.io/csi-charts"
 		}
 	}
-	objects: [
-		#SecretStore,
-		#ExternalSecret & {_name: #SecretName},
-	]
+
+	apiObjects: {
+		SecretStore: default: #SecretStore
+		ExternalSecret: "\(#SecretName)": #ExternalSecret & {
+			_name: #SecretName
+		}
+	}
 }

@@ -11,9 +11,13 @@ package holos
 
 #Kustomization: spec: dependsOn: [{name: #InstancePrefix + "-eso"}]
 
-objects: [
-	#SecretStore,
-	#ExternalSecret & {_name: "validate"},
-]
 
-{} & #KubernetesObjects
+#KubernetesObjects & {
+	apiObjects: {
+		SecretStore: default: #SecretStore
+
+		ExternalSecret: validate: #ExternalSecret & {
+			_name: "validate"
+		}
+	}
+}
