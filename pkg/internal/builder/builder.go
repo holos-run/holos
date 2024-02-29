@@ -16,6 +16,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
@@ -131,11 +132,27 @@ func (r *Result) FinalOutput() string {
 // addAPIObjects adds the overlay api objects to finalOutput.
 func (r *Result) addOverlayObjects(log *slog.Logger) {
 	b := []byte(r.FinalOutput())
-	for kind, v := range r.APIObjectMap {
-		for name, yamlString := range v {
+	kinds := make([]string, 0, len(r.APIObjectMap))
+	// Sort the keys
+	for kind := range r.APIObjectMap {
+		kinds = append(kinds, kind)
+	}
+	slices.Sort(kinds)
+
+	for _, kind := range kinds {
+		v := r.APIObjectMap[kind]
+		// Sort the keys
+		names := make([]string, 0, len(v))
+		for name := range v {
+			names = append(names, name)
+		}
+		slices.Sort(names)
+
+		for _, name := range names {
+			yamlString := v[name]
 			log.Debug(fmt.Sprintf("%s/%s", kind, name), "kind", kind, "name", name)
 			util.EnsureNewline(b)
-			header := fmt.Sprintf("---\n# Source: holos component cue api objects %s/%s\n", kind, name)
+			header := fmt.Sprintf("---\n# Source: CUE apiObjects.%s.%s\n", kind, name)
 			b = append(b, []byte(header+yamlString)...)
 			util.EnsureNewline(b)
 		}

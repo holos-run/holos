@@ -33,9 +33,13 @@ _apiVersion: "holos.run/v1alpha1"
 
 // #CommonLabels are mixed into every kubernetes api object.
 #CommonLabels: {
-	"holos.run/stage.name":     #InputKeys.stage
-	"holos.run/project.name":   #InputKeys.project
-	"holos.run/component.name": #InputKeys.component
+	"holos.run/stage.name":        #InputKeys.stage
+	"holos.run/project.name":      #InputKeys.project
+	"holos.run/component.name":    #InputKeys.component
+	"app.kubernetes.io/part-of":   #InputKeys.stage
+	"app.kubernetes.io/name":      #InputKeys.project
+	"app.kubernetes.io/component": #InputKeys.component
+	"app.kubernetes.io/instance":  #InstanceName
 	...
 }
 

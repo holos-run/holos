@@ -1,7 +1,7 @@
 # Want kube api objects in the apiObjects output.
 exec holos build .
 stdout '^kind: SecretStore$'
-stdout '# Source: holos component cue api objects SecretStore/default'
+stdout '# Source: CUE apiObjects.SecretStore.default'
 stderr 'skipping helm: no chart name specified'
 
 -- cue.mod --
