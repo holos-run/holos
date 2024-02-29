@@ -11,6 +11,9 @@ import (
 	"encoding/yaml"
 )
 
+// #ClusterName is the cluster name for cluster scoped resources.
+#ClusterName: #InputKeys.cluster
+
 _apiVersion: "holos.run/v1alpha1"
 
 // #Name defines the name: string key value pair used all over the place.
@@ -260,3 +263,6 @@ _apiVersion: "holos.run/v1alpha1"
 
 // Holos component name
 metadata: name: #InstanceName
+
+// #SecretName is the name of a Secret, ususally coupling a Deployment to an ExternalSecret
+#SecretName: string

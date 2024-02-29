@@ -30,7 +30,7 @@ package holos
 		// (optional) Prefix to use for naming RBD images.
 		// If omitted, defaults to "csi-vol-".
 		// NOTE: Set this to a cluster specific value, e.g. vol-k1-
-		volumeNamePrefix: "vol-\(#InputKeys.cluster)-"
+		volumeNamePrefix: "vol-\(#ClusterName)-"
 
 		// (required) String representing a Ceph cluster to provision storage from.
 		// Should be unique across all Ceph clusters in use for provisioning,
@@ -146,13 +146,13 @@ package holos
 
 		// The secrets have to contain Ceph credentials with required access
 		// to the 'pool'.
-		provisionerSecret: "csi-rbd-secret"
+		provisionerSecret: #SecretName
 		// If Namespaces are left empty, the secrets are assumed to be in the
 		// Release namespace.
 		provisionerSecretNamespace:      ""
-		controllerExpandSecret:          "csi-rbd-secret"
+		controllerExpandSecret:          #SecretName
 		controllerExpandSecretNamespace: ""
-		nodeStageSecret:                 "csi-rbd-secret"
+		nodeStageSecret:                 #SecretName
 		nodeStageSecretNamespace:        ""
 		// Specify the filesystem type of the volume. If not specified,
 		// csi-provisioner will set default as `ext4`.
@@ -165,7 +165,7 @@ package holos
 	secret: {
 		// Specifies whether the secret should be created
 		create: false
-		name:   "csi-rbd-secret"
+		name:   #SecretName
 		// Key values correspond to a user name and its key, as defined in the
 		// ceph cluster. User ID should have required access to the 'pool'
 		// specified in the storage class

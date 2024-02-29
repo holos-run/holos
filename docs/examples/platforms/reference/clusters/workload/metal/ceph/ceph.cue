@@ -4,6 +4,8 @@ package holos
 
 #TargetNamespace: "ceph-system"
 
+#SecretName: "\(#ClusterName)-ceph-csi-rbd"
+
 #InputKeys: {
 	project:   "metal"
 	service:   "ceph"
@@ -27,6 +29,6 @@ package holos
 	}
 	objects: [
 		#SecretStore,
-		#ExternalSecret & {_name: "ceph-csi-rbd"},
+		#ExternalSecret & {_name: #SecretName },
 	]
 }
