@@ -14,7 +14,7 @@ import "list"
 	_ns: #PlatformNamespace
 
 	objects: [
-		#Namespace & { metadata: _ns },
+		#Namespace & {metadata: _ns},
 	]
 }
 

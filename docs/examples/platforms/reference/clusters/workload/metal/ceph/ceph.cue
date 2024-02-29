@@ -29,6 +29,6 @@ package holos
 	}
 	objects: [
 		#SecretStore,
-		#ExternalSecret & {_name: #SecretName },
+		#ExternalSecret & {_name: #SecretName},
 	]
 }

@@ -93,8 +93,8 @@ _apiVersion: "holos.run/v1alpha1"
 #ExternalSecret: #NamespaceObject & es.#ExternalSecret & {
 	_name: string
 	metadata: {
-		namespace: #TargetNamespace
 		name:      _name
+		namespace: #TargetNamespace
 	}
 	spec: {
 		refreshInterval: string | *"1h"
@@ -103,12 +103,12 @@ _apiVersion: "holos.run/v1alpha1"
 			name: string | *"default"
 		}
 		target: {
+			name:           _name
 			creationPolicy: string | *"Owner"
+			deletionPolicy: string | *"Retain"
 		}
-		data: [{
-			remoteRef: key: _name
-			secretKey: _name
-		}]
+		// Copy fields 1:1 from external Secret to target Secret.
+		dataFrom: [{extract: key: _name}]
 	}
 }
 
