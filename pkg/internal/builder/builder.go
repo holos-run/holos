@@ -400,7 +400,7 @@ func isNotExist(path string) bool {
 	return os.IsNotExist(err)
 }
 
-// cacheChart stores a cached copy of Chart in the chart sub-directory of path.
+// cacheChart stores a cached copy of Chart in the chart subdirectory of path.
 func cacheChart(ctx context.Context, path holos.PathComponent, chartDir string, chart Chart) error {
 	log := logger.FromContext(ctx)
 

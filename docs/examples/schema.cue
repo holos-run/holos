@@ -11,34 +11,33 @@ import (
 	"encoding/yaml"
 )
 
-// #ClusterName is the cluster name for cluster scoped resources.
-#ClusterName: #InputKeys.cluster
-
+// _apiVersion is the version of this schema.  Defines the interface between CUE output and the holos cli.
 _apiVersion: "holos.run/v1alpha1"
 
-// #Name defines the name: string key value pair used all over the place.
-#Name: name: string
+// #ClusterName is the cluster name for cluster scoped resources.
+#ClusterName: #InputKeys.cluster
+// #StageName is prod, dev, stage, etc...  Usually prod for platform components.
+#StageName: #InputKeys.stage
+// #CollectionName is the preferred handle to the collection element of the instance name.  A collection name mapes to an "application name" as described in the kubernetes recommended labels documentation.  Refer to https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
+#CollectionName: #InputKeys.project
+// #ComponentName is the name of the holos component.
+#ComponentName: #InputKeys.component
+// #InstanceName is the name of the holos component instance being managed varying by stage, project, and component names.
+#InstanceName: "\(#StageName)-\(#CollectionName)-\(#ComponentName)"
+// #InstancePrefix is the stage and project without the component name.  Useful for dependency management among multiple components for a project stage.
+#InstancePrefix: "\(#StageName)-\(#CollectionName)"
 
 // #TargetNamespace is the target namespace for a holos component.
 #TargetNamespace: string
 
-// #InstanceName is the name of the holos component instance being managed varying by stage, project, and component names.
-#InstanceName: "\(#InputKeys.stage)-\(#InputKeys.project)-\(#InputKeys.component)"
-
-// #InstancePrefix is the stage and project without the component name.  Useful for dependency management among multiple components for a project stage.
-#InstancePrefix: "\(#InputKeys.stage)-\(#InputKeys.project)"
-
-// TypeMeta indicates a kubernetes api object
-#TypeMeta: metav1.#TypeMeta
-
 // #CommonLabels are mixed into every kubernetes api object.
 #CommonLabels: {
-	"holos.run/stage.name":        #InputKeys.stage
-	"holos.run/project.name":      #InputKeys.project
-	"holos.run/component.name":    #InputKeys.component
-	"app.kubernetes.io/part-of":   #InputKeys.stage
-	"app.kubernetes.io/name":      #InputKeys.project
-	"app.kubernetes.io/component": #InputKeys.component
+	"holos.run/stage.name":        #StageName
+	"holos.run/project.name":      #CollectionName
+	"holos.run/component.name":    #ComponentName
+	"app.kubernetes.io/part-of":   #StageName
+	"app.kubernetes.io/name":      #CollectionName
+	"app.kubernetes.io/component": #ComponentName
 	"app.kubernetes.io/instance":  #InstanceName
 	...
 }
@@ -172,7 +171,7 @@ _apiVersion: "holos.run/v1alpha1"
 	}
 	stages: [ID=_]: {
 		name: string & ID
-		environments: [...#Name]
+		environments: [...{name: string}]
 	}
 	projects: [ID=_]: {
 		name: string & ID
@@ -213,10 +212,6 @@ _apiVersion: "holos.run/v1alpha1"
 	kind: #PlatformSpec.kind | #KubernetesObjects.kind | #HelmChart.kind
 	// name holds a unique name suitable for a filename
 	metadata: name: string
-	// contentType is the standard MIME type indicating the content type of the content field
-	contentType: *"application/yaml" | "application/json"
-	// content holds the content text output
-	content: string | *""
 	// debug returns arbitrary debug output.
 	debug?: _
 }
@@ -236,7 +231,8 @@ _apiVersion: "holos.run/v1alpha1"
 	platform: #Platform
 }
 
-objects: "not allowed"
+// objects is deprecated.
+objects: []
 
 // #Chart defines an upstream helm chart
 #Chart: {
