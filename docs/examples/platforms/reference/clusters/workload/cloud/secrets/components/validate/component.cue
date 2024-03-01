@@ -11,7 +11,6 @@ package holos
 
 #Kustomization: spec: dependsOn: [{name: #InstancePrefix + "-eso"}]
 
-
 #KubernetesObjects & {
 	apiObjects: {
 		SecretStore: default: #SecretStore

@@ -49,7 +49,7 @@ PROJECT_NUMBER="$(gcloud projects describe $PROJECT_ID --format='value(projectNu
 ORG_DOMAIN="example.com"
 ```
 
-## Seed Cluster
+## Provisioner Cluster
 
 ```shell
 gcloud container clusters create-auto provisioner \

@@ -16,14 +16,19 @@ _apiVersion: "holos.run/v1alpha1"
 
 // #ClusterName is the cluster name for cluster scoped resources.
 #ClusterName: #InputKeys.cluster
+
 // #StageName is prod, dev, stage, etc...  Usually prod for platform components.
 #StageName: #InputKeys.stage
+
 // #CollectionName is the preferred handle to the collection element of the instance name.  A collection name mapes to an "application name" as described in the kubernetes recommended labels documentation.  Refer to https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
 #CollectionName: #InputKeys.project
+
 // #ComponentName is the name of the holos component.
 #ComponentName: #InputKeys.component
+
 // #InstanceName is the name of the holos component instance being managed varying by stage, project, and component names.
 #InstanceName: "\(#StageName)-\(#CollectionName)-\(#ComponentName)"
+
 // #InstancePrefix is the stage and project without the component name.  Useful for dependency management among multiple components for a project stage.
 #InstancePrefix: "\(#StageName)-\(#CollectionName)"
 
@@ -142,7 +147,7 @@ _apiVersion: "holos.run/v1alpha1"
 	// stage is usually set by the platform or project.
 	stage: *"prod" | string @tag(stage, type=string)
 	// service is usually set by the component.
-	service: string @tag(service, type=string)
+	service: *component | string @tag(service, type=string)
 	// component is the name of the component
 	component: string @tag(component, type=string)
 
@@ -199,6 +204,7 @@ _apiVersion: "holos.run/v1alpha1"
 				}
 			}
 		}
+		...
 	}
 }
 
@@ -229,7 +235,7 @@ _apiVersion: "holos.run/v1alpha1"
 	// ksObjects holds the flux Kustomization objects for gitops
 	ksObjects: [...#Kustomization] | *[#Kustomization]
 	// ksContent is the yaml representation of kustomization
-	ksContent: yaml.MarshalStream(ksObjects)
+	ksContent: yaml.Marshal(#Kustomization)
 	// platform returns the platform data structure for visibility / troubleshooting.
 	platform: #Platform
 }

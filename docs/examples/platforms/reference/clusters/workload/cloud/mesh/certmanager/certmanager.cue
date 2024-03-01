@@ -5,13 +5,12 @@ package holos
 #TargetNamespace: "cert-manager"
 
 #InputKeys: {
-	project: "mesh"
 	component: "certmanager"
-	service: "cert-manager"
+	service:   "cert-manager"
 }
 
 #HelmChart & {
-	values: installCrds: true
+	values: installCRDs: true
 	namespace: #TargetNamespace
 	chart: {
 		name:    "cert-manager"

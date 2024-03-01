@@ -1,7 +1,9 @@
 package holos
 
 // All components are share this collection
-#InputKeys: project: "mesh"
+#InputKeys: {
+	project: "mesh"
+}
 
 // Shared dependencies for all components in this collection.
 #Kustomization: spec: {
