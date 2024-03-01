@@ -10,3 +10,5 @@ package holos
 // Common Dependencies
 _CertManager: CertManager: name: "\(#InstancePrefix)-certmanager"
 _Namespaces: Namespaces: name:   "\(#StageName)-secrets-namespaces"
+_IstioBase: IstioBase: name:     "\(#InstancePrefix)-istio-base"
+_IstioPilot: IstioPilot: name:   "\(#InstancePrefix)-istiod"
