@@ -27,6 +27,9 @@ func makeRenderRunFunc(cfg *holos.Config) command.RunFunc {
 		// the same file path. Write files into a blank temporary directory, error if a
 		// file exists, then move the directory into place.
 		for _, result := range results {
+			if result.Skip {
+				continue
+			}
 			// API Objects
 			path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
 			if err := result.Save(ctx, path, result.FinalOutput()); err != nil {

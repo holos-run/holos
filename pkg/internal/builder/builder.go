@@ -29,6 +29,8 @@ const (
 	// Helm is the value of the kind field of holos build output indicating helm
 	// values and helm command information.
 	Helm = "HelmChart"
+	// Skip is the value when the instance should be skipped
+	Skip = "Skip"
 	// ChartDir is the chart cache directory name.
 	ChartDir = "vendor"
 )
@@ -85,6 +87,7 @@ type Result struct {
 	KsContent    string       `json:"ksContent,omitempty"`
 	APIObjectMap apiObjectMap `json:"apiObjectMap,omitempty"`
 	finalOutput  string
+	Skip         bool
 }
 
 type Repository struct {
@@ -251,6 +254,8 @@ func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 
 		log.DebugContext(ctx, "cue: processing holos component kind "+info.Kind)
 		switch kind := info.Kind; kind {
+		case Skip:
+			result.Skip = true
 		case Kube:
 			// CUE directly provides the kubernetes api objects in result.Content
 			if err := value.Decode(&result); err != nil {
@@ -272,7 +277,6 @@ func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 				return nil, err
 			}
 			result.addOverlayObjects(log)
-
 		default:
 			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
 		}

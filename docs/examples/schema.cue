@@ -141,8 +141,6 @@ _apiVersion: "holos.run/v1alpha1"
 	cluster: string @tag(cluster, type=string)
 	// stage is usually set by the platform or project.
 	stage: *"prod" | string @tag(stage, type=string)
-	// project is usually set by the platform or project.
-	project: string @tag(project, type=string)
 	// service is usually set by the component.
 	service: string @tag(service, type=string)
 	// component is the name of the component
@@ -209,20 +207,25 @@ _apiVersion: "holos.run/v1alpha1"
 	// apiVersion is the output api version
 	apiVersion: _apiVersion
 	// kind is a discriminator of the type of output
-	kind: #PlatformSpec.kind | #KubernetesObjects.kind | #HelmChart.kind
+	kind: #PlatformSpec.kind | #KubernetesObjects.kind | #HelmChart.kind | #NoOutput.kind
 	// name holds a unique name suitable for a filename
 	metadata: name: string
 	// debug returns arbitrary debug output.
 	debug?: _
 }
 
+#NoOutput: {
+	#OutputTypeMeta
+	kind: string | *"Skip"
+	metadata: name: string | *"skipped"
+}
+
 // #KubernetesObjectOutput is the output schema of a single component.
 #KubernetesObjects: {
 	#OutputTypeMeta
 	#APIObjects
-
-	// kind KubernetesObjects provides a yaml text stream of kubernetes api objects in the out field.
 	kind: "KubernetesObjects"
+	metadata: name: #InstanceName
 	// ksObjects holds the flux Kustomization objects for gitops
 	ksObjects: [...#Kustomization] | *[#Kustomization]
 	// ksContent is the yaml representation of kustomization
@@ -230,9 +233,6 @@ _apiVersion: "holos.run/v1alpha1"
 	// platform returns the platform data structure for visibility / troubleshooting.
 	platform: #Platform
 }
-
-// objects is deprecated.
-objects: []
 
 // #Chart defines an upstream helm chart
 #Chart: {
@@ -251,8 +251,8 @@ objects: []
 #HelmChart: {
 	#OutputTypeMeta
 	#APIObjects
-
 	kind: "HelmChart"
+	metadata: name: #InstanceName
 	// ksObjects holds the flux Kustomization objects for gitops.
 	ksObjects: [...#Kustomization] | *[#Kustomization]
 	// ksContent is the yaml representation of kustomization.
@@ -277,10 +277,10 @@ objects: []
 	kind: "PlatformSpec"
 }
 
-#Output: #PlatformSpec | #KubernetesObjects | #HelmChart
-
-// Holos component name
-metadata: name: #InstanceName
-
 // #SecretName is the name of a Secret, ususally coupling a Deployment to an ExternalSecret
 #SecretName: string
+
+// By default, render kind: Skipped so holos knows to skip over intermediate cue files.
+// This enables the use of holos render ./foo/bar/baz/... when bar contains intermediary constraints which are not complete components.
+// Holos skips over these intermediary cue instances.
+{} & #NoOutput

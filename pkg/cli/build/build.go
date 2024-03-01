@@ -20,6 +20,9 @@ func makeBuildRunFunc(cfg *holos.Config) command.RunFunc {
 		}
 		outs := make([]string, 0, len(results))
 		for _, result := range results {
+			if result.Skip {
+				continue
+			}
 			outs = append(outs, result.FinalOutput())
 		}
 		out := strings.Join(outs, "---\n")
