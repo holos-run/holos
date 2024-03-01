@@ -8,6 +8,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	es "external-secrets.io/externalsecret/v1beta1"
 	ss "external-secrets.io/secretstore/v1beta1"
+	cm "cert-manager.io/clusterissuer/v1"
 	"encoding/yaml"
 )
 
@@ -67,13 +68,14 @@ _apiVersion: "holos.run/v1alpha1"
 }
 #ClusterRole:        #ClusterObject & rbacv1.#ClusterRole
 #ClusterRoleBinding: #ClusterObject & rbacv1.#ClusterRoleBinding
-#Role:               #NamespaceObject & rbacv1.#Role
-#RoleBinding:        #NamespaceObject & rbacv1.#RoleBinding
-#ConfigMap:          #NamespaceObject & corev1.#ConfigMap
-#ServiceAccount:     #NamespaceObject & corev1.#ServiceAccount
-#Pod:                #NamespaceObject & corev1.#Pod
-#Job:                #NamespaceObject & batchv1.#Job
-#CronJob:            #NamespaceObject & batchv1.#CronJob
+#ClusterIssuer: #ClusterObject & cm.#ClusterIssuer & {...}
+#Role:           #NamespaceObject & rbacv1.#Role
+#RoleBinding:    #NamespaceObject & rbacv1.#RoleBinding
+#ConfigMap:      #NamespaceObject & corev1.#ConfigMap
+#ServiceAccount: #NamespaceObject & corev1.#ServiceAccount
+#Pod:            #NamespaceObject & corev1.#Pod
+#Job:            #NamespaceObject & batchv1.#Job
+#CronJob:        #NamespaceObject & batchv1.#CronJob
 
 // Flux Kustomization CRDs
 #Kustomization: #NamespaceObject & ksv1.#Kustomization & {
@@ -167,6 +169,8 @@ _apiVersion: "holos.run/v1alpha1"
 	org: {
 		name:   string
 		domain: string
+		contact: email:    string
+		cloudflare: email: string
 	}
 	clusters: [ID=_]: {
 		name:    string & ID
