@@ -6,6 +6,9 @@ package holos
 
 let Name = "letsencrypt"
 
+// The cloudflare api token is platform scoped, not cluster scoped.
+#SecretName: "cloudflare-api-token-secret"
+
 #KubernetesObjects & {
 	apiObjects: {
 		ClusterIssuer: {
@@ -41,12 +44,15 @@ let Name = "letsencrypt"
 						solvers: [{
 							dns01: cloudflare: {
 								email: #Platform.org.cloudflare.email
-								apiTokenSecretRef: name: "cloudflare-api-token-secret"
+								apiTokenSecretRef: name: #SecretName
 								apiTokenSecretRef: key:  "api_token"
 							}}]
 					}
 				}
 			}
+		}
+		ExternalSecret: "\(#SecretName)": #ExternalSecret & {
+			_name: #SecretName
 		}
 	}
 }

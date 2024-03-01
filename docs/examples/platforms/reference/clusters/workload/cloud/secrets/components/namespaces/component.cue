@@ -12,8 +12,12 @@ package holos
 	_ns: #PlatformNamespace
 
 	objects: [
-		#Namespace & {metadata: _ns},
-		#SecretStore & {_namespace: _ns.name}
+		#Namespace & {
+			metadata: _ns
+		},
+		#SecretStore & {
+			_namespace: _ns.name
+		},
 	]
 }
 
