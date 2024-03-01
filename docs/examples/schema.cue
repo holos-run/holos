@@ -96,7 +96,16 @@ _apiVersion: "holos.run/v1alpha1"
 		targetNamespace?: string
 		timeout:          string | *"3m0s"
 		wait:             bool | *true
+		dependsOn: [for k, v in #DependsOn {v}]
 	}
+}
+
+// #DependsOn stores all of the dependencies between components.  It's a struct to support merging across levels in the tree.
+#DependsOn: {
+	[NAME=_]: {
+		name: string
+	}
+	...
 }
 
 // External Secrets CRDs

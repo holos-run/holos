@@ -12,10 +12,8 @@ package holos
 	component: "ceph"
 }
 
-#Kustomization: spec: {
-	dependsOn: [{name: "prod-secrets-namespaces"}]
-	targetNamespace: #TargetNamespace
-}
+#Kustomization: spec: targetNamespace: #TargetNamespace
+#DependsOn: Namespaces: name:          "\(#StageName)-secrets-namespaces"
 
 #HelmChart & {
 	namespace: #TargetNamespace

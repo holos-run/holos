@@ -9,6 +9,9 @@ let Name = "letsencrypt"
 // The cloudflare api token is platform scoped, not cluster scoped.
 #SecretName: "cloudflare-api-token-secret"
 
+// Depends on cert manager
+#DependsOn: _CertManager
+
 #KubernetesObjects & {
 	apiObjects: {
 		ClusterIssuer: {

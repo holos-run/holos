@@ -4,7 +4,9 @@ package holos
 #InputKeys: project: "mesh"
 
 // Shared dependencies for all components in this collection.
-#Kustomization: spec: {
-	dependsOn: [{name: "\(#StageName)-secrets-namespaces"}, ...]
-	targetNamespace: #TargetNamespace
-}
+#Kustomization: spec: targetNamespace: #TargetNamespace
+#DependsOn: _Namespaces
+
+// Common Dependencies
+_CertManager: CertManager: name: "\(#InstancePrefix)-certmanager"
+_Namespaces: Namespaces: name:   "\(#StageName)-secrets-namespaces"

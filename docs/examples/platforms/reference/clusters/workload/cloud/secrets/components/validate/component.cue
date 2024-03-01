@@ -9,7 +9,7 @@ package holos
 	component: "validate"
 }
 
-#Kustomization: spec: dependsOn: [{name: #InstancePrefix + "-eso"}]
+#DependsOn: Namespaces: name: #InstancePrefix + "-eso"
 
 #KubernetesObjects & {
 	apiObjects: {

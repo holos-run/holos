@@ -11,10 +11,8 @@ package holos
 	service: "eso"
 }
 
-#Kustomization: spec: {
-	dependsOn: [{name: #InstancePrefix + "-namespaces"}]
-	targetNamespace: #TargetNamespace
-}
+#Kustomization: spec: targetNamespace: #TargetNamespace
+#DependsOn: Namespaces: name:          #InstancePrefix + "-namespaces"
 
 #HelmChart & {
 	values: installCrds: true
