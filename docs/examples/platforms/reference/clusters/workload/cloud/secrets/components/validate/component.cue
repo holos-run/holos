@@ -13,8 +13,6 @@ package holos
 
 #KubernetesObjects & {
 	apiObjects: {
-		SecretStore: default: #SecretStore
-
 		ExternalSecret: validate: #ExternalSecret & {
 			_name: "validate"
 		}

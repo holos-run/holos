@@ -29,7 +29,6 @@ package holos
 	}
 
 	apiObjects: {
-		SecretStore: default: #SecretStore
 		ExternalSecret: "\(#SecretName)": #ExternalSecret & {
 			_name: #SecretName
 		}

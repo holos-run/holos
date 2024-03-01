@@ -123,13 +123,14 @@ _apiVersion: "holos.run/v1alpha1"
 }
 
 #SecretStore: #NamespaceObject & ss.#SecretStore & {
+	_namespace: string
 	metadata: {
 		name:      string | *"default"
-		namespace: #TargetNamespace
+		namespace: _namespace
 	}
 	spec: provider: {
 		kubernetes: {
-			remoteNamespace: #TargetNamespace
+			remoteNamespace: _namespace
 			auth: token: bearerToken: {
 				name: string | *"eso-reader"
 				key:  string | *"token"

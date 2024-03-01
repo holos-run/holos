@@ -13,6 +13,7 @@ package holos
 
 	objects: [
 		#Namespace & {metadata: _ns},
+		#SecretStore & {_namespace: _ns.name}
 	]
 }
 
@@ -21,8 +22,9 @@ package holos
 		for ns in #PlatformNamespaces {
 			for obj in (#PlatformNamespaceObjects & {_ns: ns}).objects {
 				let Kind = obj.kind
+				let NS = ns.name
 				let Name = obj.metadata.name
-				"\(Kind)": "\(Name)": obj
+				"\(Kind)": "\(NS)/\(Name)": obj
 			}
 		}
 	}
