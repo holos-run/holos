@@ -11,4 +11,4 @@ package holos
 _CertManager: CertManager: name: "\(#InstancePrefix)-certmanager"
 _Namespaces: Namespaces: name:   "\(#StageName)-secrets-namespaces"
 _IstioBase: IstioBase: name:     "\(#InstancePrefix)-istio-base"
-_IstioPilot: IstioPilot: name:   "\(#InstancePrefix)-istiod"
+_IstioD: IstioD: name:           "\(#InstancePrefix)-istiod"

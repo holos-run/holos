@@ -4,6 +4,7 @@ import "encoding/json"
 
 #InputKeys: component: "ingress"
 #TargetNamespace: "istio-ingress"
+#DependsOn:       _IstioD
 
 #HelmChart & {
 	chart: name: "gateway"
@@ -77,13 +78,20 @@ _APIObjects: {
 					spec: {
 						serviceAccountName: "istio-ingressgateway"
 						// Allow binding to all ports (such as 80 and 443)
-						securityContext: sysctls: [{name: "net.ipv4.ip_unprivileged_port_start", value: "0"}]
+						securityContext: {
+							runAsNonRoot: true
+							seccompProfile: type: "RuntimeDefault"
+							sysctls: [{name: "net.ipv4.ip_unprivileged_port_start", value: "0"}]
+						}
 						containers: [{
 							name:  "istio-proxy"
 							image: "auto" // Managed by istiod
-							securityContext: capabilities: drop: ["ALL"]
-							securityContext: runAsUser:  1337
-							securityContext: runAsGroup: 1337
+							securityContext: {
+								allowPrivilegeEscalation: false
+								capabilities: drop: ["ALL"]
+								runAsUser:  1337
+								runAsGroup: 1337
+							}
 						}]
 					}
 				}

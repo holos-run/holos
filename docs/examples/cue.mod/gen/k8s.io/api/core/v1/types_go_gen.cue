@@ -3982,7 +3982,7 @@ import (
 	// SecurityContext holds pod-level security attributes and common container settings.
 	// Optional: Defaults to empty.  See type description for default values of each field.
 	// +optional
-	securityContext?: null | #PodSecurityContext @go(SecurityContext,*PodSecurityContext) @protobuf(14,bytes,opt)
+	securityContext?: #PodSecurityContext @go(SecurityContext,*PodSecurityContext) @protobuf(14,bytes,opt)
 
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
 	// If specified, these secrets will be passed to individual puller implementations for them to use.

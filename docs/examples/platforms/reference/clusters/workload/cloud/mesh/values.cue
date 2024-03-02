@@ -538,7 +538,10 @@ package holos
 
 	// keep in sync with settings used when installing the Istio CNI chart
 	istio_cni: {
-		enabled: false
+		// Refer to https://istio.io/latest/docs/setup/additional-setup/cni/#installing-with-helm
+		// values.istio_cni.enabled should be set to the same value as values.cni.enabled.
+		// values.istio_cni.chained should be set to the same value as values.cni.chained.
+		enabled: true
 		chained: true
 	}
 }
