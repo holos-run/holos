@@ -8,12 +8,7 @@ import "encoding/yaml"
 #HelmChart & {
 	namespace: #TargetNamespace
 	chart: {
-		name:    "istiod"
-		version: "1.20.3"
-		repository: {
-			name: "istio"
-			url:  "https://istio-release.storage.googleapis.com/charts"
-		}
+		name: "istiod"
 	}
 	values: #IstioValues & {
 		pilot: {

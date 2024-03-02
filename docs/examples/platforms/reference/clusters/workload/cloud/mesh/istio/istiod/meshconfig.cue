@@ -44,7 +44,7 @@ _MeshConfig: {
 				"cookie",
 				"x-forwarded-for",
 			]
-			port: 4180
+			port:    4180
 			service: "oauth2-proxy.istio-ingress.svc.cluster.local"
 		}
 	}, {
