@@ -9,7 +9,9 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	es "external-secrets.io/externalsecret/v1beta1"
 	ss "external-secrets.io/secretstore/v1beta1"
-	cm "cert-manager.io/clusterissuer/v1"
+	ci "cert-manager.io/clusterissuer/v1"
+	gw "networking.istio.io/gateway/v1beta1"
+	vs "networking.istio.io/virtualservice/v1beta1"
 	"encoding/yaml"
 )
 
@@ -50,26 +52,25 @@ _apiVersion: "holos.run/v1alpha1"
 }
 
 #ClusterObject: {
+	_description: string | *""
 	metadata: metav1.#ObjectMeta & {
 		labels: #CommonLabels
+		annotations: #Description & {
+			_Description: _description
+			...
+		}
 	}
 	...
 }
 
-#CommonAnnotations: {
+#Description: {
 	_Description:            string | *""
 	"holos.run/description": _Description
 	...
 }
 
 #NamespaceObject: #ClusterObject & {
-	_description: string | *""
-	metadata: {
-		namespace: string
-		annotations: #CommonAnnotations & {
-			_Description: _description
-		}
-	}
+	metadata: namespace: string
 }
 
 // Kubernetes API Objects
@@ -81,15 +82,18 @@ _apiVersion: "holos.run/v1alpha1"
 }
 #ClusterRole:        #ClusterObject & rbacv1.#ClusterRole
 #ClusterRoleBinding: #ClusterObject & rbacv1.#ClusterRoleBinding
-#ClusterIssuer: #ClusterObject & cm.#ClusterIssuer & {...}
+#ClusterIssuer: #ClusterObject & ci.#ClusterIssuer & {...}
 #Role:           #NamespaceObject & rbacv1.#Role
 #RoleBinding:    #NamespaceObject & rbacv1.#RoleBinding
 #ConfigMap:      #NamespaceObject & corev1.#ConfigMap
 #ServiceAccount: #NamespaceObject & corev1.#ServiceAccount
 #Pod:            #NamespaceObject & corev1.#Pod
+#Service:        #NamespaceObject & corev1.#Service
 #Job:            #NamespaceObject & batchv1.#Job
 #CronJob:        #NamespaceObject & batchv1.#CronJob
 #Deployment:     #NamespaceObject & appsv1.#Deployment
+#Gateway:        #NamespaceObject & gw.#Gateway
+#VirtualService: #NamespaceObject & vs.#VirtualService
 
 // Flux Kustomization CRDs
 #Kustomization: #NamespaceObject & ksv1.#Kustomization & {

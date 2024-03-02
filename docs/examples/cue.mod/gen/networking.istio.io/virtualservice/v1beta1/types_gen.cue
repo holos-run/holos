@@ -324,13 +324,7 @@ import "strings"
 			// withoutHeader has the same syntax with the header, but has
 			// opposite meaning.
 			withoutHeaders?: {
-				[string]: ({} | {
-					exact: _
-				} | {
-					prefix: _
-				} | {
-					regex: _
-				}) & {
+				[string]: {
 					exact?:  string
 					prefix?: string
 
@@ -383,11 +377,7 @@ import "strings"
 
 		// A HTTP rule can either return a direct_response, redirect or
 		// forward (default) traffic.
-		redirect?: ({} | {
-			port: _
-		} | {
-			derivePort: _
-		}) & {
+		redirect?: {
 			// On a redirect, overwrite the Authority/Host portion of the URL
 			// with this value.
 			authority?: string

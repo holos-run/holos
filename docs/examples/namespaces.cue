@@ -4,6 +4,7 @@ package holos
 #PlatformNamespace: {
 	name: string
 	labels?: {[string]: string}
+	annotations?: {[string]: string}
 }
 
 // #PlatformNamespaces is a list of namespaces to manage across the platform.

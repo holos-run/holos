@@ -19,3 +19,8 @@ package v1
   apiVersion: "v1"
   kind: "Pod"
 }
+
+#Service: {
+  apiVersion: "v1"
+  kind: "Service"
+}

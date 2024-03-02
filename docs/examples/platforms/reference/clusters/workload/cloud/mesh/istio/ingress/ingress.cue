@@ -50,28 +50,74 @@ import "encoding/json"
 _ProxyProtocol: gatewayTopology: proxyProtocol: {}
 
 // Additional holos specific API Objects
-let LoopbackName = #GatewayValues.name + "-loopback"
+let Name = #GatewayValues.name
+let GatewayLabels = {
+	app:   Name
+	istio: "ingressgateway"
+}
+let RedirectMetaName = {
+	name:      Name + "-https-redirect"
+	namespace: #TargetNamespace
+}
+
+// https-redirect
+_APIObjects: {
+	Gateway: {
+		httpsRedirect: #Gateway & {
+			metadata: RedirectMetaName
+			spec: selector: GatewayLabels
+			spec: servers: [{
+				port: {
+					number:   80
+					name:     "http2"
+					protocol: "HTTP2"
+				}
+				hosts: ["*"]
+				// handled by the VirtualService
+				tls: httpsRedirect: false
+			}]
+		}
+	}
+	VirtualService: {
+		httpsRedirect: #VirtualService & {
+			metadata: RedirectMetaName
+			spec: hosts: ["*"]
+			spec: gateways: [RedirectMetaName.name]
+			spec: http: [{
+				match: [{withoutHeaders: ":path": prefix: "/.well-known/acme-challenge/"}]
+				redirect: {
+					scheme:       "https"
+					redirectCode: 302
+				}
+			}]
+		}
+	}
+}
+
+let LoopbackName = Name + "-loopback"
 let LoopbackDescription = "Allows in-cluster traffic to stay in cluster via traffic routing"
 let LoopbackLabels = {
 	app:   LoopbackName
 	istio: "ingressgateway"
 }
+let LoopbackMetaName = {
+	name:      LoopbackName
+	namespace: #TargetNamespace
+}
 
+// istio-ingressgateway-loopback
 _APIObjects: {
 	Deployment: {
 		loopback: #Deployment & {
 			_description: LoopbackDescription
-			metadata: {
-				name:      LoopbackName
-				namespace: #TargetNamespace
-			}
+			metadata:     LoopbackMetaName
 			spec: {
 				selector: matchLabels: LoopbackLabels
 				template: {
 					metadata: {
-						annotations: #CommonAnnotations & {
-							_Description:                LoopbackDescription
-							"inject.istio.io/templates": "gateway"
+						annotations: "inject.istio.io/templates": "gateway"
+						annotations: #Description & {
+							_Description: LoopbackDescription
 						}
 						labels: LoopbackLabels & {"sidecar.istio.io/inject": "true"}
 					}
@@ -96,6 +142,14 @@ _APIObjects: {
 					}
 				}
 			}
+		}
+	}
+	Service: {
+		loopback: #Service & {
+			_description: LoopbackDescription
+			metadata:     LoopbackMetaName
+			spec: selector:      LoopbackLabels
+			spec: ports: [{port: 80, name: "http"}, {port: 443, name: "https"}]
 		}
 	}
 }
