@@ -3,6 +3,7 @@ package holos
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ksv1 "kustomize.toolkit.fluxcd.io/kustomization/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -55,8 +56,20 @@ _apiVersion: "holos.run/v1alpha1"
 	...
 }
 
+#CommonAnnotations: {
+	_Description:            string | *""
+	"holos.run/description": _Description
+	...
+}
+
 #NamespaceObject: #ClusterObject & {
-	metadata: namespace: string
+	_description: string | *""
+	metadata: {
+		namespace: string
+		annotations: #CommonAnnotations & {
+			_Description: _description
+		}
+	}
 }
 
 // Kubernetes API Objects
@@ -76,6 +89,7 @@ _apiVersion: "holos.run/v1alpha1"
 #Pod:            #NamespaceObject & corev1.#Pod
 #Job:            #NamespaceObject & batchv1.#Job
 #CronJob:        #NamespaceObject & batchv1.#CronJob
+#Deployment:     #NamespaceObject & appsv1.#Deployment
 
 // Flux Kustomization CRDs
 #Kustomization: #NamespaceObject & ksv1.#Kustomization & {

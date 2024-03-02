@@ -3066,7 +3066,7 @@ import (
 	// If set, the fields of SecurityContext override the equivalent fields of PodSecurityContext.
 	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 	// +optional
-	securityContext?: null | #SecurityContext @go(SecurityContext,*SecurityContext) @protobuf(15,bytes,opt)
+	securityContext?: #SecurityContext @go(SecurityContext,*SecurityContext) @protobuf(15,bytes,opt)
 
 	// Whether this container should allocate a buffer for stdin in the container runtime. If this
 	// is not set, reads from stdin in the container will always result in EOF.
