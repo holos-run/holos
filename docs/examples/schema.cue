@@ -105,20 +105,23 @@ _apiVersion: "holos.run/v1alpha1"
 #Certificate:    #NamespaceObject & crt.#Certificate
 
 // #HTTP01Cert defines a http01 certificate.
-#HTTP01Cert: #Certificate & {
-	_name:   string
-	_secret: string | *_name
-	let Host = _name + "." + #ClusterDomain
-	metadata: {
-		name:      _secret
-		namespace: string | *#TargetNamespace
-	}
-	spec: {
-		commonName: Host
-		dnsNames: [Host]
-		secretName: _secret
-		issuerRef: kind: "ClusterIssuer"
-		issuerRef: name: "letsencrypt"
+#HTTP01Cert: {
+	_name:      string
+	_secret:    string | *_name
+	SecretName: _secret
+	Host:       _name + "." + #ClusterDomain
+	object: #Certificate & {
+		metadata: {
+			name:      _secret
+			namespace: string | *#TargetNamespace
+		}
+		spec: {
+			commonName: Host
+			dnsNames: [Host]
+			secretName: _secret
+			issuerRef: kind: "ClusterIssuer"
+			issuerRef: name: "letsencrypt"
+		}
 	}
 }
 

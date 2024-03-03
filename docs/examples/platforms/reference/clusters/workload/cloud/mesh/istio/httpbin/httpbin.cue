@@ -14,12 +14,14 @@ let Metadata = {
 #TargetNamespace: "istio-ingress"
 #DependsOn:       _IngressGateway
 
+let Cert = #HTTP01Cert & {
+	_name:   Name
+	_secret: SecretName
+}
+
 #KubernetesObjects & {
 	apiObjects: {
-		Certificate: httpbin: #HTTP01Cert & {
-			_name:   Name
-			_secret: SecretName
-		}
+		Certificate: httpbin: Cert.object
 		Deployment: httpbin: #Deployment & {
 			metadata: Metadata
 			spec: selector: matchLabels: MatchLabels
@@ -48,6 +50,26 @@ let Metadata = {
 			spec: ports: [
 				{port: 80, targetPort: 8080, protocol: "TCP", name: "http"},
 			]
+		}
+		Gateway: httpbin: #Gateway & {
+			metadata: Metadata
+			spec: selector: istio: "ingressgateway"
+			spec: servers: [
+				{
+					hosts: ["\(#TargetNamespace)/\(Cert.Host)"]
+					port: name:          "https-\(#InstanceName)"
+					port: number:        443
+					port: protocol:      "HTTPS"
+					tls: credentialName: Cert.SecretName
+					tls: mode:           "SIMPLE"
+				},
+			]
+		}
+		VirtualService: httpbin: #VirtualService & {
+			metadata: Metadata
+			spec: hosts: [Cert.Host]
+			spec: gateways: ["\(#TargetNamespace)/\(Name)"]
+			spec: http: [{route: [{destination: host: Name}]}]
 		}
 	}
 }
