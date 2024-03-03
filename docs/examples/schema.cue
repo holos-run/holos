@@ -40,11 +40,17 @@ _apiVersion: "holos.run/v1alpha1"
 // #TargetNamespace is the target namespace for a holos component.
 #TargetNamespace: string
 
+// #SelectorLabels are mixed into selectors.
+#SelectorLabels: {
+	"holos.run/stage.name":     #StageName
+	"holos.run/project.name":   #CollectionName
+	"holos.run/component.name": #ComponentName
+	...
+}
+
 // #CommonLabels are mixed into every kubernetes api object.
 #CommonLabels: {
-	"holos.run/stage.name":        #StageName
-	"holos.run/project.name":      #CollectionName
-	"holos.run/component.name":    #ComponentName
+	#SelectorLabels
 	"app.kubernetes.io/part-of":   #StageName
 	"app.kubernetes.io/name":      #CollectionName
 	"app.kubernetes.io/component": #ComponentName
@@ -97,6 +103,24 @@ _apiVersion: "holos.run/v1alpha1"
 #Gateway:        #NamespaceObject & gw.#Gateway
 #VirtualService: #NamespaceObject & vs.#VirtualService
 #Certificate:    #NamespaceObject & crt.#Certificate
+
+// #HTTP01Cert defines a http01 certificate.
+#HTTP01Cert: #Certificate & {
+	_name:   string
+	_secret: string | *_name
+	let Host = _name + "." + #ClusterDomain
+	metadata: {
+		name:      _secret
+		namespace: string | *#TargetNamespace
+	}
+	spec: {
+		commonName: Host
+		dnsNames: [Host]
+		secretName: _secret
+		issuerRef: kind: "ClusterIssuer"
+		issuerRef: name: "letsencrypt"
+	}
+}
 
 // Flux Kustomization CRDs
 #Kustomization: #NamespaceObject & ksv1.#Kustomization & {
@@ -323,6 +347,12 @@ _apiVersion: "holos.run/v1alpha1"
 
 // Cluster Domain is the cluster specific domain
 #ClusterDomain: #InputKeys.cluster + "." + #Platform.org.domain
+
+// #SidecarInject represents the istio sidecar inject label
+#IstioSidecar: {
+	"sidecar.istio.io/inject": "true"
+	...
+}
 
 // By default, render kind: Skipped so holos knows to skip over intermediate cue files.
 // This enables the use of holos render ./foo/bar/baz/... when bar contains intermediary constraints which are not complete components.
