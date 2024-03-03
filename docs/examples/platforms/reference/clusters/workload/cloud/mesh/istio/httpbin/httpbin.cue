@@ -3,6 +3,11 @@ package holos
 let Name = "httpbin"
 let SecretName = #InputKeys.cluster + "-" + Name
 let MatchLabels = {app: Name} & #SelectorLabels
+let Metadata = {
+	name:      Name
+	namespace: #TargetNamespace
+	labels: app: Name
+}
 
 #InputKeys: component: Name
 
@@ -16,11 +21,7 @@ let MatchLabels = {app: Name} & #SelectorLabels
 			_secret: SecretName
 		}
 		Deployment: httpbin: #Deployment & {
-			metadata: {
-				name:      Name
-				namespace: #TargetNamespace
-				labels: app: Name
-			}
+			metadata: Metadata
 			spec: selector: matchLabels: MatchLabels
 			spec: template: {
 				metadata: labels: MatchLabels
@@ -40,6 +41,13 @@ let MatchLabels = {app: Name} & #SelectorLabels
 						capabilities: drop: ["ALL"]
 					}}]
 			}
+		}
+		Service: httpbin: #Service & {
+			metadata: Metadata
+			spec: selector: MatchLabels
+			spec: ports: [
+				{port: 80, targetPort: 8080, protocol: "TCP", name: "http"},
+			]
 		}
 	}
 }
