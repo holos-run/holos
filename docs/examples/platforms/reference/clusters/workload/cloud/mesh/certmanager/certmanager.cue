@@ -10,7 +10,9 @@ package holos
 }
 
 #HelmChart & {
-	values: installCRDs: true
+	values: #UpstreamValues & {
+		installCRDs: true
+	}
 	namespace: #TargetNamespace
 	chart: {
 		name:    "cert-manager"

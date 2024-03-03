@@ -4,11 +4,11 @@ package holos
 #InputKeys: project: "mesh"
 
 // Shared dependencies for all components in this collection.
-#Kustomization: spec: targetNamespace: #TargetNamespace
 #DependsOn: _Namespaces
 
 // Common Dependencies
-_CertManager: CertManager: name: "\(#InstancePrefix)-certmanager"
-_Namespaces: Namespaces: name:   "\(#StageName)-secrets-namespaces"
-_IstioBase: IstioBase: name:     "\(#InstancePrefix)-istio-base"
-_IstioD: IstioD: name:           "\(#InstancePrefix)-istiod"
+_CertManager: CertManager: name:       "\(#InstancePrefix)-certmanager"
+_Namespaces: Namespaces: name:         "\(#StageName)-secrets-namespaces"
+_IstioBase: IstioBase: name:           "\(#InstancePrefix)-istio-base"
+_IstioD: IstioD: name:                 "\(#InstancePrefix)-istiod"
+_IngressGateway: IngressGateway: name: "\(#InstancePrefix)-ingress"

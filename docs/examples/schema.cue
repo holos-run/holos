@@ -10,6 +10,7 @@ import (
 	es "external-secrets.io/externalsecret/v1beta1"
 	ss "external-secrets.io/secretstore/v1beta1"
 	ci "cert-manager.io/clusterissuer/v1"
+	crt "cert-manager.io/certificate/v1"
 	gw "networking.istio.io/gateway/v1beta1"
 	vs "networking.istio.io/virtualservice/v1beta1"
 	"encoding/yaml"
@@ -71,6 +72,7 @@ _apiVersion: "holos.run/v1alpha1"
 
 #NamespaceObject: #ClusterObject & {
 	metadata: namespace: string
+	...
 }
 
 // Kubernetes API Objects
@@ -94,6 +96,7 @@ _apiVersion: "holos.run/v1alpha1"
 #Deployment:     #NamespaceObject & appsv1.#Deployment
 #Gateway:        #NamespaceObject & gw.#Gateway
 #VirtualService: #NamespaceObject & vs.#VirtualService
+#Certificate:    #NamespaceObject & crt.#Certificate
 
 // Flux Kustomization CRDs
 #Kustomization: #NamespaceObject & ksv1.#Kustomization & {
@@ -317,6 +320,9 @@ _apiVersion: "holos.run/v1alpha1"
 
 // #SecretName is the name of a Secret, ususally coupling a Deployment to an ExternalSecret
 #SecretName: string
+
+// Cluster Domain is the cluster specific domain
+#ClusterDomain: #InputKeys.cluster + "." + #Platform.org.domain
 
 // By default, render kind: Skipped so holos knows to skip over intermediate cue files.
 // This enables the use of holos render ./foo/bar/baz/... when bar contains intermediary constraints which are not complete components.
