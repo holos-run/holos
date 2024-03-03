@@ -23,6 +23,7 @@ let MatchLabels = {app: Name} & #SelectorLabels
 			}
 			spec: selector: matchLabels: MatchLabels
 			spec: template: {
+				metadata: labels: MatchLabels
 				metadata: labels: #CommonLabels
 				metadata: labels: #IstioSidecar
 				spec: securityContext: seccompProfile: type: "RuntimeDefault"
