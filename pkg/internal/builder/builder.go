@@ -17,6 +17,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
@@ -381,6 +382,13 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 	chart := hc.Chart
 	helmOut, err := runCmd(ctx, "helm", "template", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Name, cachedChartPath)
 	if err != nil {
+		stderr := helmOut.stderr.String()
+		lines := strings.Split(stderr, "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(line, "Error:") {
+				err = fmt.Errorf("%s: %w", line, err)
+			}
+		}
 		return wrapper.Wrap(fmt.Errorf("could not run helm template: %w", err))
 	}
 
