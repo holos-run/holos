@@ -9,6 +9,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	es "external-secrets.io/externalsecret/v1beta1"
 	ss "external-secrets.io/secretstore/v1beta1"
+	is "cert-manager.io/issuer/v1"
 	ci "cert-manager.io/clusterissuer/v1"
 	crt "cert-manager.io/certificate/v1"
 	gw "networking.istio.io/gateway/v1beta1"
@@ -91,6 +92,8 @@ _apiVersion: "holos.run/v1alpha1"
 #ClusterRole:        #ClusterObject & rbacv1.#ClusterRole
 #ClusterRoleBinding: #ClusterObject & rbacv1.#ClusterRoleBinding
 #ClusterIssuer: #ClusterObject & ci.#ClusterIssuer & {...}
+
+#Issuer:         #NamespaceObject & is.#Issuer
 #Role:           #NamespaceObject & rbacv1.#Role
 #RoleBinding:    #NamespaceObject & rbacv1.#RoleBinding
 #ConfigMap:      #NamespaceObject & corev1.#ConfigMap

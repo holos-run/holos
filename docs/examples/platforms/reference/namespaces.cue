@@ -21,4 +21,5 @@ let Privileged = {
 	{name: "istio-ingress"} & Restricted,
 	{name: "cert-manager"},
 	{name: "argocd"},
+	{name: "prod-iam-zitadel"},
 ]
