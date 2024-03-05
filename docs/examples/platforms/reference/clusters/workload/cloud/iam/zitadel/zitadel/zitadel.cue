@@ -1,6 +1,7 @@
 package holos
 
-#InputKeys: component: "zitadel"
+let Name = "zitadel"
+#InputKeys: component: Name
 
 // Upstream helm chart doesn't specify the namespace field for all resources.
 #Kustomization: spec: targetNamespace: #TargetNamespace
@@ -8,10 +9,10 @@ package holos
 #HelmChart & {
 	namespace: #TargetNamespace
 	chart: {
-		name:    "zitadel"
+		name:    Name
 		version: "7.9.0"
 		repository: {
-			name: "zitadel"
+			name: Name
 			url:  "https://charts.zitadel.com"
 		}
 	}
@@ -38,6 +39,13 @@ package holos
 				subject: organizations: ["Cockroach"]
 				usages: ["digital signature", "key encipherment", "client auth"]
 			}
+		}
+		VirtualService: zitadel: #VirtualService & {
+			metadata: name: Name
+			metadata: namespace: #TargetNamespace
+			spec: hosts: ["login.\(#Platform.org.domain)"]
+			spec: gateways: ["istio-ingress/default"]
+			spec: http: [{route: [{destination: host: Name}]}]
 		}
 	}
 }

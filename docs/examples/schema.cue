@@ -360,6 +360,12 @@ _apiVersion: "holos.run/v1alpha1"
 	...
 }
 
+// kustomization.yaml
+// TODO: Import this from go
+#Kustomize: {
+	apiVersion: "kustomize.config.k8s.io/v1beta1"
+}
+
 // By default, render kind: Skipped so holos knows to skip over intermediate cue files.
 // This enables the use of holos render ./foo/bar/baz/... when bar contains intermediary constraints which are not complete components.
 // Holos skips over these intermediary cue instances.
