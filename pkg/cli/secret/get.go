@@ -2,10 +2,12 @@ package secret
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/holos-run/holos/pkg/cli/command"
 	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/pkg/util"
 	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -90,17 +92,26 @@ func makeGetRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 
 			printFile := *cfg.printFile
 			if len(toExtract) == 0 {
-				if printFile == "" {
-					printFile = secretName
-				}
-			}
-
-			if printFile != "" {
-				if data, found := secret.Data[printFile]; found {
-					hc.Write(data)
-				} else {
-					err := fmt.Errorf("cannot print: want %s have %v: did you mean --extract-all or --%s=name", printFile, keys, printFlagName)
-					return wrapper.Wrap(err)
+				if printFile == "" { // print all data keys
+					data := make(map[string]string)
+					for k, v := range secret.Data {
+						data[k] = string(v)
+					}
+					b, err := json.MarshalIndent(data, "", "  ")
+					if err != nil {
+						return wrapper.Wrap(err)
+					}
+					log.Info(fmt.Sprintf("len: %v", len(b)))
+					b = util.EnsureNewline(b)
+					log.Info(fmt.Sprintf("len: %v", len(b)))
+					hc.Write(b)
+				} else { // print named data keys keys
+					if data, found := secret.Data[printFile]; found {
+						hc.Write(data)
+					} else {
+						err := fmt.Errorf("cannot print: want %s have %v: did you mean --extract-all or --%s=name", printFile, keys, printFlagName)
+						return wrapper.Wrap(err)
+					}
 				}
 			}
 

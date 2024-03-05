@@ -164,10 +164,10 @@ func (r *Result) addOverlayObjects(log *slog.Logger) {
 		for _, name := range names {
 			yamlString := v[name]
 			log.Debug(fmt.Sprintf("%s/%s", kind, name), "kind", kind, "name", name)
-			util.EnsureNewline(b)
+			b = util.EnsureNewline(b)
 			header := fmt.Sprintf("---\n# Source: CUE apiObjects.%s.%s\n", kind, name)
 			b = append(b, []byte(header+yamlString)...)
-			util.EnsureNewline(b)
+			b = util.EnsureNewline(b)
 		}
 	}
 	r.accumulatedOutput = string(b)
@@ -193,7 +193,7 @@ func (r *Result) kustomize(ctx context.Context) error {
 	// Write the main api object resources file for kustomize.
 	target := filepath.Join(tempDir, r.ResourcesFile)
 	b := []byte(r.AccumulatedOutput())
-	util.EnsureNewline(b)
+	b = util.EnsureNewline(b)
 	if err := os.WriteFile(target, b, 0644); err != nil {
 		return wrapper.Wrap(fmt.Errorf("could not write resources: %w", err))
 	}
@@ -206,7 +206,7 @@ func (r *Result) kustomize(ctx context.Context) error {
 			return wrapper.Wrap(err)
 		}
 		b := []byte(content)
-		util.EnsureNewline(b)
+		b = util.EnsureNewline(b)
 		if err := os.WriteFile(target, b, 0644); err != nil {
 			return wrapper.Wrap(fmt.Errorf("could not write: %w", err))
 		}
