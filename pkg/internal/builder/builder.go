@@ -82,13 +82,21 @@ type Metadata struct {
 // holos cli. A map is used to improve the clarity of error messages from cue.
 type apiObjectMap map[string]map[string]string
 
+// fileContentMap is a map of file names to file contents.
+type fileContentMap map[string]string
+
 // Result is the build result for display or writing.
 type Result struct {
-	Metadata     Metadata     `json:"metadata,omitempty"`
-	KsContent    string       `json:"ksContent,omitempty"`
-	APIObjectMap apiObjectMap `json:"apiObjectMap,omitempty"`
-	finalOutput  string
-	Skip         bool
+	Metadata  Metadata `json:"metadata,omitempty"`
+	KsContent string   `json:"ksContent,omitempty"`
+	// APIObjectMap holds the marshalled representation of api objects.
+	APIObjectMap      apiObjectMap `json:"apiObjectMap,omitempty"`
+	accumulatedOutput string
+	Skip              bool
+	// KustomizeFiles holds the files for a kustomize kustomization directory.
+	KustomizeFiles fileContentMap `json:"kustomizeFiles"`
+	// ResourcesFile is the file name used for api objects in kustomization.yaml
+	ResourcesFile string `json:"resourcesFile,omitempty"`
 }
 
 type Repository struct {
@@ -104,14 +112,15 @@ type Chart struct {
 
 // A HelmChart represents a helm command to provide chart values in order to render kubernetes api objects.
 type HelmChart struct {
-	APIVersion    string       `json:"apiVersion"`
-	Kind          string       `json:"kind"`
-	Metadata      Metadata     `json:"metadata"`
-	KsContent     string       `json:"ksContent"`
-	Namespace     string       `json:"namespace"`
-	Chart         Chart        `json:"chart"`
-	ValuesContent string       `json:"valuesContent"`
-	APIObjectMap  apiObjectMap `json:"APIObjectMap"`
+	APIVersion    string   `json:"apiVersion"`
+	Kind          string   `json:"kind"`
+	Metadata      Metadata `json:"metadata"`
+	KsContent     string   `json:"ksContent"`
+	Namespace     string   `json:"namespace"`
+	Chart         Chart    `json:"chart"`
+	ValuesContent string   `json:"valuesContent"`
+	// APIObjectMap holds the marshalled representation of api objects.
+	APIObjectMap apiObjectMap `json:"APIObjectMap"`
 }
 
 // Name returns the metadata name of the result. Equivalent to the
@@ -128,14 +137,14 @@ func (r *Result) KustomizationFilename(writeTo string, cluster string) string {
 	return filepath.Join(writeTo, "clusters", cluster, "holos", "components", r.Name()+"-kustomization.gen.yaml")
 }
 
-// FinalOutput returns the final rendered output.
-func (r *Result) FinalOutput() string {
-	return r.finalOutput
+// AccumulatedOutput returns the accumulated rendered output.
+func (r *Result) AccumulatedOutput() string {
+	return r.accumulatedOutput
 }
 
-// addAPIObjects adds the overlay api objects to finalOutput.
+// addAPIObjects adds the overlay api objects to accumulatedOutput.
 func (r *Result) addOverlayObjects(log *slog.Logger) {
-	b := []byte(r.FinalOutput())
+	b := []byte(r.AccumulatedOutput())
 	kinds := make([]string, 0, len(r.APIObjectMap))
 	// Sort the keys
 	for kind := range r.APIObjectMap {
@@ -161,7 +170,58 @@ func (r *Result) addOverlayObjects(log *slog.Logger) {
 			util.EnsureNewline(b)
 		}
 	}
-	r.finalOutput = string(b)
+	r.accumulatedOutput = string(b)
+}
+
+// kustomize replaces the final output with the output of kustomize build if the
+func (r *Result) kustomize(ctx context.Context) error {
+	log := logger.FromContext(ctx)
+	if r.ResourcesFile == "" {
+		log.DebugContext(ctx, "skipping kustomize: no resourcesFile")
+		return nil
+	}
+	if len(r.KustomizeFiles) < 1 {
+		log.DebugContext(ctx, "skipping kustomize: no kustomizeFiles")
+		return nil
+	}
+	tempDir, err := os.MkdirTemp("", "holos.kustomize")
+	if err != nil {
+		return wrapper.Wrap(err)
+	}
+	defer remove(ctx, tempDir)
+
+	// Write the main api object resources file for kustomize.
+	target := filepath.Join(tempDir, r.ResourcesFile)
+	b := []byte(r.AccumulatedOutput())
+	util.EnsureNewline(b)
+	if err := os.WriteFile(target, b, 0644); err != nil {
+		return wrapper.Wrap(fmt.Errorf("could not write resources: %w", err))
+	}
+	log.DebugContext(ctx, "wrote: "+target, "op", "write", "path", target, "bytes", len(b))
+
+	// Write the kustomization tree, kustomization.yaml must be in this map for kustomize to work.
+	for file, content := range r.KustomizeFiles {
+		target := filepath.Join(tempDir, file)
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			return wrapper.Wrap(err)
+		}
+		b := []byte(content)
+		util.EnsureNewline(b)
+		if err := os.WriteFile(target, b, 0644); err != nil {
+			return wrapper.Wrap(fmt.Errorf("could not write: %w", err))
+		}
+		log.DebugContext(ctx, "wrote: "+target, "op", "write", "path", target, "bytes", len(b))
+	}
+
+	// Run kustomize.
+	kOut, err := runCmd(ctx, "kubectl", "kustomize", tempDir)
+	if err != nil {
+		log.ErrorContext(ctx, kOut.stderr.String())
+		return wrapper.Wrap(err)
+	}
+	// Replace the accumulated output
+	r.accumulatedOutput = kOut.stdout.String()
+	return nil
 }
 
 // Save writes the content to the filesystem for git ops.
@@ -278,6 +338,9 @@ func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 				return nil, err
 			}
 			result.addOverlayObjects(log)
+			if err := result.kustomize(ctx); err != nil {
+				return nil, wrapper.Wrap(fmt.Errorf("could not kustomize: %w", err))
+			}
 		default:
 			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
 		}
@@ -392,7 +455,7 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 		return wrapper.Wrap(fmt.Errorf("could not run helm template: %w", err))
 	}
 
-	r.finalOutput = helmOut.stdout.String()
+	r.accumulatedOutput = helmOut.stdout.String()
 
 	return nil
 }

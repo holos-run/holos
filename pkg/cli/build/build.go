@@ -23,7 +23,7 @@ func makeBuildRunFunc(cfg *holos.Config) command.RunFunc {
 			if result.Skip {
 				continue
 			}
-			outs = append(outs, result.FinalOutput())
+			outs = append(outs, result.AccumulatedOutput())
 		}
 		out := strings.Join(outs, "---\n")
 		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {

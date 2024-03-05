@@ -11,24 +11,24 @@ let Name = "gateway"
 
 // TODO: We need to generalize this for multiple services hanging off the default gateway.
 let LoginCert = #Certificate & {
-		metadata: {
-			name:      "login"
-			namespace: #TargetNamespace
-		}
-		spec: {
-			commonName: "login.\(#Platform.org.domain)"
-			dnsNames: [commonName]
-			secretName: metadata.name
-			issuerRef: kind: "ClusterIssuer"
-			issuerRef: name: "letsencrypt"
-		}
+	metadata: {
+		name:      "login"
+		namespace: #TargetNamespace
 	}
+	spec: {
+		commonName: "login.\(#Platform.org.domain)"
+		dnsNames: [commonName]
+		secretName: metadata.name
+		issuerRef: kind: "ClusterIssuer"
+		issuerRef: name: "letsencrypt"
+	}
+}
 
 #KubernetesObjects & {
 	apiObjects: {
 		Certificate: login: LoginCert
 		Gateway: default: #Gateway & {
-			metadata: name: "default"
+			metadata: name:      "default"
 			metadata: namespace: #TargetNamespace
 			spec: selector: istio: "ingressgateway"
 			spec: servers: [

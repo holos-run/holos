@@ -32,7 +32,7 @@ func makeRenderRunFunc(cfg *holos.Config) command.RunFunc {
 			}
 			// API Objects
 			path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
-			if err := result.Save(ctx, path, result.FinalOutput()); err != nil {
+			if err := result.Save(ctx, path, result.AccumulatedOutput()); err != nil {
 				return wrapper.Wrap(err)
 			}
 			// Kustomization

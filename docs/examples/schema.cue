@@ -14,8 +14,11 @@ import (
 	crt "cert-manager.io/certificate/v1"
 	gw "networking.istio.io/gateway/v1beta1"
 	vs "networking.istio.io/virtualservice/v1beta1"
+	kc "sigs.k8s.io/kustomize/api/types"
 	"encoding/yaml"
 )
+
+let ResourcesFile = "resources.yaml"
 
 // _apiVersion is the version of this schema.  Defines the interface between CUE output and the holos cli.
 _apiVersion: "holos.run/v1alpha1"
@@ -260,7 +263,7 @@ _apiVersion: "holos.run/v1alpha1"
 		}
 	}
 
-	// apiObjectsContent holds the marshalled representation of apiObjects
+	// apiObjectMap holds the marshalled representation of apiObjects
 	apiObjectMap: {
 		for kind, v in apiObjects {
 			"\(kind)": {
@@ -340,6 +343,10 @@ _apiVersion: "holos.run/v1alpha1"
 	platform: #Platform
 	// instance returns the key values of the holos component instance.
 	instance: #InputKeys
+	// resources is the intermediate file name for api objects.
+	resourcesFile: ResourcesFile
+	// kustomizeFiles represents the files in a kustomize directory tree.
+	kustomizeFiles: #KustomizeFiles.Files
 }
 
 // #PlatformSpec is the output schema of a platform specification.
@@ -360,10 +367,26 @@ _apiVersion: "holos.run/v1alpha1"
 	...
 }
 
+// #KustomizeTree represents a kustomize build.
+#KustomizeFiles: {
+	Objects: {
+		"kustomization.yaml": #Kustomize
+	}
+	// Files holds the marshaled output holos writes to the filesystem
+	Files: {
+		for filename, obj in Objects {
+			"\(filename)": yaml.Marshal(obj)
+		}
+		...
+	}
+}
+
 // kustomization.yaml
-// TODO: Import this from go
-#Kustomize: {
+#Kustomize: kc.#Kustomization & {
 	apiVersion: "kustomize.config.k8s.io/v1beta1"
+	kind:       "Kustomization"
+	resources: [ResourcesFile]
+	...
 }
 
 // By default, render kind: Skipped so holos knows to skip over intermediate cue files.
