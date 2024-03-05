@@ -101,9 +101,7 @@ func makeGetRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 					if err != nil {
 						return wrapper.Wrap(err)
 					}
-					log.Info(fmt.Sprintf("len: %v", len(b)))
 					b = util.EnsureNewline(b)
-					log.Info(fmt.Sprintf("len: %v", len(b)))
 					hc.Write(b)
 				} else { // print named data keys keys
 					if data, found := secret.Data[printFile]; found {
