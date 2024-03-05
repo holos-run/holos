@@ -13,6 +13,8 @@ package holos
 	values: #Values & {
 		installCRDs: true
 		startupapicheck: enabled: false
+		// Must not use kube-system on gke autopilot.  GKE Warden authz blocks access.
+		global: leaderElection: namespace: #TargetNamespace
 	}
 	namespace: #TargetNamespace
 	chart: {

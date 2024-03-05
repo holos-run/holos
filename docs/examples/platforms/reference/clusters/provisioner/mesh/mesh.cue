@@ -7,5 +7,7 @@ package holos
 #DependsOn: _Namespaces
 
 // Common Dependencies
-_CertManager: CertManager: name: "\(#InstancePrefix)-certmanager"
-_Namespaces: Namespaces: name:   "\(#StageName)-secrets-namespaces"
+_Namespaces: Namespaces: name:     "\(#StageName)-secrets-namespaces"
+_CertManager: CertManager: name:   "\(#InstancePrefix)-certmanager"
+_LetsEncrypt: LetsEncrypt: name:   "\(#InstancePrefix)-letsencrypt"
+_Certificates: Certificates: name: "\(#InstancePrefix)-certificates"

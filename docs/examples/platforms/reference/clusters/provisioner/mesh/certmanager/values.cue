@@ -51,7 +51,7 @@ package holos
 
 		leaderElection: {
 			// Override the namespace used for the leader election lease
-			namespace: "kube-system"
+			namespace: string | *"kube-system"
 		}
 	}
 
