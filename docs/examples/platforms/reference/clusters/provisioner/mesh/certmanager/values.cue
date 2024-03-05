@@ -1,6 +1,6 @@
 package holos
 
-#UpstreamValues: {
+#Values: {
 
 	// +docs:section=Global
 	// Default values for cert-manager.
@@ -246,7 +246,7 @@ package holos
 	//    memory: 32Mi
 	//
 	// ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-	resources: {}
+	resources: #PodResources
 
 	// Pod Security Context
 	// ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -310,9 +310,7 @@ package holos
 	// This default ensures that Pods are only scheduled to Linux nodes.
 	// It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
 	// +docs:property
-	nodeSelector: {
-		"kubernetes.io/os": "linux"
-	}
+	nodeSelector: #NodeSelector
 
 	// +docs:ignore
 	ingressShim: {}
@@ -408,7 +406,7 @@ package holos
 		enabled: true
 		servicemonitor: {
 			// Create a ServiceMonitor to add cert-manager to Prometheus
-			enabled: false
+			enabled: true | *false
 
 			// Specifies the `prometheus` label on the created ServiceMonitor, this is
 			// used when different Prometheus instances have label selectors matching
@@ -652,7 +650,7 @@ package holos
 		//    memory: 32Mi
 		//
 		// ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-		resources: {}
+		resources: #PodResources
 
 		// Liveness probe values
 		// ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
@@ -685,9 +683,7 @@ package holos
 		// This default ensures that Pods are only scheduled to Linux nodes.
 		// It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
 		// +docs:property
-		nodeSelector: {
-			"kubernetes.io/os": "linux"
-		}
+		nodeSelector: #NodeSelector
 
 		// A Kubernetes Affinity, if required; see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core
 		//
@@ -959,7 +955,7 @@ package holos
 		//    memory: 32Mi
 		//
 		// ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-		resources: {}
+		resources: #PodResources
 
 		// The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
 		// matching labels.
@@ -968,9 +964,7 @@ package holos
 		// This default ensures that Pods are only scheduled to Linux nodes.
 		// It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
 		// +docs:property
-		nodeSelector: {
-			"kubernetes.io/os": "linux"
-		}
+		nodeSelector: #NodeSelector
 
 		// A Kubernetes Affinity, if required; see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core
 		//
@@ -1098,7 +1092,7 @@ package holos
 
 	startupapicheck: {
 		// Enables the startup api check
-		enabled: true
+		enabled: *true | false
 
 		// Pod Security Context to be set on the startupapicheck component Pod
 		// ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
@@ -1151,7 +1145,7 @@ package holos
 		//    memory: 32Mi
 		//
 		// ref: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
-		resources: {}
+		resources: #PodResources
 
 		// The nodeSelector on Pods tells Kubernetes to schedule Pods on the nodes with
 		// matching labels.
@@ -1160,9 +1154,7 @@ package holos
 		// This default ensures that Pods are only scheduled to Linux nodes.
 		// It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
 		// +docs:property
-		nodeSelector: {
-			"kubernetes.io/os": "linux"
-		}
+		nodeSelector: #NodeSelector
 
 		// A Kubernetes Affinity, if required; see https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core
 		//
