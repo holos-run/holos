@@ -4,23 +4,22 @@
 package builder
 
 import (
-	"bytes"
 	"context"
-	"cuelang.org/go/cue/build"
 	"fmt"
-	"github.com/holos-run/holos"
-	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/util"
-	"github.com/holos-run/holos/pkg/wrapper"
 	"log/slog"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
 
+	"cuelang.org/go/cue/build"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
+
+	"github.com/holos-run/holos"
+	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/pkg/util"
+	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 const (
@@ -214,13 +213,13 @@ func (r *Result) kustomize(ctx context.Context) error {
 	}
 
 	// Run kustomize.
-	kOut, err := runCmd(ctx, "kubectl", "kustomize", tempDir)
+	kOut, err := util.RunCmd(ctx, "kubectl", "kustomize", tempDir)
 	if err != nil {
-		log.ErrorContext(ctx, kOut.stderr.String())
+		log.ErrorContext(ctx, kOut.Stderr.String())
 		return wrapper.Wrap(err)
 	}
 	// Replace the accumulated output
-	r.accumulatedOutput = kOut.stdout.String()
+	r.accumulatedOutput = kOut.Stdout.String()
 	return nil
 }
 
@@ -379,25 +378,6 @@ func (b *Builder) findCueMod() (dir holos.PathCueMod, err error) {
 	return dir, nil
 }
 
-type runResult struct {
-	stdout *bytes.Buffer
-	stderr *bytes.Buffer
-}
-
-func runCmd(ctx context.Context, name string, args ...string) (result runResult, err error) {
-	result = runResult{
-		stdout: new(bytes.Buffer),
-		stderr: new(bytes.Buffer),
-	}
-	cmd := exec.CommandContext(ctx, name, args...)
-	cmd.Stdout = result.stdout
-	cmd.Stderr = result.stderr
-	log := logger.FromContext(ctx)
-	log.DebugContext(ctx, "run: "+name, "name", name, "args", args)
-	err = cmd.Run()
-	return
-}
-
 // runHelm provides the values produced by CUE to helm template and returns
 // the rendered kubernetes api objects in the result.
 func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathComponent) error {
@@ -411,15 +391,15 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 	if isNotExist(cachedChartPath) {
 		// Add repositories
 		repo := hc.Chart.Repository
-		out, err := runCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL)
+		out, err := util.RunCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL)
 		if err != nil {
-			log.ErrorContext(ctx, "could not run helm", "stderr", out.stderr.String(), "stdout", out.stdout.String())
+			log.ErrorContext(ctx, "could not run helm", "stderr", out.Stderr.String(), "stdout", out.Stdout.String())
 			return wrapper.Wrap(fmt.Errorf("could not run helm repo add: %w", err))
 		}
 		// Update repository
-		out, err = runCmd(ctx, "helm", "repo", "update", repo.Name)
+		out, err = util.RunCmd(ctx, "helm", "repo", "update", repo.Name)
 		if err != nil {
-			log.ErrorContext(ctx, "could not run helm", "stderr", out.stderr.String(), "stdout", out.stdout.String())
+			log.ErrorContext(ctx, "could not run helm", "stderr", out.Stderr.String(), "stdout", out.Stdout.String())
 			return wrapper.Wrap(fmt.Errorf("could not run helm repo update: %w", err))
 		}
 		// Cache the chart
@@ -443,9 +423,9 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 
 	// Run charts
 	chart := hc.Chart
-	helmOut, err := runCmd(ctx, "helm", "template", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Name, cachedChartPath)
+	helmOut, err := util.RunCmd(ctx, "helm", "template", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Name, cachedChartPath)
 	if err != nil {
-		stderr := helmOut.stderr.String()
+		stderr := helmOut.Stderr.String()
 		lines := strings.Split(stderr, "\n")
 		for _, line := range lines {
 			if strings.HasPrefix(line, "Error:") {
@@ -455,7 +435,7 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 		return wrapper.Wrap(fmt.Errorf("could not run helm template: %w", err))
 	}
 
-	r.accumulatedOutput = helmOut.stdout.String()
+	r.accumulatedOutput = helmOut.Stdout.String()
 
 	return nil
 }
@@ -486,11 +466,11 @@ func cacheChart(ctx context.Context, path holos.PathComponent, chartDir string, 
 	defer remove(ctx, cacheTemp)
 
 	chartName := fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
-	helmOut, err := runCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, chartName)
+	helmOut, err := util.RunCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, chartName)
 	if err != nil {
 		return wrapper.Wrap(fmt.Errorf("could not run helm pull: %w", err))
 	}
-	log.Debug("helm pull", "stdout", helmOut.stdout, "stderr", helmOut.stderr)
+	log.Debug("helm pull", "stdout", helmOut.Stdout, "stderr", helmOut.Stderr)
 
 	cachePath := filepath.Join(string(path), chartDir)
 	if err := os.Rename(cacheTemp, cachePath); err != nil {
