@@ -9,32 +9,21 @@ let Name = "gateway"
 #TargetNamespace: "istio-ingress"
 #DependsOn:       _IngressGateway
 
-// TODO: We need to generalize this for multiple services hanging off the default gateway.
-let LoginCert = #Certificate & {
-	metadata: {
-		name:      "login"
-		namespace: #TargetNamespace
-	}
-	spec: {
-		commonName: "login.\(#Platform.org.domain)"
-		dnsNames: [commonName]
-		secretName: metadata.name
-		issuerRef: kind: "ClusterIssuer"
-		issuerRef: name: "letsencrypt"
-	}
-}
+let LoginCert = #PlatformCerts.login
 
 #KubernetesObjects & {
 	apiObjects: {
-		Certificate: login: LoginCert
+		ExternalSecret: login: #ExternalSecret & {
+			_name: "login"
+		}
 		Gateway: default: #Gateway & {
 			metadata: name:      "default"
 			metadata: namespace: #TargetNamespace
 			spec: selector: istio: "ingressgateway"
 			spec: servers: [
 				{
-					hosts: ["prod-iam-zitadel/\(LoginCert.spec.commonName)"]
-					port: name:          "https-prod-iam-zitadel"
+					hosts: [for dnsName in LoginCert.spec.dnsNames {"prod-iam-zitadel/\(dnsName)"}]
+					port: name:          "https-prod-iam-login"
 					port: number:        443
 					port: protocol:      "HTTPS"
 					tls: credentialName: LoginCert.spec.secretName
