@@ -1,20 +1,25 @@
 package holos
 
 #PlatformCerts: {
-	// Login service for IAM.
+	// Globally scoped platform services are defined here.
 	login: #PlatformCert & {
 		_name:        "login"
 		_wildcard:    true
-		_description: "Cert for Zitadel the platform oidc identity provider for iam"
+		_description: "Cert for Zitadel oidc identity provider for iam services"
 	}
-	"k2-httpbin": #ClusterCert & {
-		_name:        "httpbin"
-		_cluster:     "k2"
-		_description: "Test endpoint to verify the service mesh ingress gateway"
+
+	// Cluster scoped services are defined here.
+	for cluster in #Platform.clusters {
+		"\(cluster.name)-httpbin": #ClusterCert & {
+			_name:        "httpbin"
+			_cluster:     cluster.name
+			_description: "Test endpoint to verify the service mesh ingress gateway"
+		}
 	}
 }
 
-// #PlatformCert provisions a cert in the provisioner cluster.  Workload clusters use ExternalSecret resources to fetch the Secret tls key and cert from the provisioner cluster.
+// #PlatformCert provisions a cert in the provisioner cluster.
+// Workload clusters use ExternalSecret resources to fetch the Secret tls key and cert from the provisioner cluster.
 #PlatformCert: #Certificate & {
 	_name:     string
 	_wildcard: true | *false
