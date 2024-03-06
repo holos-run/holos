@@ -1,6 +1,7 @@
+---
 # https://github.com/golangci/golangci-lint-action?tab=readme-ov-file#how-to-use
 name: Lint
-on:
+"on":
   push:
     branches:
       - main
@@ -22,6 +23,6 @@ jobs:
           go-version: stable
           cache: false
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v4
         with:
           version: latest
