@@ -1,17 +1,20 @@
 package cli
 
 import (
+	"log/slog"
+
+	"github.com/spf13/cobra"
+
 	"github.com/holos-run/holos/pkg/cli/build"
 	"github.com/holos-run/holos/pkg/cli/create"
 	"github.com/holos-run/holos/pkg/cli/get"
 	"github.com/holos-run/holos/pkg/cli/kv"
+	"github.com/holos-run/holos/pkg/cli/preflight"
 	"github.com/holos-run/holos/pkg/cli/render"
 	"github.com/holos-run/holos/pkg/cli/txtar"
 	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/version"
-	"github.com/spf13/cobra"
-	"log/slog"
 )
 
 // New returns a new root *cobra.Command for command line execution.
@@ -51,6 +54,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(render.New(cfg))
 	rootCmd.AddCommand(get.New(cfg))
 	rootCmd.AddCommand(create.New(cfg))
+	rootCmd.AddCommand(preflight.New(cfg))
 
 	// Maybe not needed?
 	rootCmd.AddCommand(txtar.New(cfg))
