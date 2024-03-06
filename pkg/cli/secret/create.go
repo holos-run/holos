@@ -1,6 +1,7 @@
 package secret
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/holos-run/holos/pkg/cli/command"
 	"github.com/holos-run/holos/pkg/holos"
@@ -29,6 +30,7 @@ func NewCreateCmd(hc *holos.Config) *cobra.Command {
 	cfg.dryRun = flagSet.Bool("dry-run", false, "dry run")
 	cfg.appendHash = flagSet.Bool("append-hash", true, "append hash to kubernetes secret name")
 	cfg.dataStdin = flagSet.Bool("data-stdin", false, "read data field as json from stdin if")
+	cfg.trimTrailingNewlines = flagSet.Bool("trim-trailing-newlines", true, "trim trailing newlines if true")
 
 	cmd.Flags().SortFlags = false
 	cmd.Flags().AddGoFlagSet(flagSet)
@@ -80,7 +82,7 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 		}
 
 		for _, file := range cfg.files {
-			if err := filepath.WalkDir(file, makeWalkFunc(secret.Data, file)); err != nil {
+			if err := filepath.WalkDir(file, makeWalkFunc(secret.Data, file, *cfg.trimTrailingNewlines)); err != nil {
 				return wrapper.Wrap(err)
 			}
 		}
@@ -125,7 +127,7 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 	}
 }
 
-func makeWalkFunc(data secretData, root string) fs.WalkDirFunc {
+func makeWalkFunc(data secretData, root string, trimNewlines bool) fs.WalkDirFunc {
 	return func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -142,6 +144,9 @@ func makeWalkFunc(data secretData, root string) fs.WalkDirFunc {
 			key := filepath.Base(path)
 			if data[key], err = os.ReadFile(path); err != nil {
 				return wrapper.Wrap(err)
+			}
+			if trimNewlines {
+				data[key] = bytes.TrimRight(data[key], "\r\n")
 			}
 		}
 
