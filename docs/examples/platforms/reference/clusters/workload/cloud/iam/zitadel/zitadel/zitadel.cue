@@ -24,23 +24,8 @@ let Name = "zitadel"
 		ExternalSecret: masterkey: #ExternalSecret & {
 			_name: "zitadel-masterkey"
 		}
-		Certificate: zitadel: #Certificate & {
-			metadata: name:      "crdb-zitadel-client"
-			metadata: namespace: #TargetNamespace
-			spec: {
-				commonName: "zitadel"
-				issuerRef: {
-					group: "cert-manager.io"
-					kind:  "Issuer"
-					name:  "crdb-ca-issuer"
-				}
-				privateKey: algorithm: "RSA"
-				privateKey: size:      2048
-				renewBefore: "48h0m0s"
-				secretName:  "cockroachdb-zitadel"
-				subject: organizations: ["Cockroach"]
-				usages: ["digital signature", "key encipherment", "client auth"]
-			}
+		ExternalSecret: zitadel: #ExternalSecret & {
+			_name: "cockroachdb-zitadel"
 		}
 		VirtualService: zitadel: #VirtualService & {
 			metadata: name:      Name

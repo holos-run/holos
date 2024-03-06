@@ -478,7 +478,7 @@ package holos
 		copyCerts: image: "busybox"
 		certs: {
 			// Bring your own certs scenario. If provided, tls.init section will be ignored.
-			provided: false
+			provided: true | *false
 			// Secret name for the client root cert.
 			clientRootSecret: "cockroachdb-root"
 			// Secret name for node cert.
@@ -487,7 +487,7 @@ package holos
 			caSecret: "cockroach-ca"
 			// Enable if the secret is a dedicated TLS.
 			// TLS secrets are created by cert-mananger, for example.
-			tlsSecret: false
+			tlsSecret: true | *false
 			// Enable if the you want cockroach db to create its own certificates
 			selfSigner: {
 				// If set, the cockroach db will generate its own certificates

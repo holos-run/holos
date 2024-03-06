@@ -14,13 +14,7 @@ package holos
 	}
 	values: #Values
 	apiObjects: {
-		Issuer: {
-			// https://github.com/cockroachdb/helm-charts/blob/3dcf96726ebcfe3784afb526ddcf4095a1684aea/README.md?plain=1#L196-L201
-			cockroachdb: #Issuer & {
-				metadata: name:      #ComponentName
-				metadata: namespace: #TargetNamespace
-				spec: selfSigned: {}
-			}
-		}
+		ExternalSecret: node: #ExternalSecret & {_name: "cockroachdb-node"}
+		ExternalSecret: root: #ExternalSecret & {_name: "cockroachdb-root"}
 	}
 }
