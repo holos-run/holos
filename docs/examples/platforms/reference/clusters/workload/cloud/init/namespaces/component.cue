@@ -15,9 +15,6 @@ package holos
 		#Namespace & {
 			metadata: _ns
 		},
-		#SecretStore & {
-			_namespace: _ns.name
-		},
 	]
 }
 

@@ -2,6 +2,15 @@ package holos
 
 import "encoding/json"
 
+#DependsOn: _ESO
+
+#InputKeys: {
+	project:   "secrets"
+	component: "eso-creds-refresher"
+}
+
+#TargetNamespace: #CredsRefresher.namespace
+
 // output kubernetes api objects for holos
 #KubernetesObjects & {
 	apiObjects: {
@@ -12,15 +21,6 @@ import "encoding/json"
 		}
 	}
 }
-
-#InputKeys: {
-	project:   "secrets"
-	component: "eso-creds-refresher"
-}
-
-#TargetNamespace: #CredsRefresher.namespace
-
-#DependsOn: Namespaces: name: #InstancePrefix + "-namespaces"
 
 let NAME = #CredsRefresher.name
 let AUD = "//iam.googleapis.com/projects/\(#InputKeys.gcpProjectNumber)/locations/global/workloadIdentityPools/holos/providers/k8s-\(#InputKeys.cluster)"

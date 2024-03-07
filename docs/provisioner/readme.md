@@ -133,9 +133,12 @@ This section configured:
 
 1. Provisioner Cluster to provide secrets to workload clusters.
 2. IAM service account `eso-creds-refresher` to identify the credential refresher job.
-3. Workload identity pool to authenticate the `eso-creds-refresher` Kubernetes service account in an external cluster.
-4. IAM policy to allow `eso-creds-refresher` to authenticate to the Provisioner Cluster.
-5. RoleBinding to allow `eso-creds-refresher` to create kubernetes service account tokens representing the credentials for use by SecretStore resources in workload clusters.
+3. Workload identity pool to authenticate the `system:serviceaccount:holos-system:eso-creds-refresher` Kubernetes service account in all clusters that share the workload identity pool.
+4. IAM policy to allow the `eso-creds-refresher` IAM service account to authenticate to the Provisioner Cluster.
+5. RoleBinding to allow the `eso-creds-refresher` IAM service account to create kubernetes service account tokens representing the credentials for use by SecretStore resources in workload clusters.
+
+> [!NOTE]
+> Any cluster in the workload identity pool can impersonate the eso-creds-refresher IAM service account.
 
 ## Cluster Setup
 
@@ -148,6 +151,12 @@ GKE and EKS clusters always get new key on creation.  A Talos cluster can preser
 ```shell
 HOLOS_CLUSTER_NAME=west1
 ISSUER_URL="https://example.com/clusters/${HOLOS_CLUSTER_NAME}"
+```
+
+Alternatively:
+
+```shell
+ISSUER_URL="$(kubectl get --raw='/.well-known/openid-configuration' | jq -r .issuer)"
 ```
 
 ```shell
