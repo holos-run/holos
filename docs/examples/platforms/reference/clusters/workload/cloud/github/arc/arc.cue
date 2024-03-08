@@ -2,7 +2,7 @@ package holos
 
 // GitHub Actions Runner Controller
 
-#TargetNamespace: "arc-systems"
+#TargetNamespace: "arc-system"
 
 #InputKeys: project:   "github"
 #InputKeys: component: "arc"
