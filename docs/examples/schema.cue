@@ -390,6 +390,18 @@ _apiVersion: "holos.run/v1alpha1"
 	...
 }
 
+// #DefaultSecurityContext is the holos default security context to comply with the restricted namespace policy.
+// Refer to https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
+#DefaultSecurityContext: {
+	securityContext: {
+		allowPrivilegeEscalation: false
+		runAsNonRoot:             true
+		capabilities: drop: ["ALL"]
+		seccompProfile: type: "RuntimeDefault"
+	}
+	...
+}
+
 // By default, render kind: Skipped so holos knows to skip over intermediate cue files.
 // This enables the use of holos render ./foo/bar/baz/... when bar contains intermediary constraints which are not complete components.
 // Holos skips over these intermediary cue instances.

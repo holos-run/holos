@@ -11,6 +11,7 @@ package holos
 #DependsOn: Namespaces: name:          "prod-secrets-namespaces"
 
 #HelmChart & {
+	values: #Values & #DefaultSecurityContext
 	namespace: #TargetNamespace
 	chart: {
 		// Match the gha-base-name in the chart _helpers.tpl to avoid long full names.
