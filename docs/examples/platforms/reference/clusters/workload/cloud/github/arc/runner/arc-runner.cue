@@ -1,6 +1,7 @@
 package holos
 
 #InputKeys: component: "arc-runner"
+#Kustomization: spec: targetNamespace: #TargetNamespace
 
 let GithubOrg = #Platform.org.github.orgs.primary.name
 

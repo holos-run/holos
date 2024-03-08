@@ -5,6 +5,5 @@ package holos
 #DependsOn: Namespaces: name: "prod-secrets-namespaces"
 
 #TargetNamespace: #InputKeys.component
-#Kustomization: spec: targetNamespace: #TargetNamespace
 #HelmChart: namespace: #TargetNamespace
 #HelmChart: chart: version: "0.8.3"
