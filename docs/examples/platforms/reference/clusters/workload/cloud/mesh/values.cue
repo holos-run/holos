@@ -526,7 +526,7 @@ package holos
 
 	base: {
 		// For istioctl usage to disable istio config crds in base
-		enableIstioConfigCRDs: true
+		enableIstioConfigCRDs: *true | false
 
 		// If enabled, gateway-api types will be validated using the standard upstream validation logic.
 		// This is an alternative to deploying the standalone validation server the project provides.

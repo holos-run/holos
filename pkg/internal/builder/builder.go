@@ -429,7 +429,7 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 
 	// Run charts
 	chart := hc.Chart
-	helmOut, err := util.RunCmd(ctx, "helm", "template", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chartBaseName, cachedChartPath)
+	helmOut, err := util.RunCmd(ctx, "helm", "template", "--include-crds", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chartBaseName, cachedChartPath)
 	if err != nil {
 		stderr := helmOut.Stderr.String()
 		lines := strings.Split(stderr, "\n")
