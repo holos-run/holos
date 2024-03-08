@@ -24,9 +24,6 @@ let Name = "zitadel"
 		ExternalSecret: masterkey: #ExternalSecret & {
 			_name: "zitadel-masterkey"
 		}
-		ExternalSecret: zitadel: #ExternalSecret & {
-			_name: "cockroachdb-zitadel"
-		}
 		VirtualService: zitadel: #VirtualService & {
 			metadata: name:      Name
 			metadata: namespace: #TargetNamespace

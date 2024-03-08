@@ -15,6 +15,7 @@ import (
 	gw "networking.istio.io/gateway/v1beta1"
 	vs "networking.istio.io/virtualservice/v1beta1"
 	kc "sigs.k8s.io/kustomize/api/types"
+	pg "postgres-operator.crunchydata.com/postgrescluster/v1beta1"
 	"encoding/yaml"
 )
 
@@ -96,19 +97,20 @@ _apiVersion: "holos.run/v1alpha1"
 #ClusterRoleBinding: #ClusterObject & rbacv1.#ClusterRoleBinding
 #ClusterIssuer: #ClusterObject & ci.#ClusterIssuer & {...}
 
-#Issuer:         #NamespaceObject & is.#Issuer
-#Role:           #NamespaceObject & rbacv1.#Role
-#RoleBinding:    #NamespaceObject & rbacv1.#RoleBinding
-#ConfigMap:      #NamespaceObject & corev1.#ConfigMap
-#ServiceAccount: #NamespaceObject & corev1.#ServiceAccount
-#Pod:            #NamespaceObject & corev1.#Pod
-#Service:        #NamespaceObject & corev1.#Service
-#Job:            #NamespaceObject & batchv1.#Job
-#CronJob:        #NamespaceObject & batchv1.#CronJob
-#Deployment:     #NamespaceObject & appsv1.#Deployment
-#Gateway:        #NamespaceObject & gw.#Gateway
-#VirtualService: #NamespaceObject & vs.#VirtualService
-#Certificate:    #NamespaceObject & crt.#Certificate
+#Issuer:          #NamespaceObject & is.#Issuer
+#Role:            #NamespaceObject & rbacv1.#Role
+#RoleBinding:     #NamespaceObject & rbacv1.#RoleBinding
+#ConfigMap:       #NamespaceObject & corev1.#ConfigMap
+#ServiceAccount:  #NamespaceObject & corev1.#ServiceAccount
+#Pod:             #NamespaceObject & corev1.#Pod
+#Service:         #NamespaceObject & corev1.#Service
+#Job:             #NamespaceObject & batchv1.#Job
+#CronJob:         #NamespaceObject & batchv1.#CronJob
+#Deployment:      #NamespaceObject & appsv1.#Deployment
+#Gateway:         #NamespaceObject & gw.#Gateway
+#VirtualService:  #NamespaceObject & vs.#VirtualService
+#Certificate:     #NamespaceObject & crt.#Certificate
+#PostgresCluster: #NamespaceObject & pg.#PostgresCluster
 
 // #HTTP01Cert defines a http01 certificate.
 #HTTP01Cert: {
@@ -156,8 +158,8 @@ _apiVersion: "holos.run/v1alpha1"
 
 // #DependsOn stores all of the dependencies between components.  It's a struct to support merging across levels in the tree.
 #DependsOn: {
-	[NAME=_]: {
-		name: string
+	[Name=_]: {
+		name: string | *"\(#InstancePrefix)-\(Name)"
 	}
 	...
 }

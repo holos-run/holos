@@ -125,7 +125,7 @@ package holos
 	securityContext: {}
 
 	// Additional environment variables
-	env: []
+	env: [...]
 	// - name: ZITADEL_DATABASE_POSTGRES_HOST
 	//   valueFrom:
 	//     secretKeyRef:
