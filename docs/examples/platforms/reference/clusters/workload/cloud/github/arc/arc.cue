@@ -11,9 +11,10 @@ package holos
 #DependsOn: Namespaces: name:          "prod-secrets-namespaces"
 
 #HelmChart & {
-	values: installCrds: true
 	namespace: #TargetNamespace
 	chart: {
+		// Match the gha-base-name in the chart _helpers.tpl to avoid long full names.
+		release: "gha-rs-controller"
 		name:    "oci://ghcr.io/actions/actions-runner-controller-charts/gha-runner-scale-set-controller"
 		version: "0.8.3"
 	}

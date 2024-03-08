@@ -312,6 +312,7 @@ _apiVersion: "holos.run/v1alpha1"
 #Chart: {
 	name:    string
 	version: string
+	release: string | *name
 	repository: {
 		name?: string
 		url?:  string

@@ -106,6 +106,7 @@ type Repository struct {
 type Chart struct {
 	Name       string     `json:"name"`
 	Version    string     `json:"version"`
+	Release    string     `json:"release"`
 	Repository Repository `json:"repository"`
 }
 
@@ -387,8 +388,7 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 		return nil
 	}
 
-	chartBaseName := filepath.Base(hc.Chart.Name)
-	cachedChartPath := filepath.Join(string(path), ChartDir, chartBaseName)
+	cachedChartPath := filepath.Join(string(path), ChartDir, filepath.Base(hc.Chart.Name))
 	if isNotExist(cachedChartPath) {
 		// Add repositories
 		repo := hc.Chart.Repository
@@ -429,7 +429,7 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 
 	// Run charts
 	chart := hc.Chart
-	helmOut, err := util.RunCmd(ctx, "helm", "template", "--include-crds", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chartBaseName, cachedChartPath)
+	helmOut, err := util.RunCmd(ctx, "helm", "template", "--include-crds", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Release, cachedChartPath)
 	if err != nil {
 		stderr := helmOut.Stderr.String()
 		lines := strings.Split(stderr, "\n")
