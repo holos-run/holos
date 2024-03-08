@@ -16,8 +16,8 @@ package holos
 		remotePilotAddress: ""
 	}
 	base: {
-		// Include the CRDs in the helm template output
-		enableCRDTemplates: true
+		// holos includes crd templates with the --include-crds helm flag.
+		enableCRDTemplates: false
 		// Validation webhook configuration url
 		// For example: https://$remotePilotAddress:15017/validate
 		validationURL: ""

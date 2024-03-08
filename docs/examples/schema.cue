@@ -312,9 +312,10 @@ _apiVersion: "holos.run/v1alpha1"
 #Chart: {
 	name:    string
 	version: string
+	release: string | *name
 	repository: {
-		name: string
-		url:  string
+		name?: string
+		url?:  string
 	}
 }
 
@@ -386,6 +387,18 @@ _apiVersion: "holos.run/v1alpha1"
 	apiVersion: "kustomize.config.k8s.io/v1beta1"
 	kind:       "Kustomization"
 	resources: [ResourcesFile]
+	...
+}
+
+// #DefaultSecurityContext is the holos default security context to comply with the restricted namespace policy.
+// Refer to https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
+#DefaultSecurityContext: {
+	securityContext: {
+		allowPrivilegeEscalation: false
+		runAsNonRoot:             true
+		capabilities: drop: ["ALL"]
+		seccompProfile: type: "RuntimeDefault"
+	}
 	...
 }
 

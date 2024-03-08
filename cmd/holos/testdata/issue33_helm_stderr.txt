@@ -16,6 +16,7 @@ namespace: "zitadel"
 chart: {
 	name:    "zitadel"
 	version: "7.9.0"
+	release: name
 	repository: {
 		name: "zitadel"
 		url:  "https://charts.zitadel.com"

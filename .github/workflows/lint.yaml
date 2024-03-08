@@ -15,7 +15,7 @@ permissions:
 jobs:
   golangci:
     name: lint
-    runs-on: [self-hosted, k8s]
+    runs-on: gha-rs
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
