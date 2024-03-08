@@ -387,21 +387,27 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 		return nil
 	}
 
-	cachedChartPath := filepath.Join(string(path), ChartDir, hc.Chart.Name)
+	chartBaseName := filepath.Base(hc.Chart.Name)
+	cachedChartPath := filepath.Join(string(path), ChartDir, chartBaseName)
 	if isNotExist(cachedChartPath) {
 		// Add repositories
 		repo := hc.Chart.Repository
-		out, err := util.RunCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL)
-		if err != nil {
-			log.ErrorContext(ctx, "could not run helm", "stderr", out.Stderr.String(), "stdout", out.Stdout.String())
-			return wrapper.Wrap(fmt.Errorf("could not run helm repo add: %w", err))
+		if repo.URL != "" {
+			out, err := util.RunCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL)
+			if err != nil {
+				log.ErrorContext(ctx, "could not run helm", "stderr", out.Stderr.String(), "stdout", out.Stdout.String())
+				return wrapper.Wrap(fmt.Errorf("could not run helm repo add: %w", err))
+			}
+			// Update repository
+			out, err = util.RunCmd(ctx, "helm", "repo", "update", repo.Name)
+			if err != nil {
+				log.ErrorContext(ctx, "could not run helm", "stderr", out.Stderr.String(), "stdout", out.Stdout.String())
+				return wrapper.Wrap(fmt.Errorf("could not run helm repo update: %w", err))
+			}
+		} else {
+			log.DebugContext(ctx, "no chart repository url proceeding assuming oci chart")
 		}
-		// Update repository
-		out, err = util.RunCmd(ctx, "helm", "repo", "update", repo.Name)
-		if err != nil {
-			log.ErrorContext(ctx, "could not run helm", "stderr", out.Stderr.String(), "stdout", out.Stdout.String())
-			return wrapper.Wrap(fmt.Errorf("could not run helm repo update: %w", err))
-		}
+
 		// Cache the chart
 		if err := cacheChart(ctx, path, ChartDir, hc.Chart); err != nil {
 			return fmt.Errorf("could not cache chart: %w", err)
@@ -423,7 +429,7 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 
 	// Run charts
 	chart := hc.Chart
-	helmOut, err := util.RunCmd(ctx, "helm", "template", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Name, cachedChartPath)
+	helmOut, err := util.RunCmd(ctx, "helm", "template", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chartBaseName, cachedChartPath)
 	if err != nil {
 		stderr := helmOut.Stderr.String()
 		lines := strings.Split(stderr, "\n")
@@ -465,7 +471,10 @@ func cacheChart(ctx context.Context, path holos.PathComponent, chartDir string, 
 	}
 	defer remove(ctx, cacheTemp)
 
-	chartName := fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
+	chartName := chart.Name
+	if chart.Repository.Name != "" {
+		chartName = fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
+	}
 	helmOut, err := util.RunCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, chartName)
 	if err != nil {
 		return wrapper.Wrap(fmt.Errorf("could not run helm pull: %w", err))

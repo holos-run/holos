@@ -22,4 +22,5 @@ let Privileged = {
 	{name: "cert-manager"},
 	{name: "argocd"},
 	{name: "prod-iam-zitadel"},
+	{name: "arc-system"},
 ]

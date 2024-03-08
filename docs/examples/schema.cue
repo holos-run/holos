@@ -313,8 +313,8 @@ _apiVersion: "holos.run/v1alpha1"
 	name:    string
 	version: string
 	repository: {
-		name: string
-		url:  string
+		name?: string
+		url?:  string
 	}
 }
 
