@@ -227,6 +227,16 @@ _apiVersion: "holos.run/v1alpha1"
 	provisionerURL: string @tag(provisionerURL, type=string)
 }
 
+// #ClusterSpec is the specification of a holos platform cluster member.
+#ClusterSpec: {
+	// name is the cluster name.
+	name: string
+	// pool is the optional ceph pool of the cluster.
+	pool?: string
+	// region is the geographic region of the cluster.
+	region?: string
+}
+
 // #Platform defines the primary lookup table for the platform.  Lookup keys should be limited to those defined in #KeyTags.
 #Platform: {
 	// org holds user defined values scoped organization wide.  A platform has one and only one organization.
@@ -236,9 +246,8 @@ _apiVersion: "holos.run/v1alpha1"
 		contact: email:    string
 		cloudflare: email: string
 	}
-	clusters: [ID=_]: {
-		name:    string & ID
-		region?: string
+	clusters: [ID=_]: #ClusterSpec & {
+		name: string & ID
 	}
 	stages: [ID=_]: {
 		name: string & ID

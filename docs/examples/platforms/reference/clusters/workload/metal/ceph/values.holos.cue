@@ -48,7 +48,7 @@ package holos
 
 		// (required) Ceph pool into which the RBD image shall be created
 		// eg: pool: replicapool
-		pool: "k8s-dev"
+		pool: #Platform.clusters[#ClusterName].pool
 
 		// (optional) RBD image features, CSI creates image with image-format 2 CSI
 		// RBD currently supports `layering`, `journaling`, `exclusive-lock`,
