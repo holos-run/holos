@@ -1,0 +1,33 @@
+# Kustomize is a supported holos component kind
+exec holos render --cluster-name=mycluster . --log-level=debug
+
+# Want generated output
+cmp want.yaml deploy/clusters/mycluster/components/kstest/kstest.gen.yaml
+
+-- cue.mod --
+package holos
+-- component.cue --
+package holos
+
+cluster: string @tag(cluster, string)
+
+apiVersion: "holos.run/v1alpha1"
+kind: "KustomizeBuild"
+metadata: name: "kstest"
+-- kustomization.yaml --
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: mynamespace
+resources:
+- serviceaccount.yaml
+-- serviceaccount.yaml --
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: test
+-- want.yaml --
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: test
+  namespace: mynamespace

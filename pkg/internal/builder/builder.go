@@ -33,6 +33,8 @@ const (
 	Skip = "Skip"
 	// ChartDir is the chart cache directory name.
 	ChartDir = "vendor"
+	// KustomizeBuild is the value of the kind field of cue output indicating holos should process the component using kustomize build to render output.
+	KustomizeBuild = "KustomizeBuild"
 )
 
 // An Option configures a Builder
@@ -341,6 +343,20 @@ func (b *Builder) Run(ctx context.Context) (results []*Result, err error) {
 			if err := result.kustomize(ctx); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not kustomize: %w", err))
 			}
+		case KustomizeBuild:
+			// CUE directly provides the kubernetes api objects in result.Content
+			if err := value.Decode(&result); err != nil {
+				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
+			}
+			// Run kustomize.
+			kOut, err := util.RunCmd(ctx, "kubectl", "kustomize", instance.Dir)
+			if err != nil {
+				log.ErrorContext(ctx, kOut.Stderr.String())
+				return nil, wrapper.Wrap(err)
+			}
+			// Replace the accumulated output
+			result.accumulatedOutput = kOut.Stdout.String()
+			result.addOverlayObjects(log)
 		default:
 			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", kind))
 		}

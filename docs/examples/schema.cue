@@ -350,6 +350,21 @@ _apiVersion: "holos.run/v1alpha1"
 	kustomizeFiles: #KustomizeFiles.Files
 }
 
+// #KustomizeBuild is a holos component that uses plain yaml files as the source of api objects for a holos component.
+// Intended for upstream components like the CrunchyData Postgres Operator.  The holos cli is expected to execute kustomize build on the component directory to produce the rendered output.
+#KustomizeBuild: {
+	#OutputTypeMeta
+	#APIObjects
+	kind: "KustomizeBuild"
+	metadata: name: #InstanceName
+	// ksObjects holds the flux Kustomization objects for gitops.
+	ksObjects: [...#Kustomization] | *[#Kustomization]
+	// ksContent is the yaml representation of kustomization.
+	ksContent: yaml.MarshalStream(ksObjects)
+	// namespace defines the value passed to the helm --namespace flag
+	namespace: #TargetNamespace
+}
+
 // #PlatformSpec is the output schema of a platform specification.
 #PlatformSpec: {
 	#OutputTypeMeta
