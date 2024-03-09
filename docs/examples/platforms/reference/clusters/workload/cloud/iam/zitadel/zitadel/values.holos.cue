@@ -9,12 +9,12 @@ package holos
 		{
 			name: "ZITADEL_DATABASE_POSTGRES_HOST"
 			valueFrom: secretKeyRef: name: "\(_DBName)-pguser-\(_DBName)"
-			valueFrom: secretKeyRef: key:  "host"
+			valueFrom: secretKeyRef: key:  "pgbouncer-host"
 		},
 		{
 			name: "ZITADEL_DATABASE_POSTGRES_PORT"
 			valueFrom: secretKeyRef: name: "\(_DBName)-pguser-\(_DBName)"
-			valueFrom: secretKeyRef: key:  "port"
+			valueFrom: secretKeyRef: key:  "pgbouncer-port"
 		},
 		{
 			name: "ZITADEL_DATABASE_POSTGRES_DATABASE"

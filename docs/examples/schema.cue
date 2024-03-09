@@ -243,10 +243,18 @@ _apiVersion: "holos.run/v1alpha1"
 #Platform: {
 	// org holds user defined values scoped organization wide.  A platform has one and only one organization.
 	org: {
+		// e.g. "example"
 		name:   string
+		// e.g. "example.com"
 		domain: string
+		// e.g. "Example"
+		displayName: string
+		// e.g. "platform@example.com"
 		contact: email:    string
+		// e.g. "platform@example.com"
 		cloudflare: email: string
+		// e.g. "example"
+	  github: orgs: primary: name: string
 	}
 	clusters: [ID=_]: #ClusterSpec & {
 		name: string & ID
