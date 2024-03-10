@@ -1,8 +1,8 @@
 package secret
 
 import (
-	"flag"
 	"github.com/holos-run/holos/pkg/holos"
+	"github.com/spf13/pflag"
 )
 
 const NameLabel = "holos.run/secret.name"
@@ -24,10 +24,10 @@ type config struct {
 	extractTo            *string
 }
 
-func newConfig() (*config, *flag.FlagSet) {
+func newConfig() (*config, *pflag.FlagSet) {
 	cfg := &config{}
-	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
-	cfg.namespace = flagSet.String("namespace", holos.DefaultProvisionerNamespace, "namespace in the provisioner cluster")
+	flagSet := pflag.NewFlagSet("", pflag.ContinueOnError)
+	cfg.namespace = flagSet.StringP("namespace", "n", holos.DefaultProvisionerNamespace, "namespace in the provisioner cluster")
 	cfg.cluster = flagSet.String("cluster-name", "", "cluster name selector")
 	return cfg, flagSet
 }

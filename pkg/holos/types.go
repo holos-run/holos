@@ -13,6 +13,11 @@ func (i *StringSlice) String() string {
 	return fmt.Sprint(*i)
 }
 
+// Type implements the pflag.Value interface and describes the type.
+func (i *StringSlice) Type() string {
+	return "[]string"
+}
+
 // Set implements the flag.Value interface.
 func (i *StringSlice) Set(value string) error {
 	for _, str := range strings.Split(value, ",") {

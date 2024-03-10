@@ -33,7 +33,7 @@ func NewCreateCmd(hc *holos.Config) *cobra.Command {
 	cfg.trimTrailingNewlines = flagSet.Bool("trim-trailing-newlines", true, "trim trailing newlines if true")
 
 	cmd.Flags().SortFlags = false
-	cmd.Flags().AddGoFlagSet(flagSet)
+	cmd.Flags().AddFlagSet(flagSet)
 	cmd.RunE = makeCreateRunFunc(hc, cfg)
 	return cmd
 

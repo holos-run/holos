@@ -31,7 +31,7 @@ func NewGetCmd(hc *holos.Config) *cobra.Command {
 	cfg.extractTo = flagSet.String("extract-to", ".", "extract to directory")
 
 	cmd.Flags().SortFlags = false
-	cmd.Flags().AddGoFlagSet(flagSet)
+	cmd.Flags().AddFlagSet(flagSet)
 	cmd.RunE = makeGetRunFunc(hc, cfg)
 	return cmd
 }
