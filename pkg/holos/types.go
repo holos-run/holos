@@ -15,7 +15,7 @@ func (i *StringSlice) String() string {
 
 // Type implements the pflag.Value interface and describes the type.
 func (i *StringSlice) Type() string {
-	return "[]string"
+	return "strings"
 }
 
 // Set implements the flag.Value interface.
