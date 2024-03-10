@@ -244,17 +244,17 @@ _apiVersion: "holos.run/v1alpha1"
 	// org holds user defined values scoped organization wide.  A platform has one and only one organization.
 	org: {
 		// e.g. "example"
-		name:   string
+		name: string
 		// e.g. "example.com"
 		domain: string
 		// e.g. "Example"
 		displayName: string
 		// e.g. "platform@example.com"
-		contact: email:    string
+		contact: email: string
 		// e.g. "platform@example.com"
 		cloudflare: email: string
 		// e.g. "example"
-	  github: orgs: primary: name: string
+		github: orgs: primary: name: string
 	}
 	clusters: [ID=_]: #ClusterSpec & {
 		name: string & ID
@@ -271,6 +271,15 @@ _apiVersion: "holos.run/v1alpha1"
 	}
 }
 
+// #Backups defines backup configuration.
+// TODO: Consider the best place for this, possibly as part of the site platform config.  This represents the primary location for backups.
+#Backups: {
+	s3: {
+		region:   string
+		endpoint: string | *"s3.dualstack.\(region).amazonaws.com"
+	}
+}
+
 // #APIObjects is the output type for api objects produced by cue.  A map is used to aid debugging and clarity.
 #APIObjects: {
 	// apiObjects holds each the api objects produced by cue.
@@ -280,6 +289,8 @@ _apiVersion: "holos.run/v1alpha1"
 				kind: Kind
 			}
 		}
+		ExternalSecret?: [Name=_]: #ExternalSecret & {_name: Name}
+		VirtualService?: [Name=_]: #VirtualService & {metadata: name: Name}
 	}
 
 	// apiObjectMap holds the marshalled representation of apiObjects

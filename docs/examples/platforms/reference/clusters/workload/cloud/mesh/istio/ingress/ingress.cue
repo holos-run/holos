@@ -63,7 +63,7 @@ let RedirectMetaName = {
 // https-redirect
 _APIObjects: {
 	Gateway: {
-		httpsRedirect: #Gateway & {
+		"\(RedirectMetaName.name)": #Gateway & {
 			metadata: RedirectMetaName
 			spec: selector: GatewayLabels
 			spec: servers: [{
@@ -79,7 +79,7 @@ _APIObjects: {
 		}
 	}
 	VirtualService: {
-		httpsRedirect: #VirtualService & {
+		"\(RedirectMetaName.name)": #VirtualService & {
 			metadata: RedirectMetaName
 			spec: hosts: ["*"]
 			spec: gateways: [RedirectMetaName.name]

@@ -21,10 +21,8 @@ let Name = "zitadel"
 	values: #Values
 
 	apiObjects: {
-		ExternalSecret: masterkey: #ExternalSecret & {
-			_name: "zitadel-masterkey"
-		}
-		VirtualService: zitadel: #VirtualService & {
+		ExternalSecret: "zitadel-masterkey": _
+		VirtualService: "\(Name)": {
 			metadata: name:      Name
 			metadata: namespace: #TargetNamespace
 			spec: hosts: ["login.\(#Platform.org.domain)"]

@@ -11,11 +11,7 @@ package holos
 		githubConfigSecret: "controller-manager"
 		githubConfigUrl:    "https://github.com/" + #Platform.org.github.orgs.primary.name
 	}
-	apiObjects: {
-		ExternalSecret: controller: #ExternalSecret & {
-			_name: values.githubConfigSecret
-		}
-	}
+	apiObjects: ExternalSecret: "\(values.githubConfigSecret)": _
 	chart: {
 		// Match the gha-base-name in the chart _helpers.tpl to avoid long full names.
 		// NOTE: Unfortunately the INSTALLATION_NAME is used as the helm release

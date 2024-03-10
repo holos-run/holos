@@ -18,9 +18,7 @@ let Cert = #PlatformCerts[SecretName]
 
 #KubernetesObjects & {
 	apiObjects: {
-		ExternalSecret: httpbin: #ExternalSecret & {
-			_name: Cert.spec.secretName
-		}
+		ExternalSecret: "\(Cert.spec.secretName)": _
 		Deployment: httpbin: #Deployment & {
 			metadata: Metadata
 			spec: selector: matchLabels: MatchLabels

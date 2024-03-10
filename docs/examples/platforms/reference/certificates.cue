@@ -44,7 +44,8 @@ package holos
 	_name:     string
 	_cluster:  string
 	_wildcard: true | *false
-	metadata: name:      string | *"\(_cluster)-\(_name)"
+	// Enforce this value
+	metadata: name:      "\(_cluster)-\(_name)"
 	metadata: namespace: string | *"istio-ingress"
 	spec: {
 		commonName: string | *"\(_name).\(_cluster).\(#Platform.org.domain)"

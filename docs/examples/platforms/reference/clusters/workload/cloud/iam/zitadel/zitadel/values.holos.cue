@@ -35,15 +35,14 @@ package holos
 		// The postgres component configures privileged postgres user creds.
 		{
 			name: "ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME"
-			valueFrom: secretKeyRef: name: "\(_DBName)-pguser-postgres"
+			valueFrom: secretKeyRef: name: "\(_DBName)-pguser-\(_DBName)-admin"
 			valueFrom: secretKeyRef: key:  "user"
 		},
 		{
 			name: "ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD"
-			valueFrom: secretKeyRef: name: "\(_DBName)-pguser-postgres"
+			valueFrom: secretKeyRef: name: "\(_DBName)-pguser-\(_DBName)-admin"
 			valueFrom: secretKeyRef: key:  "password"
 		},
-
 	]
 
 	// Refer to https://zitadel.com/docs/self-hosting/manage/database
