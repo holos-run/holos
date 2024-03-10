@@ -237,6 +237,8 @@ _apiVersion: "holos.run/v1alpha1"
 	pool?: string
 	// region is the geographic region of the cluster.
 	region?: string
+	// primary is true if name matches the primaryCluster name
+	primary: bool
 }
 
 // #Platform defines the primary lookup table for the platform.  Lookup keys should be limited to those defined in #KeyTags.
@@ -256,8 +258,19 @@ _apiVersion: "holos.run/v1alpha1"
 		// e.g. "example"
 		github: orgs: primary: name: string
 	}
-	clusters: [ID=_]: #ClusterSpec & {
-		name: string & ID
+	// Only one cluster may be primary at a time.  All others are standby.
+	// Refer to [repo based standby](https://access.crunchydata.com/documentation/postgres-operator/latest/tutorials/backups-disaster-recovery/disaster-recovery#repo-based-standby)
+	primaryCluster: {
+		name: string
+	}
+	clusters: [Name=_]: #ClusterSpec & {
+		name: string & Name
+		if Name == primaryCluster.name {
+			primary: true
+		}
+		if Name != primaryCluster.name {
+			primary: false
+		}
 	}
 	stages: [ID=_]: {
 		name: string & ID

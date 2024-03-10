@@ -2,6 +2,7 @@ package holos
 
 #InputKeys: component: "postgres"
 
+let Cluster = #Platform.clusters[#ClusterName]
 let S3Secret = "pgo-s3-creds"
 let ZitadelUser = _DBName
 let ZitadelAdmin = "\(_DBName)-admin"
@@ -10,6 +11,8 @@ let ZitadelAdmin = "\(_DBName)-admin"
 	apiObjects: {
 		ExternalSecret: "pgo-s3-creds": _
 		PostgresCluster: db: #PostgresCluster & HighlyAvailable & {
+			// This must be an external storage bucket for our architecture.
+			let BucketRepoName = spec.backups.pgbackrest.manual.repoName
 			metadata: name:      _DBName
 			metadata: namespace: #TargetNamespace
 			spec: {
@@ -30,25 +33,59 @@ let ZitadelAdmin = "\(_DBName)-admin"
 						resources: requests: storage: string | *"1Gi"
 					}
 				}]
+				standby: {
+					repoName: BucketRepoName
+					if Cluster.primary {
+						enabled: false
+					}
+					if !Cluster.primary {
+						enabled: true
+					}
+				}
+				// Restore from a backup
+				dataSource: pgbackrest: {
+					stanza: "db"
+					configuration: [{secret: name: S3Secret}]
+					// Restore from known good full backup taken in https://github.com/holos-run/holos/issues/48#issuecomment-1987375044
+					options: ["--type=time", "--target=\"2024-03-10 21:56:00+00\""]
+					global: {
+						"\(BucketRepoName)-path":        "/pgbackrest/\(#TargetNamespace)/\(metadata.name)/\(BucketRepoName)"
+						"\(BucketRepoName)-cipher-type": "aes-256-cbc"
+					}
+					repo: {
+						name: BucketRepoName
+						s3: {
+							bucket:   string | *"\(#Platform.org.name)-zitadel-backups"
+							region:   string | *#Backups.s3.region
+							endpoint: string | *"s3.dualstack.\(region).amazonaws.com"
+						}
+					}
+				}
+
 				// Refer to https://access.crunchydata.com/documentation/postgres-operator/latest/tutorials/backups-disaster-recovery/backups
 				backups: pgbackrest: {
-					configuration: [{secret: name: S3Secret}]
+					configuration: dataSource.pgbackrest.configuration
 					manual: {
-						// Note the repoName value must match the config keys in the S3Secret.
+						// Note: the repoName value must match the config keys in the S3Secret.
+						// This must be an external repository for backup / restore / regional failovers.
 						repoName: "repo2"
 						options: ["--type=full", ...]
+					}
+					restore: {
+						enabled:  true
+						repoName: BucketRepoName
 					}
 					global: {
 						// Store only one full backup in the PV because it's more expensive than object storage.
 						"\(repos[0].name)-retention-full": "1"
 						// Store 14 days of full backups in the bucket.
-						"\(manual.repoName)-retention-full":      string | *"14"
-						"\(manual.repoName)-retention-full-type": "count" | *"time" // time in days
+						"\(BucketRepoName)-retention-full":      string | *"14"
+						"\(BucketRepoName)-retention-full-type": "count" | *"time" // time in days
 						// Refer to https://access.crunchydata.com/documentation/postgres-operator/latest/tutorials/backups-disaster-recovery/backups#encryption
-						"\(manual.repoName)-cipher-type": "aes-256-cbc"
+						"\(BucketRepoName)-cipher-type": "aes-256-cbc"
 						// "The convention we recommend for setting this variable is /pgbackrest/$NAMESPACE/$CLUSTER_NAME/repoN"
 						// Ref: https://access.crunchydata.com/documentation/postgres-operator/latest/tutorials/backups-disaster-recovery/backups#understanding-backup-configuration-and-basic-operations
-						"\(manual.repoName)-path": "/pgbackrest/\(#TargetNamespace)/\(metadata.name)/\(manual.repoName)"
+						"\(BucketRepoName)-path": "/pgbackrest/\(#TargetNamespace)/\(metadata.name)/\(manual.repoName)"
 					}
 					repos: [
 						{
@@ -59,15 +96,11 @@ let ZitadelAdmin = "\(_DBName)-admin"
 							}
 						},
 						{
-							name: manual.repoName
+							name: BucketRepoName
 							// Full backup weekly on Sunday at 1am, differntial daily at 1am every day except Sunday.
 							schedules: full:         string | *"0 1 * * 0"
 							schedules: differential: string | *"0 1 * * 1-6"
-							s3: {
-								bucket:   string | *"\(#Platform.org.name)-zitadel-backups"
-								region:   string | *#Backups.s3.region
-								endpoint: string | *"s3.dualstack.\(region).amazonaws.com"
-							}
+							s3: dataSource.pgbackrest.repo.s3
 						},
 					]
 				}
