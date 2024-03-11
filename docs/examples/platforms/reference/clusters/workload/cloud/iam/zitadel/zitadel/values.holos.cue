@@ -43,17 +43,22 @@ package holos
 			valueFrom: secretKeyRef: name: "\(_DBName)-pguser-\(_DBName)-admin"
 			valueFrom: secretKeyRef: key:  "password"
 		},
+		// CA Cert issued by PGO which issued the pgbouncer tls cert
+		{
+			name:  "ZITADEL_DATABASE_POSTGRES_USER_SSL_ROOTCERT"
+			value: "/\(_PGBouncer)/ca.crt"
+		},
+		{
+			name:  "ZITADEL_DATABASE_POSTGRES_ADMIN_SSL_ROOTCERT"
+			value: "/\(_PGBouncer)/ca.crt"
+		},
 	]
 
 	// Refer to https://zitadel.com/docs/self-hosting/manage/database
 	zitadel: {
 		// Zitadel master key
 		masterkeySecretName: "zitadel-masterkey"
-		// Note the tls configuration is a challenge to use externally issued certs from the provsioner cluster.
-		// We intentionally use pgo managed certs and intend to backup the ca key to the provisioner and restore it for
-		// cross cluster replication.  The problems seemed to arise from specifying the user and admin tls secrets in
-		// addition to the ca cert secret.
-		dbSslCaCrtSecret: "\(_DBName)-cluster-cert"
+		// dbSslCaCrtSecret: "pgo-root-cacert"
 
 		// All settings: https://zitadel.com/docs/self-hosting/manage/configure#runtime-configuration-file
 		// Helm interface: https://github.com/zitadel/zitadel-charts/blob/zitadel-7.4.0/charts/zitadel/values.yaml#L20-L21

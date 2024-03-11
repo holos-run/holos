@@ -82,6 +82,7 @@ _apiVersion: "holos.run/v1alpha1"
 }
 
 #NamespaceObject: #ClusterObject & {
+	metadata: name:      string
 	metadata: namespace: string
 	...
 }
@@ -304,6 +305,7 @@ _apiVersion: "holos.run/v1alpha1"
 		}
 		ExternalSecret?: [Name=_]: #ExternalSecret & {_name: Name}
 		VirtualService?: [Name=_]: #VirtualService & {metadata: name: Name}
+		Issuer?: [Name=_]: #Issuer & {metadata: name: Name}
 	}
 
 	// apiObjectMap holds the marshalled representation of apiObjects
@@ -458,6 +460,12 @@ _apiVersion: "holos.run/v1alpha1"
 		seccompProfile: type: "RuntimeDefault"
 	}
 	...
+}
+
+// Certificate name should always match the secret name.
+#Certificate: {
+	metadata: name:   _
+	spec: secretName: metadata.name
 }
 
 // By default, render kind: Skipped so holos knows to skip over intermediate cue files.

@@ -1,6 +1,7 @@
 package holos
 
-#InputKeys: component: "postgres"
+#InputKeys: component:        "postgres"
+#DependsOn: "postgres-certs": _
 
 let Cluster = #Platform.clusters[#ClusterName]
 let S3Secret = "pgo-s3-creds"
@@ -18,6 +19,10 @@ let ZitadelAdmin = "\(_DBName)-admin"
 			spec: {
 				image:           "registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-16.2-0"
 				postgresVersion: 16
+				// Custom certs are necessary for streaming standby replication which we use to replicate between two regions.
+				// Refer to https://access.crunchydata.com/documentation/postgres-operator/latest/tutorials/backups-disaster-recovery/disaster-recovery#streaming-standby
+				customTLSSecret: name:            "\(_DBName)-primary-tls"
+				customReplicationTLSSecret: name: "\(_DBName)-repl-tls"
 				// Refer to https://access.crunchydata.com/documentation/postgres-operator/latest/references/crd/5.5.x/postgrescluster#postgresclusterspecusersindex
 				users: [
 					{name: ZitadelUser},
