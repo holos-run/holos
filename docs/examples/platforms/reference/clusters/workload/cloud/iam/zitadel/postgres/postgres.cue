@@ -51,8 +51,9 @@ let ZitadelAdmin = "\(_DBName)-admin"
 				dataSource: pgbackrest: {
 					stanza: "db"
 					configuration: [{secret: name: S3Secret}]
-					// Restore from known good full backup taken in https://github.com/holos-run/holos/issues/48#issuecomment-1987375044
-					options: ["--type=time", "--target=\"2024-03-10 21:56:00+00\""]
+					// Restore from known good full backup taken
+					// time="2024-03-11T17:08:58Z" level=info msg="crunchy-pgbackrest ends"
+					options: ["--type=time", "--target=\"2024-03-11 17:10:00+00\""]
 					global: {
 						"\(BucketRepoName)-path":        "/pgbackrest/\(#TargetNamespace)/\(metadata.name)/\(BucketRepoName)"
 						"\(BucketRepoName)-cipher-type": "aes-256-cbc"
