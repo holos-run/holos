@@ -8,12 +8,17 @@ let S3Secret = "pgo-s3-creds"
 let ZitadelUser = _DBName
 let ZitadelAdmin = "\(_DBName)-admin"
 
+// This must be an external storage bucket for our architecture.
+let BucketRepoName = "repo2"
+
+// Restore options.  Set the timestamp to a known good point in time.
+// time="2024-03-11T17:08:58Z" level=info msg="crunchy-pgbackrest ends"
+let RestoreOptions = ["--type=time", "--target=\"2024-03-11 17:10:00+00\""]
+
 #KubernetesObjects & {
 	apiObjects: {
 		ExternalSecret: "pgo-s3-creds": _
 		PostgresCluster: db: #PostgresCluster & HighlyAvailable & {
-			// This must be an external storage bucket for our architecture.
-			let BucketRepoName = spec.backups.pgbackrest.manual.repoName
 			metadata: name:      _DBName
 			metadata: namespace: #TargetNamespace
 			spec: {
@@ -47,37 +52,37 @@ let ZitadelAdmin = "\(_DBName)-admin"
 						enabled: true
 					}
 				}
-				// Restore from a backup
-				dataSource: pgbackrest: {
-					stanza: "db"
-					configuration: [{secret: name: S3Secret}]
-					// Restore from known good full backup taken
-					// time="2024-03-11T17:08:58Z" level=info msg="crunchy-pgbackrest ends"
-					options: ["--type=time", "--target=\"2024-03-11 17:10:00+00\""]
-					global: {
-						"\(BucketRepoName)-path":        "/pgbackrest/\(#TargetNamespace)/\(metadata.name)/\(BucketRepoName)"
-						"\(BucketRepoName)-cipher-type": "aes-256-cbc"
-					}
-					repo: {
-						name: BucketRepoName
-						s3: {
-							bucket:   string | *"\(#Platform.org.name)-zitadel-backups"
-							region:   string | *#Backups.s3.region
-							endpoint: string | *"s3.dualstack.\(region).amazonaws.com"
+				// Restore from backup if and only if the cluster is primary
+				if Cluster.primary {
+					dataSource: pgbackrest: {
+						stanza:        "db"
+						configuration: backups.pgbackrest.configuration
+						// Restore from known good full backup taken
+						options: RestoreOptions
+						global: {
+							"\(BucketRepoName)-path":        "/pgbackrest/\(#TargetNamespace)/\(metadata.name)/\(BucketRepoName)"
+							"\(BucketRepoName)-cipher-type": "aes-256-cbc"
+						}
+						repo: {
+							name: BucketRepoName
+							s3:   backups.pgbackrest.repos[1].s3
 						}
 					}
 				}
 
 				// Refer to https://access.crunchydata.com/documentation/postgres-operator/latest/tutorials/backups-disaster-recovery/backups
 				backups: pgbackrest: {
-					configuration: dataSource.pgbackrest.configuration
+					configuration: [{secret: name: S3Secret}]
+					// Defines details for manual pgBackRest backup Jobs
 					manual: {
 						// Note: the repoName value must match the config keys in the S3Secret.
 						// This must be an external repository for backup / restore / regional failovers.
-						repoName: "repo2"
+						repoName: BucketRepoName
 						options: ["--type=full", ...]
 					}
+					// Defines details for performing an in-place restore using pgBackRest
 					restore: {
+						// Enables triggering a restore by annotating the postgrescluster with postgres-operator.crunchydata.com/pgbackrest-restore="$(date)"
 						enabled:  true
 						repoName: BucketRepoName
 					}
@@ -106,7 +111,11 @@ let ZitadelAdmin = "\(_DBName)-admin"
 							// Full backup weekly on Sunday at 1am, differntial daily at 1am every day except Sunday.
 							schedules: full:         string | *"0 1 * * 0"
 							schedules: differential: string | *"0 1 * * 1-6"
-							s3: dataSource.pgbackrest.repo.s3
+							s3: {
+								bucket:   string | *"\(#Platform.org.name)-zitadel-backups"
+								region:   string | *#Backups.s3.region
+								endpoint: string | *"s3.dualstack.\(region).amazonaws.com"
+							}
 						},
 					]
 				}
