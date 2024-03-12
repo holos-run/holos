@@ -121,6 +121,7 @@ type HelmChart struct {
 	Namespace     string   `json:"namespace"`
 	Chart         Chart    `json:"chart"`
 	ValuesContent string   `json:"valuesContent"`
+	EnableHooks   bool     `json:"enableHooks"`
 	// APIObjectMap holds the marshalled representation of api objects.
 	APIObjectMap apiObjectMap `json:"APIObjectMap"`
 }
@@ -445,7 +446,12 @@ func runHelm(ctx context.Context, hc *HelmChart, r *Result, path holos.PathCompo
 
 	// Run charts
 	chart := hc.Chart
-	helmOut, err := util.RunCmd(ctx, "helm", "template", "--include-crds", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Release, cachedChartPath)
+	args := []string{"template"}
+	if !hc.EnableHooks {
+		args = append(args, "--no-hooks")
+	}
+	args = append(args, "--include-crds", "--values", valuesPath, "--namespace", hc.Namespace, "--kubeconfig", "/dev/null", "--version", chart.Version, chart.Release, cachedChartPath)
+	helmOut, err := util.RunCmd(ctx, "helm", args...)
 	if err != nil {
 		stderr := helmOut.Stderr.String()
 		lines := strings.Split(stderr, "\n")

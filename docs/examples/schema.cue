@@ -393,6 +393,8 @@ _apiVersion: "holos.run/v1alpha1"
 	resourcesFile: ResourcesFile
 	// kustomizeFiles represents the files in a kustomize directory tree.
 	kustomizeFiles: #KustomizeFiles.Files
+	// enableHooks removes the --no-hooks flag from helm template
+	enableHooks: true | *false
 }
 
 // #KustomizeBuild is a holos component that uses plain yaml files as the source of api objects for a holos component.

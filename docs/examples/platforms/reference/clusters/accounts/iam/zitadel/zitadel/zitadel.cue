@@ -11,6 +11,7 @@ let Name = "zitadel"
 
 #HelmChart & {
 	namespace: #TargetNamespace
+	enableHooks: true
 	chart: {
 		name:    Name
 		version: "7.9.0"
