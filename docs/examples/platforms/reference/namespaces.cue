@@ -12,7 +12,7 @@ let Privileged = {
 
 // #PlatformNamespaces is the union of all namespaces across all cluster types.  Namespaces are created in all clusters regardless of if they're
 // used within the cluster or not.  The is important for security and consistency with IAM, RBAC, and Secrets sync between clusters.
-// Holos adopts the namespace sameness position of SIG Multicluster, refer to https://github.com/kubernetes/community/blob/dd4c8b704ef1c9c3bfd928c6fa9234276d61ad18/sig-multicluster/namespace-sameness-position-statement.md
+// TODO: Deprecate in favor of #ManagedNamespaces because it better to add fields to an object instead adding items to a list.
 #PlatformNamespaces: [
 	{name: "external-secrets"},
 	{name: "holos-system"},

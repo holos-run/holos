@@ -285,6 +285,21 @@ _apiVersion: "holos.run/v1alpha1"
 	}
 }
 
+// ManagedNamespace is a namespace to manage across all clusters in the holos platform.
+#ManagedNamespace: {
+	// TODO metadata labels and annotations
+	name: string
+	labels: [string]: string
+}
+
+// #ManagedNamepsaces is the union of all namespaces across all cluster types and optional services.
+// Holos adopts the namespace sameness position of SIG Multicluster, refer to https://github.com/kubernetes/community/blob/dd4c8b704ef1c9c3bfd928c6fa9234276d61ad18/sig-multicluster/namespace-sameness-position-statement.md
+#ManagedNamespaces: {
+	[Name=_]: {
+		name: Name
+	}
+}
+
 // #Backups defines backup configuration.
 // TODO: Consider the best place for this, possibly as part of the site platform config.  This represents the primary location for backups.
 #Backups: {

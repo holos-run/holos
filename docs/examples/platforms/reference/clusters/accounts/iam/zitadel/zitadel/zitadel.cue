@@ -10,7 +10,7 @@ let Name = "zitadel"
 #Kustomization: spec: targetNamespace: #TargetNamespace
 
 #HelmChart & {
-	namespace: #TargetNamespace
+	namespace:   #TargetNamespace
 	enableHooks: true
 	chart: {
 		name:    Name

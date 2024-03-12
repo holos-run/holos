@@ -30,5 +30,10 @@ package holos
 				"\(Kind)": "\(NS)/\(Name)": obj
 			}
 		}
+
+		for k, ns in #ManagedNamespaces {
+			let obj = #SecretStore & {_namespace: ns.name}
+			SecretStore: "\(ns.name)/\(obj.metadata.name)": obj
+		}
 	}
 }

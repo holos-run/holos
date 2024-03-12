@@ -7,25 +7,16 @@ package holos
 	component: "namespaces"
 }
 
-// #PlatformNamespaceObjects defines the api objects necessary for eso SecretStores in external clusters to access secrets in a given namespace in the provisioner cluster.
-#PlatformNamespaceObjects: {
-	_ns: #PlatformNamespace
-
-	objects: [
-		#Namespace & {
-			metadata: name: _ns.name
-		},
-	]
-}
-
 #KubernetesObjects & {
 	apiObjects: {
+		// #ManagedNamespaces is the set of all namespaces across all clusters in the platform.
+		for k, ns in #ManagedNamespaces {
+			Namespace: "\(ns.name)": #Namespace & {metadata: ns}
+		}
+
+		// #PlatformNamespaces is deprecated in favor of #ManagedNamespaces.
 		for ns in #PlatformNamespaces {
-			for obj in (#PlatformNamespaceObjects & {_ns: ns}).objects {
-				let Kind = obj.kind
-				let Name = obj.metadata.name
-				"\(Kind)": "\(Name)": obj
-			}
+			Namespace: "\(ns.name)": #Namespace & {metadata: ns}
 		}
 	}
 }

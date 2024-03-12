@@ -1,7 +1,8 @@
 package holos
 
-// The primary istio Gateway, named default
+import "list"
 
+// The primary istio Gateway, named default
 let Name = "gateway"
 
 #InputKeys: component: Name
@@ -30,6 +31,22 @@ let LoginCert = #PlatformCerts.login
 					tls: mode:           "SIMPLE"
 				},
 			]
+		}
+
+		for k, svc in #OptionalServices {
+			if svc.enabled {
+				if list.Contains(svc.clusterNames, #ClusterName) {
+					Gateway: "\(svc.name)": #Gateway & {
+						metadata: name:      svc.name
+						metadata: namespace: #TargetNamespace
+						spec: selector: istio: "ingressgateway"
+						spec: servers: [for s in svc.servers {s}]
+					}
+					for k, s in svc.servers {
+						ExternalSecret: "\(s.tls.credentialName)": _
+					}
+				}
+			}
 		}
 	}
 }

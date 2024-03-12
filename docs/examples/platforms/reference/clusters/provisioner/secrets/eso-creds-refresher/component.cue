@@ -24,6 +24,14 @@ ksObjects: []
 				"\(Kind)": "\(ns.name)/\(Name)": obj
 			}
 		}
+
+		for k, ns in #ManagedNamespaces {
+			for obj in (#PlatformNamespaceObjects & {_ns: ns}).objects {
+				let Kind = obj.kind
+				let Name = obj.metadata.name
+				"\(Kind)": "\(ns.name)/\(Name)": obj
+			}
+		}
 	}
 }
 
