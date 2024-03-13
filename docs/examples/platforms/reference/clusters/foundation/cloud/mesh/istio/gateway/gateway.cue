@@ -34,17 +34,15 @@ let LoginCert = #PlatformCerts.login
 		}
 
 		for k, svc in #OptionalServices {
-			if svc.enabled {
-				if list.Contains(svc.clusterNames, #ClusterName) {
-					Gateway: "\(svc.name)": #Gateway & {
-						metadata: name:      svc.name
-						metadata: namespace: #TargetNamespace
-						spec: selector: istio: "ingressgateway"
-						spec: servers: [for s in svc.servers {s}]
-					}
-					for k, s in svc.servers {
-						ExternalSecret: "\(s.tls.credentialName)": _
-					}
+			if svc.enabled && list.Contains(svc.clusterNames, #ClusterName) {
+				Gateway: "\(svc.name)": #Gateway & {
+					metadata: name:      svc.name
+					metadata: namespace: #TargetNamespace
+					spec: selector: istio: "ingressgateway"
+					spec: servers: [for s in svc.servers {s}]
+				}
+				for k, s in svc.servers {
+					ExternalSecret: "\(s.tls.credentialName)": _
 				}
 			}
 		}
