@@ -13,7 +13,10 @@ let BucketRepoName = "repo2"
 
 // Restore options.  Set the timestamp to a known good point in time.
 // time="2024-03-11T17:08:58Z" level=info msg="crunchy-pgbackrest ends"
-let RestoreOptions = ["--type=time", "--target=\"2024-03-11 17:10:00+00\""]
+// let RestoreOptions = ["--type=time", "--target=\"2024-03-11 17:10:00+00\""]
+
+// Restore the most recent backup.
+let RestoreOptions = []
 
 #KubernetesObjects & {
 	apiObjects: {
