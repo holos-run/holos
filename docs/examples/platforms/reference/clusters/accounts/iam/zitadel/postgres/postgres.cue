@@ -43,7 +43,7 @@ let RestoreOptions = []
 					replicas: 2
 					dataVolumeClaimSpec: {
 						accessModes: ["ReadWriteOnce"]
-						resources: requests: storage: string | *"1Gi"
+						resources: requests: storage: "10Gi"
 					}
 				}]
 				standby: {
@@ -106,7 +106,7 @@ let RestoreOptions = []
 							name: "repo1"
 							volume: volumeClaimSpec: {
 								accessModes: ["ReadWriteOnce"]
-								resources: requests: storage: string | *"1Gi"
+								resources: requests: storage: string | *"4Gi"
 							}
 						},
 						{
@@ -140,7 +140,7 @@ let HighlyAvailable = {
 			replicas: 2
 			dataVolumeClaimSpec: {
 				accessModes: ["ReadWriteOnce"]
-				resources: requests: storage: "1Gi"
+				resources: requests: storage: string | *"10Gi"
 			}
 			affinity: podAntiAffinity: preferredDuringSchedulingIgnoredDuringExecution: [{
 				weight: 1
