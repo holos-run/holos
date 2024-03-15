@@ -18,9 +18,24 @@ let BucketRepoName = "repo2"
 // Restore the most recent backup.
 let RestoreOptions = []
 
+#Kustomization: spec: healthChecks: [
+	{
+		apiVersion: "external-secrets.io/v1beta1"
+		kind:       "ExternalSecret"
+		name:       S3Secret
+		namespace:  #TargetNamespace
+	},
+	{
+		apiVersion: "postgres-operator.crunchydata.com/v1beta1"
+		kind:       "PostgresCluster"
+		name:       _DBName
+		namespace:  #TargetNamespace
+	},
+]
+
 #KubernetesObjects & {
 	apiObjects: {
-		ExternalSecret: "pgo-s3-creds": _
+		ExternalSecret: "\(S3Secret)": _
 		PostgresCluster: db: #PostgresCluster & HighlyAvailable & {
 			metadata: name:      _DBName
 			metadata: namespace: #TargetNamespace

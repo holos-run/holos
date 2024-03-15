@@ -153,7 +153,10 @@ _apiVersion: "holos.run/v1alpha1"
 		targetNamespace?: string
 		timeout:          string | *"3m0s"
 		// wait performs health checks for all reconciled resources. If set to true, .spec.healthChecks is ignored.
-		wait: bool | *true
+		// Setting this to true for all components generates considerable load on the api server from watches.
+		// Operations are additionally more complicated when all resources are watched.  Consider setting wait true for
+		// relatively simple components, otherwise target specific resources with spec.healthChecks.
+		wait: true | *false
 		dependsOn: [for k, v in #DependsOn {v}]
 	}
 }

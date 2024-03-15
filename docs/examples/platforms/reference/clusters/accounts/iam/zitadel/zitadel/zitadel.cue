@@ -7,7 +7,33 @@ let Name = "zitadel"
 #DependsOn: postgres:  _
 
 // Upstream helm chart doesn't specify the namespace field for all resources.
-#Kustomization: spec: targetNamespace: #TargetNamespace
+#Kustomization: spec: {
+	targetNamespace: #TargetNamespace
+	wait:            false
+}
+
+if #IsPrimaryCluster == true {
+	#Kustomization: spec: healthChecks: [
+		{
+			apiVersion: "apps/v1"
+			kind:       "Deployment"
+			name:       Name
+			namespace:  #TargetNamespace
+		},
+		{
+			apiVersion: "batch/v1"
+			kind:       "Job"
+			name:       "\(Name)-init"
+			namespace:  #TargetNamespace
+		},
+		{
+			apiVersion: "batch/v1"
+			kind:       "Job"
+			name:       "\(Name)-setup"
+			namespace:  #TargetNamespace
+		},
+	]
+}
 
 #HelmChart & {
 	namespace:   #TargetNamespace
@@ -95,6 +121,14 @@ let CAPatch = #Patch & {
 		target: group: "batch"
 		target: kind:  "Job"
 		target: name:  "\(Name)-setup"
+	}
+	testDisable: {
+		target: {
+			version: "v1"
+			kind:    "Pod"
+			name:    "\(Name)-test-connection"
+		}
+		patch: yaml.Marshal(DisableFluxPatch)
 	}
 	if #IsPrimaryCluster == false {
 		fluxDisable: {
