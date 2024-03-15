@@ -10,8 +10,8 @@ package holos
 #KubernetesObjects & {
 	apiObjects: {
 		// #ManagedNamespaces is the set of all namespaces across all clusters in the platform.
-		for k, ns in #ManagedNamespaces {
-			Namespace: "\(ns.name)": #Namespace & {metadata: ns}
+		for nsName, ns in #ManagedNamespaces {
+			Namespace: "\(nsName)": #Namespace & ns.namespace
 		}
 
 		// #PlatformNamespaces is deprecated in favor of #ManagedNamespaces.

@@ -4,6 +4,6 @@ package holos
 #InputKeys: project: "github"
 #DependsOn: Namespaces: name: "prod-secrets-namespaces"
 
-#TargetNamespace: #InputKeys.component
+#ARCSystemNamespace: "arc-system"
 #HelmChart: namespace: #TargetNamespace
 #HelmChart: chart: version: "0.8.3"

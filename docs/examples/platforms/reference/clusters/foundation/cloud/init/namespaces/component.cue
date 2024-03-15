@@ -1,5 +1,7 @@
 package holos
 
+import "list"
+
 #TargetNamespace: "default"
 
 #InputKeys: {
@@ -11,7 +13,9 @@ package holos
 	apiObjects: {
 		// #ManagedNamespaces is the set of all namespaces across all clusters in the platform.
 		for k, ns in #ManagedNamespaces {
-			Namespace: "\(ns.name)": #Namespace & {metadata: ns}
+			if list.Contains(ns.clusterNames, #ClusterName) {
+				Namespace: "\(k)": #Namespace & ns.namespace
+			}
 		}
 
 		// #PlatformNamespaces is deprecated in favor of #ManagedNamespaces.

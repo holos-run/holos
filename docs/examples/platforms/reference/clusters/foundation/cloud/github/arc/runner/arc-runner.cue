@@ -1,5 +1,6 @@
 package holos
 
+#TargetNamespace: "arc-runner"
 #InputKeys: component: "arc-runner"
 #Kustomization: spec: targetNamespace: #TargetNamespace
 

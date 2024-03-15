@@ -1,16 +1,19 @@
-package holos
-
 // Controls optional feature flags for services distributed across multiple holos components.
 // For example, enable issuing certificates in the provisioner cluster when an optional service is
 // enabled for a workload cluster.
+package holos
+
+import "list"
 
 #OptionalService: {
 	name:    string
 	enabled: true | *false
 	clusters: [Name=_]: #Platform.clusters[Name]
-	clusterNames: [for k, v in clusters {k}]
-	namespaces: [Name=_]: #ManagedNamespace & {
-		name: Name
+	clusterNames: [for c in clusters {c.name}]
+
+	managedNamespaces: [Name=_]: #ManagedNamespace & {
+		namespace: metadata: name: Name
+		clusterNames: ["provisioner", for c in clusters {c.name}]
 	}
 	// servers represents istio Gateway.spec.servers.hosts entries
 	// Refer to istio/gateway/gateway.cue
@@ -34,6 +37,10 @@ package holos
 	}
 }
 
-for k, v in #OptionalServices {
-	#ManagedNamespaces: v.namespaces
+for svc in #OptionalServices {
+	for nsName, ns in svc.managedNamespaces {
+		if svc.enabled && list.Contains(ns.clusterNames, #ClusterName) {
+			#ManagedNamespaces: "\(nsName)": ns
+		}
+	}
 }

@@ -93,7 +93,14 @@ provisioner get serviceaccount -A --selector=holos.run/job.name=\(NAME) --output
 
 # Create the tokens
 mkdir tokens
-jq -r '.items[].metadata | "provisioner -n \\(.namespace) create token --duration=12h \\(.name) > tokens/\\(.namespace).\\(.name).jwt"' serviceaccounts.json | bash -x
+
+kubectl get namespaces -o name > namespaces.txt
+
+# Iterate over local namespaces
+while IFS= read -r NAMESPACE; do
+  echo "Getting token for local cluster $NAMESPACE" >&2
+  jq -r '.items[] | select("namespace/"+.metadata.namespace == "'${NAMESPACE}'") | .metadata | "provisioner -n \\(.namespace) create token --duration=12h \\(.name) > tokens/\\(.namespace).\\(.name).jwt"' serviceaccounts.json | bash -x
+done < namespaces.txt
 
 # Create the secrets
 mksecret tokens/*.jwt
@@ -123,6 +130,11 @@ kubectl apply --server-side=true -f secrets.yaml
 					apiGroups: [""]
 					resources: ["secrets"]
 					verbs: ["*"]
+				},
+				{
+					apiGroups: [""]
+					resources: ["namespaces"]
+					verbs: ["list"]
 				},
 			]
 		},

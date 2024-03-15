@@ -1,6 +1,6 @@
 package holos
 
-#TargetNamespace: "arc-system"
+#TargetNamespace: #ARCSystemNamespace
 #InputKeys: component: "arc-system"
 
 #HelmChart & {

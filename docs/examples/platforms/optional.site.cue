@@ -8,7 +8,9 @@ let TargetNamespace = "prod-core-vault"
 		enabled: true
 		clusters: core1: _
 		clusters: core2: _
-		namespaces: "prod-core-vault": labels: "istio-injection": "enabled"
+		managedNamespaces: "prod-core-vault": {
+			namespace: metadata: labels: "istio-injection": "enabled"
+		}
 		certs: "vault-core": #Certificate & {
 			metadata: name:      "vault-core"
 			metadata: namespace: "istio-ingress"

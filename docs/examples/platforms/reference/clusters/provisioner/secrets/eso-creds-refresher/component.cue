@@ -25,11 +25,11 @@ ksObjects: []
 			}
 		}
 
-		for k, ns in #ManagedNamespaces {
-			for obj in (#PlatformNamespaceObjects & {_ns: ns}).objects {
+		for nsName, ns in #ManagedNamespaces {
+			for obj in (#PlatformNamespaceObjects & {_ns: ns.namespace.metadata}).objects {
 				let Kind = obj.kind
 				let Name = obj.metadata.name
-				"\(Kind)": "\(ns.name)/\(Name)": obj
+				"\(Kind)": "\(nsName)/\(Name)": obj
 			}
 		}
 	}

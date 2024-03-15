@@ -152,7 +152,8 @@ _apiVersion: "holos.run/v1alpha1"
 		suspend?:         bool
 		targetNamespace?: string
 		timeout:          string | *"3m0s"
-		wait:             bool | *true
+		// wait performs health checks for all reconciled resources. If set to true, .spec.healthChecks is ignored.
+		wait: bool | *true
 		dependsOn: [for k, v in #DependsOn {v}]
 	}
 }
@@ -287,16 +288,21 @@ _apiVersion: "holos.run/v1alpha1"
 
 // ManagedNamespace is a namespace to manage across all clusters in the holos platform.
 #ManagedNamespace: {
-	// TODO metadata labels and annotations
-	name: string
-	labels: [string]: string
+	namespace: {
+		metadata: {
+			name: string
+			labels: [string]: string
+		}
+	}
+	// clusterNames represents the set of clusters the namespace is managed on.  Usually all clusters.
+	clusterNames: [...string]
 }
 
 // #ManagedNamepsaces is the union of all namespaces across all cluster types and optional services.
 // Holos adopts the namespace sameness position of SIG Multicluster, refer to https://github.com/kubernetes/community/blob/dd4c8b704ef1c9c3bfd928c6fa9234276d61ad18/sig-multicluster/namespace-sameness-position-statement.md
 #ManagedNamespaces: {
-	[Name=_]: {
-		name: Name
+	[Name=_]: #ManagedNamespace & {
+		namespace: metadata: name: Name
 	}
 }
 
@@ -466,7 +472,7 @@ _apiVersion: "holos.run/v1alpha1"
 	resources: [ResourcesFile]
 	...
 	if len(#KustomizePatches) > 0 {
-	  patches: [for v in #KustomizePatches {v}]
+		patches: [for v in #KustomizePatches {v}]
 	}
 }
 

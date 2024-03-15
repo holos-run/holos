@@ -1,5 +1,7 @@
 package holos
 
+import "list"
+
 #DependsOn: _ESOCreds
 
 #TargetNamespace: "default"
@@ -31,9 +33,11 @@ package holos
 			}
 		}
 
-		for k, ns in #ManagedNamespaces {
-			let obj = #SecretStore & {_namespace: ns.name}
-			SecretStore: "\(ns.name)/\(obj.metadata.name)": obj
+		for nsName, ns in #ManagedNamespaces {
+			if list.Contains(ns.clusterNames, #ClusterName) {
+				let obj = #SecretStore & {_namespace: nsName}
+				SecretStore: "\(nsName)/\(obj.metadata.name)": obj
+			}
 		}
 	}
 }
