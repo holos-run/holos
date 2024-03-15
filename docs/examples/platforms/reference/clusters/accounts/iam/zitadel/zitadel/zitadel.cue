@@ -61,43 +61,70 @@ let DatabaseCACertPatch = [
 	},
 ]
 
-#Kustomize: {
-	patches: [
-		{
+let CAPatch = #Patch & {
+	target: {
+		group:   "apps" | "batch"
+		version: "v1"
+		kind:    "Job" | "Deployment"
+		name:    string
+	}
+	patch: yaml.Marshal(DatabaseCACertPatch)
+}
+
+#KustomizePatches: {
+	mesh: {
+		target: {
+			group:   "apps"
+			version: "v1"
+			kind:    "Deployment"
+			name:    Name
+		}
+		patch: yaml.Marshal(IstioInject)
+	}
+	deploymentCA: CAPatch & {
+		target: group: "apps"
+		target: kind:  "Deployment"
+		target: name:  Name
+	}
+	initJob: CAPatch & {
+		target: group: "batch"
+		target: kind:  "Job"
+		target: name:  "\(Name)-init"
+	}
+	setupJob: CAPatch & {
+		target: group: "batch"
+		target: kind:  "Job"
+		target: name:  "\(Name)-setup"
+	}
+	if #IsPrimaryCluster == false {
+		fluxDisable: {
 			target: {
 				group:   "apps"
 				version: "v1"
 				kind:    "Deployment"
 				name:    Name
 			}
-			patch: yaml.Marshal(IstioInject)
-		},
-		{
-			target: {
-				group:   "apps"
-				version: "v1"
-				kind:    "Deployment"
-				name:    Name
-			}
-			patch: yaml.Marshal(DatabaseCACertPatch)
-		},
-		{
+			patch: yaml.Marshal(DisableFluxPatch)
+		}
+		initDisable: {
 			target: {
 				group:   "batch"
 				version: "v1"
 				kind:    "Job"
 				name:    "\(Name)-init"
 			}
-			patch: yaml.Marshal(DatabaseCACertPatch)
-		},
-		{
+			patch: yaml.Marshal(DisableFluxPatch)
+		}
+		setupDisable: {
 			target: {
 				group:   "batch"
 				version: "v1"
 				kind:    "Job"
 				name:    "\(Name)-setup"
 			}
-			patch: yaml.Marshal(DatabaseCACertPatch)
-		},
-	]
+			patch: yaml.Marshal(DisableFluxPatch)
+		}
+	}
 }
+
+let DisableFluxPatch = [{op: "replace", path: "/metadata/annotations/kustomize.toolkit.fluxcd.io~1reconcile", value: "disabled"}]

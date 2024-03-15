@@ -465,7 +465,17 @@ _apiVersion: "holos.run/v1alpha1"
 	kind:       "Kustomization"
 	resources: [ResourcesFile]
 	...
+	if len(#KustomizePatches) > 0 {
+	  patches: [for v in #KustomizePatches {v}]
+	}
 }
+
+#KustomizePatches: {
+	[_]: #Patch
+}
+
+// #Patch is a kustomize patch
+#Patch: kc.#Patch
 
 // #DefaultSecurityContext is the holos default security context to comply with the restricted namespace policy.
 // Refer to https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted
@@ -484,6 +494,10 @@ _apiVersion: "holos.run/v1alpha1"
 	metadata: name:   _
 	spec: secretName: metadata.name
 }
+
+// #IsPrimaryCluster is true if the cluster being rendered is the primary cluster
+// Used by the iam project to determine where https://login.example.com is active.
+#IsPrimaryCluster: bool & #ClusterName == #Platform.primaryCluster.name
 
 // By default, render kind: Skipped so holos knows to skip over intermediate cue files.
 // This enables the use of holos render ./foo/bar/baz/... when bar contains intermediary constraints which are not complete components.
