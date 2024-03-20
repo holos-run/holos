@@ -363,7 +363,7 @@ _apiVersion: "holos.run/v1alpha1"
 	metadata: name: string | *"skipped"
 }
 
-// #KubernetesObjectOutput is the output schema of a single component.
+// #KubernetesObjects is the output schema of a single component.
 #KubernetesObjects: {
 	#OutputTypeMeta
 	#APIObjects
