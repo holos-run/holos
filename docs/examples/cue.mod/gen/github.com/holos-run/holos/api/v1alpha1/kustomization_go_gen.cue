@@ -8,10 +8,4 @@ package v1alpha1
 #Kustomization: {
 	// KsContent is the yaml representation of the flux kustomization for gitops.
 	ksContent?: string @go(KsContent)
-
-	// KustomizeFiles holds file contents for kustomize, e.g. patch files.
-	kustomizeFiles?: #FileContentMap @go(KustomizeFiles)
-
-	// ResourcesFile is the file name used for api objects in kustomization.yaml
-	resourcesFile?: string @go(ResourcesFile)
 }

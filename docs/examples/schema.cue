@@ -2,7 +2,6 @@ package holos
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	ksv1 "kustomize.toolkit.fluxcd.io/kustomization/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -24,49 +23,20 @@ let ResourcesFile = "resources.yaml"
 // _apiVersion is the version of this schema.  Defines the interface between CUE output and the holos cli.
 _apiVersion: "holos.run/v1alpha1"
 
-// #ClusterName is the cluster name for cluster scoped resources.
-#ClusterName: #InputKeys.cluster
+// #ComponentName is the name of the holos component.
+// TODO: Refactor to support multiple components per BuildPlan
+#ComponentName: #InputKeys.component
 
 // #StageName is prod, dev, stage, etc...  Usually prod for platform components.
 #StageName: #InputKeys.stage
 
-// #CollectionName is the preferred handle to the collection element of the instance name.  A collection name mapes to an "application name" as described in the kubernetes recommended labels documentation.  Refer to https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/
-#CollectionName: #InputKeys.project
-
-// #ComponentName is the name of the holos component.
-#ComponentName: #InputKeys.component
-
-// #InstanceName is the name of the holos component instance being managed varying by stage, project, and component names.
-#InstanceName: "\(#StageName)-\(#CollectionName)-\(#ComponentName)"
-
-// #InstancePrefix is the stage and project without the component name.  Useful for dependency management among multiple components for a project stage.
-#InstancePrefix: "\(#StageName)-\(#CollectionName)"
-
 // #TargetNamespace is the target namespace for a holos component.
 #TargetNamespace: string
-
-// #SelectorLabels are mixed into selectors.
-#SelectorLabels: {
-	"holos.run/stage.name":     #StageName
-	"holos.run/project.name":   #CollectionName
-	"holos.run/component.name": #ComponentName
-	...
-}
-
-// #CommonLabels are mixed into every kubernetes api object.
-#CommonLabels: {
-	#SelectorLabels
-	"app.kubernetes.io/part-of":   #StageName
-	"app.kubernetes.io/name":      #CollectionName
-	"app.kubernetes.io/component": #ComponentName
-	"app.kubernetes.io/instance":  #InstanceName
-	...
-}
 
 #ClusterObject: {
 	_description: string | *""
 	metadata: metav1.#ObjectMeta & {
-		labels: #CommonLabels
+		// labels: #CommonLabels
 		annotations: #Description & {
 			_Description: _description
 			...
@@ -88,12 +58,8 @@ _apiVersion: "holos.run/v1alpha1"
 }
 
 // Kubernetes API Objects
-#Namespace: corev1.#Namespace & #ClusterObject & {
-	metadata: {
-		name: string
-		labels: "kubernetes.io/metadata.name": name
-	}
-}
+#Namespace: corev1.#Namespace
+
 #ClusterRole:        #ClusterObject & rbacv1.#ClusterRole
 #ClusterRoleBinding: #ClusterObject & rbacv1.#ClusterRoleBinding
 #ClusterIssuer: #ClusterObject & ci.#ClusterIssuer & {...}
@@ -132,41 +98,6 @@ _apiVersion: "holos.run/v1alpha1"
 			issuerRef: name: "letsencrypt"
 		}
 	}
-}
-
-// Flux Kustomization CRDs
-#Kustomization: #NamespaceObject & ksv1.#Kustomization & {
-	metadata: {
-		name:      #InstanceName
-		namespace: string | *"flux-system"
-	}
-	spec: ksv1.#KustomizationSpec & {
-		interval:      string | *"30m0s"
-		path:          string | *"deploy/clusters/\(#InputKeys.cluster)/components/\(#InstanceName)"
-		prune:         bool | *true
-		retryInterval: string | *"2m0s"
-		sourceRef: {
-			kind: string | *"GitRepository"
-			name: string | *"flux-system"
-		}
-		suspend?:         bool
-		targetNamespace?: string
-		timeout:          string | *"3m0s"
-		// wait performs health checks for all reconciled resources. If set to true, .spec.healthChecks is ignored.
-		// Setting this to true for all components generates considerable load on the api server from watches.
-		// Operations are additionally more complicated when all resources are watched.  Consider setting wait true for
-		// relatively simple components, otherwise target specific resources with spec.healthChecks.
-		wait: true | *false
-		dependsOn: [for k, v in #DependsOn {v}]
-	}
-}
-
-// #DependsOn stores all of the dependencies between components.  It's a struct to support merging across levels in the tree.
-#DependsOn: {
-	[Name=_]: {
-		name: string | *"\(#InstancePrefix)-\(Name)"
-	}
-	...
 }
 
 // External Secrets CRDs
@@ -318,65 +249,6 @@ _apiVersion: "holos.run/v1alpha1"
 	}
 }
 
-// #APIObjects is the output type for api objects produced by cue.  A map is used to aid debugging and clarity.
-#APIObjects: {
-	// apiObjects holds each the api objects produced by cue.
-	apiObjects: {
-		[Kind=_]: {
-			[Name=_]: metav1.#TypeMeta & {
-				kind: Kind
-			}
-		}
-		ExternalSecret?: [Name=_]: #ExternalSecret & {_name: Name}
-		VirtualService?: [Name=_]: #VirtualService & {metadata: name: Name}
-		Issuer?: [Name=_]: #Issuer & {metadata: name: Name}
-	}
-
-	// apiObjectMap holds the marshalled representation of apiObjects
-	apiObjectMap: {
-		for kind, v in apiObjects {
-			"\(kind)": {
-				for name, obj in v {
-					"\(name)": yaml.Marshal(obj)
-				}
-			}
-		}
-		...
-	}
-}
-
-// #OutputTypeMeta is shared among all output types
-#OutputTypeMeta: {
-	// apiVersion is the output api version
-	apiVersion: _apiVersion
-	// kind is a discriminator of the type of output
-	kind: #PlatformSpec.kind | #KubernetesObjects.kind | #HelmChart.kind | #NoOutput.kind
-	// name holds a unique name suitable for a filename
-	metadata: name: string
-	// debug returns arbitrary debug output.
-	debug?: _
-}
-
-#NoOutput: {
-	#OutputTypeMeta
-	kind: string | *"Skip"
-	metadata: name: string | *"skipped"
-}
-
-// #KubernetesObjects is the output schema of a single component.
-#KubernetesObjects: {
-	#OutputTypeMeta
-	#APIObjects
-	kind: "KubernetesObjects"
-	metadata: name: #InstanceName
-	// ksObjects holds the flux Kustomization objects for gitops
-	ksObjects: [...#Kustomization] | *[#Kustomization]
-	// ksContent is the yaml representation of kustomization
-	ksContent: yaml.Marshal(#Kustomization)
-	// platform returns the platform data structure for visibility / troubleshooting.
-	platform: #Platform
-}
-
 // #Chart defines an upstream helm chart
 #Chart: {
 	name:    string
@@ -390,57 +262,6 @@ _apiVersion: "holos.run/v1alpha1"
 
 // #ChartValues represent the values provided to a helm chart.  Existing values may be imorted using cue import values.yaml -p holos then wrapping the values.cue content in #Values: {}
 #ChartValues: {...}
-
-// #HelmChart is a holos component which produces kubernetes api objects from cue values provided to the helm template command.
-#HelmChart: {
-	#OutputTypeMeta
-	#APIObjects
-	kind: "HelmChart"
-	metadata: name: #InstanceName
-	// ksObjects holds the flux Kustomization objects for gitops.
-	ksObjects: [...#Kustomization] | *[#Kustomization]
-	// ksContent is the yaml representation of kustomization.
-	ksContent: yaml.MarshalStream(ksObjects)
-	// namespace defines the value passed to the helm --namespace flag
-	namespace: #TargetNamespace
-	// chart defines the upstream helm chart to process.
-	chart: #Chart
-	// values represents the helm values to provide to the chart.
-	values: #ChartValues
-	// valuesContent holds the values yaml
-	valuesContent: yaml.Marshal(values)
-	// platform returns the platform data structure for visibility / troubleshooting.
-	platform: #Platform
-	// instance returns the key values of the holos component instance.
-	instance: #InputKeys
-	// resources is the intermediate file name for api objects.
-	resourcesFile: ResourcesFile
-	// kustomizeFiles represents the files in a kustomize directory tree.
-	kustomizeFiles: #KustomizeFiles.Files
-	// enableHooks removes the --no-hooks flag from helm template
-	enableHooks: true | *false
-}
-
-// #KustomizeBuild is a holos component that uses plain yaml files as the source of api objects for a holos component.
-// Intended for upstream components like the CrunchyData Postgres Operator.  The holos cli is expected to execute kustomize build on the component directory to produce the rendered output.
-#KustomizeBuild: {
-	#OutputTypeMeta
-	#APIObjects
-	kind: "KustomizeBuild"
-	metadata: name: #InstanceName
-	// ksObjects holds the flux Kustomization objects for gitops.
-	ksObjects: [...#Kustomization] | *[#Kustomization]
-	// ksContent is the yaml representation of kustomization.
-	ksContent: yaml.MarshalStream(ksObjects)
-	// namespace defines the value passed to the helm --namespace flag
-	namespace: #TargetNamespace
-}
-
-// #PlatformSpec is the output schema of a platform specification.
-#PlatformSpec: {
-	#OutputTypeMeta
-	kind: "PlatformSpec"
-}
 
 // #SecretName is the name of a Secret, ususally coupling a Deployment to an ExternalSecret
 #SecretName: string
@@ -507,8 +328,3 @@ _apiVersion: "holos.run/v1alpha1"
 // #IsPrimaryCluster is true if the cluster being rendered is the primary cluster
 // Used by the iam project to determine where https://login.example.com is active.
 #IsPrimaryCluster: bool & #ClusterName == #Platform.primaryCluster.name
-
-// By default, render kind: Skipped so holos knows to skip over intermediate cue files.
-// This enables the use of holos render ./foo/bar/baz/... when bar contains intermediary constraints which are not complete components.
-// Holos skips over these intermediary cue instances.
-{} & #NoOutput

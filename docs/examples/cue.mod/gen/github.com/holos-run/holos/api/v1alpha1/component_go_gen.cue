@@ -4,15 +4,21 @@
 
 package v1alpha1
 
-// HolosComponent defines the common fields for all holos components.
+// HolosComponent defines the fields common to all holos component kinds including the Render Result.
 #HolosComponent: {
 	#TypeMeta
 
 	// Metadata represents the holos component name
 	metadata?: #ObjectMeta @go(Metadata)
 
-	// APIObjectMap holds the marshalled representation of api objects.
+	// APIObjectMap holds the marshalled representation of api objects. Think of
+	// these as resources overlaid at the back of the render pipeline.
 	apiObjectMap?: #APIObjectMap @go(APIObjectMap)
 
 	#Kustomization
+
+	#Kustomize
+
+	// Skip causes holos to take no action regarding the component.
+	Skip: bool
 }

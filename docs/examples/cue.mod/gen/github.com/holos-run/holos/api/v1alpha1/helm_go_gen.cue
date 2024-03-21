@@ -4,11 +4,6 @@
 
 package v1alpha1
 
-#HelmChartKind: "HelmChart"
-
-// ChartDir is the directory name created in the holos component directory to cache a chart.
-#ChartDir: "vendor"
-
 // A HelmChart represents a helm command to provide chart values in order to render kubernetes api objects.
 #HelmChart: {
 	#HolosComponent

@@ -111,9 +111,9 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 		return results, err
 	}
 
+	// Each CUE instance provides a BuildPlan
 	for _, instance := range instances {
-		var info v1alpha1.TypeMeta
-		var component v1alpha1.Renderer
+		var buildPlan v1alpha1.BuildPlan
 
 		log := logger.FromContext(ctx).With("dir", instance.Dir)
 		if err := instance.Err; err != nil {
@@ -128,46 +128,29 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 		if err := value.Validate(); err != nil {
 			return nil, wrapper.Wrap(fmt.Errorf("could not validate: %w", err))
 		}
-		log.DebugContext(ctx, "cue: decoding holos component build info")
-		if err := value.Decode(&info); err != nil {
+		log.DebugContext(ctx, "cue: decoding holos build plan")
+		if err := value.Decode(&buildPlan); err != nil {
 			return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
 		}
-		log.DebugContext(ctx, "cue: processing holos component kind "+info.Kind)
 
-		switch info.Kind {
-		case Skip:
-			result := v1alpha1.Result{}
-			result.Skip = true
-			results = append(results, &result)
-			continue
-		case KubernetesObjects:
-			var ko v1alpha1.KubernetesObjects
-			if err := value.Decode(&ko); err != nil {
-				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
-			}
-			component = &ko
-		case Helm:
-			var hc v1alpha1.HelmChart
-			if err := value.Decode(&hc); err != nil {
-				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
-			}
-			component = &hc
-		case KustomizeBuild:
-			var kb v1alpha1.KustomizeBuild
-			if err := value.Decode(&kb); err != nil {
-				return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
-			}
-			component = &kb
-		default:
-			return nil, wrapper.Wrap(fmt.Errorf("build kind not implemented: %v", info.Kind))
-		}
-
-		// Render the holos component into kubernetes api objects.
-		result, err := v1alpha1.Render(ctx, component, holos.PathComponent(instance.Dir))
-		if err != nil {
+		if err := buildPlan.Validate(); err != nil {
 			return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
 		}
-		results = append(results, result)
+
+		if buildPlan.Spec.Disabled {
+			log.DebugContext(ctx, "skipped: spec.disabled is true", "skipped", true)
+			continue
+		}
+
+		for _, ko := range buildPlan.Spec.Components.KubernetesObjects {
+			result, err := ko.Render(ctx, holos.PathComponent(instance.Dir))
+			if err != nil {
+				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+			}
+			results = append(results, result)
+		}
+		// TODO: HelmCharts
+		// TODO: KustomizeBuilds
 	}
 
 	return results, nil

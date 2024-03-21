@@ -6,11 +6,12 @@ package v1alpha1
 
 // Result is the build result for display or writing.  Holos components Render the Result as a data pipeline.
 #Result: {
+	HolosComponent: #HolosComponent
+
 	#TypeMeta
 
 	#Kustomization
-	metadata?: #ObjectMeta @go(Metadata)
 
-	// Skip causes holos to take no action if true.
-	Skip: bool
+	#Kustomize
+	metadata?: #ObjectMeta @go(Metadata)
 }
