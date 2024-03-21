@@ -13,11 +13,11 @@ import (
 
 // Result is the build result for display or writing.  Holos components Render the Result as a data pipeline.
 type Result struct {
+	HolosComponent
 	TypeMeta      `json:",inline" yaml:",inline"`
 	Kustomization `json:",inline" yaml:",inline"`
+	Kustomize     `json:",inline" yaml:",inline"`
 	Metadata      ObjectMeta `json:"metadata,omitempty"`
-	// Skip causes holos to take no action if true.
-	Skip bool
 	// accumulatedOutput accumulates rendered api objects.
 	accumulatedOutput string
 }

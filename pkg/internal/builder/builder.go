@@ -136,7 +136,9 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 
 		switch info.Kind {
 		case Skip:
-			results = append(results, &v1alpha1.Result{Skip: true})
+			result := v1alpha1.Result{}
+			result.Skip = true
+			results = append(results, &result)
 			continue
 		case KubernetesObjects:
 			var ko v1alpha1.KubernetesObjects

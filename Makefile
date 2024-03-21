@@ -44,12 +44,17 @@ tidy: ## Tidy go module.
 	go mod tidy
 
 .PHONY: fmt
-fmt: ## Format Go code.
+fmt: ## Format code.
+	cd docs/examples && cue fmt ./...
 	go fmt ./...
 
 .PHONY: vet
 vet: ## Vet Go code.
 	go vet ./...
+
+.PHONY: gencue
+gencue: ## Generate CUE definitions
+	cd docs/examples && cue get go github.com/holos-run/holos/api/...
 
 .PHONY: generate
 generate: ## Generate code.

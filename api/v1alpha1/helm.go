@@ -41,11 +41,7 @@ type Repository struct {
 }
 
 func (hc *HelmChart) Render(ctx context.Context, path holos.PathComponent) (*Result, error) {
-	result := Result{
-		TypeMeta:      hc.TypeMeta,
-		Metadata:      hc.Metadata,
-		Kustomization: hc.Kustomization,
-	}
+	result := Result{HolosComponent: hc.HolosComponent}
 	if err := hc.helm(ctx, &result, path); err != nil {
 		return nil, err
 	}
