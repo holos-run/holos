@@ -25,7 +25,7 @@ type BuildPlanComponents struct {
 }
 
 func (bp *BuildPlan) Validate() error {
-	errs := make([]string, 0, 10)
+	errs := make([]string, 0, 2)
 	if bp.Kind != BuildPlanKind {
 		errs = append(errs, fmt.Sprintf("kind invalid: want: %s have: %s", BuildPlanKind, bp.Kind))
 	}

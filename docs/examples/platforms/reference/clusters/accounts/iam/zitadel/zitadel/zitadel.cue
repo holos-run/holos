@@ -97,6 +97,7 @@ let CAPatch = #Patch & {
 	patch: yaml.Marshal(DatabaseCACertPatch)
 }
 
+// TODO: Replace with #Kustomize & { _patches: foo: {} }
 #KustomizePatches: {
 	mesh: {
 		target: {

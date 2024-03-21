@@ -12,19 +12,22 @@ package holos
 cluster: string @tag(cluster, string)
 
 apiVersion: "holos.run/v1alpha1"
-kind: "KustomizeBuild"
-metadata: name: "kstest"
+kind: "BuildPlan"
+spec: components: KustomizeBuilds: [{metadata: name: "kstest"}]
+
 -- kustomization.yaml --
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: mynamespace
 resources:
 - serviceaccount.yaml
+
 -- serviceaccount.yaml --
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: test
+
 -- want.yaml --
 apiVersion: v1
 kind: ServiceAccount

@@ -1,7 +1,6 @@
 # Want support for intermediary constraints
 exec holos build ./foo/... --log-level debug
 stdout '^bf2bc7f9-9ba0-4f9e-9bd2-9a205627eb0b$'
-stderr 'processing holos component kind Skip'
 
 -- cue.mod --
 package holos
@@ -12,31 +11,21 @@ metadata: name: "jeff"
 -- foo/bar/bar.cue --
 package holos
 
-#KubernetesObjects & {
-  apiObjectMap: foo: bar: "bf2bc7f9-9ba0-4f9e-9bd2-9a205627eb0b"
-}
+spec: components: KubernetesObjects: [
+  #KubernetesObjects & {
+    apiObjectMap: foo: bar: "bf2bc7f9-9ba0-4f9e-9bd2-9a205627eb0b"
+  }
+]
 -- schema.cue --
 package holos
 
 cluster: string @tag(cluster, string)
 
-// #OutputTypeMeta is shared among all output types
-#OutputTypeMeta: {
-	apiVersion: "holos.run/v1alpha1"
-	kind: #KubernetesObjects.kind | #NoOutput.kind
-	metadata: name: string
-}
-
 #KubernetesObjects: {
-	#OutputTypeMeta
+	apiVersion: "holos.run/v1alpha1"
 	kind: "KubernetesObjects"
 	apiObjectMap: {...}
 }
 
-#NoOutput: {
-	#OutputTypeMeta
-	kind: string | *"Skip"
-	metadata: name: string | *"skipped"
-}
-
-#NoOutput & {}
+apiVersion: "holos.run/v1alpha1"
+kind: "BuildPlan"

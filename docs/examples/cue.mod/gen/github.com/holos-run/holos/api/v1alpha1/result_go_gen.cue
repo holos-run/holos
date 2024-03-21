@@ -7,11 +7,4 @@ package v1alpha1
 // Result is the build result for display or writing.  Holos components Render the Result as a data pipeline.
 #Result: {
 	HolosComponent: #HolosComponent
-
-	#TypeMeta
-
-	#Kustomization
-
-	#Kustomize
-	metadata?: #ObjectMeta @go(Metadata)
 }

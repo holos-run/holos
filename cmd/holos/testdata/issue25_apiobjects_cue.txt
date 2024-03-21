@@ -9,7 +9,9 @@ package holos
 package holos
 
 apiVersion: "holos.run/v1alpha1"
-kind: "KubernetesObjects"
+kind: "BuildPlan"
+spec: components: KubernetesObjects: [{apiObjectMap: #APIObjects.apiObjectMap}]
+
 cluster: string @tag(cluster, string)
 
 #SecretStore: {
@@ -17,7 +19,7 @@ cluster: string @tag(cluster, string)
     metadata: name: string
 }
 
-#APIObjects & {
+#APIObjects: {
   apiObjects: {
     SecretStore: {
       default: #SecretStore & { metadata: name: "default" }
@@ -54,4 +56,3 @@ import "encoding/yaml"
 		}
 	}
 }
-

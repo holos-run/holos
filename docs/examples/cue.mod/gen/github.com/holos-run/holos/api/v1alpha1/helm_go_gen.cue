@@ -16,10 +16,10 @@ package v1alpha1
 }
 
 #Chart: {
-	name:       string      @go(Name)
-	version:    string      @go(Version)
-	release:    string      @go(Release)
-	repository: #Repository @go(Repository)
+	name:        string      @go(Name)
+	version:     string      @go(Version)
+	release:     string      @go(Release)
+	repository?: #Repository @go(Repository)
 }
 
 #Repository: {

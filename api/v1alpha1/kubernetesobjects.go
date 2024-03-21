@@ -14,11 +14,7 @@ type KubernetesObjects struct {
 
 // Render produces kubernetes api objects from the APIObjectMap
 func (o *KubernetesObjects) Render(ctx context.Context, path holos.PathComponent) (*Result, error) {
-	result := Result{
-		TypeMeta:      o.TypeMeta,
-		Metadata:      o.Metadata,
-		Kustomization: o.Kustomization,
-	}
+	result := Result{HolosComponent: o.HolosComponent}
 	result.addObjectMap(ctx, o.APIObjectMap)
 	return &result, nil
 }

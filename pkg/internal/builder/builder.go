@@ -5,13 +5,14 @@ package builder
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+
 	"cuelang.org/go/cue/build"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
-	"fmt"
 	"github.com/holos-run/holos/api/v1alpha1"
-	"os"
-	"path/filepath"
 
 	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/pkg/logger"
@@ -122,7 +123,7 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 		log.DebugContext(ctx, "cue: building instance")
 		value := cueCtx.BuildInstance(instance)
 		if err := value.Err(); err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("could not build: %w", err))
+			return nil, wrapper.Wrap(fmt.Errorf("could not build %s: %w", instance.Dir, err))
 		}
 		log.DebugContext(ctx, "cue: validating instance")
 		if err := value.Validate(); err != nil {
@@ -142,15 +143,27 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 			continue
 		}
 
-		for _, ko := range buildPlan.Spec.Components.KubernetesObjects {
-			result, err := ko.Render(ctx, holos.PathComponent(instance.Dir))
-			if err != nil {
+		for _, component := range buildPlan.Spec.Components.KubernetesObjects {
+			if result, err := component.Render(ctx, holos.PathComponent(instance.Dir)); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+			} else {
+				results = append(results, result)
 			}
-			results = append(results, result)
 		}
-		// TODO: HelmCharts
-		// TODO: KustomizeBuilds
+		for _, component := range buildPlan.Spec.Components.HelmCharts {
+			if result, err := component.Render(ctx, holos.PathComponent(instance.Dir)); err != nil {
+				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+			} else {
+				results = append(results, result)
+			}
+		}
+		for _, component := range buildPlan.Spec.Components.KustomizeBuilds {
+			if result, err := component.Render(ctx, holos.PathComponent(instance.Dir)); err != nil {
+				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+			} else {
+				results = append(results, result)
+			}
+		}
 	}
 
 	return results, nil

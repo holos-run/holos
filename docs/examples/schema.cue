@@ -13,12 +13,8 @@ import (
 	crt "cert-manager.io/certificate/v1"
 	gw "networking.istio.io/gateway/v1beta1"
 	vs "networking.istio.io/virtualservice/v1beta1"
-	kc "sigs.k8s.io/kustomize/api/types"
 	pg "postgres-operator.crunchydata.com/postgrescluster/v1beta1"
-	"encoding/yaml"
 )
-
-let ResourcesFile = "resources.yaml"
 
 // _apiVersion is the version of this schema.  Defines the interface between CUE output and the holos cli.
 _apiVersion: "holos.run/v1alpha1"
@@ -274,38 +270,6 @@ _apiVersion: "holos.run/v1alpha1"
 	"sidecar.istio.io/inject": "true"
 	...
 }
-
-// #KustomizeTree represents a kustomize build.
-#KustomizeFiles: {
-	Objects: {
-		"kustomization.yaml": #Kustomize
-	}
-	// Files holds the marshaled output holos writes to the filesystem
-	Files: {
-		for filename, obj in Objects {
-			"\(filename)": yaml.Marshal(obj)
-		}
-		...
-	}
-}
-
-// kustomization.yaml
-#Kustomize: kc.#Kustomization & {
-	apiVersion: "kustomize.config.k8s.io/v1beta1"
-	kind:       "Kustomization"
-	resources: [ResourcesFile]
-	...
-	if len(#KustomizePatches) > 0 {
-		patches: [for v in #KustomizePatches {v}]
-	}
-}
-
-#KustomizePatches: {
-	[_]: #Patch
-}
-
-// #Patch is a kustomize patch
-#Patch: kc.#Patch
 
 // #DefaultSecurityContext is the holos default security context to comply with the restricted namespace policy.
 // Refer to https://kubernetes.io/docs/concepts/security/pod-security-standards/#restricted

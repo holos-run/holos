@@ -3,13 +3,14 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/util"
 	"github.com/holos-run/holos/pkg/wrapper"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 // A HelmChart represents a helm command to provide chart values in order to render kubernetes api objects.
@@ -26,7 +27,7 @@ type Chart struct {
 	Name       string     `json:"name"`
 	Version    string     `json:"version"`
 	Release    string     `json:"release"`
-	Repository Repository `json:"repository"`
+	Repository Repository `json:"repository,omitempty"`
 }
 
 type Repository struct {

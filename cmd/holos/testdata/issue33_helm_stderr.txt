@@ -7,22 +7,27 @@ package holos
 -- zitadel.cue --
 package holos
 
+apiVersion: "holos.run/v1alpha1"
+kind: "BuildPlan"
+spec: components: HelmCharts: [_HelmChart]
+
 cluster: string @tag(cluster, string)
 
-apiVersion: "holos.run/v1alpha1"
-kind: "HelmChart"
-metadata: name: "zitadel"
-namespace: "zitadel"
-chart: {
-	name:    "zitadel"
-	version: "7.9.0"
-	release: name
-	repository: {
-		name: "zitadel"
-		url:  "https://charts.zitadel.com"
-	}
+_HelmChart: {
+  apiVersion: "holos.run/v1alpha1"
+  kind: "HelmChart"
+  metadata: name: "zitadel"
+  namespace: "zitadel"
+  chart: {
+    name:    "zitadel"
+    version: "7.9.0"
+    release: name
+    repository: {
+      name: "zitadel"
+      url:  "https://charts.zitadel.com"
+    }
+  }
 }
-
 
 -- vendor/zitadel/templates/secret_zitadel-masterkey.yaml --
 {{- if (or (and .Values.zitadel.masterkey .Values.zitadel.masterkeySecretName) (and (not .Values.zitadel.masterkey) (not .Values.zitadel.masterkeySecretName)) ) }}
