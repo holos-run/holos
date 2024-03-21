@@ -1,8 +1,13 @@
 package holos
 
 let Name = "httpbin"
+let ComponentName = "\(#InstancePrefix)-\(Name)"
+
 let SecretName = #InputKeys.cluster + "-" + Name
-let MatchLabels = {app: Name} & #SelectorLabels
+let MatchLabels = {
+	app:                          Name
+	"app.kubernetes.io/instance": ComponentName
+}
 let Metadata = {
 	name:      Name
 	namespace: #TargetNamespace
@@ -12,11 +17,22 @@ let Metadata = {
 #InputKeys: component: Name
 
 #TargetNamespace: "istio-ingress"
-#DependsOn:       _IngressGateway
 
 let Cert = #PlatformCerts[SecretName]
 
-#KubernetesObjects & {
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		_dependsOn: "prod-secrets-namespaces":       _
+		_dependsOn: "\(#InstancePrefix)-istio-base": _
+		_dependsOn: "\(#InstancePrefix)-ingress":    _
+
+		metadata: name: ComponentName
+
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
+
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		ExternalSecret: "\(Cert.spec.secretName)": _
 		Deployment: httpbin: #Deployment & {
@@ -24,7 +40,6 @@ let Cert = #PlatformCerts[SecretName]
 			spec: selector: matchLabels: MatchLabels
 			spec: template: {
 				metadata: labels: MatchLabels
-				metadata: labels: #CommonLabels
 				metadata: labels: #IstioSidecar
 				spec: securityContext: seccompProfile: type: "RuntimeDefault"
 				spec: containers: [{
@@ -54,7 +69,7 @@ let Cert = #PlatformCerts[SecretName]
 			spec: servers: [
 				{
 					hosts: [for host in Cert.spec.dnsNames {"\(#TargetNamespace)/\(host)"}]
-					port: name:          "https-\(#InstanceName)"
+					port: name:          "https-\(ComponentName)"
 					port: number:        443
 					port: protocol:      "HTTPS"
 					tls: credentialName: Cert.spec.secretName

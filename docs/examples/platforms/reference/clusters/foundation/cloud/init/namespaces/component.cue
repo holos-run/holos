@@ -2,7 +2,7 @@ package holos
 
 import "list"
 
-spec: components: KubernetesObjects: [
+spec: components: KubernetesObjectsList: [
 	#KubernetesObjects & {
 		metadata: name: "prod-secrets-namespaces"
 		apiObjectMap: (#APIObjects & {

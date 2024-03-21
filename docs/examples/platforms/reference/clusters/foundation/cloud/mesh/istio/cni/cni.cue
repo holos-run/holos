@@ -1,10 +1,13 @@
 package holos
 
-#InputKeys: component: "cni"
-#TargetNamespace: "kube-system"
+spec: components: HelmChartList: [
+	#HelmChart & {
+		_dependsOn: "prod-secrets-namespaces": _
+		_dependsOn: "prod-mesh-istio-base":    _
 
-#HelmChart & {
-	namespace: #TargetNamespace
-	chart: name: "cni"
-	values: #IstioValues
-}
+		_values: #IstioValues
+		metadata: name: "\(#InstancePrefix)-\(chart.name)"
+		namespace: "kube-system"
+		chart: name: "cni"
+	},
+]

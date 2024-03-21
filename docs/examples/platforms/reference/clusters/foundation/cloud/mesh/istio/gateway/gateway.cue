@@ -12,7 +12,18 @@ let Name = "gateway"
 
 let LoginCert = #PlatformCerts.login
 
-#KubernetesObjects & {
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		_dependsOn: "prod-secrets-namespaces": _
+		_dependsOn: "prod-mesh-istio-base":    _
+		_dependsOn: "prod-mesh-ingress":       _
+
+		metadata: name: "\(#InstancePrefix)-\(Name)"
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
+
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		ExternalSecret: login: #ExternalSecret & {
 			_name: "login"

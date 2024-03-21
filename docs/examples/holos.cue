@@ -57,6 +57,11 @@ let DependsOn = {[Name=_]: name: string & Name}
 	resourcesFile: h.#ResourcesFile
 	// kustomizeFiles represents the files in a kustomize directory tree.
 	kustomizeFiles: _kustomizeFiles.Files
+
+	chart: h.#Chart & {
+		name:    string
+		release: string | *name
+	}
 }
 #KubernetesObjects: #HolosComponent & h.#KubernetesObjects
 #KustomizeBuild:    #HolosComponent & h.#KustomizeBuild
@@ -91,10 +96,6 @@ let DependsOn = {[Name=_]: name: string & Name}
 		wait: true | *false
 		dependsOn: [for k, v in _dependsOn {v}, ...]
 	}
-}
-
-// #KustomizeTree represents a kustomize build.
-#KustomizeFiles: {
 }
 
 // #Kustomize represents the kustomize post processor.

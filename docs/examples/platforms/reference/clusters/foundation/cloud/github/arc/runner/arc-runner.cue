@@ -9,7 +9,7 @@ let GitHubConfigSecret = "controller-manager"
 // Just sync the external secret, don't configure the scale set
 // Work around https://github.com/actions/actions-runner-controller/issues/3351
 if #IsPrimaryCluster == false {
-	spec: components: KubernetesObjects: [
+	spec: components: KubernetesObjectsList: [
 		#KubernetesObjects & {
 			metadata: name:                        "prod-github-arc-runner"
 			_dependsOn: "prod-secrets-namespaces": _

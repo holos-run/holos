@@ -1,17 +1,19 @@
 package holos
 
-#InputKeys: component: "istio-base"
-#TargetNamespace: "istio-system"
+spec: components: HelmChartList: [
+	#HelmChart & {
+		_dependsOn: "prod-secrets-namespaces":       _
 
-#HelmChart & {
-	namespace: #TargetNamespace
-	chart: {
-		name:    "base"
-		version: "1.20.3"
-		repository: {
-			name: "istio"
-			url:  "https://istio-release.storage.googleapis.com/charts"
+		metadata: name: "prod-mesh-istio-base"
+		namespace: "istio-system"
+		chart: {
+			name:    "base"
+			version: "1.20.3"
+			repository: {
+				name: "istio"
+				url:  "https://istio-release.storage.googleapis.com/charts"
+			}
 		}
+		_values: #IstioValues
 	}
-	values: #IstioValues
-}
+]

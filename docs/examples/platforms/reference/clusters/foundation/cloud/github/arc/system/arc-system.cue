@@ -3,7 +3,7 @@ package holos
 #TargetNamespace: #ARCSystemNamespace
 #InputKeys: component: "arc-system"
 
-spec: components: HelmCharts: [
+spec: components: HelmChartList: [
 	#HelmChart & {
 		metadata: name: "prod-github-arc-system"
 
