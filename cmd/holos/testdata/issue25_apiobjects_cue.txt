@@ -10,9 +10,9 @@ package holos
 
 apiVersion: "holos.run/v1alpha1"
 kind: "BuildPlan"
-spec: components: KubernetesObjects: [{apiObjectMap: #APIObjects.apiObjectMap}]
+spec: components: KubernetesObjectsList: [{apiObjectMap: #APIObjects.apiObjectMap}]
 
-cluster: string @tag(cluster, string)
+_cluster: string @tag(cluster, string)
 
 #SecretStore: {
     kind: string

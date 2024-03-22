@@ -4,7 +4,9 @@
 package builder
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -129,13 +131,22 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 		if err := value.Validate(); err != nil {
 			return nil, wrapper.Wrap(fmt.Errorf("could not validate: %w", err))
 		}
+
 		log.DebugContext(ctx, "cue: decoding holos build plan")
-		if err := value.Decode(&buildPlan); err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("could not decode: %w", err))
+		// Hack to catch unknown fields https://github.com/holos-run/holos/issues/72
+		jsonBytes, err := value.MarshalJSON()
+		if err != nil {
+			return nil, wrapper.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", instance.Dir, err))
+		}
+		decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
+		decoder.DisallowUnknownFields()
+		err = decoder.Decode(&buildPlan)
+		if err != nil {
+			return nil, wrapper.Wrap(fmt.Errorf("invalid BuildPlan: %s: %w", instance.Dir, err))
 		}
 
 		if err := buildPlan.Validate(); err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+			return nil, wrapper.Wrap(fmt.Errorf("could not validate %s: %w", instance.Dir, err))
 		}
 
 		if buildPlan.Spec.Disabled {
@@ -143,21 +154,22 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 			continue
 		}
 
-		for _, component := range buildPlan.Spec.Components.KubernetesObjects {
+		// TODO: concurrent renders
+		for _, component := range buildPlan.Spec.Components.KubernetesObjectsList {
 			if result, err := component.Render(ctx, holos.PathComponent(instance.Dir)); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {
 				results = append(results, result)
 			}
 		}
-		for _, component := range buildPlan.Spec.Components.HelmCharts {
+		for _, component := range buildPlan.Spec.Components.HelmChartList {
 			if result, err := component.Render(ctx, holos.PathComponent(instance.Dir)); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {
 				results = append(results, result)
 			}
 		}
-		for _, component := range buildPlan.Spec.Components.KustomizeBuilds {
+		for _, component := range buildPlan.Spec.Components.KustomizeBuildList {
 			if result, err := component.Render(ctx, holos.PathComponent(instance.Dir)); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {

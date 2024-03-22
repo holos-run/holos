@@ -1,0 +1,14 @@
+# https://github.com/holos-run/holos/issues/72
+# Want holos to fail on unknown fields to catch typos and aid refactors
+! exec holos build .
+stderr 'unknown field \\"TypoKubernetesObjectsList\\"'
+
+-- cue.mod --
+package holos
+-- component.cue --
+package holos
+_cluster: string @tag(cluster, string)
+
+apiVersion: "holos.run/v1alpha1"
+kind: "BuildPlan"
+spec: components: TypoKubernetesObjectsList: []

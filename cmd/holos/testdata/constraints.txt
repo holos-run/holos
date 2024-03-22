@@ -11,7 +11,7 @@ metadata: name: "jeff"
 -- foo/bar/bar.cue --
 package holos
 
-spec: components: KubernetesObjects: [
+spec: components: KubernetesObjectsList: [
   #KubernetesObjects & {
     apiObjectMap: foo: bar: "bf2bc7f9-9ba0-4f9e-9bd2-9a205627eb0b"
   }
@@ -19,7 +19,7 @@ spec: components: KubernetesObjects: [
 -- schema.cue --
 package holos
 
-cluster: string @tag(cluster, string)
+_cluster: string @tag(cluster, string)
 
 #KubernetesObjects: {
 	apiVersion: "holos.run/v1alpha1"

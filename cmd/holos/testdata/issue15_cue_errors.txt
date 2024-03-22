@@ -1,6 +1,6 @@
 # Want cue errors to show files and lines
 ! exec holos build .
-stderr 'apiObjectMap.foo.bar: cannot convert non-concrete value string:'
+stderr 'apiObjectMap.foo.bar: cannot convert incomplete value'
 stderr '/component.cue:\d+:\d+$'
 
 -- cue.mod --
@@ -8,9 +8,10 @@ package holos
 -- component.cue --
 package holos
 
+_cluster: string @tag(cluster, string)
+
 apiVersion: "holos.run/v1alpha1"
 kind: "BuildPlan"
-cluster: string @tag(cluster, string)
+spec: components: KubernetesObjectsList: [{apiObjectMap: foo: bar: _baz}]
 
-baz: string
-spec: components: KubernetesObjects: [{apiObjectMap: foo: bar: baz}]
+_baz: string

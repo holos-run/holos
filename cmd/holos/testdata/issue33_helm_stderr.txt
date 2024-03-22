@@ -9,9 +9,9 @@ package holos
 
 apiVersion: "holos.run/v1alpha1"
 kind: "BuildPlan"
-spec: components: HelmCharts: [_HelmChart]
+spec: components: HelmChartList: [_HelmChart]
 
-cluster: string @tag(cluster, string)
+_cluster: string @tag(cluster, string)
 
 _HelmChart: {
   apiVersion: "holos.run/v1alpha1"

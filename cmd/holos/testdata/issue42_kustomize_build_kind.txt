@@ -9,11 +9,11 @@ package holos
 -- component.cue --
 package holos
 
-cluster: string @tag(cluster, string)
+_cluster: string @tag(cluster, string)
 
 apiVersion: "holos.run/v1alpha1"
 kind: "BuildPlan"
-spec: components: KustomizeBuilds: [{metadata: name: "kstest"}]
+spec: components: KustomizeBuildList: [{metadata: name: "kstest"}]
 
 -- kustomization.yaml --
 apiVersion: kustomize.config.k8s.io/v1beta1

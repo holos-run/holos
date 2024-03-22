@@ -19,9 +19,9 @@ type BuildPlanSpec struct {
 }
 
 type BuildPlanComponents struct {
-	HelmCharts        []HelmChart         `json:"helmCharts,omitempty" yaml:"helmCharts,omitempty"`
-	KubernetesObjects []KubernetesObjects `json:"kubernetesObjects,omitempty" yaml:"kubernetesObjects,omitempty"`
-	KustomizeBuilds   []KustomizeBuild    `json:"kustomizeBuilds,omitempty" yaml:"kustomizeBuilds,omitempty"`
+	HelmChartList         []HelmChart         `json:"helmChartList,omitempty" yaml:"helmChartList,omitempty"`
+	KubernetesObjectsList []KubernetesObjects `json:"kubernetesObjectsList,omitempty" yaml:"kubernetesObjectsList,omitempty"`
+	KustomizeBuildList    []KustomizeBuild    `json:"kustomizeBuildList,omitempty" yaml:"kustomizeBuildList,omitempty"`
 }
 
 func (bp *BuildPlan) Validate() error {
