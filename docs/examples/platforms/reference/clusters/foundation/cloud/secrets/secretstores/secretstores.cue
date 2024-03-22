@@ -2,27 +2,19 @@ package holos
 
 import "list"
 
-#DependsOn: _ESOCreds
-
 #TargetNamespace: "default"
 
-#InputKeys: {
-	project:   "secrets"
-	component: "stores"
-}
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		_dependsOn: "prod-secrets-namespaces":          _
+		_dependsOn: "prod-secrets-eso-creds-refresher": _
 
-// #PlatformNamespaceObjects defines the api objects necessary for eso SecretStores in external clusters to access secrets in a given namespace in the provisioner cluster.
-#PlatformNamespaceObjects: {
-	_ns: #PlatformNamespace
+		metadata: name: "prod-secrets-stores"
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
 
-	objects: [
-		#SecretStore & {
-			_namespace: _ns.name
-		},
-	]
-}
-
-#KubernetesObjects & {
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		for ns in #PlatformNamespaces {
 			for obj in (#PlatformNamespaceObjects & {_ns: ns}).objects {
@@ -40,4 +32,15 @@ import "list"
 			}
 		}
 	}
+}
+
+// #PlatformNamespaceObjects defines the api objects necessary for eso SecretStores in external clusters to access secrets in a given namespace in the provisioner cluster.
+#PlatformNamespaceObjects: {
+	_ns: #PlatformNamespace
+
+	objects: [
+		#SecretStore & {
+			_namespace: _ns.name
+		},
+	]
 }

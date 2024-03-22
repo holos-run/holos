@@ -4,14 +4,16 @@ package holos
 
 #TargetNamespace: "holos-system"
 
-#InputKeys: {
-	project:   "secrets"
-	component: "validate"
-}
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		_dependsOn: "prod-secrets-stores": _
 
-#DependsOn: _ESO
+		metadata: name: "prod-secrets-validate"
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
 
-#KubernetesObjects & {
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		ExternalSecret: validate: #ExternalSecret & {
 			_name: "validate"

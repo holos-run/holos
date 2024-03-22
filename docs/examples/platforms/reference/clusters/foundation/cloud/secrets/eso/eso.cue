@@ -3,26 +3,22 @@ package holos
 // Manages the External Secrets Operator from the official upstream Helm chart.
 
 #TargetNamespace: "external-secrets"
-
-#InputKeys: component: "eso"
-
-#InputKeys: {
-	project: "secrets"
-	service: "eso"
-}
-
 #Kustomization: spec: targetNamespace: #TargetNamespace
-#DependsOn: Namespaces: name:          #InstancePrefix + "-namespaces"
 
-#HelmChart & {
-	values: installCrds: true
-	namespace: #TargetNamespace
-	chart: {
-		name:    "external-secrets"
-		version: "0.9.12"
-		repository: {
-			name: "external-secrets"
-			url:  "https://charts.external-secrets.io"
+spec: components: HelmChartList: [
+	#HelmChart & {
+		_dependsOn: "prod-secrets-namespaces": _
+
+		metadata: name: "prod-secrets-eso"
+		namespace: #TargetNamespace
+		chart: {
+			name:    "external-secrets"
+			version: "0.9.12"
+			repository: {
+				name: "external-secrets"
+				url:  "https://charts.external-secrets.io"
+			}
 		}
-	}
-}
+		_values: installCrds: true
+	},
+]

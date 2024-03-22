@@ -2,8 +2,6 @@ package holos
 
 import "encoding/json"
 
-#DependsOn: _ESO
-
 #InputKeys: {
 	project:   "secrets"
 	component: "eso-creds-refresher"
@@ -11,8 +9,17 @@ import "encoding/json"
 
 #TargetNamespace: #CredsRefresher.namespace
 
-// output kubernetes api objects for holos
-#KubernetesObjects & {
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		_dependsOn: "prod-secrets-namespaces": _
+		_dependsOn: "prod-secrets-eso":        _
+
+		metadata: name: "prod-secrets-eso-creds-refresher"
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
+
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		for obj in #CredsRefresherService.objects {
 			let Kind = obj.kind
