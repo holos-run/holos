@@ -2,12 +2,15 @@ package holos
 
 #TargetNamespace: "default"
 
-#InputKeys: {
-	project:   "secrets"
-	component: "namespaces"
-}
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		metadata: name: "prod-secrets-namespaces"
 
-#KubernetesObjects & {
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
+
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		// #ManagedNamespaces is the set of all namespaces across all clusters in the platform.
 		for nsName, ns in #ManagedNamespaces {

@@ -54,7 +54,10 @@ _apiVersion: "holos.run/v1alpha1"
 }
 
 // Kubernetes API Objects
-#Namespace: corev1.#Namespace
+#Namespace: corev1.#Namespace & {
+	metadata: name: string
+	metadata: labels: "kubernetes.io/metadata.name": metadata.name
+}
 
 #ClusterRole:        #ClusterObject & rbacv1.#ClusterRole
 #ClusterRoleBinding: #ClusterObject & rbacv1.#ClusterRoleBinding

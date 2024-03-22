@@ -8,10 +8,15 @@ package holos
 // - Namespace
 // - ServiceAccount eso-reader, eso-writer
 
-// No flux kustomization
-ksObjects: []
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		metadata: name: "prod-secrets-eso-creds-refresher"
 
-#KubernetesObjects & {
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
+
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		let role = #CredsRefresherIAM.role
 		let binding = #CredsRefresherIAM.binding
@@ -33,12 +38,6 @@ ksObjects: []
 			}
 		}
 	}
-}
-
-#InputKeys: {
-	cluster:   "provisioner"
-	project:   "secrets"
-	component: "eso-creds-refresher"
 }
 
 // #CredsRefresherIAM defines the rbac policy for the job that refreshes credentials used by eso SecretStore resources in clusters other than the provisioner cluster.

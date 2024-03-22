@@ -4,11 +4,8 @@ import "list"
 
 // The primary istio Gateway, named default
 let Name = "gateway"
-
 #InputKeys: component: Name
-
 #TargetNamespace: "istio-ingress"
-#DependsOn:       _IngressGateway
 
 let LoginCert = #PlatformCerts.login
 

@@ -1,7 +1,5 @@
 package holos
 
-#DependsOn: _IstioBase
-
 #HelmChart: {
 	chart: {
 		version: "1.20.3"

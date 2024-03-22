@@ -4,28 +4,28 @@ package holos
 
 #TargetNamespace: "cert-manager"
 
-#InputKeys: {
-	component: "certmanager"
-	service:   "cert-manager"
-}
+spec: components: HelmChartList: [
+	#HelmChart & {
+		metadata: name: "\(#InstancePrefix)-certmanager"
 
-#HelmChart & {
-	values: #Values & {
-		installCRDs: true
-		startupapicheck: enabled: false
-		// Must not use kube-system on gke autopilot.  GKE Warden authz blocks access.
-		global: leaderElection: namespace: #TargetNamespace
-	}
-	namespace: #TargetNamespace
-	chart: {
-		name:    "cert-manager"
-		version: "1.14.3"
-		repository: {
-			name: "jetstack"
-			url:  "https://charts.jetstack.io"
+		_dependsOn: "prod-secrets-namespaces": _
+		namespace: #TargetNamespace
+		_values: #Values & {
+			installCRDs: true
+			startupapicheck: enabled: false
+			// Must not use kube-system on gke autopilot.  GKE Warden authz blocks access.
+			global: leaderElection: namespace: #TargetNamespace
 		}
-	}
-}
+		chart: {
+			name:    "cert-manager"
+			version: "1.14.3"
+			repository: {
+				name: "jetstack"
+				url:  "https://charts.jetstack.io"
+			}
+		}
+	},
+]
 
 // https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests#min-max-requests
 #PodResources: {

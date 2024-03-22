@@ -8,13 +8,27 @@ package holos
 
 // Refer to [Using Cert Manager to Deploy TLS for Postgres on Kubernetes](https://www.crunchydata.com/blog/using-cert-manager-to-deploy-tls-for-postgres-on-kubernetes)
 
+#TargetNamespace: "prod-iam-zitadel"
 #InputKeys: component: "postgres-certs"
 
-let SelfSigned = "\(_DBName)-selfsigned"
-let RootCA = "\(_DBName)-root-ca"
+let DBName = "zitadel"
+
+let SelfSigned = "\(DBName)-selfsigned"
+let RootCA = "\(DBName)-root-ca"
 let Orgs = ["Database"]
 
-#KubernetesObjects & {
+#Kustomization: spec: wait: true
+
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		metadata: name: "prod-iam-postgres-certs"
+
+		_dependsOn: "prod-secrets-namespaces": _
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
+
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		// Put everything in the target namespace.
 		[_]: {
@@ -51,10 +65,10 @@ let Orgs = ["Database"]
 					subject: organizations: Orgs
 				}
 			}
-			"\(_DBName)-primary-tls": #DatabaseCert & {
+			"\(DBName)-primary-tls": #DatabaseCert & {
 				// PGO managed name is "<cluster name>-cluster-cert" e.g. zitadel-cluster-cert
 				spec: {
-					commonName: "\(_DBName)-primary"
+					commonName: "\(DBName)-primary"
 					dnsNames: [
 						commonName,
 						"\(commonName).\(#TargetNamespace)",
@@ -66,16 +80,16 @@ let Orgs = ["Database"]
 					usages: ["digital signature", "key encipherment"]
 				}
 			}
-			"\(_DBName)-repl-tls": #DatabaseCert & {
+			"\(DBName)-repl-tls": #DatabaseCert & {
 				spec: {
 					commonName: "_crunchyrepl"
 					dnsNames: [commonName]
 					usages: ["digital signature", "key encipherment"]
 				}
 			}
-			"\(_DBName)-client-tls": #DatabaseCert & {
+			"\(DBName)-client-tls": #DatabaseCert & {
 				spec: {
-					commonName: "\(_DBName)-client"
+					commonName: "\(DBName)-client"
 					dnsNames: [commonName]
 					usages: ["digital signature", "key encipherment"]
 				}

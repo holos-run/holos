@@ -9,6 +9,8 @@ let Name = "vault"
 
 let Vault = #OptionalServices[Name]
 
+#Kustomization: spec: wait: true
+
 if Vault.enabled && list.Contains(Vault.clusterNames, #ClusterName) {
 	spec: components: HelmChartList: [
 		#HelmChart & {

@@ -1,7 +1,6 @@
 package holos
 
 // Lets Encrypt certificate issuers for public tls certs
-#InputKeys: component: "letsencrypt"
 #TargetNamespace: "cert-manager"
 
 let Name = "letsencrypt"
@@ -9,10 +8,17 @@ let Name = "letsencrypt"
 // The cloudflare api token is platform scoped, not cluster scoped.
 #SecretName: "cloudflare-api-token-secret"
 
-// Depends on cert manager
-#DependsOn: _CertManager
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		metadata: name: "\(#InstancePrefix)-letsencrypt"
 
-#KubernetesObjects & {
+		_dependsOn: "prod-secrets-namespaces":        _
+		_dependsOn: "\(#InstancePrefix)-certmanager": _
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
+
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		ClusterIssuer: {
 			letsencrypt: #ClusterIssuer & {
