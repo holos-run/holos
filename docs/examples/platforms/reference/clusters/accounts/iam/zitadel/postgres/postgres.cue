@@ -33,7 +33,17 @@ let RestoreOptions = []
 	},
 ]
 
-#KubernetesObjects & {
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		metadata: name: "prod-iam-postgres"
+
+		_dependsOn: "prod-secrets-namespaces": _
+		_dependsOn: "prod-iam-postgres-certs": _
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
+
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		ExternalSecret: "\(S3Secret)": _
 		PostgresCluster: db: #PostgresCluster & HighlyAvailable & {

@@ -4,50 +4,27 @@ import "encoding/yaml"
 
 let Name = "zitadel"
 #InputKeys: component: Name
-#DependsOn: postgres:  _
 
-// Upstream helm chart doesn't specify the namespace field for all resources.
-#Kustomization: spec: {
-	targetNamespace: #TargetNamespace
-	wait:            false
-}
+spec: components: HelmChartList: [
+	#HelmChart & {
+		metadata: name: "\(#InstancePrefix)-zitadel"
 
-if #IsPrimaryCluster == true {
-	#Kustomization: spec: healthChecks: [
-		{
-			apiVersion: "apps/v1"
-			kind:       "Deployment"
-			name:       Name
-			namespace:  #TargetNamespace
-		},
-		{
-			apiVersion: "batch/v1"
-			kind:       "Job"
-			name:       "\(Name)-init"
-			namespace:  #TargetNamespace
-		},
-		{
-			apiVersion: "batch/v1"
-			kind:       "Job"
-			name:       "\(Name)-setup"
-			namespace:  #TargetNamespace
-		},
-	]
-}
-
-#HelmChart & {
-	namespace:   #TargetNamespace
-	enableHooks: true
-	chart: {
-		name:    Name
-		version: "7.9.0"
-		repository: {
-			name: Name
-			url:  "https://charts.zitadel.com"
+		namespace:   #TargetNamespace
+		enableHooks: true
+		chart: {
+			name:    Name
+			version: "7.9.0"
+			repository: {
+				name: Name
+				url:  "https://charts.zitadel.com"
+			}
 		}
-	}
-	values: #Values
+		_values:      #Values
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
 
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		ExternalSecret: "zitadel-masterkey": _
 		VirtualService: "\(Name)": {
@@ -97,8 +74,7 @@ let CAPatch = #Patch & {
 	patch: yaml.Marshal(DatabaseCACertPatch)
 }
 
-// TODO: Replace with #Kustomize & { _patches: foo: {} }
-#KustomizePatches: {
+#Kustomize: _patches: {
 	mesh: {
 		target: {
 			group:   "apps"
@@ -163,3 +139,32 @@ let CAPatch = #Patch & {
 }
 
 let DisableFluxPatch = [{op: "replace", path: "/metadata/annotations/kustomize.toolkit.fluxcd.io~1reconcile", value: "disabled"}]
+
+// Upstream helm chart doesn't specify the namespace field for all resources.
+#Kustomization: spec: {
+	targetNamespace: #TargetNamespace
+	wait:            false
+}
+
+if #IsPrimaryCluster == true {
+	#Kustomization: spec: healthChecks: [
+		{
+			apiVersion: "apps/v1"
+			kind:       "Deployment"
+			name:       Name
+			namespace:  #TargetNamespace
+		},
+		{
+			apiVersion: "batch/v1"
+			kind:       "Job"
+			name:       "\(Name)-init"
+			namespace:  #TargetNamespace
+		},
+		{
+			apiVersion: "batch/v1"
+			kind:       "Job"
+			name:       "\(Name)-setup"
+			namespace:  #TargetNamespace
+		},
+	]
+}

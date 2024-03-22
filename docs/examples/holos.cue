@@ -24,6 +24,8 @@ let DependsOn = {[Name=_]: name: string & Name}
 	metadata: name: string
 	#namelen: len(metadata.name) & >=1
 	let Name = metadata.name
+
+	// TODO: ksContent needs to be component scoped, not instance scoped.
 	ksContent: yaml.Marshal(#Kustomization & {
 		_dependsOn: DEPENDS_ON
 		metadata: name: Name
@@ -110,3 +112,6 @@ let DependsOn = {[Name=_]: name: string & Name}
 		patches: [for v in _patches {v}]
 	}
 }
+
+// So components don't need to import the package.
+#Patch: kc.#Patch

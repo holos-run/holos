@@ -20,7 +20,17 @@ let SecretNames = {
 	},
 ]
 
-#KubernetesObjects & {
+spec: components: KubernetesObjectsList: [
+	#KubernetesObjects & {
+		metadata: name: "prod-iam-postgres-certs"
+
+		_dependsOn: "prod-secrets-stores": _
+
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
+
+let OBJECTS = #APIObjects & {
 	apiObjects: {
 		for s in SecretNames {
 			ExternalSecret: "\(s.name)": _

@@ -1,5 +1,6 @@
 package holos
 
+#InstancePrefix:  "prod-iam"
 #TargetNamespace: #InstancePrefix + "-zitadel"
 
 // _DBName is the database name used across multiple holos components in this project
