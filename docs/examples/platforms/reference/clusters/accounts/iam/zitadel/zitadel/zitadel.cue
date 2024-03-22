@@ -9,6 +9,9 @@ spec: components: HelmChartList: [
 	#HelmChart & {
 		metadata: name: "\(#InstancePrefix)-zitadel"
 
+		_dependsOn: "prod-secrets-stores":         _
+		_dependsOn: "\(#InstancePrefix)-postgres": _
+
 		namespace:   #TargetNamespace
 		enableHooks: true
 		chart: {

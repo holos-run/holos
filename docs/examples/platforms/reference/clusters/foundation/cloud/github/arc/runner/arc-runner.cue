@@ -23,7 +23,7 @@ if #IsPrimaryCluster == false {
 
 // Put the scale set on the primary cluster.
 if #IsPrimaryCluster == true {
-	spec: components: HelmCharts: [
+	spec: components: HelmChartList: [
 		#HelmChart & {
 			_dependsOn: "prod-secrets-namespaces": _
 			metadata: name:                        "prod-github-arc-runner"
