@@ -47,7 +47,7 @@ let DependsOn = {[Name=_]: name: string & Name}
 
 // Holos component types.
 #HelmChart: #HolosComponent & h.#HelmChart & {
-	_values:         _
+	_values: {...}
 	_kustomizeFiles: #KustomizeFiles
 
 	// Render the values to yaml for holos to provide to helm.

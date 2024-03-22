@@ -2,7 +2,7 @@ package holos
 
 spec: components: HelmChartList: [
 	#HelmChart & {
-		_dependsOn: "prod-secrets-namespaces":       _
+		_dependsOn: "prod-secrets-namespaces": _
 
 		metadata: name: "prod-mesh-istio-base"
 		namespace: "istio-system"
@@ -15,5 +15,5 @@ spec: components: HelmChartList: [
 			}
 		}
 		_values: #IstioValues
-	}
+	},
 ]

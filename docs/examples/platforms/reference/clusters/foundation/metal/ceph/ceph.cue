@@ -6,29 +6,30 @@ package holos
 
 #SecretName: "\(#ClusterName)-ceph-csi-rbd"
 
-#InputKeys: {
-	project:   "metal"
-	service:   "ceph"
-	component: "ceph"
-}
+#Kustomization: spec: targetNamespace: "ceph-system"
 
-#Kustomization: spec: targetNamespace: #TargetNamespace
-#DependsOn: Namespaces: name:          "\(#StageName)-secrets-namespaces"
+spec: components: HelmChartList: [
+	#HelmChart & {
+		_dependsOn: "prod-secrets-namespaces": _
 
-#HelmChart & {
-	namespace: #TargetNamespace
-	chart: {
-		name:    "ceph-csi-rbd"
-		version: "3.10.2"
-		repository: {
-			name: "ceph-csi"
-			url:  "https://ceph.github.io/csi-charts"
+		metadata: name: "prod-metal-ceph"
+
+		namespace: #TargetNamespace
+		chart: {
+			name:    "ceph-csi-rbd"
+			version: "3.10.2"
+			repository: {
+				name: "ceph-csi"
+				url:  "https://ceph.github.io/csi-charts"
+			}
 		}
-	}
+		_values:      #ChartValues
+		apiObjectMap: OBJECTS.apiObjectMap
+	},
+]
 
+let OBJECTS = #APIObjects & {
 	apiObjects: {
-		ExternalSecret: "\(#SecretName)": #ExternalSecret & {
-			_name: #SecretName
-		}
+		ExternalSecret: "\(#SecretName)": _
 	}
 }
