@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+
 	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/util"
@@ -29,7 +30,7 @@ type KustomizeBuild struct {
 
 // Render produces a Result by executing kubectl kustomize on the holos
 // component path. Useful for processing raw yaml files.
-func (kb *KustomizeBuild) Render(ctx context.Context, path holos.PathComponent) (*Result, error) {
+func (kb *KustomizeBuild) Render(ctx context.Context, path holos.InstancePath) (*Result, error) {
 	log := logger.FromContext(ctx)
 	result := Result{HolosComponent: kb.HolosComponent}
 	// Run kustomize.

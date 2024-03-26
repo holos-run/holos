@@ -19,7 +19,8 @@ package v1alpha1
 }
 
 #BuildPlanComponents: {
-	helmCharts?: [...#HelmChart] @go(HelmCharts,[]HelmChart)
-	kubernetesObjects?: [...#KubernetesObjects] @go(KubernetesObjects,[]KubernetesObjects)
-	kustomizeBuilds?: [...#KustomizeBuild] @go(KustomizeBuilds,[]KustomizeBuild)
+	helmChartList?: [...#HelmChart] @go(HelmChartList,[]HelmChart)
+	kubernetesObjectsList?: [...#KubernetesObjects] @go(KubernetesObjectsList,[]KubernetesObjects)
+	kustomizeBuildList?: [...#KustomizeBuild] @go(KustomizeBuildList,[]KustomizeBuild)
+	resources?: {[string]: #KubernetesObjects} @go(Resources,map[string]KubernetesObjects)
 }

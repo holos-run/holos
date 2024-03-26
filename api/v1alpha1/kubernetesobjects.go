@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"context"
+
 	"github.com/holos-run/holos"
 )
 
@@ -13,7 +14,7 @@ type KubernetesObjects struct {
 }
 
 // Render produces kubernetes api objects from the APIObjectMap
-func (o *KubernetesObjects) Render(ctx context.Context, path holos.PathComponent) (*Result, error) {
+func (o *KubernetesObjects) Render(ctx context.Context, path holos.InstancePath) (*Result, error) {
 	result := Result{HolosComponent: o.HolosComponent}
 	result.addObjectMap(ctx, o.APIObjectMap)
 	return &result, nil

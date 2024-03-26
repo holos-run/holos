@@ -35,7 +35,7 @@ type Repository struct {
 	URL  string `json:"url"`
 }
 
-func (hc *HelmChart) Render(ctx context.Context, path holos.PathComponent) (*Result, error) {
+func (hc *HelmChart) Render(ctx context.Context, path holos.InstancePath) (*Result, error) {
 	result := Result{HolosComponent: hc.HolosComponent}
 	if err := hc.helm(ctx, &result, path); err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (hc *HelmChart) Render(ctx context.Context, path holos.PathComponent) (*Res
 
 // runHelm provides the values produced by CUE to helm template and returns
 // the rendered kubernetes api objects in the result.
-func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.PathComponent) error {
+func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.InstancePath) error {
 	log := logger.FromContext(ctx).With("chart", hc.Chart.Name)
 	if hc.Chart.Name == "" {
 		log.WarnContext(ctx, "skipping helm: no chart name specified, use a different component type")
@@ -121,7 +121,7 @@ func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.PathCompone
 }
 
 // cacheChart stores a cached copy of Chart in the chart subdirectory of path.
-func cacheChart(ctx context.Context, path holos.PathComponent, chartDir string, chart Chart) error {
+func cacheChart(ctx context.Context, path holos.InstancePath, chartDir string, chart Chart) error {
 	log := logger.FromContext(ctx)
 
 	cacheTemp, err := os.MkdirTemp(string(path), chartDir)

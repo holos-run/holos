@@ -2,12 +2,13 @@ package v1alpha1
 
 import (
 	"context"
+
 	"github.com/holos-run/holos"
 )
 
 type Renderer interface {
 	GetKind() string
-	Render(ctx context.Context, path holos.PathComponent) (*Result, error)
+	Render(ctx context.Context, path holos.InstancePath) (*Result, error)
 }
 
 // Render produces a Result representing the kubernetes api objects to
@@ -16,6 +17,6 @@ type Renderer interface {
 // conceptualized as a data pipeline, for example a component may render a
 // result by first calling helm template, then passing the result through
 // kustomize, then mixing in overlay api objects.
-func Render(ctx context.Context, r Renderer, path holos.PathComponent) (*Result, error) {
+func Render(ctx context.Context, r Renderer, path holos.InstancePath) (*Result, error) {
 	return r.Render(ctx, path)
 }

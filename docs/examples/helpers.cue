@@ -7,7 +7,7 @@ import "encoding/yaml"
 	// apiObjects holds each the api objects produced by cue.
 	apiObjects: {
 		[Kind=_]: {
-			[Name=_]: {
+			[string]: {
 				kind: Kind
 				...
 			}

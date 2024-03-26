@@ -3,12 +3,13 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
-	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/util"
-	"github.com/holos-run/holos/pkg/wrapper"
 	"os"
 	"path/filepath"
 	"slices"
+
+	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/pkg/util"
+	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 // Result is the build result for display or writing.  Holos components Render the Result as a data pipeline.
@@ -40,7 +41,7 @@ func (r *Result) AccumulatedOutput() string {
 func (r *Result) addObjectMap(ctx context.Context, objectMap APIObjectMap) {
 	log := logger.FromContext(ctx)
 	b := []byte(r.AccumulatedOutput())
-	kinds := make([]string, 0, len(objectMap))
+	kinds := make([]Kind, 0, len(objectMap))
 	// Sort the keys
 	for kind := range objectMap {
 		kinds = append(kinds, kind)
@@ -50,7 +51,7 @@ func (r *Result) addObjectMap(ctx context.Context, objectMap APIObjectMap) {
 	for _, kind := range kinds {
 		v := objectMap[kind]
 		// Sort the keys
-		names := make([]string, 0, len(v))
+		names := make([]Label, 0, len(v))
 		for name := range v {
 			names = append(names, name)
 		}

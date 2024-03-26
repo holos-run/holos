@@ -5,6 +5,6 @@ package holos
 // It is given a unique type so the API is clear.
 type PathCueMod string
 
-// A PathComponent is a string representing the filesystem path of a holos component.
+// A InstancePath is a string representing the filesystem path of a holos instance.
 // It is given a unique type so the API is clear.
-type PathComponent string
+type InstancePath string

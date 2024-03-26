@@ -155,22 +155,29 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 		}
 
 		// TODO: concurrent renders
+		for _, component := range buildPlan.Spec.Components.Resources {
+			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
+				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+			} else {
+				results = append(results, result)
+			}
+		}
 		for _, component := range buildPlan.Spec.Components.KubernetesObjectsList {
-			if result, err := component.Render(ctx, holos.PathComponent(instance.Dir)); err != nil {
+			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {
 				results = append(results, result)
 			}
 		}
 		for _, component := range buildPlan.Spec.Components.HelmChartList {
-			if result, err := component.Render(ctx, holos.PathComponent(instance.Dir)); err != nil {
+			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {
 				results = append(results, result)
 			}
 		}
 		for _, component := range buildPlan.Spec.Components.KustomizeBuildList {
-			if result, err := component.Render(ctx, holos.PathComponent(instance.Dir)); err != nil {
+			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
 				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {
 				results = append(results, result)
