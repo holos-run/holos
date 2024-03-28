@@ -23,6 +23,27 @@ import h "github.com/holos-run/holos/api/v1alpha1"
 	// clusters are the cluster names the project is configured on.
 	clusters: [Name=string]: #Cluster & {name: Name}
 
+	// managedNamespaces ensures project namespaces have SecretStores that can sync ExternalSecrets from the provisioner cluster.
+	managedNamespaces: {
+		// Define the shape of a managed namespace.
+		[Name=_]: #ManagedNamespace & {
+			namespace: metadata: name: Name
+			clusterNames: ["provisioner", for c in clusters {c.name}]
+		}
+
+		// Manage a system namespace for each stage in the project.
+		for stage in stages {
+			for ns in stage.namespaces {
+				(ns.name): _
+			}
+		}
+
+		// Manage a namespace for each environment in the project.
+		for env in environments {
+			(env.namespace): _
+		}
+	}
+
 	// features is YAGNI maybe? 
 	features: [Name=string]: #Feature & {name: Name}
 }
@@ -47,6 +68,9 @@ import h "github.com/holos-run/holos/api/v1alpha1"
 	name:    string
 	project: string
 	slug:    "\(name)-\(project)"
+	// Manage a system namespace for each stage
+	namespaces: [Name=_]: name: Name
+	namespaces: "\(name)-\(project)-system": _
 }
 
 #Feature: {

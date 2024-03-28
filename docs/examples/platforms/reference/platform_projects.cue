@@ -19,6 +19,7 @@ import "strings"
 
 	// ExtAuthzHosts maps host names to the backend environment namespace for ExtAuthz.
 	let ExtAuthzHosts = {
+		// Initialize all stages, even if they have no environments.
 		for stage in project.stages {
 			(stage.name): {}
 		}
@@ -62,25 +63,6 @@ import "strings"
 
 	workload: resources: {
 		for stage in project.stages {
-			// System namespace for each project stage
-			let SystemName = "\(stage.slug)-system"
-			(SystemName): #KubernetesObjects & {
-				apiObjectMap: (#APIObjects & {
-					apiObjects: Namespace: (SystemName):   _
-					apiObjects: SecretStore: (SystemName): _
-				}).apiObjectMap
-			}
-
-			// Project namespace for each project environment
-			"\(stage.slug)-namespaces": #KubernetesObjects & {
-				apiObjectMap: (#APIObjects & {
-					for env in project.environments if env.stage == stage.name {
-						apiObjects: Namespace: (env.slug):   _
-						apiObjects: SecretStore: (env.slug): _
-					}
-				}).apiObjectMap
-			}
-
 			// Istio Gateway
 			"\(stage.slug)-gateway": #KubernetesObjects & {
 				apiObjectMap: (#APIObjects & {
@@ -98,15 +80,6 @@ import "strings"
 
 	provisioner: resources: {
 		for stage in project.stages {
-			"\(stage.slug)-namespaces": #KubernetesObjects & {
-				apiObjectMap: (#APIObjects & {
-					apiObjects: Namespace: "\(stage.slug)-system": _
-					for env in project.environments if env.stage == stage.name {
-						apiObjects: Namespace: (env.slug): _
-					}
-				}).apiObjectMap
-			}
-
 			"\(stage.slug)-certs": #KubernetesObjects & {
 				apiObjectMap: (#APIObjects & {
 					for host in ExtAuthzHosts[stage.name] {
