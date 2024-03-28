@@ -73,10 +73,14 @@ _apiVersion: "holos.run/v1alpha1"
 #Job:             #NamespaceObject & batchv1.#Job
 #CronJob:         #NamespaceObject & batchv1.#CronJob
 #Deployment:      #NamespaceObject & appsv1.#Deployment
-#Gateway:         #NamespaceObject & gw.#Gateway
 #VirtualService:  #NamespaceObject & vs.#VirtualService
 #Certificate:     #NamespaceObject & crt.#Certificate
 #PostgresCluster: #NamespaceObject & pg.#PostgresCluster
+
+#Gateway: #NamespaceObject & gw.#Gateway & {
+	metadata: namespace: string | *"istio-ingress"
+	spec: selector: istio: string | *"ingressgateway"
+}
 
 // #HTTP01Cert defines a http01 certificate.
 #HTTP01Cert: {

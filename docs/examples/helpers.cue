@@ -12,9 +12,13 @@ import "encoding/yaml"
 				...
 			}
 		}
+		Namespace?: [Name=_]: #Namespace & {metadata: name: Name}
+		SecretStore?: [Name=_]: #SecretStore & {_namespace: Name}
 		ExternalSecret?: [Name=_]: #ExternalSecret & {_name: Name}
 		VirtualService?: [Name=_]: #VirtualService & {metadata: name: Name}
 		Issuer?: [Name=_]: #Issuer & {metadata: name: Name}
+		Gateway?: [Name=_]: #Gateway & {metadata: name: Name}
+		Certificate?: [Name=_]: #Certificate & {metadata: name: Name}
 	}
 
 	// apiObjectMap holds the marshalled representation of apiObjects
