@@ -1,7 +1,5 @@
 package holos
 
-import "list"
-
 spec: components: KubernetesObjectsList: [
 	#KubernetesObjects & {
 		metadata: name: "prod-secrets-namespaces"
@@ -9,7 +7,7 @@ spec: components: KubernetesObjectsList: [
 			apiObjects: {
 				// #ManagedNamespaces is the set of all namespaces across all clusters in the platform.
 				for k, ns in #ManagedNamespaces {
-					if list.Contains(ns.clusterNames, #ClusterName) {
+					if ns.clusters[#ClusterName] != _|_ {
 						Namespace: "\(k)": #Namespace & ns.namespace
 					}
 				}

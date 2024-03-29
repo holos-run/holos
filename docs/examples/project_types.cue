@@ -2,6 +2,8 @@ package holos
 
 import h "github.com/holos-run/holos/api/v1alpha1"
 
+import "strings"
+
 // #Projects is a map of all the projects in the platform.
 #Projects: [Name=_]: #Project & {name: Name}
 
@@ -19,9 +21,11 @@ import h "github.com/holos-run/holos/api/v1alpha1"
 	}
 
 	// hosts are short hostnames to configure for the project.
+	// Each value is routed to every environment in the project as a dns prefix.
 	hosts: [Name=string]: #Host & {name: Name}
 	// clusters are the cluster names the project is configured on.
 	clusters: [Name=string]: #Cluster & {name: Name}
+	clusterNames: [for c in clusters {c.name}]
 
 	// managedNamespaces ensures project namespaces have SecretStores that can sync ExternalSecrets from the provisioner cluster.
 	managedNamespaces: {
@@ -61,6 +65,7 @@ import h "github.com/holos-run/holos/api/v1alpha1"
 	stage:     string | "dev" | "prod"
 	slug:      "\(name)-\(project)"
 	namespace: "\(name)-\(project)"
+	stageSlug: "\(stage)-\(project)"
 	dnsSegments: [...string] | *[name]
 }
 
@@ -90,5 +95,25 @@ import h "github.com/holos-run/holos/api/v1alpha1"
 	// provisioner cluster resources
 	provisioner: resources: [Name=_]: h.#KubernetesObjects & {
 		metadata: name: Name
+	}
+}
+
+// #EnvHosts provides hostnames given a project and environment
+#EnvHosts: {
+	project: #Project & {name: env.project}
+	env: #Environment
+
+	hosts: {
+		for host in project.hosts {
+			let SEGMENTS = [host.name] + env.dnsSegments + [#Platform.org.domain]
+			let HOST = strings.Join(SEGMENTS, ".")
+			(HOST): {name: HOST}
+
+			for cluster in project.clusters {
+				let SEGMENTS = [host.name] + env.dnsSegments + [cluster.name, #Platform.org.domain]
+				let HOST = strings.Join(SEGMENTS, ".")
+				(HOST): {name: HOST}
+			}
+		}
 	}
 }

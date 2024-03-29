@@ -1,6 +1,8 @@
 package holos
 
-import "strings"
+import (
+	"strings"
+)
 
 // Platform level definition of a project.
 #Project: {
@@ -10,15 +12,15 @@ import "strings"
 	environments: prod: dnsSegments: []
 	stages: prod: _
 	stages: dev:  _
-	// Short hostnames to construct fqdns.
+	// Ensure at least the project name is a short hostname.  Additional may be added.
 	hosts: (name): _
 }
 
 #ProjectTemplate: {
 	project: #Project
 
-	// ExtAuthzHosts maps host names to the backend environment namespace for ExtAuthz.
-	let ExtAuthzHosts = {
+	// GatewayServers maps Gateway spec.servers #GatewayServer values indexed by stage then name.
+	let GatewayServers = {
 		// Initialize all stages, even if they have no environments.
 		for stage in project.stages {
 			(stage.name): {}
@@ -27,16 +29,14 @@ import "strings"
 		for env in project.environments {
 			(env.stage): {
 				for host in project.hosts {
-					let NAME = "https-\(project.name)-\(env.name)-\(host.name)"
+					let NAME = "https-\(env.name)-\(project.name)-\(host.name)"
 					let SEGMENTS = [host.name] + env.dnsSegments + [#Platform.org.domain]
 					let HOST = strings.Join(SEGMENTS, ".")
 					(NAME): #GatewayServer & {
 						hosts: ["\(env.namespace)/\(HOST)"]
-						// name must be unique across all servers in all gateways
-						port: name:     NAME
-						port: number:   443
-						port: protocol: "HTTPS"
-						// TODO: Manage a certificate with each host in the dns alt names.
+						port: name:          NAME
+						port: number:        443
+						port: protocol:      "HTTPS"
 						tls: credentialName: HOST
 						tls: mode:           "SIMPLE"
 					}
@@ -47,11 +47,9 @@ import "strings"
 						let HOST = strings.Join(SEGMENTS, ".")
 						(NAME): #GatewayServer & {
 							hosts: ["\(env.namespace)/\(HOST)"]
-							// name must be unique across all servers in all gateways
-							port: name:     NAME
-							port: number:   443
-							port: protocol: "HTTPS"
-							// TODO: Manage a certificate with each host in the dns alt names.
+							port: name:          NAME
+							port: number:        443
+							port: protocol:      "HTTPS"
 							tls: credentialName: HOST
 							tls: mode:           "SIMPLE"
 						}
@@ -62,18 +60,32 @@ import "strings"
 	}
 
 	workload: resources: {
-		for stage in project.stages {
-			// Istio Gateway
-			"\(stage.slug)-gateway": #KubernetesObjects & {
-				apiObjectMap: (#APIObjects & {
-					apiObjects: Gateway: (stage.slug): #Gateway & {
-						spec: servers: [for host in ExtAuthzHosts[stage.name] {host}]
-					}
+		// Provide resources only if the project is managed on --cluster-name
+		if project.clusters[#ClusterName] != _|_ {
+			for stage in project.stages {
+				// Istio Gateway
+				"\(stage.slug)-gateway": #KubernetesObjects & {
+					apiObjectMap: (#APIObjects & {
+						apiObjects: Gateway: (stage.slug): #Gateway & {
+							spec: servers: [for server in GatewayServers[stage.name] {server}]
+						}
 
-					for host in ExtAuthzHosts[stage.name] {
-						apiObjects: ExternalSecret: (host.tls.credentialName): metadata: namespace: "istio-ingress"
+						for host in GatewayServers[stage.name] {
+							apiObjects: ExternalSecret: (host.tls.credentialName): metadata: namespace: "istio-ingress"
+						}
+					}).apiObjectMap
+				}
+
+				// Manage httpbin in each environment
+				for Env in project.environments if Env.stage == stage.name {
+					let Component = "\(Env.slug)-httpbin"
+					(Component): #KubernetesObjects & {
+						apiObjectMap: (#APIObjects & {
+							let Project = project
+							apiObjects: (HTTPBIN & {env: Env, project: Project}).apiObjects
+						}).apiObjectMap
 					}
-				}).apiObjectMap
+				}
 			}
 		}
 	}
@@ -82,7 +94,7 @@ import "strings"
 		for stage in project.stages {
 			"\(stage.slug)-certs": #KubernetesObjects & {
 				apiObjectMap: (#APIObjects & {
-					for host in ExtAuthzHosts[stage.name] {
+					for host in GatewayServers[stage.name] {
 						let CN = host.tls.credentialName
 						apiObjects: Certificate: (CN): #Certificate & {
 							metadata: name:      CN
@@ -98,83 +110,60 @@ import "strings"
 							}
 						}
 					}
-
 				}).apiObjectMap
 			}
 		}
 	}
 }
 
-// #GatewayServer defines the value of the istio Gateway.spec.servers field.
-#GatewayServer: {
-	// The ip or the Unix domain socket to which the listener should
-	// be bound to.
-	bind?:            string
-	defaultEndpoint?: string
+let HTTPBIN = {
+	name:    string | *"httpbin"
+	project: #Project
+	env:     #Environment
+	let Name = name
 
-	// One or more hosts exposed by this gateway.
-	hosts: [...string]
-
-	// An optional name of the server, when set must be unique across
-	// all servers.
-	name?: string
-
-	// The Port on which the proxy should listen for incoming
-	// connections.
-	port: {
-		// Label assigned to the port.
-		name: string
-
-		// A valid non-negative integer port number.
-		number: int
-
-		// The protocol exposed on the port.
-		protocol:    string
-		targetPort?: int
+	let Metadata = {
+		name:      Name
+		namespace: env.namespace
+		labels: app: name
 	}
 
-	// Set of TLS related options that govern the server's behavior.
-	tls?: {
-		// REQUIRED if mode is `MUTUAL` or `OPTIONAL_MUTUAL`.
-		caCertificates?: string
+	apiObjects: {
+		Deployment: (Name): #Deployment & {
+			metadata: Metadata
 
-		// Optional: If specified, only support the specified cipher list.
-		cipherSuites?: [...string]
-
-		// For gateways running on Kubernetes, the name of the secret that
-		// holds the TLS certs including the CA certificates.
-		credentialName?: string
-
-		// If set to true, the load balancer will send a 301 redirect for
-		// all http connections, asking the clients to use HTTPS.
-		httpsRedirect?: bool
-
-		// Optional: Maximum TLS protocol version.
-		maxProtocolVersion?: "TLS_AUTO" | "TLSV1_0" | "TLSV1_1" | "TLSV1_2" | "TLSV1_3"
-
-		// Optional: Minimum TLS protocol version.
-		minProtocolVersion?: "TLS_AUTO" | "TLSV1_0" | "TLSV1_1" | "TLSV1_2" | "TLSV1_3"
-
-		// Optional: Indicates whether connections to this port should be
-		// secured using TLS.
-		mode?: "PASSTHROUGH" | "SIMPLE" | "MUTUAL" | "AUTO_PASSTHROUGH" | "ISTIO_MUTUAL" | "OPTIONAL_MUTUAL"
-
-		// REQUIRED if mode is `SIMPLE` or `MUTUAL`.
-		privateKey?: string
-
-		// REQUIRED if mode is `SIMPLE` or `MUTUAL`.
-		serverCertificate?: string
-
-		// A list of alternate names to verify the subject identity in the
-		// certificate presented by the client.
-		subjectAltNames?: [...string]
-
-		// An optional list of hex-encoded SHA-256 hashes of the
-		// authorized client certificates.
-		verifyCertificateHash?: [...string]
-
-		// An optional list of base64-encoded SHA-256 hashes of the SPKIs
-		// of authorized client certificates.
-		verifyCertificateSpki?: [...string]
+			spec: selector: matchLabels: Metadata.labels
+			spec: template: {
+				metadata: labels: Metadata.labels & #IstioSidecar
+				spec: securityContext: seccompProfile: type: "RuntimeDefault"
+				spec: containers: [{
+					name:  Name
+					image: "quay.io/holos/mccutchen/go-httpbin"
+					ports: [{containerPort: 8080}]
+					securityContext: {
+						seccompProfile: type: "RuntimeDefault"
+						allowPrivilegeEscalation: false
+						runAsNonRoot:             true
+						runAsUser:                8192
+						runAsGroup:               8192
+						capabilities: drop: ["ALL"]
+					}}]
+			}
+		}
+		Service: (Name): #Service & {
+			metadata: Metadata
+			spec: selector: Metadata.labels
+			spec: ports: [
+				{port: 80, targetPort: 8080, protocol: "TCP", name: "http"},
+			]
+		}
+		VirtualService: (Name): #VirtualService & {
+			metadata: Metadata
+			let Project = project
+			let Env = env
+			spec: hosts: [for host in (#EnvHosts & {project: Project, env: Env}).hosts {host.name}]
+			spec: gateways: ["istio-ingress/\(env.stageSlug)"]
+			spec: http: [{route: [{destination: host: Name}]}]
+		}
 	}
 }

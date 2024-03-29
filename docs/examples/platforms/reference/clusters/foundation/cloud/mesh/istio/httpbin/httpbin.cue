@@ -50,8 +50,8 @@ let OBJECTS = #APIObjects & {
 						seccompProfile: type: "RuntimeDefault"
 						allowPrivilegeEscalation: false
 						runAsNonRoot:             true
-						runAsUser:                1337
-						runAsGroup:               1337
+						runAsUser:                8192
+						runAsGroup:               8192
 						capabilities: drop: ["ALL"]
 					}}]
 			}

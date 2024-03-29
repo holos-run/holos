@@ -26,6 +26,8 @@ _Projects: #Projects & {
 // Manage namespaces for platform project environments.
 for project in _Projects {
 	for ns in project.managedNamespaces {
-		#ManagedNamespaces: (ns.namespace.metadata.name): ns
+		if ns.clusters[#ClusterName] != _|_ {
+			#ManagedNamespaces: (ns.namespace.metadata.name): ns
+		}
 	}
 }
