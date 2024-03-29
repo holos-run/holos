@@ -3,32 +3,48 @@ package holos
 // Platform level definition of a project.
 #Project: {
 	name: string
+
 	// All projects have at least a prod environment and stage.
-	stages: prod: _
+	stages: prod: stageSegments: []
 	environments: prod: stage: "prod"
-	environments: prod: stageSegments: []
 	environments: prod: envSegments: []
 	stages: dev: _
 	environments: dev: stage: "dev"
 	environments: dev: envSegments: []
 	// Ensure at least the project name is a short hostname.  Additional may be added.
 	hosts: (name): _
+
+	// environments share the stage segments of their stage.
+	environments: [_]: {
+		stage:         string
+		stageSegments: stages[stage].stageSegments
+	}
 }
 
 #ProjectTemplate: {
 	project: #Project
+	let Project = project
 
 	// GatewayServers maps Gateway spec.servers #GatewayServer values indexed by stage then name.
 	let GatewayServers = {
 		// Initialize all stages, even if they have no environments.
 		for stage in project.stages {
-			(stage.name): {}
+			(stage.name): {
+				let Stage = stage
+				for host in (#StageHosts & {project: Project, stage: Stage}).hosts {
+					(host.name): #GatewayServer & {
+						hosts: ["\(stage.namespace)/\(host.name)"]
+						port: host.port
+						tls: credentialName: host.name
+						tls: mode:           "SIMPLE"
+					}
+				}
+			}
 		}
 
 		// For each stage, construct entries for the Gateway spec.servers.hosts field.
 		for env in project.environments {
 			(env.stage): {
-				let Project = project
 				let Env = env
 				for host in (#EnvHosts & {project: Project, env: Env}).hosts {
 					(host.name): #GatewayServer & {

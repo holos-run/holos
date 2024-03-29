@@ -88,7 +88,7 @@ import "strings"
 		host: {
 			name: strings.Join(SEGMENTS, ".")
 			port: {
-				name:     strings.Join(NAMESEGMENTS, "-")
+				name:     strings.Replace(strings.Join(NAMESEGMENTS, "-"), ".", "-", -1)
 				number:   443
 				protocol: "HTTPS"
 			}
@@ -105,6 +105,8 @@ import "strings"
 	// Manage a system namespace for each stage
 	namespaces: [Name=_]: name: Name
 	namespaces: (namespace): _
+	// stageSegments are the stage portion of the dns segments
+	stageSegments: [...string] | *[name]
 }
 
 #Feature: {
@@ -143,6 +145,48 @@ import "strings"
 			for Cluster in project.clusters {
 				let HOST = (env.#host & {name: host.name, cluster: Cluster.name}).host
 				(HOST.name): HOST
+			}
+		}
+	}
+}
+
+// #StageHosts provides hostnames given a project and stage.  Primarily for the
+// auth proxy.
+// Refer to https://github.com/holos-run/holos/issues/66#issuecomment-2027562626
+#StageHosts: {
+	// names are the leading prefix names to create hostnames for.
+	names: [...string] | *["auth"]
+	stage: #Stage
+	project: #Project & {
+		name: stage.project
+	}
+
+	hosts: {
+		for host in names {
+			let SEGMENTS = [host, project.name] + stage.stageSegments + [#Platform.org.domain]
+			let NAMESEGMENTS = ["https"] + SEGMENTS
+			let HOSTNAME = strings.Join(SEGMENTS, ".")
+			(HOSTNAME): {
+				name: HOSTNAME
+				port: {
+					name:     strings.Replace(strings.Join(NAMESEGMENTS, "-"), ".", "-", -1)
+					number:   443
+					protocol: "HTTPS"
+				}
+			}
+
+			for cluster in project.clusters {
+				let SEGMENTS = [host, project.name] + stage.stageSegments + [cluster.name] + [#Platform.org.domain]
+				let NAMESEGMENTS = ["https"] + SEGMENTS
+				let HOSTNAME = strings.Join(SEGMENTS, ".")
+				(HOSTNAME): {
+					name: HOSTNAME
+					port: {
+						name:     strings.Replace(strings.Join(NAMESEGMENTS, "-"), ".", "-", -1)
+						number:   443
+						protocol: "HTTPS"
+					}
+				}
 			}
 		}
 	}
