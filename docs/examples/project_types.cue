@@ -9,6 +9,8 @@ import "strings"
 
 #Project: {
 	name: string
+	// resourceId is the zitadel project Resource ID
+	resourceId: number
 	let ProjectName = name
 	description: string
 	environments: [Name=string]: #Environment & {
@@ -66,16 +68,43 @@ import "strings"
 	slug:      "\(name)-\(project)"
 	namespace: "\(name)-\(project)"
 	stageSlug: "\(stage)-\(project)"
-	dnsSegments: [...string] | *[name]
+
+	// envSegments are the env portion of the dns segments
+	envSegments: [...string] | *[name]
+	// stageSegments are the stage portion of the dns segments
+	stageSegments: [...string] | *[stage]
+
+	// #host provides a hostname
+	// Refer to: https://github.com/holos-run/holos/issues/66#issuecomment-2027562626
+	#host: {
+		name:     string
+		cluster?: string
+		clusterSegments: [...string]
+		if cluster != _|_ {
+			clusterSegments: [cluster]
+		}
+		let SEGMENTS = envSegments + [name] + stageSegments + clusterSegments + [#Platform.org.domain]
+		let NAMESEGMENTS = ["https"] + SEGMENTS
+		host: {
+			name: strings.Join(SEGMENTS, ".")
+			port: {
+				name:     strings.Join(NAMESEGMENTS, "-")
+				number:   443
+				protocol: "HTTPS"
+			}
+		}
+	}
 }
 
 #Stage: {
 	name:    string
 	project: string
 	slug:    "\(name)-\(project)"
+	// namespace is the system namespace for the project stage
+	namespace: "\(name)-\(project)-system"
 	// Manage a system namespace for each stage
 	namespaces: [Name=_]: name: Name
-	namespaces: "\(name)-\(project)-system": _
+	namespaces: (namespace): _
 }
 
 #Feature: {
@@ -98,21 +127,22 @@ import "strings"
 	}
 }
 
-// #EnvHosts provides hostnames given a project and environment
+// #EnvHosts provides hostnames given a project and environment.
+// Refer to https://github.com/holos-run/holos/issues/66#issuecomment-2027562626
 #EnvHosts: {
 	project: #Project & {name: env.project}
 	env: #Environment
 
 	hosts: {
 		for host in project.hosts {
-			let SEGMENTS = [host.name] + env.dnsSegments + [#Platform.org.domain]
-			let HOST = strings.Join(SEGMENTS, ".")
-			(HOST): {name: HOST}
+			// globally scoped hostname
+			let HOST = (env.#host & {name: host.name}).host
+			(HOST.name): HOST
 
-			for cluster in project.clusters {
-				let SEGMENTS = [host.name] + env.dnsSegments + [cluster.name, #Platform.org.domain]
-				let HOST = strings.Join(SEGMENTS, ".")
-				(HOST): {name: HOST}
+			// cluster scoped hostname
+			for Cluster in project.clusters {
+				let HOST = (env.#host & {name: host.name, cluster: Cluster.name}).host
+				(HOST.name): HOST
 			}
 		}
 	}

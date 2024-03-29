@@ -1,17 +1,16 @@
 package holos
 
-import (
-	"strings"
-)
-
 // Platform level definition of a project.
 #Project: {
 	name: string
 	// All projects have at least a prod environment and stage.
-	environments: prod: stage: "prod"
-	environments: prod: dnsSegments: []
 	stages: prod: _
-	stages: dev:  _
+	environments: prod: stage: "prod"
+	environments: prod: stageSegments: []
+	environments: prod: envSegments: []
+	stages: dev: _
+	environments: dev: stage: "dev"
+	environments: dev: envSegments: []
 	// Ensure at least the project name is a short hostname.  Additional may be added.
 	hosts: (name): _
 }
@@ -26,33 +25,17 @@ import (
 			(stage.name): {}
 		}
 
+		// For each stage, construct entries for the Gateway spec.servers.hosts field.
 		for env in project.environments {
 			(env.stage): {
-				for host in project.hosts {
-					let NAME = "https-\(env.name)-\(project.name)-\(host.name)"
-					let SEGMENTS = [host.name] + env.dnsSegments + [#Platform.org.domain]
-					let HOST = strings.Join(SEGMENTS, ".")
-					(NAME): #GatewayServer & {
-						hosts: ["\(env.namespace)/\(HOST)"]
-						port: name:          NAME
-						port: number:        443
-						port: protocol:      "HTTPS"
-						tls: credentialName: HOST
+				let Project = project
+				let Env = env
+				for host in (#EnvHosts & {project: Project, env: Env}).hosts {
+					(host.name): #GatewayServer & {
+						hosts: ["\(env.namespace)/\(host.name)"]
+						port: host.port
+						tls: credentialName: host.name
 						tls: mode:           "SIMPLE"
-					}
-
-					for cluster in project.clusters {
-						let NAME = "https-\(cluster.name)-\(project.name)-\(env.name)-\(host.name)"
-						let SEGMENTS = [host.name] + env.dnsSegments + [cluster.name, #Platform.org.domain]
-						let HOST = strings.Join(SEGMENTS, ".")
-						(NAME): #GatewayServer & {
-							hosts: ["\(env.namespace)/\(HOST)"]
-							port: name:          NAME
-							port: number:        443
-							port: protocol:      "HTTPS"
-							tls: credentialName: HOST
-							tls: mode:           "SIMPLE"
-						}
 					}
 				}
 			}
@@ -78,8 +61,7 @@ import (
 
 				// Manage httpbin in each environment
 				for Env in project.environments if Env.stage == stage.name {
-					let Component = "\(Env.slug)-httpbin"
-					(Component): #KubernetesObjects & {
+					"\(Env.slug)-httpbin": #KubernetesObjects & {
 						apiObjectMap: (#APIObjects & {
 							let Project = project
 							apiObjects: (HTTPBIN & {env: Env, project: Project}).apiObjects

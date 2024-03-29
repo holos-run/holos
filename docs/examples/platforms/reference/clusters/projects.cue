@@ -2,6 +2,7 @@ package holos
 
 _Projects: #Projects & {
 	holos: {
+		resourceId: 260446255245690199
 		clusters: {
 			k1: _
 			k2: _
