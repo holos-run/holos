@@ -4,7 +4,7 @@ PROJ=holos
 ORG_PATH=github.com/holos-run
 REPO_PATH=$(ORG_PATH)/$(PROJ)
 
-VERSION := $(shell grep "const Version " pkg/version/version.go | sed -E 's/.*"(.+)"$$/\1/')
+VERSION := $(shell cat pkg/version/embedded/{major,minor,patch} | xargs printf "%s.%s.%s")
 BIN_NAME := holos
 
 DOCKER_REPO=quay.io/openinfrastructure/holos
@@ -38,6 +38,10 @@ bumpmajor: ## Bump the major version.
 	scripts/bump major
 	scripts/bump minor 0
 	scripts/bump patch 0
+
+.PHONY: show-version
+show-version: ## Print the full version.
+	@echo $(VERSION)
 
 .PHONY: tidy
 tidy: ## Tidy go module.
