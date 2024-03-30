@@ -25,7 +25,7 @@ package holos
 	for Project in projects {
 		if Project.clusters[clusterName] != _|_ {
 			for Stage in Project.stages {
-				let Name = "authproxy-\(Stage.slug)"
+				let Name = "\(Stage.slug)-authproxy"
 				extensionProviderMap: (Name): #ExtAuthzProxy & {
 					envoyExtAuthzHttp: service: "authproxy.\(Stage.namespace).svc.cluster.local"
 				}
