@@ -349,6 +349,9 @@ let AUTHPROXY = {
 								seccompProfile: type: "RuntimeDefault"
 								allowPrivilegeEscalation: false
 								capabilities: drop: ["ALL"]
+								runAsNonRoot: true
+								runAsUser:    999
+								runAsGroup:   999
 							}
 							volumeMounts: [{
 								mountPath: "/redis-master-data"
