@@ -285,7 +285,7 @@ let AUTHPROXY = {
 			metadata: Metadata
 			spec: selector: Metadata.labels
 			spec: ports: [
-				{port: 80, targetPort: 4180, protocol: "TCP", name: "http"},
+				{port: 4180, targetPort: 4180, protocol: "TCP", name: "http"},
 			]
 		}
 		VirtualService: (Name): #VirtualService & {
@@ -296,7 +296,7 @@ let AUTHPROXY = {
 				match: [{uri: prefix: project.authProxyPrefix}]
 				route: [{
 					destination: host: Name
-					destination: port: number: 80
+					destination: port: number: 4180
 				}]
 			}]
 		}
