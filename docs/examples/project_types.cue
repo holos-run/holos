@@ -25,6 +25,10 @@ import "strings"
 
 	// authProxyPrefix is the path routed to the ext auth proxy.
 	authProxyPrefix: string | *"/holos/oidc"
+	// authProxyOrgDomain is the primary org domain for zitadel.
+	authProxyOrgDomain: string | *#Platform.org.domain
+	// authProxyIssuer is the issuer url
+	authProxyIssuer: string | *"https://login.\(#Platform.org.domain)"
 
 	// hosts are short hostnames to configure for the project.
 	// Each value is routed to every environment in the project as a dns prefix.

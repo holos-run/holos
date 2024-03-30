@@ -1,5 +1,7 @@
 package holos
 
+#Project: authProxyOrgDomain: "openinfrastructure.co"
+
 _Projects: #Projects & {
 	holos: {
 		resourceId: 260446255245690199

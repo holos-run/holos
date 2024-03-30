@@ -4,7 +4,7 @@ PROJ=holos
 ORG_PATH=github.com/holos-run
 REPO_PATH=$(ORG_PATH)/$(PROJ)
 
-VERSION := $(shell cat pkg/version/embedded/{major,minor,patch} | xargs printf "%s.%s.%s")
+VERSION := $(shell cat pkg/version/embedded/major pkg/version/embedded/minor pkg/version/embedded/patch | xargs printf "%s.%s.%s")
 BIN_NAME := holos
 
 DOCKER_REPO=quay.io/openinfrastructure/holos
