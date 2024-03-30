@@ -17,6 +17,8 @@ import "encoding/yaml"
 		VirtualService?: [Name=_]: #VirtualService & {metadata: name: Name}
 		Issuer?: [Name=_]: #Issuer & {metadata: name: Name}
 		Gateway?: [Name=_]: #Gateway & {metadata: name: Name}
+		ConfigMap?: [Name=_]: #ConfigMap & {metadata: name: Name}
+		Deployment?: [_]: #Deployment
 	}
 
 	// apiObjectMap holds the marshalled representation of apiObjects

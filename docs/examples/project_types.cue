@@ -21,6 +21,7 @@ import "strings"
 		name:    Name
 		project: ProjectName
 	}
+	domain: string | *#Platform.org.domain
 
 	// hosts are short hostnames to configure for the project.
 	// Each value is routed to every environment in the project as a dns prefix.
@@ -107,6 +108,8 @@ import "strings"
 	namespaces: (namespace): _
 	// stageSegments are the stage portion of the dns segments
 	stageSegments: [...string] | *[name]
+	// authProxyClientID is the ClientID registered with the oidc issuer.
+	authProxyClientID: string
 }
 
 #Feature: {
@@ -150,33 +153,25 @@ import "strings"
 	}
 }
 
-// #StageHosts provides hostnames given a project and stage.  Primarily for the
+// #StageDomains provides hostnames given a project and stage.  Primarily for the
 // auth proxy.
 // Refer to https://github.com/holos-run/holos/issues/66#issuecomment-2027562626
-#StageHosts: {
+#StageDomains: {
 	// names are the leading prefix names to create hostnames for.
-	names: [...string] | *["auth"]
+	// this is a two level list to support strings.Join()
+	prefixes: [...[...string]] | *[[]]
 	stage: #Stage
 	project: #Project & {
 		name: stage.project
 	}
 
-	hosts: {
-		for host in names {
-			let SEGMENTS = [host, project.name] + stage.stageSegments + [#Platform.org.domain]
-			let NAMESEGMENTS = ["https"] + SEGMENTS
-			let HOSTNAME = strings.Join(SEGMENTS, ".")
-			(HOSTNAME): {
-				name: HOSTNAME
-				port: {
-					name:     strings.Replace(strings.Join(NAMESEGMENTS, "-"), ".", "-", -1)
-					number:   443
-					protocol: "HTTPS"
-				}
-			}
+	// blank segment for the global domain plus each cluster in the project.
+	let ClusterSegments = [[], for cluster in project.clusters {[cluster.name]}]
 
-			for cluster in project.clusters {
-				let SEGMENTS = [host, project.name] + stage.stageSegments + [cluster.name] + [#Platform.org.domain]
+	hosts: {
+		for prefix in prefixes {
+			for ClusterSegment in ClusterSegments {
+				let SEGMENTS = prefix + [project.name] + stage.stageSegments + ClusterSegment + [project.domain]
 				let NAMESEGMENTS = ["https"] + SEGMENTS
 				let HOSTNAME = strings.Join(SEGMENTS, ".")
 				(HOSTNAME): {

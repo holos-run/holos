@@ -7,6 +7,8 @@ _Projects: #Projects & {
 			k1: _
 			k2: _
 		}
+		stages: dev: authProxyClientID:  "260505543108527218@holos"
+		stages: prod: authProxyClientID: "260506079325128023@holos"
 		environments: {
 			prod: stage: "prod"
 			dev: stage:  "dev"
