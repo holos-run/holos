@@ -21,10 +21,13 @@ _Projects: #Projects & {
 	}
 
 	iam: {
+		resourceId: 260582480954787159
 		clusters: {
 			core1: _
 			core2: _
 		}
+		stages: dev: authProxyClientID:  "260582521186616432@iam"
+		stages: prod: authProxyClientID: "260582633862399090@iam"
 	}
 }
 
