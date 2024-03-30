@@ -290,7 +290,7 @@ let AUTHPROXY = {
 		}
 		VirtualService: (Name): #VirtualService & {
 			metadata: Metadata
-			spec: hosts: [for host, v in servers {host}]
+			spec: hosts: ["*"]
 			spec: gateways: ["istio-ingress/\(stage.slug)"]
 			spec: http: [{
 				match: [{uri: prefix: project.authProxyPrefix}]
