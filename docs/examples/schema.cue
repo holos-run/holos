@@ -13,6 +13,8 @@ import (
 	crt "cert-manager.io/certificate/v1"
 	gw "networking.istio.io/gateway/v1beta1"
 	vs "networking.istio.io/virtualservice/v1beta1"
+	ra "security.istio.io/requestauthentication/v1"
+	ap "security.istio.io/authorizationpolicy/v1"
 	pg "postgres-operator.crunchydata.com/postgrescluster/v1beta1"
 )
 
@@ -63,19 +65,21 @@ _apiVersion: "holos.run/v1alpha1"
 #ClusterRoleBinding: #ClusterObject & rbacv1.#ClusterRoleBinding
 #ClusterIssuer: #ClusterObject & ci.#ClusterIssuer & {...}
 
-#Issuer:          #NamespaceObject & is.#Issuer
-#Role:            #NamespaceObject & rbacv1.#Role
-#RoleBinding:     #NamespaceObject & rbacv1.#RoleBinding
-#ConfigMap:       #NamespaceObject & corev1.#ConfigMap
-#ServiceAccount:  #NamespaceObject & corev1.#ServiceAccount
-#Pod:             #NamespaceObject & corev1.#Pod
-#Service:         #NamespaceObject & corev1.#Service
-#Job:             #NamespaceObject & batchv1.#Job
-#CronJob:         #NamespaceObject & batchv1.#CronJob
-#Deployment:      #NamespaceObject & appsv1.#Deployment
-#VirtualService:  #NamespaceObject & vs.#VirtualService
-#Certificate:     #NamespaceObject & crt.#Certificate
-#PostgresCluster: #NamespaceObject & pg.#PostgresCluster
+#Issuer:                #NamespaceObject & is.#Issuer
+#Role:                  #NamespaceObject & rbacv1.#Role
+#RoleBinding:           #NamespaceObject & rbacv1.#RoleBinding
+#ConfigMap:             #NamespaceObject & corev1.#ConfigMap
+#ServiceAccount:        #NamespaceObject & corev1.#ServiceAccount
+#Pod:                   #NamespaceObject & corev1.#Pod
+#Service:               #NamespaceObject & corev1.#Service
+#Job:                   #NamespaceObject & batchv1.#Job
+#CronJob:               #NamespaceObject & batchv1.#CronJob
+#Deployment:            #NamespaceObject & appsv1.#Deployment
+#VirtualService:        #NamespaceObject & vs.#VirtualService
+#RequestAuthentication: #NamespaceObject & ra.#RequestAuthentication
+#AuthorizationPolicy:   #NamespaceObject & ap.#AuthorizationPolicy
+#Certificate:           #NamespaceObject & crt.#Certificate
+#PostgresCluster:       #NamespaceObject & pg.#PostgresCluster
 
 #Gateway: #NamespaceObject & gw.#Gateway & {
 	metadata: namespace: string | *"istio-ingress"

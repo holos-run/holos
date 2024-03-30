@@ -18,7 +18,10 @@ import "encoding/yaml"
 		Issuer?: [Name=_]: #Issuer & {metadata: name: Name}
 		Gateway?: [Name=_]: #Gateway & {metadata: name: Name}
 		ConfigMap?: [Name=_]: #ConfigMap & {metadata: name: Name}
-		Deployment?: [_]: #Deployment
+
+		Deployment?: [_]:            #Deployment
+		RequestAuthentication?: [_]: #RequestAuthentication
+		AuthorizationPolicy?: [_]:   #AuthorizationPolicy
 	}
 
 	// apiObjectMap holds the marshalled representation of apiObjects

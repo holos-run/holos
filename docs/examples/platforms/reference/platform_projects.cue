@@ -79,6 +79,13 @@ package holos
 					}).apiObjectMap
 				}
 
+				// Manage auth policy in each stage
+				"\(stage.slug)-authpolicy": #KubernetesObjects & {
+					apiObjectMap: (#APIObjects & {
+						apiObjects: (AUTHPOLICY & {stage: Stage, project: Project, servers: GatewayServers[stage.name]}).apiObjects
+					}).apiObjectMap
+				}
+
 				// Manage httpbin in each environment
 				for Env in project.environments if Env.stage == stage.name {
 					"\(Env.slug)-httpbin": #KubernetesObjects & {
@@ -221,7 +228,7 @@ let AUTHPROXY = {
 					metadata: labels: #IstioSidecar
 					spec: securityContext: seccompProfile: type: "RuntimeDefault"
 					spec: containers: [{
-						image:           "quay.io/oauth2-proxy/oauth2-proxy:v7.4.0"
+						image:           "quay.io/oauth2-proxy/oauth2-proxy:v7.6.0"
 						imagePullPolicy: "IfNotPresent"
 						name:            "oauth2-proxy"
 						args: [
@@ -236,13 +243,21 @@ let AUTHPROXY = {
 							"--cookie-name=__Secure-\(Name)-\(stage.slug)",
 							"--cookie-samesite=lax",
 							for domain in StageDomains {"--cookie-domain=.\(domain.name)"},
+							for domain in StageDomains {"--cookie-domain=\(domain.name)"},
 							for domain in StageDomains {"--whitelist-domain=.\(domain.name)"},
+							for domain in StageDomains {"--whitelist-domain=\(domain.name)"},
 							"--cookie-csrf-per-request=true",
 							"--cookie-csrf-expire=120s",
-							"--set-authorization-header=false",
-							"--set-xauthrequest=true",
+							// Add X-Auth-Request-Access-Token header to response
 							"--pass-access-token=true",
+							"--set-xauthrequest=true",
+							// set Authorization Bearer response header (useful in Nginx auth_request mode)
+							// NOTE: this is set because the zitadel access token is not a JWT.  If this interferes with an app that expects to be able to control the Authorization header, we need to set this in a different response header using the alpha oauth2-proxy config.
+							"--set-authorization-header=true",
+							// pass OIDC IDToken to upstream via Authorization Bearer header
 							"--pass-authorization-header=true",
+							// will skip authentication for OPTIONS requests
+							"--skip-auth-preflight=true",
 							"--upstream=static://200",
 							"--reverse-proxy",
 							"--real-client-ip-header=X-Forwarded-For",
@@ -382,6 +397,67 @@ let AUTHPROXY = {
 				protocol:   "TCP"
 				targetPort: 6379
 			}]
+		}
+	}
+}
+
+// AUTHPOLICY configures the baseline AuthorizationPolicy and RequestAuthentication policy for each stage of each project.
+let AUTHPOLICY = {
+	project: #Project
+	stage:   #Stage
+	let Name = "\(stage.slug)-authproxy"
+	let Project = project
+
+	let Metadata = {
+		name:      string
+		namespace: "istio-ingress"
+		labels: {
+			"app.kubernetes.io/name":     name
+			"app.kubernetes.io/instance": stage.name
+			"app.kubernetes.io/part-of":  stage.project
+		}
+	}
+
+	// Collect all the hosts associated with the stage
+	let Hosts = {
+		for Env in project.environments if Env.stage == stage.name {
+			for HOST in (#EnvHosts & {project: Project, env: Env}).hosts {
+				(HOST.name): HOST
+			}
+		}
+	}
+
+	// HostList is a list of hosts for AuthorizationPolicy rules
+	let HostList = [
+		for host in Hosts {host.name},
+		for host in Hosts {host.name + ":*"},
+	]
+
+	apiObjects: {
+		RequestAuthentication: (Name): #RequestAuthentication & {
+			metadata: Metadata & {name: Name}
+			spec: jwtRules: [{
+				audiences: [stage.authProxyClientID]
+				forwardOriginalToken: true
+				fromHeaders: [{name: "x-auth-request-access-token"}]
+				issuer: project.authProxyIssuer
+			}, {
+				audiences: [stage.authProxyClientID]
+				forwardOriginalToken: true
+				fromHeaders: [{name: "authorization", prefix: "Bearer "}]
+				issuer: project.authProxyIssuer
+			}]
+			spec: selector: matchLabels: istio: "ingressgateway"
+		}
+		AuthorizationPolicy: "\(Name)-custom": {
+			metadata: Metadata & {name: "\(Name)-custom"}
+			spec: {
+				action: "CUSTOM"
+				// send the request to the auth proxy
+				provider: name: stage.extAuthzProviderName
+				rules: [{to: [{operation: hosts: HostList}]}]
+				selector: matchLabels: istio: "ingressgateway"
+			}
 		}
 	}
 }

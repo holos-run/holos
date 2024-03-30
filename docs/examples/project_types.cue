@@ -117,6 +117,8 @@ import "strings"
 	stageSegments: [...string] | *[name]
 	// authProxyClientID is the ClientID registered with the oidc issuer.
 	authProxyClientID: string
+	// extAuthzProviderName is the provider name in the mesh config
+	extAuthzProviderName: "\(slug)-authproxy"
 }
 
 #Feature: {
