@@ -29,28 +29,21 @@ package holos
 	let GatewayServers = {
 		// Initialize all stages, even if they have no environments.
 		for stage in project.stages {
-			(stage.name): {
-				let Stage = stage
-
-				// entry for the auth-proxy domain
-				for host in (#StageDomains & {project: Project, stage: Stage, prefixes: [["auth"]]}).hosts {
-					(host.name): #GatewayServer & {
-						hosts: ["\(stage.namespace)/\(host.name)"]
-						port: host.port
-						tls: credentialName: host.name
-						tls: mode:           "SIMPLE"
-					}
-				}
-			}
+			(stage.name): {}
 		}
 
 		// For each stage, construct entries for the Gateway spec.servers.hosts field.
 		for env in project.environments {
 			(env.stage): {
 				let Env = env
+				let Stage = project.stages[env.stage]
 				for host in (#EnvHosts & {project: Project, env: Env}).hosts {
 					(host.name): #GatewayServer & {
-						hosts: ["\(env.namespace)/\(host.name)"]
+						hosts: [
+							"\(env.namespace)/\(host.name)",
+							// Allow the authproxy VirtualService to match the project.authProxyPrefix path.
+							"\(Stage.namespace)/\(host.name)",
+						]
 						port: host.port
 						tls: credentialName: host.name
 						tls: mode:           "SIMPLE"
@@ -82,7 +75,7 @@ package holos
 				// Manage auth-proxy in each stage
 				"\(stage.slug)-authproxy": #KubernetesObjects & {
 					apiObjectMap: (#APIObjects & {
-						apiObjects: (AUTHPROXY & {stage: Stage, project: Project}).apiObjects
+						apiObjects: (AUTHPROXY & {stage: Stage, project: Project, servers: GatewayServers[stage.name]}).apiObjects
 					}).apiObjectMap
 				}
 
@@ -182,6 +175,7 @@ let AUTHPROXY = {
 	name:    string | *"authproxy"
 	project: #Project
 	stage:   #Stage
+	servers: {}
 	let Name = name
 	let Project = project
 	let Stage = stage
@@ -231,7 +225,8 @@ let AUTHPROXY = {
 						imagePullPolicy: "IfNotPresent"
 						name:            "oauth2-proxy"
 						args: [
-							"--proxy-prefix=/oauth2",
+							// callback url is proxy prefix + /callback
+							"--proxy-prefix=" + project.authProxyPrefix,
 							"--email-domain=*",
 							"--session-store-type=redis",
 							"--redis-connection-url=redis://\(RedisMetadata.name):6379",
@@ -292,6 +287,18 @@ let AUTHPROXY = {
 				{port: 80, targetPort: 4180, protocol: "TCP", name: "http"},
 			]
 		}
+		VirtualService: (Name): #VirtualService & {
+			metadata: Metadata
+			spec: hosts: [for host, v in servers {host}]
+			spec: gateways: ["istio-ingress/\(stage.slug)"]
+			spec: http: [{
+				match: [{uri: prefix: project.authProxyPrefix}]
+				route: [{
+					destination: host: Name
+					destination: port: number: 80
+				}]
+			}]
+		}
 
 		// redis
 		ConfigMap: (RedisMetadata.name): {
@@ -340,9 +347,6 @@ let AUTHPROXY = {
 							securityContext: {
 								seccompProfile: type: "RuntimeDefault"
 								allowPrivilegeEscalation: false
-								runAsNonRoot:             true
-								runAsUser:                8192
-								runAsGroup:               8192
 								capabilities: drop: ["ALL"]
 							}
 							volumeMounts: [{

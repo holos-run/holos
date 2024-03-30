@@ -23,6 +23,9 @@ import "strings"
 	}
 	domain: string | *#Platform.org.domain
 
+	// authProxyPrefix is the path routed to the ext auth proxy.
+	authProxyPrefix: string | *"/holos/oidc"
+
 	// hosts are short hostnames to configure for the project.
 	// Each value is routed to every environment in the project as a dns prefix.
 	hosts: [Name=string]: #Host & {name: Name}

@@ -306,19 +306,10 @@ import "strings"
 			// "value"` for prefix-based match - `regex: "value"` for RE2
 			// style regex-based match
 			// (https://github.com/google/re2/wiki/Syntax).
-			uri?: ({} | {
-				exact: _
-			} | {
-				prefix: _
-			} | {
-				regex: _
-			}) & {
+			uri?: {
 				exact?:  string
 				prefix?: string
-
-				// RE2 style regex-based match
-				// (https://github.com/google/re2/wiki/Syntax).
-				regex?: string
+				regex?:  string
 			}
 
 			// withoutHeader has the same syntax with the header, but has
