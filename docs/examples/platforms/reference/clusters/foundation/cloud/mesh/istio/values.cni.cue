@@ -126,7 +126,7 @@ package holos
 		hub: "docker.io/istio"
 
 		// Default tag for Istio images.
-		tag: "1.20.3"
+		tag: #IstioVersion
 
 		// Variant of the image to use.
 		// Currently supported are: [debug, distroless]

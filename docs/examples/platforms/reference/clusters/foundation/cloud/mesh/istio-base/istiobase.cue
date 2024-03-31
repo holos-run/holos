@@ -8,7 +8,7 @@ spec: components: HelmChartList: [
 		namespace: "istio-system"
 		chart: {
 			name:    "base"
-			version: "1.20.3"
+			version: #IstioVersion
 			repository: {
 				name: "istio"
 				url:  "https://istio-release.storage.googleapis.com/charts"

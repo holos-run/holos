@@ -172,20 +172,14 @@ package holos
 				enabled: true
 				// Indicates whether to enable WebAssembly runtime for stats filter.
 				wasmEnabled: false
-				// overrides stats EnvoyFilter configuration.
-				configOverride: {
-					gateway: {}
-					inboundSidecar: {}
-					outboundSidecar: {}
-				}
 			}
 			// stackdriver filter settings.
 			stackdriver: {
-				enabled:         false
-				logging:         false
-				monitoring:      false
-				topology:        false // deprecated. setting this to true will have no effect, as this option is no longer supported.
-				disableOutbound: false
+				enabled:    false
+				logging:    false
+				monitoring: false
+				topology:   false // deprecated. setting this to true will have no effect, as this option is no longer supported.
+
 				//  configOverride parts give you the ability to override the low level configuration params passed to envoy filter.
 
 				configOverride: {}
@@ -248,7 +242,7 @@ package holos
 		// Dev builds from prow are on gcr.io
 		hub: string | *"docker.io/istio"
 		// Default tag for Istio images.
-		tag: string | *"1.20.3"
+		tag: #IstioVersion
 		// Variant of the image to use.
 		// Currently supported are: [debug, distroless]
 		variant: string | *""
