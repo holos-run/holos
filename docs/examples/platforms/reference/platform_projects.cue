@@ -1,5 +1,7 @@
 package holos
 
+import "encoding/yaml"
+
 // Platform level definition of a project.
 #Project: {
 	name: string
@@ -210,6 +212,45 @@ let AUTHPROXY = {
 	apiObjects: {
 		// oauth2-proxy
 		ExternalSecret: (Name): metadata: Metadata
+		// Place the ID token in a header that does not conflict with the Authorization header.
+		// Refer to: https://github.com/oauth2-proxy/oauth2-proxy/issues/1877#issuecomment-1364033723
+		ConfigMap: (Name): {
+			metadata: Metadata
+			data: "config.yaml": yaml.Marshal(AuthProxyConfig)
+			let AuthProxyConfig = {
+				injectResponseHeaders: [{
+					name: "x-oidc-id-token"
+					values: [{claim: "id_token"}]
+				}]
+				providers: [{
+					id:                    "Holos Platform"
+					name:                  "Holos Platform"
+					provider:              "oidc"
+					scope:                 "openid profile email groups offline_access urn:zitadel:iam:org:domain:primary:\(project.authProxyOrgDomain)"
+					clientID:              stage.authProxyClientID
+					clientSecretFile:      "/dev/null"
+					code_challenge_method: "S256"
+					loginURLParameters: [{
+						default: ["force"]
+						name: "approval_prompt"
+					}]
+					oidcConfig: {
+						issuerURL: project.authProxyIssuer
+						audienceClaims: ["aud"]
+						emailClaim:  "email"
+						groupsClaim: "groups"
+						userIDClaim: "sub"
+					}
+				}]
+				server: BindAddress: ":4180"
+				upstreamConfig: upstreams: [{
+					id:         "static://200"
+					path:       "/"
+					static:     true
+					staticCode: 200
+				}]
+			}
+		}
 		Deployment: (Name): #Deployment & {
 			metadata: Metadata
 
@@ -226,73 +267,64 @@ let AUTHPROXY = {
 				template: {
 					metadata: labels: Metadata.labels
 					metadata: labels: #IstioSidecar
-					spec: securityContext: seccompProfile: type: "RuntimeDefault"
-					spec: containers: [{
-						image:           "quay.io/oauth2-proxy/oauth2-proxy:v7.6.0"
-						imagePullPolicy: "IfNotPresent"
-						name:            "oauth2-proxy"
-						args: [
-							// callback url is proxy prefix + /callback
-							"--proxy-prefix=" + project.authProxyPrefix,
-							"--email-domain=*",
-							"--session-store-type=redis",
-							"--redis-connection-url=redis://\(RedisMetadata.name):6379",
-							"--cookie-refresh=12h",
-							"--cookie-expire=2160h",
-							"--cookie-secure=true",
-							"--cookie-name=__Secure-\(Name)-\(stage.slug)",
-							"--cookie-samesite=lax",
-							for domain in StageDomains {"--cookie-domain=.\(domain.name)"},
-							for domain in StageDomains {"--cookie-domain=\(domain.name)"},
-							for domain in StageDomains {"--whitelist-domain=.\(domain.name)"},
-							for domain in StageDomains {"--whitelist-domain=\(domain.name)"},
-							"--cookie-csrf-per-request=true",
-							"--cookie-csrf-expire=120s",
-							// Add X-Auth-Request-Access-Token header to response
-							"--pass-access-token=true",
-							"--set-xauthrequest=true",
-							// set Authorization Bearer response header (useful in Nginx auth_request mode)
-							// NOTE: this is set because the zitadel access token is not a JWT.  If this interferes with an app that expects to be able to control the Authorization header, we need to set this in a different response header using the alpha oauth2-proxy config.
-							"--set-authorization-header=true",
-							// pass OIDC IDToken to upstream via Authorization Bearer header
-							"--pass-authorization-header=true",
-							// will skip authentication for OPTIONS requests
-							"--skip-auth-preflight=true",
-							"--upstream=static://200",
-							"--reverse-proxy",
-							"--real-client-ip-header=X-Forwarded-For",
-							"--skip-provider-button=true",
-							"--auth-logging",
-							"--provider=oidc",
-							"--scope=openid profile email groups offline_access urn:zitadel:iam:org:domain:primary:\(project.authProxyOrgDomain)",
-							"--client-id=" + stage.authProxyClientID,
-							"--client-secret-file=/dev/null",
-							"--oidc-issuer-url=\(project.authProxyIssuer)",
-							"--code-challenge-method=S256",
-							"--http-address=0.0.0.0:4180",
-							// "--allowed-group=\(project.resourceId):\(stage.name)-access",
-						]
-						env: [{
-							name: "OAUTH2_PROXY_COOKIE_SECRET"
-							// echo '{"cookiesecret":"'$(LC_ALL=C tr -dc "[:alpha:]" </dev/random | tr '[:upper:]' '[:lower:]' | head -c 32)'"}' | holos create secret -n dev-holos-system --append-hash=false --data-stdin authproxy
-							valueFrom: secretKeyRef: {
-								key:  "cookiesecret"
-								name: Name
+					spec: {
+						securityContext: seccompProfile: type: "RuntimeDefault"
+						containers: [{
+							image:           "quay.io/oauth2-proxy/oauth2-proxy:v7.6.0"
+							imagePullPolicy: "IfNotPresent"
+							name:            "oauth2-proxy"
+							volumeMounts: [{
+								name:      "config"
+								mountPath: "/config"
+								readOnly:  true
+							}]
+							args: [
+								// callback url is proxy prefix + /callback
+								"--proxy-prefix=" + project.authProxyPrefix,
+								"--email-domain=*",
+								"--session-store-type=redis",
+								"--redis-connection-url=redis://\(RedisMetadata.name):6379",
+								"--cookie-refresh=12h",
+								"--cookie-expire=2160h",
+								"--cookie-secure=true",
+								"--cookie-name=__Secure-\(stage.slug)-\(Name)",
+								"--cookie-samesite=lax",
+								for domain in StageDomains {"--cookie-domain=.\(domain.name)"},
+								for domain in StageDomains {"--cookie-domain=\(domain.name)"},
+								for domain in StageDomains {"--whitelist-domain=.\(domain.name)"},
+								for domain in StageDomains {"--whitelist-domain=\(domain.name)"},
+								"--cookie-csrf-per-request=true",
+								"--cookie-csrf-expire=120s",
+								// will skip authentication for OPTIONS requests
+								"--skip-auth-preflight=true",
+								"--real-client-ip-header=X-Forwarded-For",
+								"--skip-provider-button=true",
+								"--auth-logging",
+								"--alpha-config=/config/config.yaml",
+							]
+							env: [{
+								name: "OAUTH2_PROXY_COOKIE_SECRET"
+								// echo '{"cookiesecret":"'$(LC_ALL=C tr -dc "[:alpha:]" </dev/random | tr '[:upper:]' '[:lower:]' | head -c 32)'"}' | holos create secret -n dev-holos-system --append-hash=false --data-stdin authproxy
+								valueFrom: secretKeyRef: {
+									key:  "cookiesecret"
+									name: Name
+								}
+							}]
+							ports: [{
+								containerPort: 4180
+								protocol:      "TCP"
+							}]
+							securityContext: {
+								seccompProfile: type: "RuntimeDefault"
+								allowPrivilegeEscalation: false
+								runAsNonRoot:             true
+								runAsUser:                8192
+								runAsGroup:               8192
+								capabilities: drop: ["ALL"]
 							}
 						}]
-						ports: [{
-							containerPort: 4180
-							protocol:      "TCP"
-						}]
-						securityContext: {
-							seccompProfile: type: "RuntimeDefault"
-							allowPrivilegeEscalation: false
-							runAsNonRoot:             true
-							runAsUser:                8192
-							runAsGroup:               8192
-							capabilities: drop: ["ALL"]
-						}
-					}]
+						volumes: [{name: "config", configMap: name: Name}]
+					}
 				}
 			}
 		}
@@ -439,12 +471,7 @@ let AUTHPOLICY = {
 			spec: jwtRules: [{
 				audiences: [stage.authProxyClientID]
 				forwardOriginalToken: true
-				fromHeaders: [{name: "x-auth-request-access-token"}]
-				issuer: project.authProxyIssuer
-			}, {
-				audiences: [stage.authProxyClientID]
-				forwardOriginalToken: true
-				fromHeaders: [{name: "authorization", prefix: "Bearer "}]
+				fromHeaders: [{name: "x-oidc-id-token"}]
 				issuer: project.authProxyIssuer
 			}]
 			spec: selector: matchLabels: istio: "ingressgateway"

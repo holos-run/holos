@@ -36,9 +36,7 @@ package holos
 		headersToUpstreamOnAllow: [
 			"authorization",
 			"path",
-			"x-auth-request-user",
-			"x-auth-request-email",
-			"x-auth-request-access-token",
+			"x-oidc-id-token",
 		]
 		includeAdditionalHeadersInCheck: "X-Auth-Request-Redirect": "%REQ(x-forwarded-proto)%://%REQ(:authority)%%REQ(:path)%%REQ(:query)%"
 		includeRequestHeadersInCheck: [
