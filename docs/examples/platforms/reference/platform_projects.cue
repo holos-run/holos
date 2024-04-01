@@ -81,19 +81,17 @@ import "encoding/yaml"
 					}).apiObjectMap
 				}
 
-				// Manage auth policy in each stage
-				"\(stage.slug)-authpolicy": #KubernetesObjects & {
-					apiObjectMap: (#APIObjects & {
-						apiObjects: (AUTHPOLICY & {stage: Stage, project: Project, servers: GatewayServers[stage.name]}).apiObjects
-					}).apiObjectMap
-				}
-
 				// Manage httpbin in each environment
 				for Env in project.environments if Env.stage == stage.name {
 					"\(Env.slug)-httpbin": #KubernetesObjects & {
+						let Project = project
 						apiObjectMap: (#APIObjects & {
-							let Project = project
 							apiObjects: (HTTPBIN & {env: Env, project: Project}).apiObjects
+						}).apiObjectMap
+
+						// Manage auth policy in each env
+						apiObjectMap: (#APIObjects & {
+							apiObjects: (AUTHPOLICY & {env: Env, project: Project, servers: GatewayServers[stage.name]}).apiObjects
 						}).apiObjectMap
 					}
 				}
@@ -132,11 +130,18 @@ let HTTPBIN = {
 	project: #Project
 	env:     #Environment
 	let Name = name
+	let Stage = project.stages[env.stage]
 
 	let Metadata = {
 		name:      Name
 		namespace: env.namespace
 		labels: app: name
+	}
+	let Labels = {
+		"app.kubernetes.io/name":       Name
+		"app.kubernetes.io/instance":   env.slug
+		"app.kubernetes.io/part-of":    env.project
+		"security.holos.run/authproxy": Stage.extAuthzProviderName
 	}
 
 	apiObjects: {
@@ -145,7 +150,7 @@ let HTTPBIN = {
 
 			spec: selector: matchLabels: Metadata.labels
 			spec: template: {
-				metadata: labels: Metadata.labels & #IstioSidecar
+				metadata: labels: Metadata.labels & #IstioSidecar & Labels
 				spec: securityContext: seccompProfile: type: "RuntimeDefault"
 				spec: containers: [{
 					name:  Name
@@ -436,13 +441,15 @@ let AUTHPROXY = {
 // AUTHPOLICY configures the baseline AuthorizationPolicy and RequestAuthentication policy for each stage of each project.
 let AUTHPOLICY = {
 	project: #Project
-	stage:   #Stage
+	env:     #Environment
 	let Name = "\(stage.slug)-authproxy"
 	let Project = project
+	let stage = project.stages[env.stage]
+	let Env = env
 
 	let Metadata = {
 		name:      string
-		namespace: "istio-ingress"
+		namespace: env.namespace
 		labels: {
 			"app.kubernetes.io/name":     name
 			"app.kubernetes.io/instance": stage.name
@@ -452,10 +459,8 @@ let AUTHPOLICY = {
 
 	// Collect all the hosts associated with the stage
 	let Hosts = {
-		for Env in project.environments if Env.stage == stage.name {
-			for HOST in (#EnvHosts & {project: Project, env: Env}).hosts {
-				(HOST.name): HOST
-			}
+		for HOST in (#EnvHosts & {project: Project, env: Env}).hosts {
+			(HOST.name): HOST
 		}
 	}
 
@@ -464,6 +469,7 @@ let AUTHPOLICY = {
 		for host in Hosts {host.name},
 		for host in Hosts {host.name + ":*"},
 	]
+	let MatchLabels = {"security.holos.run/authproxy": stage.extAuthzProviderName}
 
 	apiObjects: {
 		RequestAuthentication: (Name): #RequestAuthentication & {
@@ -474,7 +480,7 @@ let AUTHPOLICY = {
 				fromHeaders: [{name: "x-oidc-id-token"}]
 				issuer: project.authProxyIssuer
 			}]
-			spec: selector: matchLabels: istio: "ingressgateway"
+			spec: selector: matchLabels: MatchLabels
 		}
 		AuthorizationPolicy: "\(Name)-custom": {
 			metadata: Metadata & {name: "\(Name)-custom"}
@@ -483,7 +489,7 @@ let AUTHPOLICY = {
 				// send the request to the auth proxy
 				provider: name: stage.extAuthzProviderName
 				rules: [{to: [{operation: hosts: HostList}]}]
-				selector: matchLabels: istio: "ingressgateway"
+				selector: matchLabels: MatchLabels
 			}
 		}
 	}
