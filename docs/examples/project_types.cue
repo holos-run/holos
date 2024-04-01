@@ -7,6 +7,9 @@ import "strings"
 // #Projects is a map of all the projects in the platform.
 #Projects: [Name=_]: #Project & {name: Name}
 
+// The platform project is required and where platform services reside.  ArgoCD, Grafana, Prometheus, etc...
+#Projects: platform: _
+
 #Project: {
 	name: string
 	// resourceId is the zitadel project Resource ID

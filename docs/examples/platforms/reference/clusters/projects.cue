@@ -3,12 +3,20 @@ package holos
 #Project: authProxyOrgDomain: "openinfrastructure.co"
 
 _Projects: #Projects & {
+	// The platform project is required and where platform services reside.  ArgoCD, Grafana, Prometheus, etc...
+	platform: {
+		// https://login.ois.run/ui/console/projects/257713952794870157?id=general
+		resourceId: 257713952794870157
+		clusters: k1: _
+		clusters: k2: _
+		stages: dev: authProxyClientID:  "260887327029658738@holos_platform"
+		stages: prod: authProxyClientID: "260887404288738416@holos_platform"
+	}
+
 	holos: {
 		resourceId: 260446255245690199
-		clusters: {
-			k1: _
-			k2: _
-		}
+		clusters: k1: _
+		clusters: k2: _
 		stages: dev: authProxyClientID:  "260505543108527218@holos"
 		stages: prod: authProxyClientID: "260506079325128023@holos"
 		environments: {
