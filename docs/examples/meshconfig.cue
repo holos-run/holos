@@ -6,9 +6,10 @@ package holos
 	// clusterName is the value of the --cluster-name flag, the cluster currently being manged / rendered.
 	clusterName: string | *#ClusterName
 
-	extensionProviderMap: [Name=_]: {
-		name: Name
-	}
+	// for extAuthzHttp extension providers
+	extensionProviderMap: [Name=_]: #ExtAuthzProxy & {name: Name}
+	// for other extension providers like zipkin
+	extensionProviderExtraMap: [Name=_]: {name: Name}
 
 	config: {
 		accessLogEncoding: string | *"JSON"
@@ -21,7 +22,10 @@ package holos
 		enablePrometheusMerge: false | *true
 		rootNamespace:         string | *"istio-system"
 		trustDomain:           string | *"cluster.local"
-		extensionProviders: [for x in extensionProviderMap {x}]
+		extensionProviders: [
+			for x in extensionProviderMap {x},
+			for y in extensionProviderExtraMap {y},
+		]
 	}
 }
 

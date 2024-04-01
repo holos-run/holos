@@ -5,7 +5,6 @@ package holos
 _Projects: #Projects & {
 	// The platform project is required and where platform services reside.  ArgoCD, Grafana, Prometheus, etc...
 	platform: {
-		// https://login.ois.run/ui/console/projects/257713952794870157?id=general
 		resourceId: 257713952794870157
 		clusters: k1: _
 		clusters: k2: _

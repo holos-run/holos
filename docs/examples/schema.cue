@@ -225,6 +225,17 @@ _apiVersion: "holos.run/v1alpha1"
 	services: [ID=_]: {
 		name: string & ID
 	}
+	// authproxy configures the auth proxy attached to the default ingress gateway in the istio-ingress namespace.
+	authproxy: #IngressAuthProxySpec
+}
+
+#IngressAuthProxySpec: {
+	// projectID is the zitadel project resource id.
+	projectID: number
+	// clientID is the zitadel application client id.
+	clientID: string
+	// orgDomain is the zitadel organization domain for logins.
+	orgDomain: string | *#Platform.org.domain
 }
 
 // ManagedNamespace is a namespace to manage across all clusters in the holos platform.

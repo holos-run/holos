@@ -4,7 +4,7 @@ package holos
 	projects:    _
 	clusterName: _
 
-	extensionProviderMap: {
+	extensionProviderExtraMap: {
 		"cluster-trace": {
 			zipkin: {
 				maxTagLength: 56

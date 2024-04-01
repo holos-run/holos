@@ -52,6 +52,8 @@ spec: components: HelmChartList: [
 			}
 		}
 		apiObjectMap: OBJECTS.apiObjectMap
+		// Auth Proxy
+		apiObjectMap: (#APIObjects & {apiObjects: #IngressAuthProxy.apiObjects} ).apiObjectMap
 	},
 ]
 
