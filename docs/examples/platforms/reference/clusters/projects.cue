@@ -11,6 +11,10 @@ _Projects: #Projects & {
 		clusters: k2: _
 		stages: dev: authProxyClientID:  "260887327029658738@holos_platform"
 		stages: prod: authProxyClientID: "260887404288738416@holos_platform"
+		// Services hosted in the platform project
+		hosts: argocd:     _
+		hosts: grafana:    _
+		hosts: prometheus: _
 	}
 
 	holos: {
