@@ -226,24 +226,31 @@ _apiVersion: "holos.run/v1alpha1"
 		name: string & ID
 	}
 	// authproxy configures the auth proxy attached to the default ingress gateway in the istio-ingress namespace.
-	authproxy: #IngressAuthProxySpec
+	authproxy: #AuthProxySpec & {
+		namespace: "istio-ingress"
+		provider:  "ingressauth"
+	}
 }
 
-#IngressAuthProxySpec: {
+#AuthProxySpec: {
 	// projectID is the zitadel project resource id.
 	projectID: number
 	// clientID is the zitadel application client id.
 	clientID: string
+	// namespace is the namespace
+	namespace: string
+	// provider is the istio extension provider name in the mesh config.
+	provider: string
 	// orgDomain is the zitadel organization domain for logins.
 	orgDomain: string | *#Platform.org.domain
+	// issuerHost is the Host: header value of the oidc issuer
+	issuerHost: string | *"login.\(#Platform.org.domain)"
 	// issuer is the oidc identity provider issuer url
-	issuer: string | *"https://login.\(#Platform.org.domain)"
+	issuer: string | *"https://\(issuerHost)"
 	// path is the oauth2-proxy --proxy-prefix value.  The default callback url is the Host: value with a path of /holos/oidc/callback
-	proxyPrefix: string | *"/holos/oidc"
-	// provider is the istio extension provider name in the mesh config.
-	provider: "ingressauth"
+	proxyPrefix: string | *"/holos/authproxy/\(namespace)"
 	// idTokenHeader represents the header where the id token is placed
-	idTokenHeader: "x-oidc-id-token"
+	idTokenHeader: string | *"x-oidc-id-token"
 }
 
 // ManagedNamespace is a namespace to manage across all clusters in the holos platform.

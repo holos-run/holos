@@ -9,10 +9,10 @@ import "encoding/yaml"
 // The ingress gateway auth proxy is used by multiple cue instances.
 // AUTHPROXY configures one oauth2-proxy deployment for each host in each stage of a project.  Multiple deployments per stage are used to narrow down the cookie domain.
 _IngressAuthProxy: {
-	Name:      "authproxy"
-	Namespace: "istio-ingress"
-	service:   "\(Name).\(Namespace).svc.cluster.local"
-	authproxy: #IngressAuthProxySpec | *#Platform.authproxy
+	Name:          "authproxy"
+	Namespace:     "istio-ingress"
+	service:       "\(Name).\(Namespace).svc.cluster.local"
+	AuthProxySpec: #AuthProxySpec & #Platform.authproxy
 
 	Domains: [DOMAIN=string]: {name: DOMAIN}
 	Domains: (#Platform.org.domain):                    _
@@ -48,8 +48,8 @@ _IngressAuthProxy: {
 						id:                    "Holos Platform"
 						name:                  "Holos Platform"
 						provider:              "oidc"
-						scope:                 "openid profile email groups offline_access urn:zitadel:iam:org:domain:primary:\(authproxy.orgDomain)"
-						clientID:              authproxy.clientID
+						scope:                 "openid profile email groups offline_access urn:zitadel:iam:org:domain:primary:\(AuthProxySpec.orgDomain)"
+						clientID:              AuthProxySpec.clientID
 						clientSecretFile:      "/dev/null"
 						code_challenge_method: "S256"
 						loginURLParameters: [{
@@ -57,7 +57,7 @@ _IngressAuthProxy: {
 							name: "approval_prompt"
 						}]
 						oidcConfig: {
-							issuerURL: authproxy.issuer
+							issuerURL: AuthProxySpec.issuer
 							audienceClaims: ["aud"]
 							emailClaim:  "email"
 							groupsClaim: "groups"
@@ -95,7 +95,7 @@ _IngressAuthProxy: {
 								}]
 								args: [
 									// callback url is proxy prefix + /callback
-									"--proxy-prefix=" + authproxy.proxyPrefix,
+									"--proxy-prefix=" + AuthProxySpec.proxyPrefix,
 									"--email-domain=*",
 									"--session-store-type=redis",
 									"--redis-connection-url=redis://\(RedisMetadata.name):6379",
@@ -155,7 +155,7 @@ _IngressAuthProxy: {
 				spec: hosts: ["*"]
 				spec: gateways: ["istio-ingress/default"]
 				spec: http: [{
-					match: [{uri: prefix: authproxy.proxyPrefix}]
+					match: [{uri: prefix: AuthProxySpec.proxyPrefix}]
 					route: [{
 						destination: host: Name
 						destination: port: number: 4180
@@ -254,10 +254,10 @@ _IngressAuthProxy: {
 			RequestAuthentication: (Name): #RequestAuthentication & {
 				metadata: Metadata & {name: Name}
 				spec: jwtRules: [{
-					audiences: ["\(authproxy.projectID)"]
+					audiences: ["\(AuthProxySpec.projectID)"]
 					forwardOriginalToken: true
-					fromHeaders: [{name: authproxy.idTokenHeader}]
-					issuer: authproxy.issuer
+					fromHeaders: [{name: AuthProxySpec.idTokenHeader}]
+					issuer: AuthProxySpec.issuer
 				}]
 				spec: selector: matchLabels: istio: "ingressgateway"
 			}
@@ -265,10 +265,14 @@ _IngressAuthProxy: {
 				metadata: Metadata & {name: "\(Name)-custom"}
 				spec: {
 					action: "CUSTOM"
-					provider: name: authproxy.provider
+					provider: name: AuthProxySpec.provider
 					// bypass the external authorizer when the id token is already in the request.
 					// the RequestAuthentication rule will verify the token.
-					rules: [{when: [{key: "request.headers[\(authproxy.idTokenHeader)]", notValues: ["*"]}]}]
+					rules: [{when: [
+						{key: "request.headers[\(AuthProxySpec.idTokenHeader)]", notValues: ["*"]},
+						// TODO: Define a way for hosts to be excluded.
+						{key: "request.headers[host]", notValues: [AuthProxySpec.issuerHost]},
+					]}]
 					selector: matchLabels: istio: "ingressgateway"
 				}
 			}

@@ -194,6 +194,14 @@ let AUTHPROXY = {
 	let Project = project
 	let Stage = stage
 
+	let AuthProxySpec = #AuthProxySpec & {
+		namespace: stage.namespace
+		projectID: project.resourceId
+		clientID:  stage.authProxyClientID
+		orgDomain: project.authProxyOrgDomain
+		provider:  stage.extAuthzProviderName
+	}
+
 	let Metadata = {
 		name:      Name
 		namespace: stage.namespace
@@ -224,15 +232,15 @@ let AUTHPROXY = {
 			data: "config.yaml": yaml.Marshal(AuthProxyConfig)
 			let AuthProxyConfig = {
 				injectResponseHeaders: [{
-					name: "x-oidc-id-token"
+					name: AuthProxySpec.idTokenHeader
 					values: [{claim: "id_token"}]
 				}]
 				providers: [{
 					id:                    "Holos Platform"
 					name:                  "Holos Platform"
 					provider:              "oidc"
-					scope:                 "openid profile email groups offline_access urn:zitadel:iam:org:domain:primary:\(project.authProxyOrgDomain)"
-					clientID:              stage.authProxyClientID
+					scope:                 "openid profile email groups offline_access urn:zitadel:iam:org:domain:primary:\(AuthProxySpec.orgDomain)"
+					clientID:              AuthProxySpec.clientID
 					clientSecretFile:      "/dev/null"
 					code_challenge_method: "S256"
 					loginURLParameters: [{
@@ -240,7 +248,7 @@ let AUTHPROXY = {
 						name: "approval_prompt"
 					}]
 					oidcConfig: {
-						issuerURL: project.authProxyIssuer
+						issuerURL: AuthProxySpec.issuer
 						audienceClaims: ["aud"]
 						emailClaim:  "email"
 						groupsClaim: "groups"
@@ -285,7 +293,7 @@ let AUTHPROXY = {
 							}]
 							args: [
 								// callback url is proxy prefix + /callback
-								"--proxy-prefix=" + project.authProxyPrefix,
+								"--proxy-prefix=" + AuthProxySpec.proxyPrefix,
 								"--email-domain=*",
 								"--session-store-type=redis",
 								"--redis-connection-url=redis://\(RedisMetadata.name):6379",
@@ -345,7 +353,7 @@ let AUTHPROXY = {
 			spec: hosts: ["*"]
 			spec: gateways: ["istio-ingress/\(stage.slug)"]
 			spec: http: [{
-				match: [{uri: prefix: project.authProxyPrefix}]
+				match: [{uri: prefix: AuthProxySpec.proxyPrefix}]
 				route: [{
 					destination: host: Name
 					destination: port: number: 4180
@@ -447,6 +455,14 @@ let AUTHPOLICY = {
 	let stage = project.stages[env.stage]
 	let Env = env
 
+	let AuthProxySpec = #AuthProxySpec & {
+		namespace: stage.namespace
+		projectID: project.resourceId
+		clientID:  stage.authProxyClientID
+		orgDomain: project.authProxyOrgDomain
+		provider:  stage.extAuthzProviderName
+	}
+
 	let Metadata = {
 		name:      string
 		namespace: env.namespace
@@ -469,16 +485,16 @@ let AUTHPOLICY = {
 		for host in Hosts {host.name},
 		for host in Hosts {host.name + ":*"},
 	]
-	let MatchLabels = {"security.holos.run/authproxy": stage.extAuthzProviderName}
+	let MatchLabels = {"security.holos.run/authproxy": AuthProxySpec.provider}
 
 	apiObjects: {
 		RequestAuthentication: (Name): #RequestAuthentication & {
 			metadata: Metadata & {name: Name}
 			spec: jwtRules: [{
-				audiences: [stage.authProxyClientID]
+				audiences: [AuthProxySpec.clientID]
 				forwardOriginalToken: true
-				fromHeaders: [{name: "x-oidc-id-token"}]
-				issuer: project.authProxyIssuer
+				fromHeaders: [{name: AuthProxySpec.idTokenHeader}]
+				issuer: AuthProxySpec.issuer
 			}]
 			spec: selector: matchLabels: MatchLabels
 		}
@@ -487,8 +503,19 @@ let AUTHPOLICY = {
 			spec: {
 				action: "CUSTOM"
 				// send the request to the auth proxy
-				provider: name: stage.extAuthzProviderName
-				rules: [{to: [{operation: hosts: HostList}]}]
+				provider: name: AuthProxySpec.provider
+				rules: [{
+					to: [{operation: hosts: HostList}]
+					when: [
+						{
+							key: "request.headers[\(AuthProxySpec.idTokenHeader)]"
+							notValues: ["*"]
+						},
+						{
+							key: "request.headers[host]"
+							notValues: [AuthProxySpec.issuerHost]
+						},
+					]}]
 				selector: matchLabels: MatchLabels
 			}
 		}
