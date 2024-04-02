@@ -262,20 +262,62 @@ _IngressAuthProxy: {
 				spec: selector: matchLabels: istio: "ingressgateway"
 			}
 			AuthorizationPolicy: "\(Name)-custom": {
+				_description: "Route all requests through the auth proxy by default"
+
 				metadata: Metadata & {name: "\(Name)-custom"}
 				spec: {
 					action: "CUSTOM"
 					provider: name: AuthProxySpec.provider
-					// bypass the external authorizer when the id token is already in the request.
-					// the RequestAuthentication rule will verify the token.
-					rules: [{when: [
-						{key: "request.headers[\(AuthProxySpec.idTokenHeader)]", notValues: ["*"]},
-						// TODO: Define a way for hosts to be excluded.
-						{key: "request.headers[host]", notValues: [AuthProxySpec.issuerHost]},
-					]}]
+					rules: [
+						{
+							to: [{
+								operation: notHosts: [
+									// Never send requests for the login service through the authorizer, would block login.
+									AuthProxySpec.issuerHost,
+									// Exclude hosts with specialized rules from the catch-all.
+									for x in _AuthPolicyRules.hosts {x.name},
+								]
+							}]
+							when: [
+								{
+									// bypass the external authorizer when the id token is already in the request.
+									// the RequestAuthentication rule will verify the token.
+									key: "request.headers[\(AuthProxySpec.idTokenHeader)]"
+									notValues: ["*"]
+								},
+							]
+						},
+					]
 					selector: matchLabels: istio: "ingressgateway"
 				}
 			}
+		}
+	}
+}
+
+_AuthPolicyRules: #AuthPolicyRules & {
+	hosts: {
+		let Vault = "vault.core.ois.run"
+		(Vault): {
+			slug: "vault"
+			// Rules for when to route requests through the auth proxy
+			spec: rules: [
+				{
+					to: [{
+						operation: hosts: [Vault]
+						operation: paths: ["/ui", "/ui/*"]
+					}]
+				},
+				{
+					to: [{
+						operation: hosts: [Vault]
+					}]
+					when: [{
+						key: "request.headers[x-vault-request]"
+						notValues: ["true"]
+					}]
+				},
+			]
 		}
 	}
 }

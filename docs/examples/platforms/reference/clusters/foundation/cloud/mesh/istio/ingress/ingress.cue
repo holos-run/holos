@@ -56,6 +56,8 @@ spec: components: HelmChartList: [
 		apiObjectMap: _IngressAuthProxy.Deployment.apiObjectMap
 		// Auth Policy
 		apiObjectMap: _IngressAuthProxy.Policy.apiObjectMap
+		// Auth Policy Exclusions
+		apiObjectMap: _AuthPolicyRules.objects.apiObjectMap
 	},
 ]
 
