@@ -887,7 +887,7 @@ package holos
 	//# Dex
 	dex: {
 		// -- Enable dex
-		enabled: true
+		enabled: *true | false
 		// -- Dex name
 		name: "dex-server"
 

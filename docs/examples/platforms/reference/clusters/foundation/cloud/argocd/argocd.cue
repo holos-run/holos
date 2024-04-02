@@ -25,9 +25,9 @@ spec: components: HelmChartList: [
 		_values: #ArgoCDValues & {
 			kubeVersionOverride: "1.29.0"
 			global: domain: "argocd.\(#ClusterName).\(#Platform.org.domain)"
-
+			dex: enabled:   false
+			// for integration with istio
 			configs: params: "server.insecure": true
-
 			configs: cm: {
 				"admin.enabled": false
 				"oidc.config":   yaml.Marshal(OIDCConfig)
