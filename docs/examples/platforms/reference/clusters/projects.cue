@@ -2,14 +2,17 @@ package holos
 
 #Project: authProxyOrgDomain: "openinfrastructure.co"
 
+let ZitadelProjectID = 257713952794870157
+
 _Projects: #Projects & {
 	// The platform project is required and where platform services reside.  ArgoCD, Grafana, Prometheus, etc...
 	platform: {
-		resourceId: 257713952794870157
-		clusters: k1: _
+		resourceId: ZitadelProjectID
+		// platform level services typically run in the core cluster pair.
+		clusters: core1: _
+		clusters: core2: _
+		// for development, probably wouldn't run these services in the workload clusters.
 		clusters: k2: _
-		stages: dev: authProxyClientID:  "260887327029658738@holos_platform"
-		stages: prod: authProxyClientID: "260887404288738416@holos_platform"
 		// Services hosted in the platform project
 		hosts: argocd:     _
 		hosts: grafana:    _
@@ -17,11 +20,9 @@ _Projects: #Projects & {
 	}
 
 	holos: {
-		resourceId: 260446255245690199
+		resourceId: ZitadelProjectID
 		clusters: k1: _
 		clusters: k2: _
-		stages: dev: authProxyClientID:  "260505543108527218@holos"
-		stages: prod: authProxyClientID: "260506079325128023@holos"
 		environments: {
 			prod: stage: "prod"
 			dev: stage:  "dev"
@@ -32,13 +33,11 @@ _Projects: #Projects & {
 	}
 
 	iam: {
-		resourceId: 260582480954787159
+		resourceId: ZitadelProjectID
 		clusters: {
 			core1: _
 			core2: _
 		}
-		stages: dev: authProxyClientID:  "260582521186616432@iam"
-		stages: prod: authProxyClientID: "260582633862399090@iam"
 	}
 }
 
