@@ -61,6 +61,8 @@ import "strings"
 
 	// features is YAGNI maybe? 
 	features: [Name=string]: #Feature & {name: Name}
+	features: authproxy: _
+	features: httpbin:   _
 }
 
 // #Cluster defines a cluster
@@ -125,7 +127,7 @@ import "strings"
 #Feature: {
 	name:        string
 	description: string
-	enabled:     *true | false
+	enabled:     true | *false
 }
 
 #ProjectTemplate: {

@@ -75,24 +75,32 @@ import "encoding/yaml"
 				}
 
 				// Manage auth-proxy in each stage
-				"\(stage.slug)-authproxy": #KubernetesObjects & {
-					apiObjectMap: (#APIObjects & {
-						apiObjects: (AUTHPROXY & {stage: Stage, project: Project, servers: GatewayServers[stage.name]}).apiObjects
-					}).apiObjectMap
+				if project.features.authproxy.enabled {
+					"\(stage.slug)-authproxy": #KubernetesObjects & {
+						apiObjectMap: (#APIObjects & {
+							apiObjects: (AUTHPROXY & {stage: Stage, project: Project, servers: GatewayServers[stage.name]}).apiObjects
+						}).apiObjectMap
+					}
+
+					for Env in project.environments if Env.stage == stage.name {
+						"\(Env.slug)-authpolicy": #KubernetesObjects & {
+							// Manage auth policy in each env
+							apiObjectMap: (#APIObjects & {
+								apiObjects: (AUTHPOLICY & {env: Env, project: Project, servers: GatewayServers[stage.name]}).apiObjects
+							}).apiObjectMap
+						}
+					}
 				}
 
 				// Manage httpbin in each environment
-				for Env in project.environments if Env.stage == stage.name {
-					"\(Env.slug)-httpbin": #KubernetesObjects & {
-						let Project = project
-						apiObjectMap: (#APIObjects & {
-							apiObjects: (HTTPBIN & {env: Env, project: Project}).apiObjects
-						}).apiObjectMap
-
-						// Manage auth policy in each env
-						apiObjectMap: (#APIObjects & {
-							apiObjects: (AUTHPOLICY & {env: Env, project: Project, servers: GatewayServers[stage.name]}).apiObjects
-						}).apiObjectMap
+				if project.features.httpbin.enabled {
+					for Env in project.environments if Env.stage == stage.name {
+						"\(Env.slug)-httpbin": #KubernetesObjects & {
+							let Project = project
+							apiObjectMap: (#APIObjects & {
+								apiObjects: (HTTPBIN & {env: Env, project: Project}).apiObjects
+							}).apiObjectMap
+						}
 					}
 				}
 			}
