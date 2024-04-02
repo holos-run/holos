@@ -112,7 +112,7 @@ _apiVersion: "holos.run/v1alpha1"
 	_name: string
 	metadata: {
 		name:      _name
-		namespace: #TargetNamespace
+		namespace: string | *#TargetNamespace
 	}
 	spec: {
 		refreshInterval: string | *"1h"
@@ -236,6 +236,14 @@ _apiVersion: "holos.run/v1alpha1"
 	clientID: string
 	// orgDomain is the zitadel organization domain for logins.
 	orgDomain: string | *#Platform.org.domain
+	// issuer is the oidc identity provider issuer url
+	issuer: string | *"https://login.\(#Platform.org.domain)"
+	// path is the oauth2-proxy --proxy-prefix value.  The default callback url is the Host: value with a path of /holos/oidc/callback
+	proxyPrefix: string | *"/holos/oidc"
+	// provider is the istio extension provider name in the mesh config.
+	provider: "ingressauth"
+	// idTokenHeader represents the header where the id token is placed
+	idTokenHeader: "x-oidc-id-token"
 }
 
 // ManagedNamespace is a namespace to manage across all clusters in the holos platform.

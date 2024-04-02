@@ -1,7 +1,9 @@
 package holos
 
 // Ingress Gateway default auth proxy
-#MeshConfig: extensionProviderMap: ingressauth: envoyExtAuthzHttp: service: #IngressAuthProxy.service
+let Provider = _IngressAuthProxy.authproxy.provider
+let Service = _IngressAuthProxy.service
+#MeshConfig: extensionProviderMap: (Provider): envoyExtAuthzHttp: service: Service
 
 // Istio meshconfig
 _MeshConfig: (#MeshConfig & {projects: _Projects}).config
