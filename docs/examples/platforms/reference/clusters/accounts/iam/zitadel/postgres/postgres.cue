@@ -124,7 +124,7 @@ let OBJECTS = #APIObjects & {
 						"\(BucketRepoName)-cipher-type": "aes-256-cbc"
 						// "The convention we recommend for setting this variable is /pgbackrest/$NAMESPACE/$CLUSTER_NAME/repoN"
 						// Ref: https://access.crunchydata.com/documentation/postgres-operator/latest/tutorials/backups-disaster-recovery/backups#understanding-backup-configuration-and-basic-operations
-						"\(BucketRepoName)-path": "/pgbackrest/prod-iam-zitadel/\(metadata.name)/\(manual.repoName)"
+						"\(BucketRepoName)-path": "/pgbackrest/\(metadata.namespace)/\(metadata.name)/\(manual.repoName)"
 					}
 					repos: [
 						{
