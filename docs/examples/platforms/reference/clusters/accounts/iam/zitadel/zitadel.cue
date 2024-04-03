@@ -1,7 +1,9 @@
 package holos
 
-#InstancePrefix:  "prod-iam"
-#TargetNamespace: #InstancePrefix + "-zitadel"
+#InstancePrefix: "prod-iam"
+
+// The namespace is managed by a project.
+#TargetNamespace: _Projects.iam.environments.prod.namespace
 
 // _DBName is the database name used across multiple holos components in this project
 _DBName: "zitadel"

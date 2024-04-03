@@ -4,4 +4,4 @@ package holos
 #InputKeys: project: "iam"
 
 // Shared dependencies for all components in this collection.
-#DependsOn: namespaces: name: "\(#StageName)-secrets-namespaces"
+#DependsOn: namespaces: name: "\(#StageName)-secrets-stores"
