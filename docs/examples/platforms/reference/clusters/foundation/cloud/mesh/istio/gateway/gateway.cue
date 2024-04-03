@@ -7,8 +7,6 @@ let Name = "gateway"
 #InputKeys: component: Name
 #TargetNamespace: "istio-ingress"
 
-let LoginCert = #PlatformCerts.login
-
 spec: components: KubernetesObjectsList: [
 	#KubernetesObjects & {
 		_dependsOn: "prod-secrets-stores":  _
@@ -22,25 +20,6 @@ spec: components: KubernetesObjectsList: [
 
 let OBJECTS = #APIObjects & {
 	apiObjects: {
-		ExternalSecret: login: #ExternalSecret & {
-			_name: "login"
-		}
-		Gateway: default: #Gateway & {
-			metadata: name:      "default"
-			metadata: namespace: #TargetNamespace
-			spec: selector: istio: "ingressgateway"
-			spec: servers: [
-				{
-					hosts: [for dnsName in LoginCert.spec.dnsNames {"prod-iam-zitadel/\(dnsName)"}]
-					port: name:          "https-prod-iam-login"
-					port: number:        443
-					port: protocol:      "HTTPS"
-					tls: credentialName: LoginCert.spec.secretName
-					tls: mode:           "SIMPLE"
-				},
-			]
-		}
-
 		for k, svc in #OptionalServices {
 			if svc.enabled && list.Contains(svc.clusterNames, #ClusterName) {
 				Gateway: "\(svc.name)": #Gateway & {
