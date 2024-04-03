@@ -7,48 +7,53 @@ let Name = "gateway"
 #InputKeys: component: Name
 #TargetNamespace: "istio-ingress"
 
-let LoginCert = #PlatformCerts.login
-
 spec: components: KubernetesObjectsList: [
 	#KubernetesObjects & {
-		_dependsOn: "prod-secrets-namespaces": _
-		_dependsOn: "prod-mesh-istio-base":    _
-		_dependsOn: "prod-mesh-ingress":       _
+		_dependsOn: "prod-secrets-stores":  _
+		_dependsOn: "prod-mesh-istio-base": _
+		_dependsOn: "prod-mesh-ingress":    _
 
 		metadata: name: "\(#InstancePrefix)-\(Name)"
 		apiObjectMap: OBJECTS.apiObjectMap
 	},
 ]
 
+// GatewayServers represents all hosts for all VirtualServices in the cluster attached to Gateway/default
+// NOTE: This is a critical structure because the default Gateway should be used in most cases.
+let GatewayServers = {
+	for Project in _Projects {
+		for server in (#ProjectTemplate & {project: Project}).ClusterGatewayServers {
+			(server.port.name): server
+		}
+	}
+
+	for k, svc in #OptionalServices {
+		if svc.enabled && list.Contains(svc.clusterNames, #ClusterName) {
+			for server in svc.servers {
+				(server.port.name): server
+			}
+		}
+	}
+
+	if #PlatformServers[#ClusterName] != _|_ {
+		for server in #PlatformServers[#ClusterName] {
+			(server.port.name): server
+		}
+	}
+}
+
 let OBJECTS = #APIObjects & {
 	apiObjects: {
-		ExternalSecret: login: #ExternalSecret & {
-			_name: "login"
-		}
 		Gateway: default: #Gateway & {
 			metadata: name:      "default"
 			metadata: namespace: #TargetNamespace
+
 			spec: selector: istio: "ingressgateway"
-			spec: servers: [
-				{
-					hosts: [for dnsName in LoginCert.spec.dnsNames {"prod-iam-zitadel/\(dnsName)"}]
-					port: name:          "https-prod-iam-login"
-					port: number:        443
-					port: protocol:      "HTTPS"
-					tls: credentialName: LoginCert.spec.secretName
-					tls: mode:           "SIMPLE"
-				},
-			]
+			spec: servers: [for x in GatewayServers {x}]
 		}
 
 		for k, svc in #OptionalServices {
 			if svc.enabled && list.Contains(svc.clusterNames, #ClusterName) {
-				Gateway: "\(svc.name)": #Gateway & {
-					metadata: name:      svc.name
-					metadata: namespace: #TargetNamespace
-					spec: selector: istio: "ingressgateway"
-					spec: servers: [for s in svc.servers {s}]
-				}
 				for k, s in svc.servers {
 					ExternalSecret: "\(s.tls.credentialName)": _
 				}

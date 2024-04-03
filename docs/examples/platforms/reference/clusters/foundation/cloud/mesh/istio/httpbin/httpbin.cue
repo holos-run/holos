@@ -3,7 +3,6 @@ package holos
 let Name = "httpbin"
 let ComponentName = "\(#InstancePrefix)-\(Name)"
 
-let SecretName = #InputKeys.cluster + "-" + Name
 let MatchLabels = {
 	app:                          Name
 	"app.kubernetes.io/instance": ComponentName
@@ -18,7 +17,7 @@ let Metadata = {
 
 #TargetNamespace: "istio-ingress"
 
-let Cert = #PlatformCerts[SecretName]
+let Cert = #PlatformCerts["\(#ClusterName)-httpbin"]
 
 spec: components: KubernetesObjectsList: [
 	#KubernetesObjects & {
@@ -63,24 +62,10 @@ let OBJECTS = #APIObjects & {
 				{port: 80, targetPort: 8080, protocol: "TCP", name: "http"},
 			]
 		}
-		Gateway: httpbin: #Gateway & {
-			metadata: Metadata
-			spec: selector: istio: "ingressgateway"
-			spec: servers: [
-				{
-					hosts: [for host in Cert.spec.dnsNames {"\(#TargetNamespace)/\(host)"}]
-					port: name:          "https-\(ComponentName)"
-					port: number:        443
-					port: protocol:      "HTTPS"
-					tls: credentialName: Cert.spec.secretName
-					tls: mode:           "SIMPLE"
-				},
-			]
-		}
 		VirtualService: httpbin: #VirtualService & {
 			metadata: Metadata
 			spec: hosts: [for host in Cert.spec.dnsNames {host}]
-			spec: gateways: ["\(#TargetNamespace)/\(Name)"]
+			spec: gateways: ["istio-ingress/default"]
 			spec: http: [{route: [{destination: host: Name}]}]
 		}
 	}

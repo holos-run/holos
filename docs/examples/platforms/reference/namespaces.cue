@@ -22,7 +22,6 @@ let Privileged = {
 	{name: "istio-ingress"} & Restricted,
 	{name: "cert-manager"},
 	{name: "argocd"},
-	{name: "prod-iam-zitadel"},
 	{name: "arc-system"},
 	{name: "arc-runner"},
 	// https://github.com/CrunchyData/postgres-operator-examples/blob/main/kustomize/install/namespace/namespace.yaml

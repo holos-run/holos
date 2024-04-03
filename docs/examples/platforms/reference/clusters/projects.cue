@@ -34,6 +34,7 @@ _Projects: #Projects & {
 
 	iam: {
 		resourceId: ZitadelProjectID
+		hosts: login: _
 		clusters: {
 			core1: _
 			core2: _

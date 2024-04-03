@@ -8,7 +8,7 @@ package holos
 
 // Refer to [Using Cert Manager to Deploy TLS for Postgres on Kubernetes](https://www.crunchydata.com/blog/using-cert-manager-to-deploy-tls-for-postgres-on-kubernetes)
 
-#TargetNamespace: "prod-iam-zitadel"
+#TargetNamespace: _Projects.iam.environments.prod.namespace
 #InputKeys: component: "postgres-certs"
 
 let DBName = "zitadel"

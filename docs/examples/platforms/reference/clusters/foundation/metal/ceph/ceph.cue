@@ -10,7 +10,7 @@ package holos
 
 spec: components: HelmChartList: [
 	#HelmChart & {
-		_dependsOn: "prod-secrets-namespaces": _
+		_dependsOn: "prod-secrets-stores": _
 
 		metadata: name: "prod-metal-ceph"
 
