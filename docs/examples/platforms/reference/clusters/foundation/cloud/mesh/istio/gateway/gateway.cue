@@ -11,9 +11,9 @@ let LoginCert = #PlatformCerts.login
 
 spec: components: KubernetesObjectsList: [
 	#KubernetesObjects & {
-		_dependsOn: "prod-secrets-namespaces": _
-		_dependsOn: "prod-mesh-istio-base":    _
-		_dependsOn: "prod-mesh-ingress":       _
+		_dependsOn: "prod-secrets-stores":  _
+		_dependsOn: "prod-mesh-istio-base": _
+		_dependsOn: "prod-mesh-ingress":    _
 
 		metadata: name: "\(#InstancePrefix)-\(Name)"
 		apiObjectMap: OBJECTS.apiObjectMap
