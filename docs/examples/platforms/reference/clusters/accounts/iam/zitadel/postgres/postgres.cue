@@ -68,7 +68,7 @@ let OBJECTS = #APIObjects & {
 					replicas: 2
 					dataVolumeClaimSpec: {
 						accessModes: ["ReadWriteOnce"]
-						resources: requests: storage: "10Gi"
+						resources: requests: storage: "20Gi"
 					}
 				}]
 				standby: {
@@ -165,7 +165,7 @@ let HighlyAvailable = {
 			replicas: 2
 			dataVolumeClaimSpec: {
 				accessModes: ["ReadWriteOnce"]
-				resources: requests: storage: string | *"10Gi"
+				resources: requests: storage: string | *"20Gi"
 			}
 			affinity: podAntiAffinity: preferredDuringSchedulingIgnoredDuringExecution: [{
 				weight: 1
