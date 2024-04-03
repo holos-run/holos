@@ -37,7 +37,7 @@ spec: components: KubernetesObjectsList: [
 	#KubernetesObjects & {
 		metadata: name: "prod-iam-postgres"
 
-		_dependsOn: "prod-secrets-namespaces": _
+		_dependsOn: "prod-secrets-stores":     _
 		_dependsOn: "prod-iam-postgres-certs": _
 		apiObjectMap: OBJECTS.apiObjectMap
 	},
@@ -124,7 +124,7 @@ let OBJECTS = #APIObjects & {
 						"\(BucketRepoName)-cipher-type": "aes-256-cbc"
 						// "The convention we recommend for setting this variable is /pgbackrest/$NAMESPACE/$CLUSTER_NAME/repoN"
 						// Ref: https://access.crunchydata.com/documentation/postgres-operator/latest/tutorials/backups-disaster-recovery/backups#understanding-backup-configuration-and-basic-operations
-						"\(BucketRepoName)-path": "/pgbackrest/\(#TargetNamespace)/\(metadata.name)/\(manual.repoName)"
+						"\(BucketRepoName)-path": "/pgbackrest/prod-iam-zitadel/\(metadata.name)/\(manual.repoName)"
 					}
 					repos: [
 						{
