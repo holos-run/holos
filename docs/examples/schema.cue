@@ -1,5 +1,7 @@
 package holos
 
+import "strings"
+
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -192,6 +194,8 @@ _apiVersion: "holos.run/v1alpha1"
 		name: string
 		// e.g. "example.com"
 		domain: string
+		// e.g. "example.com"
+		emailDomain: string | *domain
 		// e.g. "Example"
 		displayName: string
 		// e.g. "platform@example.com"
@@ -229,6 +233,26 @@ _apiVersion: "holos.run/v1alpha1"
 	authproxy: #AuthProxySpec & {
 		namespace: "istio-ingress"
 		provider:  "ingressauth"
+	}
+
+	oauthClients: [Name=_]: #OAuthClientSpec & {name: Name}
+}
+
+#OAuthClientSpec: {
+	name:      string
+	orgDomain: string | *#Platform.org.emailDomain
+	spec: {
+		issuer:   string | *"https://login.\(#Platform.org.domain)"
+		clientID: string | *name
+		scopes:   string | *strings.Join(scopesList, " ")
+		scopesList: ["openid", "profile", "email", "groups", "urn:zitadel:iam:org:domain:primary:\(orgDomain)"]
+		jwks_uri:               string | *"\(issuer)/oauth/v2/keys"
+		authorization_endpoint: string | *"\(issuer)/oauth/v2/authorize"
+		token_endpoint:         string | *"\(issuer)/oauth/v2/token"
+		introspection_endpoint: string | *"\(issuer)/oauth/v2/introspect"
+		userinfo_endpoint:      string | *"\(issuer)/oauth/v1/userinfo"
+		revocation_endpoint:    string | *"\(issuer)/oauth/v2/revoke"
+		end_session_endpoint:   string | *"\(issuer)/oauth/v1/end_session"
 	}
 }
 
