@@ -67,7 +67,7 @@ let OBJECTS = #APIObjects & {
 			metadata: name:      Name
 			metadata: namespace: #TargetNamespace
 			spec: hosts: [for cert in Vault.certs {cert.spec.commonName}]
-			spec: gateways: ["istio-ingress/\(Name)"]
+			spec: gateways: ["istio-ingress/default"]
 			spec: http: [
 				{
 					route: [

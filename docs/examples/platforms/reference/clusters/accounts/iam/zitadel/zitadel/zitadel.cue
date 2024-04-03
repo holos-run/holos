@@ -34,7 +34,7 @@ let OBJECTS = #APIObjects & {
 			metadata: name:      Name
 			metadata: namespace: #TargetNamespace
 			spec: hosts: ["login.\(#Platform.org.domain)"]
-			spec: gateways: ["istio-ingress/\(_Projects.iam.environments.prod.namespace)"]
+			spec: gateways: ["istio-ingress/default"]
 			spec: http: [{route: [{destination: host: Name}]}]
 		}
 	}

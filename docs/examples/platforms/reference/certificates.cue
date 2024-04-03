@@ -1,5 +1,21 @@
 package holos
 
+#PlatformServers: {
+	for cluster in #Platform.clusters {
+		(cluster.name): {
+			"https-istio-ingress-httpbin": {
+				let cert = #PlatformCerts[cluster.name+"-httpbin"]
+				hosts: [for host in cert.spec.dnsNames {"istio-ingress/\(host)"}]
+				port: name:          "https-istio-ingress-httpbin"
+				port: number:        443
+				port: protocol:      "HTTPS"
+				tls: credentialName: cert.spec.secretName
+				tls: mode:           "SIMPLE"
+			}
+		}
+	}
+}
+
 #PlatformCerts: {
 	// Globally scoped platform services are defined here.
 	login: #PlatformCert & {

@@ -49,7 +49,7 @@ let OBJECTS = #APIObjects & {
 				ArgoCD + ".\(#Platform.org.domain)",
 				ArgoCD + ".\(#ClusterName).\(#Platform.org.domain)",
 			]
-			spec: gateways: ["istio-ingress/\(Namespace)"]
+			spec: gateways: ["istio-ingress/default"]
 			spec: http: [{route: [{destination: {
 				host: "argocd-server.\(Namespace).svc.cluster.local"
 				port: number: 80

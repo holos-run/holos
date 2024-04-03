@@ -55,6 +55,18 @@ import "encoding/yaml"
 		}
 	}
 
+	// ClusterGatewayServers provides a struct of Gateway servers for the current cluster.
+	// This is intended for Gateway/default to add all servers to the default gateway.
+	ClusterGatewayServers: {
+		if project.clusters[#ClusterName] != _|_ {
+			for Stage in project.stages {
+				for server in GatewayServers[Stage.name] {
+					(server.port.name): server
+				}
+			}
+		}
+	}
+
 	workload: resources: {
 		// Provide resources only if the project is managed on --cluster-name
 		if project.clusters[#ClusterName] != _|_ {
@@ -64,10 +76,6 @@ import "encoding/yaml"
 				// Istio Gateway
 				"\(stage.slug)-gateway": #KubernetesObjects & {
 					apiObjectMap: (#APIObjects & {
-						apiObjects: Gateway: (stage.slug): #Gateway & {
-							spec: servers: [for server in GatewayServers[stage.name] {server}]
-						}
-
 						for host in GatewayServers[stage.name] {
 							apiObjects: ExternalSecret: (host.tls.credentialName): metadata: namespace: "istio-ingress"
 						}
@@ -186,7 +194,7 @@ let HTTPBIN = {
 			let Project = project
 			let Env = env
 			spec: hosts: [for host in (#EnvHosts & {project: Project, env: Env}).hosts {host.name}]
-			spec: gateways: ["istio-ingress/\(env.stageSlug)"]
+			spec: gateways: ["istio-ingress/default"]
 			spec: http: [{route: [{destination: host: Name}]}]
 		}
 	}
@@ -359,7 +367,7 @@ let AUTHPROXY = {
 		VirtualService: (Name): #VirtualService & {
 			metadata: Metadata
 			spec: hosts: ["*"]
-			spec: gateways: ["istio-ingress/\(stage.slug)"]
+			spec: gateways: ["istio-ingress/default"]
 			spec: http: [{
 				match: [{uri: prefix: AuthProxySpec.proxyPrefix}]
 				route: [{
