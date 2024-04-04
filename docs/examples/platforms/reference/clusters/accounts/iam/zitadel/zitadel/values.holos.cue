@@ -78,6 +78,7 @@ package holos
 			// Refer to: https://github.com/holos-run/holos/issues/96
 			// Refer to: https://github.com/zitadel/zitadel/discussions/7464
 			SystemDefaults: KeyConfig: PrivateKeyLifetime: "999999h"
+			SystemDefaults: KeyConfig: PublicKeyLifetime:  "999999h"
 
 			// Database connection credentials are injected via environment variables from the db-pguser-db secret.
 			Database: postgres: {
