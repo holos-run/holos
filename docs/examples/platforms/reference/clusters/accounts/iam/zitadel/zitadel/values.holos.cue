@@ -74,6 +74,11 @@ package holos
 			ExternalPort:   443
 			TLS: Enabled: false
 
+			// Fix AuthProxy JWKS Error - Jwks doesn't have key to match kid or alg from Jwt
+			// Refer to: https://github.com/holos-run/holos/issues/96
+			// Refer to: https://github.com/zitadel/zitadel/discussions/7464
+			SystemDefaults: KeyConfig: PrivateKeyLifetime: "999999h"
+
 			// Database connection credentials are injected via environment variables from the db-pguser-db secret.
 			Database: postgres: {
 				MaxOpenConns:    25
