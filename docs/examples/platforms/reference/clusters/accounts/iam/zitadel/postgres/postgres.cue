@@ -80,6 +80,8 @@ let OBJECTS = #APIObjects & {
 						enabled: true
 					}
 				}
+				// Monitoring configuration
+				monitoring: pgmonitor: exporter: image: "registry.developers.crunchydata.com/crunchydata/crunchy-postgres-exporter:ubi8-5.5.1-0"
 				// Restore from backup if and only if the cluster is primary
 				if Cluster.primary {
 					dataSource: pgbackrest: {
