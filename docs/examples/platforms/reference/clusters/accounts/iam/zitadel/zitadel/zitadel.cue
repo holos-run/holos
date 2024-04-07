@@ -16,7 +16,7 @@ spec: components: HelmChartList: [
 		enableHooks: true
 		chart: {
 			name:    Name
-			version: "7.9.0"
+			version: "7.11.0"
 			repository: {
 				name: Name
 				url:  "https://charts.zitadel.com"
