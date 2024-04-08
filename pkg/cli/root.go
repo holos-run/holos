@@ -5,6 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/holos-run/holos/internal/server"
+
 	"github.com/holos-run/holos/pkg/cli/build"
 	"github.com/holos-run/holos/pkg/cli/create"
 	"github.com/holos-run/holos/pkg/cli/get"
@@ -61,6 +63,9 @@ func New(cfg *holos.Config) *cobra.Command {
 
 	// Deprecated, remove?
 	rootCmd.AddCommand(kv.New(cfg))
+
+	// Server
+	rootCmd.AddCommand(server.New())
 
 	return rootCmd
 }
