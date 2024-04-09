@@ -5,22 +5,23 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/holos-run/holos/pkg/cli/command"
-	"github.com/holos-run/holos/pkg/cli/secret"
-	"github.com/holos-run/holos/pkg/holos"
-	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/wrapper"
-	"github.com/spf13/cobra"
-	"golang.org/x/tools/txtar"
 	"io"
 	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/holos-run/holos/pkg/cli/command"
+	"github.com/holos-run/holos/pkg/cli/secret"
+	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/pkg/holos"
+	"github.com/holos-run/holos/pkg/logger"
+	"github.com/spf13/cobra"
+	"golang.org/x/tools/txtar"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/util/hash"
-	"os"
-	"path/filepath"
 	"sigs.k8s.io/yaml"
-	"strings"
 )
 
 type putConfig struct {
@@ -56,7 +57,7 @@ func makePutRunFunc(cfg *holos.Config, pcfg putConfig) command.RunFunc {
 		if len(args) == 0 {
 			data, err := io.ReadAll(cfg.Stdin())
 			if err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 
 			if *pcfg.file != "" {
@@ -80,7 +81,7 @@ func makePutRunFunc(cfg *holos.Config, pcfg putConfig) command.RunFunc {
 				a.Comment = []byte(filepath.Base(args[0]))
 			} else {
 				err := fmt.Errorf("missing secret name from name, args, or txtar comment")
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 		}
 
@@ -90,7 +91,7 @@ func makePutRunFunc(cfg *holos.Config, pcfg putConfig) command.RunFunc {
 		// Add files from the filesystem to the archive
 		for _, name := range args {
 			if err := filepath.WalkDir(name, makeWalkFunc(a, name)); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 		}
 
@@ -106,13 +107,13 @@ func makePutRunFunc(cfg *holos.Config, pcfg putConfig) command.RunFunc {
 		// Create the secret.
 		secret, err := createSecret(ctx, cfg, pcfg, a, secretName)
 		if err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 
 		if *pcfg.dryRun {
 			data, err := yaml.Marshal(secret)
 			if err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 			cfg.Println(string(data))
 			return nil
@@ -121,12 +122,12 @@ func makePutRunFunc(cfg *holos.Config, pcfg putConfig) command.RunFunc {
 		// Make the API call
 		cs, err := newClientSet(cfg)
 		if err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 
 		secret, err = cs.CoreV1().Secrets(cfg.KVNamespace()).Create(ctx, secret, metav1.CreateOptions{})
 		if err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 
 		log.InfoContext(ctx, "created: "+secret.Name, "secret", secret.Name, "name", secretName, "namespace", secret.Namespace)
@@ -158,7 +159,7 @@ func createSecret(ctx context.Context, cfg *holos.Config, pcfg putConfig, a *txt
 
 	secretHash, err := hash.SecretHash(secret)
 	if err != nil {
-		return nil, wrapper.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 	secret.Name = fmt.Sprintf("%s-%s", secret.Name, secretHash)
 
@@ -182,7 +183,7 @@ func makeWalkFunc(a *txtar.Archive, rootDir string) fs.WalkDirFunc {
 
 		if !d.IsDir() {
 			if file, err := file(path); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			} else {
 				file.Name = filepath.Base(path)
 				a.Files = append(a.Files, file)

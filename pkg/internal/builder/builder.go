@@ -17,8 +17,8 @@ import (
 	"github.com/holos-run/holos/api/v1alpha1"
 
 	"github.com/holos-run/holos"
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 const (
@@ -75,7 +75,7 @@ func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
 
 	mod, err := b.findCueMod()
 	if err != nil {
-		return nil, wrapper.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 	dir := string(mod)
 
@@ -86,11 +86,11 @@ func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
 	for idx, path := range b.cfg.args {
 		target, err := filepath.Abs(path)
 		if err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("could not find absolute path: %w", err))
+			return nil, errors.Wrap(fmt.Errorf("could not find absolute path: %w", err))
 		}
 		relPath, err := filepath.Rel(dir, target)
 		if err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("invalid argument, must be relative to cue.mod: %w", err))
+			return nil, errors.Wrap(fmt.Errorf("invalid argument, must be relative to cue.mod: %w", err))
 		}
 		relPath = "./" + relPath
 		args[idx] = relPath
@@ -120,33 +120,33 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 
 		log := logger.FromContext(ctx).With("dir", instance.Dir)
 		if err := instance.Err; err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("could not load: %w", err))
+			return nil, errors.Wrap(fmt.Errorf("could not load: %w", err))
 		}
 		log.DebugContext(ctx, "cue: building instance")
 		value := cueCtx.BuildInstance(instance)
 		if err := value.Err(); err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("could not build %s: %w", instance.Dir, err))
+			return nil, errors.Wrap(fmt.Errorf("could not build %s: %w", instance.Dir, err))
 		}
 		log.DebugContext(ctx, "cue: validating instance")
 		if err := value.Validate(); err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("could not validate: %w", err))
+			return nil, errors.Wrap(fmt.Errorf("could not validate: %w", err))
 		}
 
 		log.DebugContext(ctx, "cue: decoding holos build plan")
 		// Hack to catch unknown fields https://github.com/holos-run/holos/issues/72
 		jsonBytes, err := value.MarshalJSON()
 		if err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", instance.Dir, err))
+			return nil, errors.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", instance.Dir, err))
 		}
 		decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
 		decoder.DisallowUnknownFields()
 		err = decoder.Decode(&buildPlan)
 		if err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("invalid BuildPlan: %s: %w", instance.Dir, err))
+			return nil, errors.Wrap(fmt.Errorf("invalid BuildPlan: %s: %w", instance.Dir, err))
 		}
 
 		if err := buildPlan.Validate(); err != nil {
-			return nil, wrapper.Wrap(fmt.Errorf("could not validate %s: %w", instance.Dir, err))
+			return nil, errors.Wrap(fmt.Errorf("could not validate %s: %w", instance.Dir, err))
 		}
 
 		if buildPlan.Spec.Disabled {
@@ -157,28 +157,28 @@ func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err erro
 		// TODO: concurrent renders
 		for _, component := range buildPlan.Spec.Components.Resources {
 			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
-				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+				return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {
 				results = append(results, result)
 			}
 		}
 		for _, component := range buildPlan.Spec.Components.KubernetesObjectsList {
 			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
-				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+				return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {
 				results = append(results, result)
 			}
 		}
 		for _, component := range buildPlan.Spec.Components.HelmChartList {
 			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
-				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+				return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {
 				results = append(results, result)
 			}
 		}
 		for _, component := range buildPlan.Spec.Components.KustomizeBuildList {
 			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
-				return nil, wrapper.Wrap(fmt.Errorf("could not render: %w", err))
+				return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
 			} else {
 				results = append(results, result)
 			}

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 
 	"connectrpc.com/connect"
@@ -11,7 +10,7 @@ import (
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	holos "github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1"
-	"github.com/holos-run/holos/pkg/wrapper"
+	"github.com/holos-run/holos/pkg/errors"
 )
 
 func createUser(ctx context.Context, client *ent.Client, name string, claims authn.Identity) (*ent.User, error) {
@@ -24,7 +23,7 @@ func createUser(ctx context.Context, client *ent.Client, name string, claims aut
 		SetEmailVerified(claims.Verified()).
 		Save(ctx)
 	if err != nil {
-		err = connect.NewError(connect.CodeFailedPrecondition, wrapper.Wrap(err))
+		err = connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 		log.ErrorContext(ctx, "could not create user", "err", err)
 		return user, err
 	}
@@ -41,7 +40,7 @@ func createUser(ctx context.Context, client *ent.Client, name string, claims aut
 		SetUserID(user.ID).
 		Save(ctx)
 	if err != nil {
-		err = connect.NewError(connect.CodeFailedPrecondition, wrapper.Wrap(err))
+		err = connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 		log.ErrorContext(ctx, "could not create link", "err", err)
 		return user, err
 	}
@@ -55,7 +54,7 @@ func updateUser(ctx context.Context, user *ent.User, name *string) (*ent.User, e
 		return user, nil
 	}
 	updated, err := user.Update().SetName(*name).Save(ctx)
-	return updated, wrapper.Wrap(err)
+	return updated, errors.Wrap(err)
 }
 
 func (h *HolosHandler) RegisterUser(
@@ -65,7 +64,7 @@ func (h *HolosHandler) RegisterUser(
 	log := logger.FromContext(ctx).With("issue", 127)
 	oidc, err := authn.FromContext(ctx)
 	if err != nil {
-		return nil, connect.NewError(connect.CodePermissionDenied, wrapper.Wrap(err))
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 
 	// Check if the user exists
@@ -95,7 +94,7 @@ func (h *HolosHandler) RegisterUser(
 	}
 	var notFoundError *ent.NotFoundError
 	if !errors.As(err, &notFoundError) {
-		err = connect.NewError(connect.CodeInternal, wrapper.Wrap(err))
+		err = connect.NewError(connect.CodeInternal, errors.Wrap(err))
 		log.ErrorContext(ctx, "could not register", "err", err)
 		return nil, err
 	}

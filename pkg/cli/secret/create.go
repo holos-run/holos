@@ -3,20 +3,21 @@ package secret
 import (
 	"bytes"
 	"fmt"
-	"github.com/holos-run/holos/pkg/cli/command"
-	"github.com/holos-run/holos/pkg/holos"
-	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/wrapper"
-	"github.com/spf13/cobra"
 	"io"
 	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/holos-run/holos/pkg/cli/command"
+	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/pkg/holos"
+	"github.com/holos-run/holos/pkg/logger"
+	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/util/hash"
-	"os"
-	"path/filepath"
 	"sigs.k8s.io/yaml"
-	"strings"
 )
 
 func NewCreateCmd(hc *holos.Config) *cobra.Command {
@@ -70,11 +71,11 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 			var obj map[string]string
 			data, err := io.ReadAll(hc.Stdin())
 			if err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 			err = yaml.Unmarshal(data, &obj)
 			if err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 			for k, v := range obj {
 				secret.Data[k] = []byte(v)
@@ -83,7 +84,7 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 
 		for _, file := range cfg.files {
 			if err := filepath.WalkDir(file, makeWalkFunc(secret.Data, file, *cfg.trimTrailingNewlines)); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 		}
 
@@ -96,7 +97,7 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 
 		if *cfg.appendHash {
 			if secretHash, err := hash.SecretHash(secret); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			} else {
 				secret.Name = fmt.Sprintf("%s-%s", secret.Name, secretHash)
 			}
@@ -105,7 +106,7 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 		if *cfg.dryRun {
 			out, err := yaml.Marshal(secret)
 			if err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 			hc.Write(out)
 			return nil
@@ -113,13 +114,13 @@ func makeCreateRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 
 		cs, err := hc.ProvisionerClientset()
 		if err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 		secret, err = cs.CoreV1().
 			Secrets(*cfg.namespace).
 			Create(ctx, secret, metav1.CreateOptions{})
 		if err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 
 		log.InfoContext(ctx, "created: "+secret.Name, "secret", secret.Name, "name", secretName, "namespace", secret.Namespace)
@@ -143,7 +144,7 @@ func makeWalkFunc(data secretData, root string, trimNewlines bool) fs.WalkDirFun
 		if !d.IsDir() {
 			key := filepath.Base(path)
 			if data[key], err = os.ReadFile(path); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 			if trimNewlines {
 				data[key] = bytes.TrimRight(data[key], "\r\n")

@@ -2,18 +2,19 @@ package render
 
 import (
 	"fmt"
+
 	"github.com/holos-run/holos/pkg/cli/command"
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/internal/builder"
 	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
 )
 
 func makeRenderRunFunc(cfg *holos.Config) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		if cfg.ClusterName() == "" {
-			return wrapper.Wrap(fmt.Errorf("missing cluster name"))
+			return errors.Wrap(fmt.Errorf("missing cluster name"))
 		}
 
 		ctx := cmd.Context()
@@ -21,7 +22,7 @@ func makeRenderRunFunc(cfg *holos.Config) command.RunFunc {
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
 		results, err := build.Run(cmd.Context())
 		if err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 		// TODO: Avoid accidental over-writes if to holos component instances result in
 		// the same file path. Write files into a blank temporary directory, error if a
@@ -33,12 +34,12 @@ func makeRenderRunFunc(cfg *holos.Config) command.RunFunc {
 			// API Objects
 			path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
 			if err := result.Save(ctx, path, result.AccumulatedOutput()); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 			// Kustomization
 			path = result.KustomizationFilename(cfg.WriteTo(), cfg.ClusterName())
 			if err := result.Save(ctx, path, result.KsContent); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered", "name", result.Name())
 		}

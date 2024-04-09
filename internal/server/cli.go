@@ -18,8 +18,8 @@ import (
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/server/server"
 	"github.com/holos-run/holos/internal/server/signals"
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/version"
-	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 //go:embed help/root.txt
@@ -71,7 +71,7 @@ func New(options ...app.Option) *cobra.Command {
 			// Connect to the database
 			conn, err := db.Client(app)
 			if err != nil {
-				return wrapper.Wrap(fmt.Errorf("could not create db client: %w", err))
+				return errors.Wrap(fmt.Errorf("could not create db client: %w", err))
 			}
 			defer func() {
 				if closeError := conn.Client.Close(); closeError != nil {
@@ -89,18 +89,18 @@ func New(options ...app.Option) *cobra.Command {
 				plog.DebugContext(ctx, "ping")
 				if pingErr := conn.DB.PingContext(ctx); pingErr != nil {
 					plog.DebugContext(ctx, "retryable: could not ping", "ok", false, "err", pingErr)
-					return retry.RetryableError(wrapper.Wrap(pingErr))
+					return retry.RetryableError(errors.Wrap(pingErr))
 				}
 				plog.DebugContext(ctx, "pong", "ok", true)
 				return nil
 			}
 			if err = retry.Do(ctx, backoff, ping); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 
 			// Automatic migration
 			if err = conn.Client.Schema.Create(ctx); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 			log.InfoContext(ctx, "schema created", "database", conn.Driver.Dialect())
 
@@ -108,13 +108,13 @@ func New(options ...app.Option) *cobra.Command {
 			// We may pass an instrumented *http.Client via ctx in the future.
 			verifier, err := authn.NewVerifier(app, config.OIDCIssuer)
 			if err != nil {
-				return wrapper.Wrap(fmt.Errorf("could not create identity verifier: %w", err))
+				return errors.Wrap(fmt.Errorf("could not create identity verifier: %w", err))
 			}
 
 			// Start the server
 			srv, err := server.NewServer(app, srvCfg, conn.Client, verifier)
 			if err != nil {
-				return wrapper.Wrap(fmt.Errorf("could not start server: %w", err))
+				return errors.Wrap(fmt.Errorf("could not start server: %w", err))
 			}
 
 			if config.ListenAndServe {
@@ -129,7 +129,7 @@ func New(options ...app.Option) *cobra.Command {
 		// PersistentPreRunE runs after flag parsing before RunE.
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := config.Validate(cmd.OutOrStdout()); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 
 			level := config.GetLogLevel()

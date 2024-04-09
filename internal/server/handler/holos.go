@@ -8,7 +8,7 @@ import (
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	holos "github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1"
-	"github.com/holos-run/holos/pkg/wrapper"
+	"github.com/holos-run/holos/pkg/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -28,7 +28,7 @@ func (h *HolosHandler) GetUserClaims(
 ) (*connect.Response[holos.GetUserClaimsResponse], error) {
 	authnIdentity, err := authn.FromContext(ctx)
 	if err != nil {
-		return nil, connect.NewError(connect.CodePermissionDenied, wrapper.Wrap(err))
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 	res := connect.NewResponse(&holos.GetUserClaimsResponse{
 		Iss:           authnIdentity.Issuer(),

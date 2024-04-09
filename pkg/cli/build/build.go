@@ -2,12 +2,13 @@ package build
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/holos-run/holos/pkg/cli/command"
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/holos"
 	"github.com/holos-run/holos/pkg/internal/builder"
-	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
-	"strings"
 )
 
 // makeBuildRunFunc returns the internal implementation of the build cli command
@@ -27,7 +28,7 @@ func makeBuildRunFunc(cfg *holos.Config) command.RunFunc {
 		}
 		out := strings.Join(outs, "---\n")
 		if _, err := fmt.Fprintln(cmd.OutOrStdout(), out); err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 		return nil
 	}

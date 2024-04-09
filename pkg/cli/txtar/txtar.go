@@ -3,16 +3,17 @@ package txtar
 import (
 	"bytes"
 	"fmt"
-	"github.com/holos-run/holos/pkg/cli/command"
-	"github.com/holos-run/holos/pkg/holos"
-	"github.com/holos-run/holos/pkg/util"
-	"github.com/holos-run/holos/pkg/wrapper"
-	"github.com/spf13/cobra"
-	"golang.org/x/tools/txtar"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+
+	"github.com/holos-run/holos/pkg/cli/command"
+	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/pkg/holos"
+	"github.com/holos-run/holos/pkg/util"
+	"github.com/spf13/cobra"
+	"golang.org/x/tools/txtar"
 )
 
 // New returns a new txtar command.
@@ -37,11 +38,11 @@ func makeRunFunc(cfg *holos.Config) command.RunFunc {
 		a := &txtar.Archive{}
 		for _, name := range args {
 			if err := filepath.WalkDir(name, util.MakeWalkFunc(a)); err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 		}
 		if _, err := cfg.Stdout().Write(txtar.Format(a)); err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 		return nil
 	}
@@ -51,7 +52,7 @@ func makeRunFunc(cfg *holos.Config) command.RunFunc {
 func extract(cfg *holos.Config) error {
 	input, err := io.ReadAll(cfg.Stdin())
 	if err != nil {
-		return wrapper.Wrap(fmt.Errorf("could not read stdin: %w", err))
+		return errors.Wrap(fmt.Errorf("could not read stdin: %w", err))
 	}
 	archive := txtar.Parse(input)
 	if idx := cfg.TxtarIndex(); idx != 0 {
@@ -64,7 +65,7 @@ func extract(cfg *holos.Config) error {
 // printFile prints one file from the txtar archive by index.
 func printFile(w io.Writer, idx int, a *txtar.Archive) (err error) {
 	if idx == 0 {
-		return wrapper.Wrap(fmt.Errorf("idx cannot be 0"))
+		return errors.Wrap(fmt.Errorf("idx cannot be 0"))
 	}
 	if idx > 0 {
 		_, err = w.Write(util.EnsureNewline(a.Files[idx-1].Data))
@@ -85,10 +86,10 @@ func writeFiles(logger *slog.Logger, a *txtar.Archive) (err error) {
 		path := filepath.Join(".", file.Name)
 		log.Info("writing: " + file.Name)
 		if err = os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			return wrapper.Wrap(fmt.Errorf("could not make directory: %w", err))
+			return errors.Wrap(fmt.Errorf("could not make directory: %w", err))
 		}
 		if err = os.WriteFile(path, file.Data, 0644); err != nil {
-			return wrapper.Wrap(fmt.Errorf("could not write file: %w", err))
+			return errors.Wrap(fmt.Errorf("could not write file: %w", err))
 		}
 	}
 	return

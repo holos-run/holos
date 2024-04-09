@@ -4,16 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/holos-run/holos/pkg/cli/command"
-	"github.com/holos-run/holos/pkg/holos"
-	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/util"
-	"github.com/holos-run/holos/pkg/wrapper"
-	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"path/filepath"
 	"sort"
+
+	"github.com/holos-run/holos/pkg/cli/command"
+	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/pkg/holos"
+	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/pkg/util"
+	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const printFlagName = "print-key"
@@ -60,12 +61,12 @@ func makeGetRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 			}
 			list, err := cs.CoreV1().Secrets(namespace).List(ctx, opts)
 			if err != nil {
-				return wrapper.Wrap(err)
+				return errors.Wrap(err)
 			}
 
 			log.DebugContext(ctx, "results", "len", len(list.Items))
 			if len(list.Items) < 1 {
-				return wrapper.Wrap(fmt.Errorf("not found: %v", secretName))
+				return errors.Wrap(fmt.Errorf("not found: %v", secretName))
 			}
 
 			// Sort oldest first.
@@ -99,7 +100,7 @@ func makeGetRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 					}
 					b, err := json.MarshalIndent(data, "", "  ")
 					if err != nil {
-						return wrapper.Wrap(err)
+						return errors.Wrap(err)
 					}
 					b = util.EnsureNewline(b)
 					hc.Write(b)
@@ -108,7 +109,7 @@ func makeGetRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 						hc.Write(data)
 					} else {
 						err := fmt.Errorf("cannot print: want %s have %v: did you mean --extract-all or --%s=name", printFile, keys, printFlagName)
-						return wrapper.Wrap(err)
+						return errors.Wrap(err)
 					}
 				}
 			}
@@ -118,11 +119,11 @@ func makeGetRunFunc(hc *holos.Config, cfg *config) command.RunFunc {
 				data, found := secret.Data[name]
 				if !found {
 					err := fmt.Errorf("%s not found in %v", name, keys)
-					return wrapper.Wrap(err)
+					return errors.Wrap(err)
 				}
 				path := filepath.Join(*cfg.extractTo, name)
 				if err := os.WriteFile(path, data, 0666); err != nil {
-					return wrapper.Wrap(fmt.Errorf("could not write %s: %w", path, err))
+					return errors.Wrap(fmt.Errorf("could not write %s: %w", path, err))
 				}
 				log.InfoContext(ctx, "wrote: "+path, "name", name, "bytes", len(data))
 			}
@@ -141,7 +142,7 @@ func listSecrets(ctx context.Context, hc *holos.Config, namespace string) error 
 	selector := metav1.ListOptions{LabelSelector: NameLabel}
 	secrets, err := cs.CoreV1().Secrets(namespace).List(ctx, selector)
 	if err != nil {
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	secretNames := make(map[string]bool)
 	for _, secret := range secrets.Items {

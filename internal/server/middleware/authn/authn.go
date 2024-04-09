@@ -5,7 +5,6 @@ package authn
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -13,7 +12,7 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
-	"github.com/holos-run/holos/pkg/wrapper"
+	"github.com/holos-run/holos/pkg/errors"
 )
 
 // Verifier is the interface that wraps the basic Verify method to verify an
@@ -95,7 +94,7 @@ func NewVerifier(app app.App, issuer string) (*oidc.IDTokenVerifier, error) {
 		}
 	}
 	if err != nil {
-		return nil, wrapper.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 	// We allow tokens from multiple client ids (web, cli), they are checked in the handler.
 	return oidcProvider.Verifier(&oidc.Config{SkipClientIDCheck: true}), nil

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/util"
-	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 type ghAuthStatusResponse string
@@ -48,7 +48,7 @@ func cliIsAuthed(ctx context.Context, cfg *config) error {
 	if err != nil || !ghIsAuthenticated(status, cfg) {
 		log.WarnContext(ctx, "GitHub CLI not authenticated to "+*cfg.githubInstance)
 		if err := authenticateGh(ctx, cfg); err != nil {
-			return wrapper.Wrap(fmt.Errorf("failed to authenticate the GitHub CLI to %v: %w", cfg.githubInstance, err))
+			return errors.Wrap(fmt.Errorf("failed to authenticate the GitHub CLI to %v: %w", cfg.githubInstance, err))
 		}
 
 		// Re-run this check now that gh should be authenticated.
@@ -59,7 +59,7 @@ func cliIsAuthed(ctx context.Context, cfg *config) error {
 	log.InfoContext(ctx, "GitHub CLI is authenticated to "+*cfg.githubInstance)
 
 	if !ghTokenAllowsRepoCreation(status) {
-		return wrapper.Wrap(fmt.Errorf("GitHub token does not have the necessary scopes to create a repository"))
+		return errors.Wrap(fmt.Errorf("GitHub token does not have the necessary scopes to create a repository"))
 	}
 
 	log.InfoContext(ctx, "GitHub token is able to create a repository")
@@ -95,7 +95,7 @@ func getGhVersion(ctx context.Context) (string, error) {
 func guideToInstallGh(ctx context.Context) error {
 	log := logger.FromContext(ctx)
 	log.WarnContext(ctx, "The GitHub CLI is required to set up Holos. To install it, follow the instructions at: https://github.com/cli/cli#installation")
-	return wrapper.Wrap(fmt.Errorf("GitHub CLI is not installed"))
+	return errors.Wrap(fmt.Errorf("GitHub CLI is not installed"))
 }
 
 // authenticateGh runs 'gh auth login' to authenticate the GitHub CLI.
@@ -106,7 +106,7 @@ func authenticateGh(ctx context.Context, cfg *config) error {
 	err := util.RunInteractiveCmd(ctx, "gh", "auth", "login", "--hostname="+*cfg.githubInstance)
 	if err != nil {
 		log.ErrorContext(ctx, "Failed to authenticate GitHub CLI")
-		return wrapper.Wrap(fmt.Errorf("failed to authenticate GitHub CLI: %w", err))
+		return errors.Wrap(fmt.Errorf("failed to authenticate GitHub CLI: %w", err))
 	}
 
 	log.InfoContext(ctx, "GitHub CLI has been authenticated.")

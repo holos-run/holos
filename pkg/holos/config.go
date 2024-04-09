@@ -3,15 +3,16 @@ package holos
 import (
 	"flag"
 	"fmt"
-	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/wrapper"
 	"io"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"log/slog"
 	"os"
 	"path/filepath"
+
+	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/pkg/logger"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 const DefaultProvisionerNamespace = "secrets"
@@ -246,11 +247,11 @@ func (c *Config) ProvisionerClientset() (kubernetes.Interface, error) {
 	if c.provisionerClientset == nil {
 		kcfg, err := clientcmd.BuildConfigFromFlags("", c.KVKubeconfig())
 		if err != nil {
-			return nil, wrapper.Wrap(err)
+			return nil, errors.Wrap(err)
 		}
 		clientset, err := kubernetes.NewForConfig(kcfg)
 		if err != nil {
-			return nil, wrapper.Wrap(err)
+			return nil, errors.Wrap(err)
 		}
 		c.provisionerClientset = clientset
 	}

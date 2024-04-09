@@ -5,10 +5,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/holos-run/holos/pkg/tint"
-	"github.com/holos-run/holos/pkg/version"
-	"github.com/holos-run/holos/pkg/wrapper"
-	"github.com/mattn/go-isatty"
 	"io"
 	"log/slog"
 	"os"
@@ -16,6 +12,11 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/pkg/tint"
+	"github.com/holos-run/holos/pkg/version"
+	"github.com/mattn/go-isatty"
 )
 
 const ErrKey = "err"
@@ -195,7 +196,7 @@ func (c *Config) vetLevel() error {
 		}
 	}
 	err := fmt.Errorf("invalid log level: %s is not one of %s", c.level, strings.Join(validLogLevels, ", "))
-	return wrapper.Wrap(err)
+	return errors.Wrap(err)
 }
 
 func (c *Config) vetFormat() error {
@@ -205,7 +206,7 @@ func (c *Config) vetFormat() error {
 		}
 	}
 	err := fmt.Errorf("invalid log format: %s is not one of %s", c.format, strings.Join(validLogFormats, ", "))
-	return wrapper.Wrap(err)
+	return errors.Wrap(err)
 }
 
 // getenv is equivalent to os.Getenv() with a default value

@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -10,8 +9,8 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/version"
-	"github.com/holos-run/holos/pkg/wrapper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -99,20 +98,20 @@ func (c *Config) Validate(out io.Writer) error {
 		return PrintVersionYAML(out)
 	}
 	if err := c.ValidateLogLevel(); err != nil {
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	if err := c.ValidateLogFormat(); err != nil {
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	if !strings.HasPrefix(c.OIDCIssuer, "https://") {
-		return wrapper.Wrap(errors.New("oidc issuer must start with https://"))
+		return errors.Wrap(errors.New("oidc issuer must start with https://"))
 	}
 	if c.dbURIFile == "" {
 		c.databaseURI = os.Getenv("DATABASE_URL")
 	} else {
 		dat, err := os.ReadFile(c.dbURIFile)
 		if err != nil {
-			return wrapper.Wrap(fmt.Errorf("could not read db uri file: %w", err))
+			return errors.Wrap(fmt.Errorf("could not read db uri file: %w", err))
 		}
 		c.databaseURI = strings.TrimSpace(string(dat))
 	}
@@ -129,7 +128,7 @@ func (c *Config) ValidateLogLevel() error {
 		}
 	}
 	err := fmt.Errorf("invalid log level: %s is not one of %s", c.LogLevel, strings.Join(validLogLevels, ", "))
-	return wrapper.Wrap(err)
+	return errors.Wrap(err)
 }
 
 func (c *Config) ValidateLogFormat() error {
@@ -139,7 +138,7 @@ func (c *Config) ValidateLogFormat() error {
 		}
 	}
 	err := fmt.Errorf("invalid log format: %s is not one of %s", c.LogFormat, strings.Join(validLogFormats, ", "))
-	return wrapper.Wrap(err)
+	return errors.Wrap(err)
 }
 
 // GetLogLevel returns a slog.Level configured by the user
@@ -180,7 +179,7 @@ func (s *stringSlice) Set(value string) error {
 func PrintVersion(out io.Writer) error {
 	info := version.NewVersionInfo()
 	if _, err := out.Write([]byte(info.Version + "\n")); err != nil {
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	return &FastExitError{}
 }
@@ -190,10 +189,10 @@ func PrintVersionYAML(out io.Writer) error {
 	info := version.NewVersionInfo()
 	data, err := yaml.Marshal(info)
 	if err != nil {
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	if _, err = out.Write(data); err != nil {
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	return &FastExitError{}
 }

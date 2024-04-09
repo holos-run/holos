@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	_ "net/http/pprof"
@@ -18,7 +17,7 @@ import (
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1/holosconnect"
-	"github.com/holos-run/holos/pkg/wrapper"
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -83,7 +82,7 @@ func NewServer(app app.App, config *Config, db *ent.Client, verifier authn.Verif
 
 	srv.registerHandlers()
 	if err := srv.registerConnectRpc(); err != nil {
-		return srv, wrapper.Wrap(err)
+		return srv, errors.Wrap(err)
 	}
 
 	return srv, nil
@@ -124,7 +123,7 @@ func (s *Server) registerConnectRpc() error {
 	// Validator for all rpc messages
 	validator, err := validate.NewInterceptor()
 	if err != nil {
-		return wrapper.Wrap(fmt.Errorf("could not initialize proto validation interceptor: %w", err))
+		return errors.Wrap(fmt.Errorf("could not initialize proto validation interceptor: %w", err))
 	}
 
 	h := handler.NewHolosHandler(s.app, s.db)

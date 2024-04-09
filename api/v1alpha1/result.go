@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"slices"
 
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/util"
-	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 // Result is the build result for display or writing.  Holos components Render the Result as a data pipeline.
@@ -82,7 +82,7 @@ func (r *Result) kustomize(ctx context.Context) error {
 	}
 	tempDir, err := os.MkdirTemp("", "holos.kustomize")
 	if err != nil {
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	defer util.Remove(ctx, tempDir)
 
@@ -91,7 +91,7 @@ func (r *Result) kustomize(ctx context.Context) error {
 	b := []byte(r.AccumulatedOutput())
 	b = util.EnsureNewline(b)
 	if err := os.WriteFile(target, b, 0644); err != nil {
-		return wrapper.Wrap(fmt.Errorf("could not write resources: %w", err))
+		return errors.Wrap(fmt.Errorf("could not write resources: %w", err))
 	}
 	log.DebugContext(ctx, "wrote: "+target, "op", "write", "path", target, "bytes", len(b))
 
@@ -99,12 +99,12 @@ func (r *Result) kustomize(ctx context.Context) error {
 	for file, content := range r.KustomizeFiles {
 		target := filepath.Join(tempDir, file)
 		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 		b := []byte(content)
 		b = util.EnsureNewline(b)
 		if err := os.WriteFile(target, b, 0644); err != nil {
-			return wrapper.Wrap(fmt.Errorf("could not write: %w", err))
+			return errors.Wrap(fmt.Errorf("could not write: %w", err))
 		}
 		log.DebugContext(ctx, "wrote: "+target, "op", "write", "path", target, "bytes", len(b))
 	}
@@ -113,7 +113,7 @@ func (r *Result) kustomize(ctx context.Context) error {
 	kOut, err := util.RunCmd(ctx, "kubectl", "kustomize", tempDir)
 	if err != nil {
 		log.ErrorContext(ctx, kOut.Stderr.String())
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	// Replace the accumulated output
 	r.accumulatedOutput = kOut.Stdout.String()
@@ -126,12 +126,12 @@ func (r *Result) Save(ctx context.Context, path string, content string) error {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, os.FileMode(0775)); err != nil {
 		log.WarnContext(ctx, "could not mkdir", "path", dir, "err", err)
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	// Write the kube api objects
 	if err := os.WriteFile(path, []byte(content), os.FileMode(0644)); err != nil {
 		log.WarnContext(ctx, "could not write", "path", path, "err", err)
-		return wrapper.Wrap(err)
+		return errors.Wrap(err)
 	}
 	log.DebugContext(ctx, "out: wrote "+path, "action", "write", "path", path, "status", "ok")
 	return nil

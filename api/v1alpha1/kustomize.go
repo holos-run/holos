@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/holos-run/holos"
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/util"
-	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 const KustomizeBuildKind = "KustomizeBuild"
@@ -37,7 +37,7 @@ func (kb *KustomizeBuild) Render(ctx context.Context, path holos.InstancePath) (
 	kOut, err := util.RunCmd(ctx, "kubectl", "kustomize", string(path))
 	if err != nil {
 		log.ErrorContext(ctx, kOut.Stderr.String())
-		return nil, wrapper.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 	// Replace the accumulated output
 	result.accumulatedOutput = kOut.Stdout.String()

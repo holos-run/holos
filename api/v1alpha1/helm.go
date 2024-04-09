@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/holos-run/holos"
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/logger"
 	"github.com/holos-run/holos/pkg/util"
-	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 // A HelmChart represents a helm command to provide chart values in order to render kubernetes api objects.
@@ -42,7 +42,7 @@ func (hc *HelmChart) Render(ctx context.Context, path holos.InstancePath) (*Resu
 	}
 	result.addObjectMap(ctx, hc.APIObjectMap)
 	if err := result.kustomize(ctx); err != nil {
-		return nil, wrapper.Wrap(fmt.Errorf("could not kustomize: %w", err))
+		return nil, errors.Wrap(fmt.Errorf("could not kustomize: %w", err))
 	}
 	return &result, nil
 }
@@ -64,13 +64,13 @@ func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.InstancePat
 			out, err := util.RunCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL)
 			if err != nil {
 				log.ErrorContext(ctx, "could not run helm", "stderr", out.Stderr.String(), "stdout", out.Stdout.String())
-				return wrapper.Wrap(fmt.Errorf("could not run helm repo add: %w", err))
+				return errors.Wrap(fmt.Errorf("could not run helm repo add: %w", err))
 			}
 			// Update repository
 			out, err = util.RunCmd(ctx, "helm", "repo", "update", repo.Name)
 			if err != nil {
 				log.ErrorContext(ctx, "could not run helm", "stderr", out.Stderr.String(), "stdout", out.Stdout.String())
-				return wrapper.Wrap(fmt.Errorf("could not run helm repo update: %w", err))
+				return errors.Wrap(fmt.Errorf("could not run helm repo update: %w", err))
 			}
 		} else {
 			log.DebugContext(ctx, "no chart repository url proceeding assuming oci chart")
@@ -85,13 +85,13 @@ func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.InstancePat
 	// Write values file
 	tempDir, err := os.MkdirTemp("", "holos")
 	if err != nil {
-		return wrapper.Wrap(fmt.Errorf("could not make temp dir: %w", err))
+		return errors.Wrap(fmt.Errorf("could not make temp dir: %w", err))
 	}
 	defer util.Remove(ctx, tempDir)
 
 	valuesPath := filepath.Join(tempDir, "values.yaml")
 	if err := os.WriteFile(valuesPath, []byte(hc.ValuesContent), 0644); err != nil {
-		return wrapper.Wrap(fmt.Errorf("could not write values: %w", err))
+		return errors.Wrap(fmt.Errorf("could not write values: %w", err))
 	}
 	log.DebugContext(ctx, "helm: wrote values", "path", valuesPath, "bytes", len(hc.ValuesContent))
 
@@ -112,7 +112,7 @@ func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.InstancePat
 				err = fmt.Errorf("%s: %w", line, err)
 			}
 		}
-		return wrapper.Wrap(fmt.Errorf("could not run helm template: %w", err))
+		return errors.Wrap(fmt.Errorf("could not run helm template: %w", err))
 	}
 
 	r.accumulatedOutput = helmOut.Stdout.String()
@@ -126,7 +126,7 @@ func cacheChart(ctx context.Context, path holos.InstancePath, chartDir string, c
 
 	cacheTemp, err := os.MkdirTemp(string(path), chartDir)
 	if err != nil {
-		return wrapper.Wrap(fmt.Errorf("could not make temp dir: %w", err))
+		return errors.Wrap(fmt.Errorf("could not make temp dir: %w", err))
 	}
 	defer util.Remove(ctx, cacheTemp)
 
@@ -136,13 +136,13 @@ func cacheChart(ctx context.Context, path holos.InstancePath, chartDir string, c
 	}
 	helmOut, err := util.RunCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, chartName)
 	if err != nil {
-		return wrapper.Wrap(fmt.Errorf("could not run helm pull: %w", err))
+		return errors.Wrap(fmt.Errorf("could not run helm pull: %w", err))
 	}
 	log.Debug("helm pull", "stdout", helmOut.Stdout, "stderr", helmOut.Stderr)
 
 	cachePath := filepath.Join(string(path), chartDir)
 	if err := os.Rename(cacheTemp, cachePath); err != nil {
-		return wrapper.Wrap(fmt.Errorf("could not rename: %w", err))
+		return errors.Wrap(fmt.Errorf("could not rename: %w", err))
 	}
 	log.InfoContext(ctx, "cached", "chart", chart.Name, "version", chart.Version, "path", cachePath)
 

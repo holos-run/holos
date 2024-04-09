@@ -9,7 +9,7 @@ import (
 	esql "entgo.io/ent/dialect/sql"
 	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
-	"github.com/holos-run/holos/pkg/wrapper"
+	"github.com/holos-run/holos/pkg/errors"
 	"modernc.org/sqlite"
 )
 
@@ -28,7 +28,7 @@ func (mc *MemoryClientFactory) New() (Conn, error) {
 	db, err := sql.Open("sqlite3", "file:db.sqlite3?mode=memory&cache=shared")
 	if err != nil {
 		log.DebugContext(ctx, "could not open sql connection", "err", err)
-		return Conn{}, wrapper.Wrap(err)
+		return Conn{}, errors.Wrap(err)
 	}
 	// Fix database is locked errors when testing with sqlite3 in-memory and parallel test cases.
 	db.SetMaxOpenConns(1)

@@ -8,7 +8,7 @@ import (
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
-	"github.com/holos-run/holos/pkg/wrapper"
+	"github.com/holos-run/holos/pkg/errors"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -27,7 +27,7 @@ func (mc *PGXClientFactory) New() (Conn, error) {
 	uri := mc.app.Config.DatabaseURI()
 	db, err := sql.Open("pgx", uri)
 	if err != nil {
-		return Conn{}, wrapper.Wrap(fmt.Errorf("could not open pgx: %w", err))
+		return Conn{}, errors.Wrap(fmt.Errorf("could not open pgx: %w", err))
 	}
 	drv := entsql.OpenDB(dialect.Postgres, db)
 	client := withHooks(ent.NewClient(ent.Driver(drv)))

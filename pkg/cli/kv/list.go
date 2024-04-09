@@ -3,8 +3,8 @@ package kv
 import (
 	"github.com/holos-run/holos/pkg/cli/command"
 	"github.com/holos-run/holos/pkg/cli/secret"
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/holos"
-	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -30,7 +30,7 @@ func makeListRunFunc(cfg *holos.Config) command.RunFunc {
 		selector := metav1.ListOptions{LabelSelector: secret.NameLabel}
 		secrets, err := cs.CoreV1().Secrets(cfg.KVNamespace()).List(ctx, selector)
 		if err != nil {
-			return wrapper.Wrap(err)
+			return errors.Wrap(err)
 		}
 		labels := make(map[string]bool)
 		for _, s := range secrets.Items {

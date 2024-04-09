@@ -2,8 +2,8 @@ package kv
 
 import (
 	"github.com/holos-run/holos/pkg/cli/command"
+	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/holos"
-	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -30,11 +30,11 @@ func New(cfg *holos.Config) *cobra.Command {
 func newClientSet(cfg *holos.Config) (*kubernetes.Clientset, error) {
 	kcfg, err := clientcmd.BuildConfigFromFlags("", cfg.KVKubeconfig())
 	if err != nil {
-		return nil, wrapper.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 	clientset, err := kubernetes.NewForConfig(kcfg)
 	if err != nil {
-		return nil, wrapper.Wrap(err)
+		return nil, errors.Wrap(err)
 	}
 	return clientset, nil
 }

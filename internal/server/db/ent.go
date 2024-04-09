@@ -9,7 +9,7 @@ import (
 	"entgo.io/ent/dialect"
 	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
-	"github.com/holos-run/holos/pkg/wrapper"
+	"github.com/holos-run/holos/pkg/errors"
 )
 
 // Conn holds database connection info
@@ -46,7 +46,7 @@ func setUpdatedToCreatedOnCreate(next ent.Mutator) ent.Mutator {
 			if _, ok := m.Field("updated_at"); ok && m.Op().Is(ent.OpCreate) {
 				err := m.SetField("updated_at", createdAt.(time.Time))
 				if err != nil {
-					return nil, wrapper.Wrap(err)
+					return nil, errors.Wrap(err)
 				}
 			}
 		}

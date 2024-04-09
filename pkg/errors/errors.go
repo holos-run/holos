@@ -1,5 +1,5 @@
-// Package wrapper provides error wrapping with location information
-package wrapper
+// Package errors provides error wrapping with location information
+package errors
 
 import (
 	"context"
@@ -9,6 +9,34 @@ import (
 	"path/filepath"
 	"runtime"
 )
+
+// ErrUnsupported is errors.ErrUnsupported
+var ErrUnsupported = errors.ErrUnsupported
+
+// As calls errors.As
+func As(err error, target any) bool {
+	return errors.As(err, target)
+}
+
+// Is calls errors.Is
+func Is(err error, target error) bool {
+	return errors.Is(err, target)
+}
+
+// Join calls errors.Join
+func Join(errs ...error) error {
+	return errors.Join(errs...)
+}
+
+// New calls errors.New
+func New(text string) error {
+	return errors.New(text)
+}
+
+// Unwrap calls errors.Unwrap
+func Unwrap(err error) error {
+	return errors.Unwrap(err)
+}
 
 // Source represents the Source file and line where an error was encountered
 type Source struct {
