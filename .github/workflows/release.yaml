@@ -14,23 +14,33 @@ jobs:
   goreleaser:
     runs-on: gha-rs
     steps:
-      - name: Provide GPG and Git
-        run: sudo apt update && sudo apt -qq -y install gnupg git
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Provide GPG and Git
+        run: sudo apt update && sudo apt -qq -y install gnupg git curl zip unzip tar bzip2 make
+
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.GPG_CODE_SIGNING_SECRETKEY }}
           passphrase: ${{ secrets.GPG_CODE_SIGNING_PASSPHRASE }}
+
       - name: List keys
         run: gpg -K
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: stable
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:

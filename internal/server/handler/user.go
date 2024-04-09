@@ -9,8 +9,8 @@ import (
 	"github.com/holos-run/holos/internal/server/ent/useridentity"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
-	holos "github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1"
 	"github.com/holos-run/holos/pkg/errors"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 func createUser(ctx context.Context, client *ent.Client, name string, claims authn.Identity) (*ent.User, error) {

@@ -15,10 +15,10 @@ import (
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/handler"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
-	holosSvc "github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1"
-	"github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1/holosconnect"
 	"github.com/holos-run/holos/internal/server/testutils"
 	"github.com/holos-run/holos/pkg/holos"
+	holosSvc "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	"github.com/holos-run/holos/service/gen/holos/v1alpha1/holosconnect"
 	"github.com/stretchr/testify/assert"
 )
 

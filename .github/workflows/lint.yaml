@@ -17,11 +17,30 @@ jobs:
     name: lint
     runs-on: gha-rs
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
           go-version: stable
-          cache: false
+
+      - name: Install tools
+        run: sudo apt update && sudo apt -qq -y install curl zip unzip tar bzip2 make
+
+      - name: Install Deps
+        run: |
+          make go-deps
+          go generate ./...
+          make frontend-deps
+          make frontend
+          go mod tidy
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:

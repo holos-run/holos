@@ -10,10 +10,11 @@ version: 1
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
-    - go mod tidy
-    # you may remove this if you don't need go generate
+    - make go-deps
     - go generate ./...
+    - make frontend-deps
+    - make frontend
+    - go mod tidy
 
 builds:
   - main: ./cmd/holos
@@ -23,6 +24,9 @@ builds:
       - linux
       - windows
       - darwin
+    goarch:
+      - amd64
+      - arm64
 
 signs:
   - artifacts: checksum

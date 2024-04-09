@@ -18,19 +18,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: stable
 
-      - name: Provide unzip for Helm
-        run: sudo apt update && sudo apt -qq -y install curl zip unzip tar bzip2
+      - name: Install tools
+        run: sudo apt update && sudo apt -qq -y install curl zip unzip tar bzip2 make
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v3
+
+      - name: Install Deps
+        run: |
+          make go-deps
+          go generate ./...
+          make frontend-deps
+          make frontend
+          go mod tidy
 
       - name: Test
         run: ./scripts/test

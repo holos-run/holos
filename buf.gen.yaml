@@ -1,0 +1,24 @@
+# Generates gRPC and ConnectRPC bindings for Go and TypeScript
+#
+# Note: protoc-gen-connect-query is the primary method of wiring up the React
+# frontend.
+version: v1
+plugins:
+  - plugin: go
+    out: service/gen
+    opt: paths=source_relative
+  - plugin: connect-go
+    out: service/gen
+    opt: paths=source_relative
+  - plugin: es
+    out: internal/server/frontend/gen
+    opt:
+      - target=ts
+  - plugin: connect-es
+    out: internal/server/frontend/gen
+    opt:
+      - target=ts
+  - plugin: connect-query
+    out: internal/server/frontend/gen
+    opt:
+      - target=ts

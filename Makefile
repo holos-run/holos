@@ -12,6 +12,9 @@ IMAGE_NAME=$(DOCKER_REPO)
 
 $( shell mkdir -p bin)
 
+# For buf plugin protoc-gen-connect-es
+export PATH := $(PWD)/internal/server/frontend/node_modules/.bin:$(PATH)
+
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_TREE_STATE=$(shell test -n "`git status --porcelain`" && echo "dirty" || echo "clean")
 BUILD_DATE=$(shell date -Iseconds)
@@ -93,6 +96,40 @@ coverage: test  ## Test coverage profile.
 .PHONY: snapshot
 snapshot:  ## Go release snapshot
 	goreleaser release --snapshot --clean
+
+.PHONY: buf
+buf: ## buf generate
+	cd service && buf mod update
+	buf generate
+
+.PHONY: go-deps
+go-deps: ## install go executables
+	go install github.com/bufbuild/buf/cmd/buf@v1
+	go install github.com/fullstorydev/grpcurl/cmd/grpcurl@v1
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1
+	go install connectrpc.com/connect/cmd/protoc-gen-connect-go@v1
+	go install honnef.co/go/tools/cmd/staticcheck@latest
+	# curl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash
+
+.PHONY: frontend-deps
+frontend-deps: ## Setup npm and vite
+	cd internal/server/frontend && npm install
+	cd internal/server/frontend && npm install --save-dev @bufbuild/buf @connectrpc/protoc-gen-connect-es
+	cd internal/server/frontend && npm install @connectrpc/connect @connectrpc/connect-web @bufbuild/protobuf
+	# https://github.com/connectrpc/connect-query-es/blob/1350b6f07b6aead81793917954bdb1cc3ce09df9/packages/protoc-gen-connect-query/README.md?plain=1#L23
+	cd internal/server/frontend && npm install --save-dev @connectrpc/protoc-gen-connect-query @bufbuild/protoc-gen-es
+	cd internal/server/frontend && npm install @connectrpc/connect-query @bufbuild/protobuf
+	# https://github.com/aleclarson/vite-tsconfig-paths
+	cd internal/server/frontend && npm install --save-dev vite-tsconfig-paths
+
+
+.PHONY: frontend
+frontend: buf
+	mkdir -p internal/server/frontend/dist
+	cd internal/server/frontend/dist && rm -rf app
+	cd internal/server/frontend && ./node_modules/.bin/vite build
+	# Necessary to force go build cache miss
+	touch internal/server/frontend/frontend.go
 
 .PHONY: help
 help:  ## Display this help menu.

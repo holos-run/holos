@@ -2,7 +2,7 @@ bin/
 vendor/
 .idea/
 coverage.out
-dist/
+/dist/
 *.hold/
 /deploy/
 .vscode/
