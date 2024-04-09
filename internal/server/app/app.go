@@ -1,16 +1,14 @@
-// Package core contains essential structs and runtime environment structures for the application.
-
-package core
+package app
 
 import (
 	"context"
 	"log/slog"
 )
 
-// AppContext carries core application level elements commonly passed around the
+// App carries core application level elements commonly passed around the
 // entire system. The primary use case is to inject a context.Context and a
 // slog.Logger.
-type AppContext struct {
+type App struct {
 	Context context.Context
 	Logger  *slog.Logger
 	Config  *Config
@@ -20,7 +18,7 @@ type AppContext struct {
 // into local variables.
 //
 //	ctx, log := app.ContextLogger()
-func (a AppContext) ContextLogger() (ctx context.Context, log *slog.Logger) {
+func (a App) ContextLogger() (ctx context.Context, log *slog.Logger) {
 	ctx = a.Context
 	if ctx == nil {
 		ctx = context.Background()
@@ -33,19 +31,19 @@ func (a AppContext) ContextLogger() (ctx context.Context, log *slog.Logger) {
 	return
 }
 
-func (a AppContext) WithContext(ctx context.Context) AppContext {
+func (a App) WithContext(ctx context.Context) App {
 	a.Context = ctx
 	return a
 }
 
-func (a AppContext) WithLogger(logger *slog.Logger) AppContext {
+func (a App) WithLogger(logger *slog.Logger) App {
 	a.Logger = logger
 	return a
 }
 
-// NewAppContext returns a new AppContext initialized with default values.
-func NewAppContext() AppContext {
-	return AppContext{
+// New returns a new App initialized with default values.
+func New() App {
+	return App{
 		Context: context.Background(),
 		Logger:  slog.Default(),
 		Config:  NewConfig(),

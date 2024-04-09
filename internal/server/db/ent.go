@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect"
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
+	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 // Conn holds database connection info
@@ -18,7 +19,7 @@ type Conn struct {
 	Driver dialect.Driver
 }
 
-func Client(app core.AppContext) (Conn, error) {
+func Client(app app.App) (Conn, error) {
 	var clientFactory ClientFactory
 	if app.Config == nil || app.Config.DatabaseURI() == "" {
 		clientFactory = NewMemoryClientFactory(app)
@@ -45,7 +46,7 @@ func setUpdatedToCreatedOnCreate(next ent.Mutator) ent.Mutator {
 			if _, ok := m.Field("updated_at"); ok && m.Op().Is(ent.OpCreate) {
 				err := m.SetField("updated_at", createdAt.(time.Time))
 				if err != nil {
-					return nil, core.WrapError(err)
+					return nil, wrapper.Wrap(err)
 				}
 			}
 		}

@@ -1,4 +1,4 @@
-package core
+package app
 
 import (
 	"errors"
@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/holos-run/holos/pkg/version"
+	"github.com/holos-run/holos/pkg/wrapper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -21,7 +22,7 @@ func NewConfig() *Config {
 	f.BoolVar(&c.PrintVersionYAML, "version-detail", false, "print detailed version info and exit")
 	f.StringVar(&c.LogLevel, "log-level", "info", fmt.Sprintf("Log Level (%s)", strings.Join(validLogLevels, "|")))
 	f.StringVar(&c.LogFormat, "log-format", "json", fmt.Sprintf("Log format (%s)", strings.Join(validLogFormats, "|")))
-	f.StringVar(&c.OIDCIssuer, "oidc-issuer", "https://idex.core.ois.run", "OIDC Issuer URL")
+	f.StringVar(&c.OIDCIssuer, "oidc-issuer", "https://login.ois.run", "OIDC Issuer URL")
 	f.Var(&c.OIDCAudiences, "oidc-audience", "oidc audience to allow, e.g. \"holos-cli,https://sso.holos.run\"")
 	f.BoolVar(&c.ListenAndServe, "serve", true, "Listen and serve requests.")
 	f.Var(&c.dropAttrs, "log-drop", "Log attributes to drop, e.g. \"user-agent,version\"")
@@ -48,13 +49,12 @@ type Config struct {
 	flagSet          *flag.FlagSet
 }
 
-// DatabaseURI opens the --db-uri-file and returns the trimmed content if the
-// flag is set, otherwise the DATABASE_URL environment var is returned.
+// DatabaseURI represents the database connection uri.
 func (c *Config) DatabaseURI() string {
 	return c.databaseURI
 }
 
-// ListenPort returns the port of the prometheus /metrics scrape endpoint configured by a flag.
+// ListenPort returns the port of the main server.
 func (c *Config) ListenPort() int {
 	return c.listenPort
 }
@@ -84,20 +84,20 @@ func (c *Config) Validate(out io.Writer) error {
 		return PrintVersionYAML(out)
 	}
 	if err := c.ValidateLogLevel(); err != nil {
-		return WrapError(err)
+		return wrapper.Wrap(err)
 	}
 	if err := c.ValidateLogFormat(); err != nil {
-		return WrapError(err)
+		return wrapper.Wrap(err)
 	}
 	if !strings.HasPrefix(c.OIDCIssuer, "https://") {
-		return WrapError(errors.New("oidc issuer must start with https://"))
+		return wrapper.Wrap(errors.New("oidc issuer must start with https://"))
 	}
 	if c.dbURIFile == "" {
 		c.databaseURI = os.Getenv("DATABASE_URL")
 	} else {
 		dat, err := os.ReadFile(c.dbURIFile)
 		if err != nil {
-			return WrapError(fmt.Errorf("could not read db uri file: %w", err))
+			return wrapper.Wrap(fmt.Errorf("could not read db uri file: %w", err))
 		}
 		c.databaseURI = strings.TrimSpace(string(dat))
 	}
@@ -114,7 +114,7 @@ func (c *Config) ValidateLogLevel() error {
 		}
 	}
 	err := fmt.Errorf("invalid log level: %s is not one of %s", c.LogLevel, strings.Join(validLogLevels, ", "))
-	return WrapError(err)
+	return wrapper.Wrap(err)
 }
 
 func (c *Config) ValidateLogFormat() error {
@@ -124,7 +124,7 @@ func (c *Config) ValidateLogFormat() error {
 		}
 	}
 	err := fmt.Errorf("invalid log format: %s is not one of %s", c.LogFormat, strings.Join(validLogFormats, ", "))
-	return WrapError(err)
+	return wrapper.Wrap(err)
 }
 
 // GetLogLevel returns a slog.Level configured by the user
@@ -165,7 +165,7 @@ func (s *stringSlice) Set(value string) error {
 func PrintVersion(out io.Writer) error {
 	info := version.NewVersionInfo()
 	if _, err := out.Write([]byte(info.Version + "\n")); err != nil {
-		return WrapError(err)
+		return wrapper.Wrap(err)
 	}
 	return &FastExitError{}
 }
@@ -175,10 +175,10 @@ func PrintVersionYAML(out io.Writer) error {
 	info := version.NewVersionInfo()
 	data, err := yaml.Marshal(info)
 	if err != nil {
-		return WrapError(err)
+		return wrapper.Wrap(err)
 	}
 	if _, err = out.Write(data); err != nil {
-		return WrapError(err)
+		return wrapper.Wrap(err)
 	}
 	return &FastExitError{}
 }

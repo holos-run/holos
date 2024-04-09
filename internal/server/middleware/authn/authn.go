@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
+	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 // Verifier is the interface that wraps the basic Verify method to verify an
@@ -72,7 +73,7 @@ func FromContext(ctx context.Context) (Identity, error) {
 
 // NewVerifier returns an *oidc.IDTokenVerifier that implements Verifier from an
 // oidc.Provider for issuer which performs jwks .well-known discovery.
-func NewVerifier(app core.AppContext, issuer string) (*oidc.IDTokenVerifier, error) {
+func NewVerifier(app app.App, issuer string) (*oidc.IDTokenVerifier, error) {
 	ctx, log := app.ContextLogger()
 	var err error
 	var oidcProvider *oidc.Provider
@@ -94,7 +95,7 @@ func NewVerifier(app core.AppContext, issuer string) (*oidc.IDTokenVerifier, err
 		}
 	}
 	if err != nil {
-		return nil, core.WrapError(err)
+		return nil, wrapper.Wrap(err)
 	}
 	// We allow tokens from multiple client ids (web, cli), they are checked in the handler.
 	return oidcProvider.Verifier(&oidc.Config{SkipClientIDCheck: true}), nil

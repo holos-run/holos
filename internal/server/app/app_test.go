@@ -1,17 +1,17 @@
-package core_test
+package app_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/testutils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestServer(t *testing.T) {
 	t.Run("AppContext", func(t *testing.T) {
-		app := core.NewAppContext()
+		app := app.New()
 		assert.NotNil(t, app)
 
 		t.Run("WithContext", func(t *testing.T) {

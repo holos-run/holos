@@ -7,19 +7,20 @@ import (
 	"log/slog"
 
 	esql "entgo.io/ent/dialect/sql"
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
+	"github.com/holos-run/holos/pkg/wrapper"
 	"modernc.org/sqlite"
 )
 
 // NewMemoryClientFactory returns a MemoryClientFactory implementation of ClientFactory
-func NewMemoryClientFactory(app core.AppContext) *MemoryClientFactory {
+func NewMemoryClientFactory(app app.App) *MemoryClientFactory {
 	return &MemoryClientFactory{app: app}
 }
 
 // MemoryClientFactory produces simple in-memory sqlite database clients for development and testing.
 type MemoryClientFactory struct {
-	app core.AppContext
+	app app.App
 }
 
 func (mc *MemoryClientFactory) New() (Conn, error) {
@@ -27,7 +28,7 @@ func (mc *MemoryClientFactory) New() (Conn, error) {
 	db, err := sql.Open("sqlite3", "file:db.sqlite3?mode=memory&cache=shared")
 	if err != nil {
 		log.DebugContext(ctx, "could not open sql connection", "err", err)
-		return Conn{}, core.WrapError(err)
+		return Conn{}, wrapper.Wrap(err)
 	}
 	// Fix database is locked errors when testing with sqlite3 in-memory and parallel test cases.
 	db.SetMaxOpenConns(1)

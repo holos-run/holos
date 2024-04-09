@@ -11,13 +11,14 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/frontend"
 	"github.com/holos-run/holos/internal/server/handler"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1/holosconnect"
+	"github.com/holos-run/holos/pkg/wrapper"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -55,7 +56,7 @@ type Config struct {
 }
 
 type Server struct {
-	app           core.AppContext
+	app           app.App
 	mux           *http.ServeMux
 	handler       http.Handler
 	config        *Config
@@ -69,7 +70,7 @@ func (s *Server) Mux() *http.ServeMux {
 
 type Middleware func(next http.Handler) http.Handler
 
-func NewServer(app core.AppContext, config *Config, db *ent.Client, verifier authn.Verifier) (*Server, error) {
+func NewServer(app app.App, config *Config, db *ent.Client, verifier authn.Verifier) (*Server, error) {
 	mux := http.NewServeMux()
 	srv := &Server{
 		app:           app,
@@ -82,7 +83,7 @@ func NewServer(app core.AppContext, config *Config, db *ent.Client, verifier aut
 
 	srv.registerHandlers()
 	if err := srv.registerConnectRpc(); err != nil {
-		return srv, core.WrapError(err)
+		return srv, wrapper.Wrap(err)
 	}
 
 	return srv, nil
@@ -123,7 +124,7 @@ func (s *Server) registerConnectRpc() error {
 	// Validator for all rpc messages
 	validator, err := validate.NewInterceptor()
 	if err != nil {
-		return core.WrapError(fmt.Errorf("could not initialize proto validation interceptor: %w", err))
+		return wrapper.Wrap(fmt.Errorf("could not initialize proto validation interceptor: %w", err))
 	}
 
 	h := handler.NewHolosHandler(s.app, s.db)

@@ -4,20 +4,21 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	holos "github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1"
+	"github.com/holos-run/holos/pkg/wrapper"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewHolosHandler(app core.AppContext, db *ent.Client) *HolosHandler {
+func NewHolosHandler(app app.App, db *ent.Client) *HolosHandler {
 	return &HolosHandler{app: app, db: db}
 }
 
 // HolosHandler implements the connect service handler interface.
 type HolosHandler struct {
-	app core.AppContext
+	app app.App
 	db  *ent.Client
 }
 
@@ -27,7 +28,7 @@ func (h *HolosHandler) GetUserClaims(
 ) (*connect.Response[holos.GetUserClaimsResponse], error) {
 	authnIdentity, err := authn.FromContext(ctx)
 	if err != nil {
-		return nil, connect.NewError(connect.CodePermissionDenied, core.WrapError(err))
+		return nil, connect.NewError(connect.CodePermissionDenied, wrapper.Wrap(err))
 	}
 	res := connect.NewResponse(&holos.GetUserClaimsResponse{
 		Iss:           authnIdentity.Issuer(),

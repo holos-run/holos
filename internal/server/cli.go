@@ -12,13 +12,14 @@ import (
 	"github.com/sethvargo/go-retry"
 	"github.com/spf13/cobra"
 
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/db"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/server/server"
 	"github.com/holos-run/holos/internal/server/signals"
 	"github.com/holos-run/holos/pkg/version"
+	"github.com/holos-run/holos/pkg/wrapper"
 )
 
 //go:embed help/root.txt
@@ -26,13 +27,13 @@ var helpLong string
 
 // Root holds the program configuration and root command for flag parsing.
 type Root struct {
-	Config  *core.Config
+	Config  *app.Config
 	Command *cobra.Command
 }
 
 // NewRoot builds a root cobra command with flags linked to the Config field.
 func New() *cobra.Command {
-	config := core.NewConfig()
+	config := app.NewConfig()
 	root := Root{Config: config}
 	cmd := &cobra.Command{
 		Use:   "server",
@@ -61,7 +62,7 @@ func New() *cobra.Command {
 			slog.SetDefault(log)
 			log.DebugContext(ctx, "hello", "lifecycle", "start")
 
-			app := core.AppContext{
+			app := app.App{
 				Context: ctx,
 				Logger:  log,
 				Config:  config,
@@ -70,7 +71,7 @@ func New() *cobra.Command {
 			// Connect to the database
 			conn, err := db.Client(app)
 			if err != nil {
-				return core.WrapError(fmt.Errorf("could not create db client: %w", err))
+				return wrapper.Wrap(fmt.Errorf("could not create db client: %w", err))
 			}
 			defer func() {
 				if closeError := conn.Client.Close(); closeError != nil {
@@ -88,18 +89,18 @@ func New() *cobra.Command {
 				plog.DebugContext(ctx, "ping")
 				if pingErr := conn.DB.PingContext(ctx); pingErr != nil {
 					plog.DebugContext(ctx, "retryable: could not ping", "ok", false, "err", pingErr)
-					return retry.RetryableError(core.WrapError(pingErr))
+					return retry.RetryableError(wrapper.Wrap(pingErr))
 				}
 				plog.DebugContext(ctx, "pong", "ok", true)
 				return nil
 			}
 			if err = retry.Do(ctx, backoff, ping); err != nil {
-				return core.WrapError(err)
+				return wrapper.Wrap(err)
 			}
 
 			// Automatic migration
 			if err = conn.Client.Schema.Create(ctx); err != nil {
-				return core.WrapError(err)
+				return wrapper.Wrap(err)
 			}
 			log.InfoContext(ctx, "schema created", "database", conn.Driver.Dialect())
 
@@ -107,13 +108,13 @@ func New() *cobra.Command {
 			// We may pass an instrumented *http.Client via ctx in the future.
 			verifier, err := authn.NewVerifier(app, config.OIDCIssuer)
 			if err != nil {
-				return core.WrapError(fmt.Errorf("could not create identity verifier: %w", err))
+				return wrapper.Wrap(fmt.Errorf("could not create identity verifier: %w", err))
 			}
 
 			// Start the server
 			srv, err := server.NewServer(app, srvCfg, conn.Client, verifier)
 			if err != nil {
-				return core.WrapError(fmt.Errorf("could not start server: %w", err))
+				return wrapper.Wrap(fmt.Errorf("could not start server: %w", err))
 			}
 
 			if config.ListenAndServe {
@@ -128,7 +129,7 @@ func New() *cobra.Command {
 		// PersistentPreRunE runs after flag parsing before RunE.
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := config.Validate(cmd.OutOrStdout()); err != nil {
-				return core.WrapError(err)
+				return wrapper.Wrap(err)
 			}
 
 			level := config.GetLogLevel()
