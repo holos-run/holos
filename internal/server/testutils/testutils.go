@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/lmittmann/tint"
 )
@@ -51,13 +50,4 @@ func TestLogger(t testing.TB) *slog.Logger {
 // to t.Log(). Useful to associate all logs with the test case that caused them.
 func LogCtx(t testing.TB) context.Context {
 	return logger.NewContext(context.Background(), TestLogger(t))
-}
-
-// NewAppContext returns a new app.App wired to t.Log().
-func NewAppContext(t testing.TB) app.App {
-	log := TestLogger(t)
-	return app.App{
-		Context: logger.NewContext(context.Background(), log),
-		Logger:  log,
-	}
 }

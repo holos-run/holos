@@ -13,7 +13,6 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/go-jose/go-jose/v3"
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/server/testutils"
@@ -30,8 +29,7 @@ func TestAuthentication(t *testing.T) {
 		client := &http.Client{Transport: &nullRoundTripper{}}
 		log := testutils.TestLogger(t)
 		ctx := oidc.ClientContext(logger.NewContext(context.Background(), log), client)
-		app := app.App{Context: ctx}.WithLogger(log)
-		_, err := authn.NewVerifier(app, issuer)
+		_, err := authn.NewVerifier(ctx, log, "https://example.com")
 		assert.Error(t, err)
 	})
 

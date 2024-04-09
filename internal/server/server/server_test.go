@@ -8,21 +8,19 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/db"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/frontend"
 	"github.com/holos-run/holos/internal/server/server"
 	"github.com/holos-run/holos/internal/server/testutils"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestServer(t *testing.T) {
-	app := testutils.NewAppContext(t)
-	srvCfg := &server.Config{}
-	client := newClient(app)
-
-	srv, err := server.NewServer(app, srvCfg, client, &fakeVerifier{})
+	cfg := holos.New(holos.Logger(testutils.TestLogger(t)))
+	client := newClient(cfg)
+	srv, err := server.NewServer(cfg, client, &fakeVerifier{})
 	assert.NoError(t, err)
 	assert.NotNil(t, srv)
 
@@ -64,9 +62,9 @@ func (p fakeVerifier) Verify(context.Context, string) (*oidc.IDToken, error) {
 	}
 	return idToken, nil
 }
-func newClient(app app.App) *ent.Client {
+func newClient(cfg *holos.Config) *ent.Client {
 	// Connect to the database
-	var dbf db.ClientFactory = db.NewMemoryClientFactory(app)
+	var dbf db.ClientFactory = db.NewMemoryClientFactory(cfg)
 	conn, err := dbf.New()
 	dbClient := conn.Client
 	if err != nil {

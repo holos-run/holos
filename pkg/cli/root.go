@@ -36,7 +36,6 @@ func New(cfg *holos.Config) *cobra.Command {
 				return err
 			}
 			log := cfg.Logger()
-			// Set the configured logger in the context.
 			c.SetContext(logger.NewContext(c.Context(), log))
 			// Set the default logger after flag parsing.
 			slog.SetDefault(log)
@@ -65,7 +64,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(kv.New(cfg))
 
 	// Server
-	rootCmd.AddCommand(server.New())
+	rootCmd.AddCommand(server.New(cfg))
 
 	return rootCmd
 }

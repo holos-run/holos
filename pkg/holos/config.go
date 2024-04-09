@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/logger"
@@ -27,6 +28,7 @@ type options struct {
 	stderr               io.Writer
 	provisionerClientset kubernetes.Interface
 	clientset            kubernetes.Interface
+	logger               *slog.Logger
 }
 
 // Stdin redirects standard input to r, useful for test capture.
@@ -54,6 +56,10 @@ func ClusterClientset(clientset *kubernetes.Clientset) Option {
 	return func(o *options) { o.clientset = clientset }
 }
 
+func Logger(logger *slog.Logger) Option {
+	return func(o *options) { o.logger = logger }
+}
+
 // New returns a new top level cli Config.
 func New(opts ...Option) *Config {
 	cfgOptions := &options{
@@ -78,6 +84,8 @@ func New(opts ...Option) *Config {
 		kvFlagSet:            kvFlagSet,
 		txtarFlagSet:         txFlagSet,
 		provisionerClientset: cfgOptions.provisionerClientset,
+		logger:               cfgOptions.logger,
+		ServerConfig:         &ServerConfig{},
 	}
 	writeFlagSet.StringVar(&cfg.writeTo, "write-to", cfg.writeTo, "write to directory")
 	clusterFlagSet.StringVar(&cfg.clusterName, "cluster-name", cfg.clusterName, "cluster name")
@@ -111,6 +119,7 @@ type Config struct {
 	txtarIndex           *int
 	txtarFlagSet         *flag.FlagSet
 	provisionerClientset kubernetes.Interface
+	ServerConfig         *ServerConfig
 }
 
 // LogFlagSet returns the logging *flag.FlagSet for use by the command handler.
@@ -126,6 +135,10 @@ func (c *Config) WriteFlagSet() *flag.FlagSet {
 // ClusterFlagSet returns a *flag.FlagSet wired to c *Config.  Useful for commands scoped to one cluster.
 func (c *Config) ClusterFlagSet() *flag.FlagSet {
 	return c.clusterFlagSet
+}
+
+func (c *Config) ServerFlagSet() *flag.FlagSet {
+	return c.ServerConfig.FlagSet()
 }
 
 // KVFlagSet returns the *flag.FlagSet for kv related commands.
@@ -264,4 +277,72 @@ func getenv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+type ServerConfig struct {
+	oidcIssuer     string      // --oidc-issuer
+	oidcAudiences  stringSlice // --oidc-audience
+	listenAndServe bool        // --no-serve
+	listenPort     int         // --listen-port
+	metricsPort    int         // --metrics-port
+	dbURIFile      string      // --db-uri-file
+	databaseURI    string
+	flagSet        *flag.FlagSet
+}
+
+// OIDCIssuer returns the configured oidc issuer url.
+func (c *ServerConfig) OIDCIssuer() string {
+	return c.oidcIssuer
+}
+
+// OIDCAudiences returns the configured allowed id token aud claim values.
+func (c *ServerConfig) OIDCAudiences() []string {
+	return c.oidcAudiences
+}
+
+// DatabaseURI represents the database connection uri.
+func (c *ServerConfig) DatabaseURI() string {
+	return c.databaseURI
+}
+
+// ListenAndServe returns true if the server should listen for and serve requests.
+func (c *ServerConfig) ListenAndServe() bool {
+	return c.listenAndServe
+}
+
+// ListenPort returns the port of the main server.
+func (c *ServerConfig) ListenPort() int {
+	return c.listenPort
+}
+
+// MetricsPort returns the port of the prometheus /metrics scrape endpoint configured by a flag.
+func (c *ServerConfig) MetricsPort() int {
+	return c.metricsPort
+}
+
+func (c *ServerConfig) FlagSet() *flag.FlagSet {
+	if c.flagSet != nil {
+		return c.flagSet
+	}
+	f := flag.NewFlagSet("", flag.ContinueOnError)
+	f.StringVar(&c.oidcIssuer, "oidc-issuer", c.oidcIssuer, "oidc issuer url.")
+	f.Var(&c.oidcAudiences, "oidc-audience", "allowed oidc audiences.")
+	f.BoolVar(&c.listenAndServe, "serve", true, "listen and serve requests.")
+	f.StringVar(&c.dbURIFile, "db-uri-file", "", "file path containing the database uri.")
+	f.IntVar(&c.listenPort, "listen-port", 3000, "service listen port.")
+	f.IntVar(&c.metricsPort, "metrics-port", 9090, "metrics listen port.")
+	c.flagSet = f
+	return f
+}
+
+// stringSlice is a comma separated list of string values
+type stringSlice []string
+
+func (s *stringSlice) String() string {
+	return strings.Join((*s)[:], ",")
+}
+
+func (s *stringSlice) Set(value string) error {
+	*s = append(*s, strings.Split(value, ",")...)
+	return nil
 }

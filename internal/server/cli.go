@@ -5,36 +5,24 @@ import (
 	_ "embed"
 	"fmt"
 	"log/slog"
-	"strconv"
 	"time"
 
-	"github.com/lmittmann/tint"
 	"github.com/sethvargo/go-retry"
 	"github.com/spf13/cobra"
 
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/db"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
-	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/server/server"
 	"github.com/holos-run/holos/internal/server/signals"
 	"github.com/holos-run/holos/pkg/errors"
-	"github.com/holos-run/holos/pkg/version"
+	"github.com/holos-run/holos/pkg/holos"
 )
 
 //go:embed help/root.txt
 var helpLong string
 
-// Root holds the program configuration and root command for flag parsing.
-type Root struct {
-	Config  *app.Config
-	Command *cobra.Command
-}
-
-// NewRoot builds a root cobra command with flags linked to the Config field.
-func New(options ...app.Option) *cobra.Command {
-	config := app.NewConfig(options...)
-	root := Root{Config: config}
+// New builds a root cobra command with flags linked to the Config field.
+func New(cfg *holos.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
 		Short: "server",
@@ -51,25 +39,12 @@ func New(options ...app.Option) *cobra.Command {
 			if ctx == nil {
 				ctx = context.Background()
 			}
-			srvCfg := &server.Config{
-				Port:          strconv.Itoa(config.ListenPort()),
-				MetricsPort:   config.MetricsPort(),
-				OIDCIssuer:    config.OIDCIssuer,
-				OIDCAudiences: config.OIDCAudiences,
-			}
 
-			log := logger.FromContext(cmd.Context()).With("version", version.NewVersionInfo().Version)
-			slog.SetDefault(log)
+			log := cfg.Logger()
 			log.DebugContext(ctx, "hello", "lifecycle", "start")
 
-			app := app.App{
-				Context: ctx,
-				Logger:  log,
-				Config:  config,
-			}
-
 			// Connect to the database
-			conn, err := db.Client(app)
+			conn, err := db.Client(cfg)
 			if err != nil {
 				return errors.Wrap(fmt.Errorf("could not create db client: %w", err))
 			}
@@ -106,18 +81,18 @@ func New(options ...app.Option) *cobra.Command {
 
 			// Authentication (Identity Verifier)
 			// We may pass an instrumented *http.Client via ctx in the future.
-			verifier, err := authn.NewVerifier(app, config.OIDCIssuer)
+			verifier, err := authn.NewVerifier(ctx, log, cfg.ServerConfig.OIDCIssuer())
 			if err != nil {
 				return errors.Wrap(fmt.Errorf("could not create identity verifier: %w", err))
 			}
 
 			// Start the server
-			srv, err := server.NewServer(app, srvCfg, conn.Client, verifier)
+			srv, err := server.NewServer(cfg, conn.Client, verifier)
 			if err != nil {
 				return errors.Wrap(fmt.Errorf("could not start server: %w", err))
 			}
 
-			if config.ListenAndServe {
+			if cfg.ServerConfig.ListenAndServe() {
 				httpServer, healthy, ready := srv.ListenAndServe()
 				stopCh := signals.SetupSignalHandler()
 				sd := signals.NewShutdown(15*time.Second, log)
@@ -126,43 +101,10 @@ func New(options ...app.Option) *cobra.Command {
 
 			return nil
 		},
-		// PersistentPreRunE runs after flag parsing before RunE.
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := config.Validate(cmd.OutOrStdout()); err != nil {
-				return errors.Wrap(err)
-			}
-
-			level := config.GetLogLevel()
-			var handler slog.Handler
-			if config.LogFormat == "text" {
-				handler = tint.NewHandler(cmd.ErrOrStderr(), &tint.Options{
-					Level:       level,
-					TimeFormat:  time.Kitchen,
-					AddSource:   level == slog.LevelDebug,
-					ReplaceAttr: config.ReplaceAttr,
-				})
-			} else {
-				handler = slog.NewJSONHandler(cmd.ErrOrStderr(), &slog.HandlerOptions{
-					Level:       level,
-					AddSource:   true,
-					ReplaceAttr: config.ReplaceAttr,
-				})
-			}
-
-			ctx := cmd.Context()
-			if ctx == nil {
-				ctx = context.Background()
-			}
-
-			// Note, we deliberately do not touch slog.Default so these commands work concurrently.
-			cmd.SetContext(logger.NewContext(ctx, slog.New(handler)))
-			return nil
-		},
 	}
 
 	// Add flags valid for all subcommands
 	cmd.Flags().SortFlags = false
-	cmd.PersistentFlags().AddGoFlagSet(config.FlagSet())
-	root.Command = cmd
+	cmd.PersistentFlags().AddGoFlagSet(cfg.ServerFlagSet())
 	return cmd
 }

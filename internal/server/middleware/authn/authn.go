@@ -5,12 +5,12 @@ package authn
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/pkg/errors"
 )
@@ -72,8 +72,7 @@ func FromContext(ctx context.Context) (Identity, error) {
 
 // NewVerifier returns an *oidc.IDTokenVerifier that implements Verifier from an
 // oidc.Provider for issuer which performs jwks .well-known discovery.
-func NewVerifier(app app.App, issuer string) (*oidc.IDTokenVerifier, error) {
-	ctx, log := app.ContextLogger()
+func NewVerifier(ctx context.Context, log *slog.Logger, issuer string) (*oidc.IDTokenVerifier, error) {
 	var err error
 	var oidcProvider *oidc.Provider
 	for i := 1; i < 30; i++ {

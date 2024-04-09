@@ -6,11 +6,9 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"sync/atomic"
-	"time"
 
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/frontend"
 	"github.com/holos-run/holos/internal/server/handler"
@@ -18,6 +16,7 @@ import (
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1/holosconnect"
 	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -42,24 +41,11 @@ var (
 	ready   int32
 )
 
-type Config struct {
-	HttpServerTimeout     time.Duration
-	ServerShutdownTimeout time.Duration
-	Host                  string
-	Port                  string
-	Unhealthy             bool
-	Unready               bool
-	MetricsPort           int
-	OIDCIssuer            string
-	OIDCAudiences         []string
-}
-
 type Server struct {
-	app           app.App
+	cfg           *holos.Config
+	db            *ent.Client
 	mux           *http.ServeMux
 	handler       http.Handler
-	config        *Config
-	db            *ent.Client
 	authenticator authn.Verifier
 }
 
@@ -69,14 +55,13 @@ func (s *Server) Mux() *http.ServeMux {
 
 type Middleware func(next http.Handler) http.Handler
 
-func NewServer(app app.App, config *Config, db *ent.Client, verifier authn.Verifier) (*Server, error) {
+func NewServer(cfg *holos.Config, db *ent.Client, verifier authn.Verifier) (*Server, error) {
 	mux := http.NewServeMux()
 	srv := &Server{
-		app:           app,
+		cfg:           cfg,
+		db:            db,
 		mux:           mux,
 		handler:       h2c.NewHandler(mux, &http2.Server{}),
-		config:        config,
-		db:            db,
 		authenticator: verifier,
 	}
 
@@ -90,13 +75,13 @@ func NewServer(app app.App, config *Config, db *ent.Client, verifier authn.Verif
 
 // middlewares wraps the handler with our standard middleware chain.
 func (s *Server) middlewares(handler http.Handler) http.Handler {
-	return logger.LoggingMiddleware(s.app.Logger)(s.uiMiddleware(handler))
+	return logger.LoggingMiddleware(s.cfg.Logger())(s.uiMiddleware(handler))
 }
 
 func (s *Server) notFoundHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log := s.app.Logger
+		log := s.cfg.Logger()
 		w.WriteHeader(http.StatusNotFound)
 		if _, err := w.Write([]byte("404 page not found\n")); err != nil {
 			log.ErrorContext(ctx, "could not write", "err", err)
@@ -107,9 +92,10 @@ func (s *Server) notFoundHandler() http.Handler {
 func (s *Server) registerHandlers() {
 	// Prometheus metrics
 	s.mux.Handle("/metrics", promhttp.Handler())
-	// Main entrypoint for the frontend interface
+	// Main entrypoint for the frontend interface.
+	spaFileServer := frontend.NewSPAFileServer(s.cfg.ServerConfig.OIDCIssuer())
 	fsHandler := http.FileServer(http.FS(frontend.Root()))
-	s.mux.Handle(frontend.Path, s.middlewares(frontend.SPAFileServer(fsHandler)))
+	s.mux.Handle(frontend.Path, s.middlewares(spaFileServer(fsHandler)))
 	// Handle 404 errors server side for static paths like assets and logos.
 	staticHandler := s.middlewares(fsHandler)
 	s.mux.Handle(frontend.Path+"assets/", staticHandler)
@@ -126,9 +112,9 @@ func (s *Server) registerConnectRpc() error {
 		return errors.Wrap(fmt.Errorf("could not initialize proto validation interceptor: %w", err))
 	}
 
-	h := handler.NewHolosHandler(s.app, s.db)
+	h := handler.NewHolosHandler(s.db)
 	holosPath, holosHandler := holosconnect.NewHolosServiceHandler(h, connect.WithInterceptors(validator))
-	authenticatingHandler := authn.Handler(s.authenticator, s.config.OIDCAudiences, holosHandler)
+	authenticatingHandler := authn.Handler(s.authenticator, s.cfg.ServerConfig.OIDCAudiences(), holosHandler)
 	s.mux.Handle(holosPath, s.middlewares(authenticatingHandler))
 
 	return nil
@@ -152,40 +138,36 @@ func (s *Server) ListenAndServe() (*http.Server, *int32, *int32) {
 	srv := s.startServer()
 
 	// signal Kubernetes the server is ready to receive traffic
-	if !s.config.Unhealthy {
-		atomic.StoreInt32(&healthy, 1)
-	}
-	if !s.config.Unready {
-		atomic.StoreInt32(&ready, 1)
-	}
+	atomic.StoreInt32(&healthy, 1)
+	atomic.StoreInt32(&ready, 1)
 
 	return srv, &healthy, &ready
 }
 
 func (s *Server) startServer() *http.Server {
 	// determine if the port is specified
-	if s.config.Port == "0" {
+	if s.cfg.ServerConfig.ListenPort() == 0 {
 		// move on immediately
 		return nil
 	}
 
 	srv := &http.Server{
-		Addr:         s.config.Host + ":" + s.config.Port,
-		WriteTimeout: s.config.HttpServerTimeout,
-		ReadTimeout:  s.config.HttpServerTimeout,
-		IdleTimeout:  2 * s.config.HttpServerTimeout,
-		Handler:      s.handler,
+		Addr:    fmt.Sprintf(":%d", s.cfg.ServerConfig.ListenPort()),
+		Handler: s.handler,
+		// WriteTimeout: s.cfg.ServerConfig.HttpServerTimeout,
+		// ReadTimeout:  s.cfg.ServerConfig.HttpServerTimeout,
+		// IdleTimeout:  2 * s.cfg.ServerConfig.HttpServerTimeout,
 	}
 
-	httpLog := s.app.Logger.With("addr", srv.Addr, "server", "http")
+	httpLog := s.cfg.Logger().With("addr", srv.Addr, "server", "http")
 
 	// start the server in the background
 	go func() {
-		httpLog.InfoContext(s.app.Context, "listening for http requests")
+		httpLog.Info("listening for http requests")
 		if err := srv.ListenAndServe(); errors.Is(err, http.ErrServerClosed) {
-			httpLog.DebugContext(s.app.Context, "server closed", "lifecycle", "end")
+			httpLog.Debug("server closed", "lifecycle", "end")
 		} else {
-			httpLog.ErrorContext(s.app.Context, "could not listen for http requests", "err", err, "lifecycle", "end", "exit", 2)
+			httpLog.Error("could not listen for http requests", "err", err, "lifecycle", "end", "exit", 2)
 			os.Exit(2)
 		}
 	}()
@@ -195,29 +177,29 @@ func (s *Server) startServer() *http.Server {
 }
 
 func (s *Server) startMetricsServer() {
-	ctx, log := s.app.ContextLogger()
-	if s.config.MetricsPort < 1 {
-		log.WarnContext(ctx, "metrics disabled", "suggestion", "enable with flag --metrics-port=9090")
+	log := s.cfg.Logger()
+	if s.cfg.ServerConfig.MetricsPort() < 1 {
+		log.Warn("metrics disabled", "suggestion", "enable with flag --metrics-port=9090")
 	}
 	mux := http.DefaultServeMux
 	mux.Handle("/metrics", promhttp.Handler())
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte("OK")); err != nil {
-			log.ErrorContext(ctx, "could not write", "err", err)
+			log.Error("could not write", "err", err)
 		}
 	})
 
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%v", s.config.MetricsPort),
+		Addr:    fmt.Sprintf(":%d", s.cfg.ServerConfig.MetricsPort()),
 		Handler: mux,
 	}
 
 	srvLog := log.With("addr", srv.Addr, "server", "metrics")
-	srvLog.InfoContext(ctx, "listening for prom requests")
+	srvLog.Info("listening for prom requests")
 	// Blocks the go routine, always returns a non-nil error
 	if err := srv.ListenAndServe(); err != nil {
-		srvLog.ErrorContext(ctx, "could not listen for prom requests", "err", err)
+		srvLog.Error("could not listen for prom requests", "err", err)
 	}
 }
 

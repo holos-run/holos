@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"connectrpc.com/connect"
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	holos "github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1"
@@ -12,14 +11,13 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewHolosHandler(app app.App, db *ent.Client) *HolosHandler {
-	return &HolosHandler{app: app, db: db}
+func NewHolosHandler(db *ent.Client) *HolosHandler {
+	return &HolosHandler{db: db}
 }
 
 // HolosHandler implements the connect service handler interface.
 type HolosHandler struct {
-	app app.App
-	db  *ent.Client
+	db *ent.Client
 }
 
 func (h *HolosHandler) GetUserClaims(

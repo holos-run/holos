@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect"
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/pkg/holos"
 )
 
 // Conn holds database connection info
@@ -19,12 +19,12 @@ type Conn struct {
 	Driver dialect.Driver
 }
 
-func Client(app app.App) (Conn, error) {
+func Client(cfg *holos.Config) (Conn, error) {
 	var clientFactory ClientFactory
-	if app.Config == nil || app.Config.DatabaseURI() == "" {
-		clientFactory = NewMemoryClientFactory(app)
+	if cfg.ServerConfig == nil || cfg.ServerConfig.DatabaseURI() == "" {
+		clientFactory = NewMemoryClientFactory(cfg)
 	} else {
-		clientFactory = NewPGXClientFactory(app)
+		clientFactory = NewPGXClientFactory(cfg)
 	}
 	return clientFactory.New()
 }

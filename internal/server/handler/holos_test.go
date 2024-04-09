@@ -11,14 +11,14 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
 	"github.com/google/uuid"
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/db"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/handler"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
-	holos "github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1"
+	holosSvc "github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1"
 	"github.com/holos-run/holos/internal/server/service/gen/holos/v1alpha1/holosconnect"
 	"github.com/holos-run/holos/internal/server/testutils"
+	"github.com/holos-run/holos/pkg/holos"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,7 +33,7 @@ func TestHolosService(t *testing.T) {
 			t.Run("registration", func(t *testing.T) {
 				// The id token claims should be sufficient for user registration. Authenticated
 				// clients need only pass in the zero value to register themselves.
-				request, authnIdentity := newAuthenticRequest(&holos.RegisterUserRequest{})
+				request, authnIdentity := newAuthenticRequest(&holosSvc.RegisterUserRequest{})
 				response, err := client.RegisterUser(testutils.LogCtx(t), request)
 				if err != nil {
 					t.Errorf("unexpected: %v", err)
@@ -46,7 +46,7 @@ func TestHolosService(t *testing.T) {
 			t.Run("name", func(t *testing.T) {
 				// An authenticated client can set their name.
 				expected := "Bob"
-				req, authnIdentity := newAuthenticRequest(&holos.RegisterUserRequest{
+				req, authnIdentity := newAuthenticRequest(&holosSvc.RegisterUserRequest{
 					Name: &expected,
 				})
 				resp, err := client.RegisterUser(testutils.LogCtx(t), req)
@@ -61,7 +61,7 @@ func TestHolosService(t *testing.T) {
 			t.Run("name_length_limit", func(t *testing.T) {
 				// Name cannot be longer than 100 characters.
 				name := strings.Repeat("X", 101)
-				req, _ := newAuthenticRequest(&holos.RegisterUserRequest{
+				req, _ := newAuthenticRequest(&holosSvc.RegisterUserRequest{
 					Name: &name,
 				})
 				_, err := client.RegisterUser(testutils.LogCtx(t), req)
@@ -127,14 +127,13 @@ func TestHolosService(t *testing.T) {
 		})
 	}
 
-	app := app.New().WithLogger(testutils.TestLogger(t))
 	requestMessageValidator, err := validate.NewInterceptor()
 	if err != nil {
 		panic(err)
 	}
 	routePath, holosHandler := holosconnect.NewHolosServiceHandler(
 		// Inject the logger here.
-		handler.NewHolosHandler(app, newDatabaseClient(t, app)),
+		handler.NewHolosHandler(newDatabaseClient(t)),
 		connect.WithInterceptors(requestMessageValidator),
 	)
 
@@ -195,9 +194,10 @@ func (u user) Verified() bool {
 }
 
 // newDatabaseClient returns a new database client for testing.
-func newDatabaseClient(t *testing.T, app app.App) *ent.Client {
+func newDatabaseClient(t *testing.T) *ent.Client {
+	cfg := holos.New(holos.Logger(testutils.TestLogger(t)))
 	// Connect to the database
-	var dbf db.ClientFactory = db.NewMemoryClientFactory(app)
+	var dbf db.ClientFactory = db.NewMemoryClientFactory(cfg)
 	conn, err := dbf.New()
 	dbClient := conn.Client
 	if err != nil {

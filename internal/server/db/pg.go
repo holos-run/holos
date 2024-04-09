@@ -6,25 +6,25 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/pkg/holos"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 // NewPGXClientFactory returns a PGXClientFactory implementation of ClientFactory
-func NewPGXClientFactory(app app.App) *PGXClientFactory {
-	return &PGXClientFactory{app: app}
+func NewPGXClientFactory(cfg *holos.Config) *PGXClientFactory {
+	return &PGXClientFactory{cfg: cfg}
 }
 
 // PGXClientFactory produces pgx clients suitable for live workloads
 type PGXClientFactory struct {
-	app app.App
+	cfg *holos.Config
 }
 
 // New returns a new ent.Client using pgx with PostgreSQL
 func (mc *PGXClientFactory) New() (Conn, error) {
-	uri := mc.app.Config.DatabaseURI()
+	uri := mc.cfg.ServerConfig.DatabaseURI()
 	db, err := sql.Open("pgx", uri)
 	if err != nil {
 		return Conn{}, errors.Wrap(fmt.Errorf("could not open pgx: %w", err))

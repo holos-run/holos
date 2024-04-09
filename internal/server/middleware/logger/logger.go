@@ -8,41 +8,27 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/holos-run/holos/pkg/logger"
 )
 
-// key is an unexported type for keys defined in this package to prevent
-// collisions with keys defined in other packages.
-type key int
-
-// https://cs.opensource.google/go/go/+/refs/tags/go1.21.1:src/context/context.go;l=140-158
-// loggerKey is the key for *slog.Logger values in Contexts. It us unexported;
-// clients use NewContext and FromContext instead of this key directly.
-var loggerKey key
-
-// NewContext returns a new Context that carries value logger. Use FromContext
-// to retrieve the value.
-func NewContext(ctx context.Context, logger *slog.Logger) context.Context {
-	return context.WithValue(ctx, loggerKey, logger)
+func NewContext(ctx context.Context, log *slog.Logger) context.Context {
+	return logger.NewContext(ctx, log)
 }
 
 // FromContext returns the *slog.Logger previously stored in ctx by NewContext.
 // slog.Default() is returned otherwise.
 func FromContext(ctx context.Context) *slog.Logger {
-	// https://go.dev/ref/spec#Type_assertions
-	if logger, ok := ctx.Value(loggerKey).(*slog.Logger); ok {
-		return logger
-	}
-	return slog.Default()
+	return logger.FromContext(ctx)
 }
 
 // LoggingMiddleware returns a handler that adds a *slog.Logger to the request
 // context.Context retrievable by FromContext. The returned handler is useful as
 // the outer client facing edge of a middleware chain and includes attributes on
 // the log messages.
-func LoggingMiddleware(logger *slog.Logger) func(h http.Handler) http.Handler {
+func LoggingMiddleware(log *slog.Logger) func(h http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			log := logger
 			start := time.Now()
 			defer func() {
 				if err := recover(); err != nil {
@@ -51,8 +37,8 @@ func LoggingMiddleware(logger *slog.Logger) func(h http.Handler) http.Handler {
 			}()
 
 			// Test cases inject a logger wired to t.Log(), use it if present.
-			if loggerFromContext, ok := r.Context().Value(loggerKey).(*slog.Logger); ok {
-				log = loggerFromContext
+			if logContext := logger.FromContextMaybe(r.Context()); logContext != nil {
+				log = logContext
 			}
 
 			log = log.With(
@@ -63,7 +49,7 @@ func LoggingMiddleware(logger *slog.Logger) func(h http.Handler) http.Handler {
 				"user-agent", r.UserAgent(),
 			)
 
-			ctx := NewContext(r.Context(), logger)
+			ctx := NewContext(r.Context(), log)
 			wrapped := wrapResponseWriter(w)
 			next.ServeHTTP(wrapped, r.WithContext(ctx))
 			log.DebugContext(ctx, "response", "code", wrapped.code(), "duration", time.Since(start))
