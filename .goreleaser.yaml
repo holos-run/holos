@@ -10,8 +10,8 @@ version: 1
 
 before:
   hooks:
-    - go mod tidy
     - go generate ./...
+    - go mod tidy
 
 builds:
   - main: ./cmd/holos
