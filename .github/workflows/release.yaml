@@ -34,6 +34,8 @@ jobs:
         with:
           go-version: stable
 
+      # Necessary to run these outside of goreleaser, otherwise
+      # /home/runner/_work/holos/holos/internal/server/frontend/node_modules/.bin/protoc-gen-connect-query is not in PATH
       - name: Install Deps
         run: |
           make go-deps
@@ -41,9 +43,6 @@ jobs:
           make frontend-deps
           make frontend
           go mod tidy
-
-      - name: Find protoc-gen-connect-query
-        run: find / -name protoc-gen-connect-query
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
