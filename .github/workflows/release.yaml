@@ -34,6 +34,17 @@ jobs:
         with:
           go-version: stable
 
+      - name: Install Deps
+        run: |
+          make go-deps
+          go generate ./...
+          make frontend-deps
+          make frontend
+          go mod tidy
+
+      - name: Find protoc-gen-connect-query
+        run: find / -name protoc-gen-connect-query
+
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6
         with:
