@@ -32,8 +32,8 @@ type Root struct {
 }
 
 // NewRoot builds a root cobra command with flags linked to the Config field.
-func New() *cobra.Command {
-	config := app.NewConfig()
+func New(options ...app.Option) *cobra.Command {
+	config := app.NewConfig(options...)
 	root := Root{Config: config}
 	cmd := &cobra.Command{
 		Use:   "server",

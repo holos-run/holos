@@ -10,19 +10,18 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/holos-run/holos/internal/server"
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRoot(t *testing.T) {
-	var fastExitError *core.FastExitError
+	var fastExitError *app.FastExitError
 
-	t.Run("NewRoot", func(t *testing.T) {
-		root := server.New()
-		assert.NotNil(t, root)
-		assert.NotNil(t, root.Command)
+	t.Run("New", func(t *testing.T) {
+		cmd := server.New()
+		assert.NotNil(t, cmd)
 	})
 
 	t.Run("--version", func(t *testing.T) {
@@ -128,17 +127,15 @@ func mockIdentityProvider(ctx context.Context) context.Context {
 
 // root is a test harness for the root command and output.
 type root struct {
-	cfg *core.Config
 	cmd *cobra.Command
 	err *bytes.Buffer
 	out *bytes.Buffer
 }
 
 func newRoot(args []string) root {
-	rc := cmd.NewRoot()
+	rc := server.New(app.WithIssuer("https://example.com"))
 	r := root{
-		cfg: rc.Config,
-		cmd: rc.Command,
+		cmd: rc,
 		err: new(bytes.Buffer),
 		out: new(bytes.Buffer),
 	}
@@ -148,7 +145,5 @@ func newRoot(args []string) root {
 	// mock http client for the coreos/oidc module
 	ctx := mockIdentityProvider(context.Background())
 	r.cmd.SetContext(ctx)
-	// force oidc provider to example.com
-	r.cfg.OIDCIssuer = "https://example.com"
 	return r
 }

@@ -11,7 +11,7 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
 	"github.com/google/uuid"
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/db"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/handler"
@@ -127,7 +127,7 @@ func TestHolosService(t *testing.T) {
 		})
 	}
 
-	app := core.NewAppContext().WithLogger(testutils.TestLogger(t))
+	app := app.New().WithLogger(testutils.TestLogger(t))
 	requestMessageValidator, err := validate.NewInterceptor()
 	if err != nil {
 		panic(err)
@@ -195,7 +195,7 @@ func (u user) Verified() bool {
 }
 
 // newDatabaseClient returns a new database client for testing.
-func newDatabaseClient(t *testing.T, app core.AppContext) *ent.Client {
+func newDatabaseClient(t *testing.T, app app.App) *ent.Client {
 	// Connect to the database
 	var dbf db.ClientFactory = db.NewMemoryClientFactory(app)
 	conn, err := dbf.New()

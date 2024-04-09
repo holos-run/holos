@@ -15,14 +15,29 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func NewConfig() *Config {
+type Option func(*Config)
+
+func WithIssuer(issuer string) Option {
+	return func(c *Config) {
+		c.OIDCIssuer = issuer
+	}
+}
+
+func NewConfig(options ...Option) *Config {
 	f := flag.NewFlagSet("", flag.ContinueOnError)
-	c := &Config{flagSet: f}
+	// default options
+	c := &Config{
+		OIDCIssuer: "https://login.ois.run",
+		flagSet:    f,
+	}
+	for _, o := range options {
+		o(c)
+	}
 	f.BoolVar(&c.PrintVersion, "version", false, "print version and exit")
 	f.BoolVar(&c.PrintVersionYAML, "version-detail", false, "print detailed version info and exit")
 	f.StringVar(&c.LogLevel, "log-level", "info", fmt.Sprintf("Log Level (%s)", strings.Join(validLogLevels, "|")))
 	f.StringVar(&c.LogFormat, "log-format", "json", fmt.Sprintf("Log format (%s)", strings.Join(validLogFormats, "|")))
-	f.StringVar(&c.OIDCIssuer, "oidc-issuer", "https://login.ois.run", "OIDC Issuer URL")
+	f.StringVar(&c.OIDCIssuer, "oidc-issuer", c.OIDCIssuer, "OIDC Issuer URL")
 	f.Var(&c.OIDCAudiences, "oidc-audience", "oidc audience to allow, e.g. \"holos-cli,https://sso.holos.run\"")
 	f.BoolVar(&c.ListenAndServe, "serve", true, "Listen and serve requests.")
 	f.Var(&c.dropAttrs, "log-drop", "Log attributes to drop, e.g. \"user-agent,version\"")

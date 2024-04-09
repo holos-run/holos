@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/lmittmann/tint"
 )
@@ -53,10 +53,10 @@ func LogCtx(t testing.TB) context.Context {
 	return logger.NewContext(context.Background(), TestLogger(t))
 }
 
-// NewAppContext returns a new core.AppContext wired to t.Log().
-func NewAppContext(t testing.TB) core.AppContext {
+// NewAppContext returns a new app.App wired to t.Log().
+func NewAppContext(t testing.TB) app.App {
 	log := TestLogger(t)
-	return core.AppContext{
+	return app.App{
 		Context: logger.NewContext(context.Background(), log),
 		Logger:  log,
 	}

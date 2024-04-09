@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
-	"github.com/holos-run/holos/internal/server/core"
+	"github.com/holos-run/holos/internal/server/app"
 	"github.com/holos-run/holos/internal/server/db"
 	"github.com/holos-run/holos/internal/server/ent"
 	"github.com/holos-run/holos/internal/server/frontend"
@@ -64,7 +64,7 @@ func (p fakeVerifier) Verify(context.Context, string) (*oidc.IDToken, error) {
 	}
 	return idToken, nil
 }
-func newClient(app core.AppContext) *ent.Client {
+func newClient(app app.App) *ent.Client {
 	// Connect to the database
 	var dbf db.ClientFactory = db.NewMemoryClientFactory(app)
 	conn, err := dbf.New()
