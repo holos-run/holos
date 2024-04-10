@@ -1,0 +1,318 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: '{name}'
+  namespace: '{namespace}'
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+spec:
+  selector:
+    matchLabels:
+      app: '{name}'
+  template:
+    metadata:
+      labels:
+        app: '{name}'
+        holos.run/developer: '{developer}'
+        sidecar.istio.io/inject: 'true'
+    spec:
+      serviceAccountName: holos
+      containers:
+        - name: holos
+          image: holos # Tilt appends a tilt-* tag for the built docker image
+          # args are configured in the Tiltfile
+          env:
+            - name: GOMAXPROCS
+              value: '1'
+            - name: TZ
+              value: '{tz}'
+            - name: SHUTDOWN_DELAY
+              value: '0'
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: holos-pguser-holos
+                  key: uri
+          ports:
+            - name: http
+              containerPort: {listen_port}
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 250m
+              memory: 100Mi
+            limits:
+              cpu: 1000m
+              memory: 200Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: '{name}'
+  namespace: '{namespace}'
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+spec:
+  type: ClusterIP
+  selector:
+    app: '{name}'
+  ports:
+    - name: http
+      port: {listen_port}
+      appProtocol: http2
+      protocol: TCP
+      targetPort: {listen_port}
+    - name: metrics
+      port: {metrics_port}
+      appProtocol: http
+      protocol: TCP
+      targetPort: {metrics_port}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: '{name}'
+  namespace: '{namespace}'
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+spec:
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
+  selector:
+    matchLabels:
+      app: '{name}'
+      holos.run/developer: '{developer}'
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: '{name}'
+  namespace: '{namespace}'
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+spec:
+  gateways:
+    - istio-ingress/default
+  hosts:
+    - '{developer}.holos.dev.k2.ois.run'
+  http:
+    - route:
+        - destination:
+            host: '{name}'
+            port:
+              number: {listen_port}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: holos
+  namespace: '{namespace}'
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+imagePullSecrets:
+  - name: kube-system-ecr-image-pull-creds
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+  name: '{name}-allow-groups'
+  namespace: '{namespace}'
+spec:
+  action: ALLOW
+  rules:
+    - when:
+        - key: request.auth.claims[groups]
+          values:
+            - holos-developer
+            - holos-developer@openinfrastructure.co
+  selector:
+    matchLabels:
+      holos.run/authz: dev-holos-sso
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: '{name}-allow-nothing'
+  namespace: '{namespace}'
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      holos.run/authz: dev-holos-sso
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: '{name}-allow-well-known-paths'
+  namespace: '{namespace}'
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+spec:
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            paths:
+              - /healthz
+              - /metrics
+              - /callbacks/github
+  selector:
+    matchLabels:
+      holos.run/authz: dev-holos-sso
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: '{name}-auth'
+  namespace: '{namespace}'
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+spec:
+  action: CUSTOM
+  provider:
+    name: dev-holos-sso
+  rules:
+    - to:
+        - operation:
+            notPaths:
+              - /healthz
+              - /metrics
+              - /callbacks/github
+      when:
+        - key: request.headers[Authorization]
+          notValues:
+            - Bearer *
+  selector:
+    matchLabels:
+      holos.run/authz: dev-holos-sso
+---
+apiVersion: security.istio.io/v1beta1
+kind: RequestAuthentication
+metadata:
+  name: '{name}'
+  namespace: '{namespace}'
+  labels:
+    app: '{name}'
+    holos.run/developer: '{developer}'
+spec:
+  jwtRules:
+    - audiences:
+        - https://sso.dev.holos.run
+      forwardOriginalToken: true
+      fromHeaders:
+        - name: x-auth-request-access-token
+      issuer: https://idex.core.ois.run
+      jwksUri: https://idex.core.ois.run/keys
+    - audiences:
+        - holos-cli
+      forwardOriginalToken: true
+      fromHeaders:
+        - name: authorization
+          prefix: 'Bearer '
+      issuer: https://idex.core.ois.run
+      jwksUri: https://idex.core.ois.run/keys
+  selector:
+    matchLabels:
+      holos.run/authz: dev-holos-sso
+---
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PGAdmin
+metadata:
+  name: 'pgadmin'
+  namespace: '{namespace}'
+  labels:
+    holos.run/developer: '{developer}'
+spec:
+  serverGroups:
+    - name: holos
+      postgresClusterSelector:
+        matchLabels:
+          holos.run/developer: '{developer}'
+  dataVolumeClaimSpec:
+    accessModes:
+      - "ReadWriteOnce"
+    resources:
+      requests:
+        storage: 1Gi
+---
+apiVersion: postgres-operator.crunchydata.com/v1beta1
+kind: PostgresCluster
+metadata:
+  name: 'holos'
+  namespace: '{namespace}'
+  labels:
+    holos.run/developer: '{developer}'
+spec:
+  image: registry.developers.crunchydata.com/crunchydata/crunchy-postgres:ubi8-16.1-0
+  postgresVersion: 16
+  users:
+    - name: holos
+      databases:
+        - holos
+      options: 'SUPERUSER'
+    - name: kratos
+      databases:
+        - kratos
+      options: 'SUPERUSER'
+    - name: hydra
+      databases:
+        - hydra
+      options: 'SUPERUSER'
+    - name: '{developer}'
+      databases:
+        - holos
+        - kratos
+        - hydra
+        - '{developer}'
+      options: 'SUPERUSER'
+  # https://access.crunchydata.com/documentation/postgres-operator/latest/architecture/user-management
+  instances:
+    - name: db
+      dataVolumeClaimSpec:
+        accessModes:
+        - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: 1Gi
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    postgres-operator.crunchydata.com/cluster: '{name}'
+  backups:
+    pgbackrest:
+      image: registry.developers.crunchydata.com/crunchydata/crunchy-pgbackrest:ubi8-2.47-2
+      # https://github.com/CrunchyData/postgres-operator/issues/2531#issuecomment-1713676019
+      global:
+        archive-async: "y"
+        archive-push-queue-max: "100MiB"
+        spool-path: "/pgdata/backups"
+      repos:
+        - name: repo1
+          volume:
+            volumeClaimSpec:
+              accessModes:
+              - "ReadWriteOnce"
+              resources:
+                requests:
+                  storage: 1Gi

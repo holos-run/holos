@@ -1,0 +1,20 @@
+#! /bin/bash
+#
+# Output the stateful set yaml of the database using selectors
+
+set -euo pipefail
+
+sel="postgres-operator.crunchydata.com/cluster=${1},postgres-operator.crunchydata.com/instance-set=db"
+
+x=30
+while [[ $x -gt 0 ]]; do
+  for pod in $(kubectl get statefulsets --selector=$sel '--output=jsonpath={.items..metadata.name}'); do
+    echo "---"
+    kubectl get -o yaml statefulsets/$pod
+    x=0
+  done
+  if [[ $x -gt 0 ]]; then
+    ((x--))
+    sleep 1
+  fi
+done

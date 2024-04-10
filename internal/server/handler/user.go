@@ -5,8 +5,8 @@ import (
 	"log/slog"
 
 	"connectrpc.com/connect"
-	"github.com/holos-run/holos/internal/server/ent"
-	"github.com/holos-run/holos/internal/server/ent/useridentity"
+	"github.com/holos-run/holos/internal/ent"
+	"github.com/holos-run/holos/internal/ent/useridentity"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/pkg/errors"

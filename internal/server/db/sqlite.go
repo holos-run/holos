@@ -7,7 +7,7 @@ import (
 	"log/slog"
 
 	esql "entgo.io/ent/dialect/sql"
-	"github.com/holos-run/holos/internal/server/ent"
+	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/holos"
 	"modernc.org/sqlite"

@@ -9,8 +9,8 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/validate"
-	"github.com/holos-run/holos/internal/server/ent"
-	"github.com/holos-run/holos/internal/server/frontend"
+	"github.com/holos-run/holos/internal/ent"
+	"github.com/holos-run/holos/internal/frontend"
 	"github.com/holos-run/holos/internal/server/handler"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"

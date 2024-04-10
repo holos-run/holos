@@ -6,7 +6,7 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/holos-run/holos/internal/server/ent"
+	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/holos"
 	_ "github.com/jackc/pgx/v5/stdlib"

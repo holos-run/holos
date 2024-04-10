@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/holos-run/holos/internal/server/ent"
+	"github.com/holos-run/holos/internal/ent"
 )
 
 // WithTx runs callbacks in a transaction as described in https://entgo.io/docs/transactions/#best-practices

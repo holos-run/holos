@@ -35,7 +35,7 @@ jobs:
           go-version: stable
 
       # Necessary to run these outside of goreleaser, otherwise
-      # /home/runner/_work/holos/holos/internal/server/frontend/node_modules/.bin/protoc-gen-connect-query is not in PATH
+      # /home/runner/_work/holos/holos/internal/frontend/node_modules/.bin/protoc-gen-connect-query is not in PATH
       - name: Install Deps
         run: |
           make go-deps

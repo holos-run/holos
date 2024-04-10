@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect"
-	"github.com/holos-run/holos/internal/server/ent"
+	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/pkg/errors"
 	"github.com/holos-run/holos/pkg/holos"
 )

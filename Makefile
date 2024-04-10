@@ -13,7 +13,7 @@ IMAGE_NAME=$(DOCKER_REPO)
 $( shell mkdir -p bin)
 
 # For buf plugin protoc-gen-connect-es
-export PATH := $(PWD)/internal/server/frontend/node_modules/.bin:$(PATH)
+export PATH := $(PWD)/internal/frontend/node_modules/.bin:$(PATH)
 
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_TREE_STATE=$(shell test -n "`git status --porcelain`" && echo "dirty" || echo "clean")
@@ -113,23 +113,23 @@ go-deps: ## install go executables
 
 .PHONY: frontend-deps
 frontend-deps: ## Setup npm and vite
-	cd internal/server/frontend && npm install
-	cd internal/server/frontend && npm install --save-dev @bufbuild/buf @connectrpc/protoc-gen-connect-es
-	cd internal/server/frontend && npm install @connectrpc/connect @connectrpc/connect-web @bufbuild/protobuf
+	cd internal/frontend && npm install
+	cd internal/frontend && npm install --save-dev @bufbuild/buf @connectrpc/protoc-gen-connect-es
+	cd internal/frontend && npm install @connectrpc/connect @connectrpc/connect-web @bufbuild/protobuf
 	# https://github.com/connectrpc/connect-query-es/blob/1350b6f07b6aead81793917954bdb1cc3ce09df9/packages/protoc-gen-connect-query/README.md?plain=1#L23
-	cd internal/server/frontend && npm install --save-dev @connectrpc/protoc-gen-connect-query @bufbuild/protoc-gen-es
-	cd internal/server/frontend && npm install @connectrpc/connect-query @bufbuild/protobuf
+	cd internal/frontend && npm install --save-dev @connectrpc/protoc-gen-connect-query @bufbuild/protoc-gen-es
+	cd internal/frontend && npm install @connectrpc/connect-query @bufbuild/protobuf
 	# https://github.com/aleclarson/vite-tsconfig-paths
-	cd internal/server/frontend && npm install --save-dev vite-tsconfig-paths
+	cd internal/frontend && npm install --save-dev vite-tsconfig-paths
 
 
 .PHONY: frontend
 frontend: buf
-	mkdir -p internal/server/frontend/dist
-	cd internal/server/frontend/dist && rm -rf app
-	cd internal/server/frontend && ./node_modules/.bin/vite build
+	mkdir -p internal/frontend/dist
+	cd internal/frontend/dist && rm -rf app
+	cd internal/frontend && ./node_modules/.bin/vite build
 	# Necessary to force go build cache miss
-	touch internal/server/frontend/frontend.go
+	touch internal/frontend/frontend.go
 
 .PHONY: help
 help:  ## Display this help menu.
