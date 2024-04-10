@@ -11,14 +11,14 @@ plugins:
     out: service/gen
     opt: paths=source_relative
   - plugin: es
-    out: internal/frontend/gen
+    out: internal/frontend/holos/gen
     opt:
       - target=ts
   - plugin: connect-es
-    out: internal/frontend/gen
+    out: internal/frontend/holos/gen
     opt:
       - target=ts
   - plugin: connect-query
-    out: internal/frontend/gen
+    out: internal/frontend/holos/gen
     opt:
       - target=ts
