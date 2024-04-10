@@ -190,7 +190,7 @@ k8s_resource(
     ],
     resource_deps=[compile_id],
     links=[
-        link('https://{}.dev.holos.run/app/'.format(developer), "Holos Web UI")
+        link('https://{}.holos.dev.k2.ois.run/app/'.format(developer), "Holos Web UI")
     ],
 )
 

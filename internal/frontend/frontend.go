@@ -11,10 +11,10 @@ import (
 
 const Path = "/app/"
 
-//go:embed all:dist
+//go:embed all:holos/dist/holos/browser
 var content embed.FS
 
-//go:embed dist/app/index.html
+//go:embed holos/dist/holos/browser/index.html
 var spaIndexHtml []byte
 
 // Root returns the content root subdirectory
