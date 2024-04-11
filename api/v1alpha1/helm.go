@@ -141,9 +141,25 @@ func cacheChart(ctx context.Context, path holos.InstancePath, chartDir string, c
 	log.Debug("helm pull", "stdout", helmOut.Stdout, "stderr", helmOut.Stderr)
 
 	cachePath := filepath.Join(string(path), chartDir)
-	if err := os.Rename(cacheTemp, cachePath); err != nil {
-		return errors.Wrap(fmt.Errorf("could not rename: %w", err))
+
+	if err := os.MkdirAll(cachePath, 0777); err != nil {
+		return errors.Wrap(fmt.Errorf("could not mkdir: %w", err))
 	}
+
+	items, err := os.ReadDir(cacheTemp)
+	if err != nil {
+		return errors.Wrap(fmt.Errorf("could not read directory: %w", err))
+	}
+
+	for _, item := range items {
+		src := filepath.Join(cacheTemp, item.Name())
+		dst := filepath.Join(cachePath, item.Name())
+		log.DebugContext(ctx, "rename", "src", src, "dst", dst)
+		if err := os.Rename(src, dst); err != nil {
+			return errors.Wrap(fmt.Errorf("could not rename: %w", err))
+		}
+	}
+
 	log.InfoContext(ctx, "cached", "chart", chart.Name, "version", chart.Version, "path", cachePath)
 
 	return nil

@@ -1,0 +1,6 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# curl -LO https://github.com/nats-io/nack/releases/latest/download/crds.yml
+resources:
+- crds.yml
