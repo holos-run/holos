@@ -4,10 +4,14 @@ package holos
 // 	spec: components: resources: (#ProjectTemplate & {project: Project}).workload.resources
 // }
 
+let Namespace = "jeff-holos"
+
+#Kustomization: spec: targetNamespace: Namespace
+
 spec: components: HelmChartList: [
 	#HelmChart & {
 		metadata: name: "jeff-holos-nats"
-		namespace: "jeff-holos"
+		namespace: Namespace
 		_dependsOn: "prod-secrets-stores": _
 		chart: {
 			name:       "nats"
@@ -17,7 +21,7 @@ spec: components: HelmChartList: [
 	},
 	#HelmChart & {
 		metadata: name: "jeff-holos-nack"
-		namespace: "jeff-holos"
+		namespace: Namespace
 		_dependsOn: "jeff-holos-nats": _
 		chart: {
 			name:       "nack"
