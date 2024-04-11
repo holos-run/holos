@@ -15,6 +15,8 @@ require (
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/lmittmann/tint v1.0.4
 	github.com/mattn/go-isatty v0.0.20
+	github.com/mattn/go-runewidth v0.0.9
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/prometheus/client_golang v1.19.0
 	github.com/rogpeppe/go-internal v1.12.0
 	github.com/sethvargo/go-retry v0.2.4
