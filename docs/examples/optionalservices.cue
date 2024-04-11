@@ -1,6 +1,8 @@
 // Controls optional feature flags for services distributed across multiple holos components.
 // For example, enable issuing certificates in the provisioner cluster when an optional service is
-// enabled for a workload cluster.
+// enabled for a workload cluster.  Another example is NATS, which isn't necessary on all clusters,
+// but is necessary on clusters with a project like holos which depends on NATS.
+
 package holos
 
 import "list"

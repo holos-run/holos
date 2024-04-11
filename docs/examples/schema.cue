@@ -182,7 +182,7 @@ _apiVersion: "holos.run/v1alpha1"
 	pool?: string
 	// region is the geographic region of the cluster.
 	region?: string
-	// primary is true if name matches the primaryCluster name
+	// primary is true if the cluster is the primary cluster among a group of related clusters.
 	primary: bool
 }
 
@@ -219,6 +219,7 @@ _apiVersion: "holos.run/v1alpha1"
 			primary: false
 		}
 	}
+	// TODO: Remove stages, they're in the subdomain of projects.
 	stages: [ID=_]: {
 		name: string & ID
 		environments: [...{name: string}]
@@ -226,9 +227,11 @@ _apiVersion: "holos.run/v1alpha1"
 	projects: [ID=_]: {
 		name: string & ID
 	}
+	// TODO: Remove services, they're in the subdomain of projects.
 	services: [ID=_]: {
 		name: string & ID
 	}
+
 	// authproxy configures the auth proxy attached to the default ingress gateway in the istio-ingress namespace.
 	authproxy: #AuthProxySpec & {
 		namespace: "istio-ingress"
@@ -275,29 +278,6 @@ _apiVersion: "holos.run/v1alpha1"
 	proxyPrefix: string | *"/holos/authproxy/\(namespace)"
 	// idTokenHeader represents the header where the id token is placed
 	idTokenHeader: string | *"x-oidc-id-token"
-}
-
-// ManagedNamespace is a namespace to manage across all clusters in the holos platform.
-#ManagedNamespace: {
-	namespace: {
-		metadata: {
-			name: string
-			labels: [string]: string
-		}
-	}
-	// clusterNames represents the set of clusters the namespace is managed on.  Usually all clusters.
-	clusterNames: [...string]
-	for cluster in clusterNames {
-		clusters: (cluster): name: cluster
-	}
-}
-
-// #ManagedNamepsaces is the union of all namespaces across all cluster types and optional services.
-// Holos adopts the namespace sameness position of SIG Multicluster, refer to https://github.com/kubernetes/community/blob/dd4c8b704ef1c9c3bfd928c6fa9234276d61ad18/sig-multicluster/namespace-sameness-position-statement.md
-#ManagedNamespaces: {
-	[Name=_]: #ManagedNamespace & {
-		namespace: metadata: name: Name
-	}
 }
 
 // #Backups defines backup configuration.
