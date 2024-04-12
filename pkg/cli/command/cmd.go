@@ -26,5 +26,6 @@ func New(name string) *cobra.Command {
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
+	cmd.Flags().SortFlags = false
 	return cmd
 }

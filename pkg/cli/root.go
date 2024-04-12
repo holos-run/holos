@@ -12,6 +12,7 @@ import (
 	"github.com/holos-run/holos/pkg/cli/get"
 	"github.com/holos-run/holos/pkg/cli/kv"
 	"github.com/holos-run/holos/pkg/cli/login"
+	"github.com/holos-run/holos/pkg/cli/logout"
 	"github.com/holos-run/holos/pkg/cli/preflight"
 	"github.com/holos-run/holos/pkg/cli/render"
 	"github.com/holos-run/holos/pkg/cli/txtar"
@@ -58,6 +59,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(create.New(cfg))
 	rootCmd.AddCommand(preflight.New(cfg))
 	rootCmd.AddCommand(login.New(cfg))
+	rootCmd.AddCommand(logout.New(cfg))
 
 	// Maybe not needed?
 	rootCmd.AddCommand(txtar.New(cfg))
