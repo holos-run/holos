@@ -266,19 +266,9 @@ spec:
       databases:
         - holos
       options: 'SUPERUSER'
-    - name: kratos
-      databases:
-        - kratos
-      options: 'SUPERUSER'
-    - name: hydra
-      databases:
-        - hydra
-      options: 'SUPERUSER'
     - name: '{developer}'
       databases:
         - holos
-        - kratos
-        - hydra
         - '{developer}'
       options: 'SUPERUSER'
   # https://access.crunchydata.com/documentation/postgres-operator/latest/architecture/user-management
