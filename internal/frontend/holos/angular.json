@@ -17,8 +17,12 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/holos",
+            "outputPath": {
+              "base": "dist/holos",
+              "browser": "ui"
+            },
             "index": "src/index.html",
+            "baseHref": "/ui/",
             "browser": "src/main.ts",
             "polyfills": [
               "zone.js"
