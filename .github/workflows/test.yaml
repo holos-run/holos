@@ -28,8 +28,8 @@ jobs:
         with:
           go-version: stable
 
-      - name: Install tools
-        run: sudo apt update && sudo apt -qq -y install curl zip unzip tar bzip2 make
+      - name: Install Packages
+        run: sudo apt update && sudo apt -qq -y install git curl zip unzip tar bzip2 make
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
@@ -37,11 +37,12 @@ jobs:
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v3
 
-      - name: Install Deps
+      - name: Install Tools
         run: |
-          make go-deps
+          set -x
+          make tools
+          make buf
           go generate ./...
-          make frontend-deps
           make frontend
           go mod tidy
 

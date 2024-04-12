@@ -102,12 +102,15 @@ buf: ## buf generate
 	cd service && buf mod update
 	buf generate
 
+.PHONY: tools
+tools: go-deps frontend-deps  ## install tool dependencies
+
 .PHONY: go-deps
-go-deps: ## install go executables
-	go install github.com/bufbuild/buf/cmd/buf@v1
-	go install github.com/fullstorydev/grpcurl/cmd/grpcurl@v1
-	go install google.golang.org/protobuf/cmd/protoc-gen-go@v1
-	go install connectrpc.com/connect/cmd/protoc-gen-connect-go@v1
+go-deps: ## tool versions pinned in tools.go
+	go install github.com/bufbuild/buf/cmd/buf
+	go install github.com/fullstorydev/grpcurl/cmd/grpcurl
+	go install google.golang.org/protobuf/cmd/protoc-gen-go
+	go install connectrpc.com/connect/cmd/protoc-gen-connect-go
 	go install honnef.co/go/tools/cmd/staticcheck@latest
 	# curl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash
 

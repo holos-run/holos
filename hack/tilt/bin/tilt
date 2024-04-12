@@ -1,0 +1,9 @@
+#! /bin/bash
+# Override kubeconfig so we can create it with local()
+set -euo pipefail
+TOPLEVEL="$(cd $(dirname "$0")/.. && pwd)"
+export NAMESPACE="${USER}-holos"
+export KUBECONFIG="${TOPLEVEL}/kubeconfig"
+envsubst < "${KUBECONFIG}.template" > "${KUBECONFIG}"
+export TILT_WRAPPER=1
+exec tilt "$@"
