@@ -22,20 +22,6 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
-// @title Holos Server
-// @version 0.1
-// @description Holos is a holistically integrated software development platform.
-
-// @contact.name Open Infrastructure Services LLC
-// @contact.url https://openinfrastructure.co
-
-// @license.name TBD
-// @license.url https://openinfrastructure.co
-
-// @host localhost:8443
-// @BasePath /
-// @schemes https
-
 var (
 	healthy int32
 	ready   int32

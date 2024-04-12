@@ -9,17 +9,25 @@ import (
 	"time"
 )
 
-const Path = "/app/"
+// Path needs to match <base href="/ui/"> in index.html and baseHref in angular.json
+const Path = "/ui/"
 
-//go:embed all:holos/dist/holos/browser
-var content embed.FS
+// Output must be the relative path to where the frontend build too places the
+// output index.html file.  Tip: use the holos server frontend ls command to
+// list the embedded file system.
+// Refer to: https://angular.io/guide/workspace-config#output-path-configuration
+// This should be the base output path with the browser field set to "ui" in angular.json
+const OutputPath = "holos/dist/holos"
 
-//go:embed holos/dist/holos/browser/index.html
+//go:embed all:holos/dist/holos/ui
+var Dist embed.FS
+
+//go:embed holos/dist/holos/ui/index.html
 var spaIndexHtml []byte
 
 // Root returns the content root subdirectory
 func Root() fs.FS {
-	sub, err := fs.Sub(content, "dist")
+	sub, err := fs.Sub(Dist, OutputPath)
 	if err != nil {
 		panic(err)
 	}

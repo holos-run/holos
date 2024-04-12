@@ -4,13 +4,17 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"io"
+	"io/fs"
 	"log/slog"
 	"time"
 
 	"github.com/sethvargo/go-retry"
 	"github.com/spf13/cobra"
 
+	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/frontend"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/server/db"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
@@ -106,5 +110,56 @@ func New(cfg *holos.Config) *cobra.Command {
 	// Add flags valid for all subcommands
 	cmd.Flags().SortFlags = false
 	cmd.PersistentFlags().AddGoFlagSet(cfg.ServerFlagSet())
+
+	// Add debug commands
+	cmd.AddCommand(frontendCmd())
+
 	return cmd
+}
+
+func frontendCmd() *cobra.Command {
+	cmd := command.New("frontend")
+	cmd.AddCommand(listCmd())
+	cmd.AddCommand(rootCmd())
+	return cmd
+}
+
+// listCmd returns debug sub commands
+func listCmd() *cobra.Command {
+	cmd := command.New("dist")
+	cmd.Long = "list full embedded fs.FS"
+	cmd.Args = cobra.MaximumNArgs(1)
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		root := "."
+		if len(args) > 0 {
+			root = args[0]
+		}
+		return walk(cmd.OutOrStdout(), frontend.Dist, root)
+	}
+	return cmd
+}
+
+// listCmd returns debug sub commands
+func rootCmd() *cobra.Command {
+	cmd := command.New("ls")
+	cmd.Long = "list http.FileServer root"
+	cmd.Args = cobra.MaximumNArgs(1)
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		root := "."
+		if len(args) > 0 {
+			root = args[0]
+		}
+		return walk(cmd.OutOrStdout(), frontend.Root(), root)
+	}
+	return cmd
+}
+
+func walk(w io.Writer, fsys fs.FS, root string) error {
+	return fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		_, err = fmt.Fprintln(w, path)
+		return err
+	})
 }
