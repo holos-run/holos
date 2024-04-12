@@ -22,6 +22,8 @@ func TestMemoryClientFactory(t *testing.T) {
 		t.Run("CreateUser", func(t *testing.T) {
 			uc := client.User.Create().
 				SetName("Foo").
+				SetIss("https://login.example.com").
+				SetSub("1234567890").
 				SetEmail("foo@example.com")
 			_, err := uc.Save(context.Background())
 			assert.NoError(t, err)
