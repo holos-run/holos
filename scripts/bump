@@ -1,4 +1,4 @@
 #! /bin/bash
 
-VERSION=${2:-$(( $(<pkg/version/embedded/${1:-patch}) + 1 ))}
-echo $VERSION > pkg/version/embedded/${1:-patch}
+VERSION=${2:-$(( $(<version/embedded/${1:-patch}) + 1 ))}
+echo $VERSION > version/embedded/${1:-patch}

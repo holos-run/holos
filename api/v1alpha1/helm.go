@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/holos-run/holos"
-	"github.com/holos-run/holos/pkg/errors"
-	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/util"
+	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/util"
 )
 
 // A HelmChart represents a helm command to provide chart values in order to render kubernetes api objects.

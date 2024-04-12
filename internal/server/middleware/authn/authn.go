@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
-	"github.com/holos-run/holos/pkg/errors"
 )
 
 // Verifier is the interface that wraps the basic Verify method to verify an

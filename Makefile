@@ -4,7 +4,7 @@ PROJ=holos
 ORG_PATH=github.com/holos-run
 REPO_PATH=$(ORG_PATH)/$(PROJ)
 
-VERSION := $(shell cat pkg/version/embedded/major pkg/version/embedded/minor pkg/version/embedded/patch | xargs printf "%s.%s.%s")
+VERSION := $(shell cat version/embedded/major version/embedded/minor version/embedded/patch | xargs printf "%s.%s.%s")
 BIN_NAME := holos
 
 DOCKER_REPO=quay.io/openinfrastructure/holos
@@ -19,7 +19,7 @@ GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_TREE_STATE=$(shell test -n "`git status --porcelain`" && echo "dirty" || echo "clean")
 BUILD_DATE=$(shell date -Iseconds)
 
-LD_FLAGS="-w -X ${ORG_PATH}/${PROJ}/pkg/version.GitCommit=${GIT_COMMIT} -X ${ORG_PATH}/${PROJ}/pkg/version.GitTreeState=${GIT_TREE_STATE} -X ${ORG_PATH}/${PROJ}/pkg/version.BuildDate=${BUILD_DATE}"
+LD_FLAGS="-w -X ${ORG_PATH}/${PROJ}/version.GitCommit=${GIT_COMMIT} -X ${ORG_PATH}/${PROJ}/version.GitTreeState=${GIT_TREE_STATE} -X ${ORG_PATH}/${PROJ}/version.BuildDate=${BUILD_DATE}"
 
 .PHONY: default
 default: test

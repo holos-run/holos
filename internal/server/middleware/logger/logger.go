@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/holos-run/holos/pkg/logger"
+	"github.com/holos-run/holos/internal/logger"
 )
 
 func NewContext(ctx context.Context, log *slog.Logger) context.Context {

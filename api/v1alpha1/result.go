@@ -7,9 +7,9 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/holos-run/holos/pkg/errors"
-	"github.com/holos-run/holos/pkg/logger"
-	"github.com/holos-run/holos/pkg/util"
+	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/util"
 )
 
 // Result is the build result for display or writing.  Holos components Render the Result as a data pipeline.

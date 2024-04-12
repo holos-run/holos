@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/server/testutils"
-	"github.com/holos-run/holos/pkg/holos"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -10,12 +10,12 @@ import (
 	"github.com/sethvargo/go-retry"
 	"github.com/spf13/cobra"
 
+	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/server/db"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/server"
 	"github.com/holos-run/holos/internal/server/signals"
-	"github.com/holos-run/holos/pkg/errors"
-	"github.com/holos-run/holos/pkg/holos"
 )
 
 //go:embed help/root.txt

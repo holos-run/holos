@@ -10,10 +10,10 @@ import (
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/internal/frontend"
+	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/server/db"
 	"github.com/holos-run/holos/internal/server/server"
 	"github.com/holos-run/holos/internal/server/testutils"
-	"github.com/holos-run/holos/pkg/holos"
 	"github.com/stretchr/testify/assert"
 )
 

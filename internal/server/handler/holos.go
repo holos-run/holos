@@ -5,8 +5,8 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/holos-run/holos/internal/ent"
+	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
-	"github.com/holos-run/holos/pkg/errors"
 	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )

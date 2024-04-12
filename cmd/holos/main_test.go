@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/holos-run/holos/pkg/cli"
-	"github.com/rogpeppe/go-internal/testscript"
 	"os"
 	"testing"
+
+	"github.com/holos-run/holos/internal/cli"
+	"github.com/rogpeppe/go-internal/testscript"
 )
 
 func TestMain(m *testing.M) {

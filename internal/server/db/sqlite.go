@@ -8,8 +8,8 @@ import (
 
 	esql "entgo.io/ent/dialect/sql"
 	"github.com/holos-run/holos/internal/ent"
-	"github.com/holos-run/holos/pkg/errors"
-	"github.com/holos-run/holos/pkg/holos"
+	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/holos"
 	"modernc.org/sqlite"
 )
 

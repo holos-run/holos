@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/holos-run/holos/pkg/errors"
+	"github.com/holos-run/holos/internal/errors"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
