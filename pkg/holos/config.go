@@ -285,7 +285,6 @@ type ServerConfig struct {
 	listenAndServe bool        // --no-serve
 	listenPort     int         // --listen-port
 	metricsPort    int         // --metrics-port
-	dbURIFile      string      // --db-uri-file
 	databaseURI    string
 	flagSet        *flag.FlagSet
 }
@@ -328,9 +327,9 @@ func (c *ServerConfig) FlagSet() *flag.FlagSet {
 	f.StringVar(&c.oidcIssuer, "oidc-issuer", c.oidcIssuer, "oidc issuer url.")
 	f.Var(&c.oidcAudiences, "oidc-audience", "allowed oidc audiences.")
 	f.BoolVar(&c.listenAndServe, "serve", true, "listen and serve requests.")
-	f.StringVar(&c.dbURIFile, "db-uri-file", "", "file path containing the database uri.")
 	f.IntVar(&c.listenPort, "listen-port", 3000, "service listen port.")
 	f.IntVar(&c.metricsPort, "metrics-port", 9090, "metrics listen port.")
+	f.StringVar(&c.databaseURI, "database-url", getenv("DATABASE_URL", c.databaseURI), "database uri (DATABASE_URL)")
 	c.flagSet = f
 	return f
 }
