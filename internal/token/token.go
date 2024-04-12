@@ -46,7 +46,10 @@ type Token struct {
 
 func (t Token) Claims() *Claims {
 	if t.claims == nil {
-		json.Unmarshal([]byte(t.Pretty), &t.claims)
+		if err := json.Unmarshal([]byte(t.Pretty), &t.claims); err != nil {
+			slog.Default().Error("could not decode claims", "err", err)
+			return &Claims{}
+		}
 	}
 	return t.claims
 }
