@@ -24,32 +24,13 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
-	// EmailVerified holds the value of the "email_verified" field.
-	EmailVerified bool `json:"email_verified,omitempty"`
+	// Iss holds the value of the "iss" field.
+	Iss string `json:"iss,omitempty"`
+	// Sub holds the value of the "sub" field.
+	Sub string `json:"sub,omitempty"`
 	// Name holds the value of the "name" field.
-	Name string `json:"name,omitempty"`
-	// Edges holds the relations/edges for other nodes in the graph.
-	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges        UserEdges `json:"edges"`
+	Name         string `json:"name,omitempty"`
 	selectValues sql.SelectValues
-}
-
-// UserEdges holds the relations/edges for other nodes in the graph.
-type UserEdges struct {
-	// Identities holds the value of the identities edge.
-	Identities []*UserIdentity `json:"identities,omitempty"`
-	// loadedTypes holds the information for reporting if a
-	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
-}
-
-// IdentitiesOrErr returns the Identities value or an error if the edge
-// was not loaded in eager-loading.
-func (e UserEdges) IdentitiesOrErr() ([]*UserIdentity, error) {
-	if e.loadedTypes[0] {
-		return e.Identities, nil
-	}
-	return nil, &NotLoadedError{edge: "identities"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -57,9 +38,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldEmailVerified:
-			values[i] = new(sql.NullBool)
-		case user.FieldEmail, user.FieldName:
+		case user.FieldEmail, user.FieldIss, user.FieldSub, user.FieldName:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -104,11 +83,17 @@ func (u *User) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				u.Email = value.String
 			}
-		case user.FieldEmailVerified:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field email_verified", values[i])
+		case user.FieldIss:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field iss", values[i])
 			} else if value.Valid {
-				u.EmailVerified = value.Bool
+				u.Iss = value.String
+			}
+		case user.FieldSub:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field sub", values[i])
+			} else if value.Valid {
+				u.Sub = value.String
 			}
 		case user.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -127,11 +112,6 @@ func (u *User) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (u *User) Value(name string) (ent.Value, error) {
 	return u.selectValues.Get(name)
-}
-
-// QueryIdentities queries the "identities" edge of the User entity.
-func (u *User) QueryIdentities() *UserIdentityQuery {
-	return NewUserClient(u.config).QueryIdentities(u)
 }
 
 // Update returns a builder for updating this User.
@@ -166,8 +146,11 @@ func (u *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(u.Email)
 	builder.WriteString(", ")
-	builder.WriteString("email_verified=")
-	builder.WriteString(fmt.Sprintf("%v", u.EmailVerified))
+	builder.WriteString("iss=")
+	builder.WriteString(u.Iss)
+	builder.WriteString(", ")
+	builder.WriteString("sub=")
+	builder.WriteString(u.Sub)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(u.Name)

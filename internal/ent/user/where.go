@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/predicate"
 )
@@ -71,9 +70,14 @@ func Email(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldEmail, v))
 }
 
-// EmailVerified applies equality check predicate on the "email_verified" field. It's identical to EmailVerifiedEQ.
-func EmailVerified(v bool) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldEmailVerified, v))
+// Iss applies equality check predicate on the "iss" field. It's identical to IssEQ.
+func Iss(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIss, v))
+}
+
+// Sub applies equality check predicate on the "sub" field. It's identical to SubEQ.
+func Sub(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldSub, v))
 }
 
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
@@ -226,14 +230,134 @@ func EmailContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldEmail, v))
 }
 
-// EmailVerifiedEQ applies the EQ predicate on the "email_verified" field.
-func EmailVerifiedEQ(v bool) predicate.User {
-	return predicate.User(sql.FieldEQ(FieldEmailVerified, v))
+// IssEQ applies the EQ predicate on the "iss" field.
+func IssEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldIss, v))
 }
 
-// EmailVerifiedNEQ applies the NEQ predicate on the "email_verified" field.
-func EmailVerifiedNEQ(v bool) predicate.User {
-	return predicate.User(sql.FieldNEQ(FieldEmailVerified, v))
+// IssNEQ applies the NEQ predicate on the "iss" field.
+func IssNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldIss, v))
+}
+
+// IssIn applies the In predicate on the "iss" field.
+func IssIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldIss, vs...))
+}
+
+// IssNotIn applies the NotIn predicate on the "iss" field.
+func IssNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldIss, vs...))
+}
+
+// IssGT applies the GT predicate on the "iss" field.
+func IssGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldIss, v))
+}
+
+// IssGTE applies the GTE predicate on the "iss" field.
+func IssGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldIss, v))
+}
+
+// IssLT applies the LT predicate on the "iss" field.
+func IssLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldIss, v))
+}
+
+// IssLTE applies the LTE predicate on the "iss" field.
+func IssLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldIss, v))
+}
+
+// IssContains applies the Contains predicate on the "iss" field.
+func IssContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldIss, v))
+}
+
+// IssHasPrefix applies the HasPrefix predicate on the "iss" field.
+func IssHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldIss, v))
+}
+
+// IssHasSuffix applies the HasSuffix predicate on the "iss" field.
+func IssHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldIss, v))
+}
+
+// IssEqualFold applies the EqualFold predicate on the "iss" field.
+func IssEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldIss, v))
+}
+
+// IssContainsFold applies the ContainsFold predicate on the "iss" field.
+func IssContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldIss, v))
+}
+
+// SubEQ applies the EQ predicate on the "sub" field.
+func SubEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldSub, v))
+}
+
+// SubNEQ applies the NEQ predicate on the "sub" field.
+func SubNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldSub, v))
+}
+
+// SubIn applies the In predicate on the "sub" field.
+func SubIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldSub, vs...))
+}
+
+// SubNotIn applies the NotIn predicate on the "sub" field.
+func SubNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldSub, vs...))
+}
+
+// SubGT applies the GT predicate on the "sub" field.
+func SubGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldSub, v))
+}
+
+// SubGTE applies the GTE predicate on the "sub" field.
+func SubGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldSub, v))
+}
+
+// SubLT applies the LT predicate on the "sub" field.
+func SubLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldSub, v))
+}
+
+// SubLTE applies the LTE predicate on the "sub" field.
+func SubLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldSub, v))
+}
+
+// SubContains applies the Contains predicate on the "sub" field.
+func SubContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldSub, v))
+}
+
+// SubHasPrefix applies the HasPrefix predicate on the "sub" field.
+func SubHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldSub, v))
+}
+
+// SubHasSuffix applies the HasSuffix predicate on the "sub" field.
+func SubHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldSub, v))
+}
+
+// SubEqualFold applies the EqualFold predicate on the "sub" field.
+func SubEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldSub, v))
+}
+
+// SubContainsFold applies the ContainsFold predicate on the "sub" field.
+func SubContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldSub, v))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -299,29 +423,6 @@ func NameEqualFold(v string) predicate.User {
 // NameContainsFold applies the ContainsFold predicate on the "name" field.
 func NameContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldName, v))
-}
-
-// HasIdentities applies the HasEdge predicate on the "identities" edge.
-func HasIdentities() predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := sqlgraph.NewStep(
-			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, IdentitiesTable, IdentitiesColumn),
-		)
-		sqlgraph.HasNeighbors(s, step)
-	})
-}
-
-// HasIdentitiesWith applies the HasEdge predicate on the "identities" edge with a given conditions (other predicates).
-func HasIdentitiesWith(preds ...predicate.UserIdentity) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		step := newIdentitiesStep()
-		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
-			for _, p := range preds {
-				p(s)
-			}
-		})
-	})
 }
 
 // And groups predicates with the AND operator between them.

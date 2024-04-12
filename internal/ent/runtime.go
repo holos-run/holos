@@ -6,15 +6,40 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
+	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/schema"
 	"github.com/holos-run/holos/internal/ent/user"
-	"github.com/holos-run/holos/internal/ent/useridentity"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	organizationMixin := schema.Organization{}.Mixin()
+	organizationMixinFields0 := organizationMixin[0].Fields()
+	_ = organizationMixinFields0
+	organizationMixinFields1 := organizationMixin[1].Fields()
+	_ = organizationMixinFields1
+	organizationFields := schema.Organization{}.Fields()
+	_ = organizationFields
+	// organizationDescCreatedAt is the schema descriptor for created_at field.
+	organizationDescCreatedAt := organizationMixinFields1[0].Descriptor()
+	// organization.DefaultCreatedAt holds the default value on creation for the created_at field.
+	organization.DefaultCreatedAt = organizationDescCreatedAt.Default.(func() time.Time)
+	// organizationDescUpdatedAt is the schema descriptor for updated_at field.
+	organizationDescUpdatedAt := organizationMixinFields1[1].Descriptor()
+	// organization.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	organization.DefaultUpdatedAt = organizationDescUpdatedAt.Default.(func() time.Time)
+	// organization.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	organization.UpdateDefaultUpdatedAt = organizationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// organizationDescName is the schema descriptor for name field.
+	organizationDescName := organizationFields[0].Descriptor()
+	// organization.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	organization.NameValidator = organizationDescName.Validators[0].(func(string) error)
+	// organizationDescID is the schema descriptor for id field.
+	organizationDescID := organizationMixinFields0[0].Descriptor()
+	// organization.DefaultID holds the default value on creation for the id field.
+	organization.DefaultID = organizationDescID.Default.(func() uuid.UUID)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0
@@ -36,49 +61,8 @@ func init() {
 	userDescEmail := userFields[0].Descriptor()
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
-	// userDescEmailVerified is the schema descriptor for email_verified field.
-	userDescEmailVerified := userFields[1].Descriptor()
-	// user.DefaultEmailVerified holds the default value on creation for the email_verified field.
-	user.DefaultEmailVerified = userDescEmailVerified.Default.(bool)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
 	user.DefaultID = userDescID.Default.(func() uuid.UUID)
-	useridentityMixin := schema.UserIdentity{}.Mixin()
-	useridentityMixinFields0 := useridentityMixin[0].Fields()
-	_ = useridentityMixinFields0
-	useridentityMixinFields1 := useridentityMixin[1].Fields()
-	_ = useridentityMixinFields1
-	useridentityFields := schema.UserIdentity{}.Fields()
-	_ = useridentityFields
-	// useridentityDescCreatedAt is the schema descriptor for created_at field.
-	useridentityDescCreatedAt := useridentityMixinFields1[0].Descriptor()
-	// useridentity.DefaultCreatedAt holds the default value on creation for the created_at field.
-	useridentity.DefaultCreatedAt = useridentityDescCreatedAt.Default.(func() time.Time)
-	// useridentityDescUpdatedAt is the schema descriptor for updated_at field.
-	useridentityDescUpdatedAt := useridentityMixinFields1[1].Descriptor()
-	// useridentity.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	useridentity.DefaultUpdatedAt = useridentityDescUpdatedAt.Default.(func() time.Time)
-	// useridentity.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
-	useridentity.UpdateDefaultUpdatedAt = useridentityDescUpdatedAt.UpdateDefault.(func() time.Time)
-	// useridentityDescIss is the schema descriptor for iss field.
-	useridentityDescIss := useridentityFields[0].Descriptor()
-	// useridentity.IssValidator is a validator for the "iss" field. It is called by the builders before save.
-	useridentity.IssValidator = useridentityDescIss.Validators[0].(func(string) error)
-	// useridentityDescSub is the schema descriptor for sub field.
-	useridentityDescSub := useridentityFields[1].Descriptor()
-	// useridentity.SubValidator is a validator for the "sub" field. It is called by the builders before save.
-	useridentity.SubValidator = useridentityDescSub.Validators[0].(func(string) error)
-	// useridentityDescEmail is the schema descriptor for email field.
-	useridentityDescEmail := useridentityFields[2].Descriptor()
-	// useridentity.EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	useridentity.EmailValidator = useridentityDescEmail.Validators[0].(func(string) error)
-	// useridentityDescEmailVerified is the schema descriptor for email_verified field.
-	useridentityDescEmailVerified := useridentityFields[3].Descriptor()
-	// useridentity.DefaultEmailVerified holds the default value on creation for the email_verified field.
-	useridentity.DefaultEmailVerified = useridentityDescEmailVerified.Default.(bool)
-	// useridentityDescID is the schema descriptor for id field.
-	useridentityDescID := useridentityMixinFields0[0].Descriptor()
-	// useridentity.DefaultID holds the default value on creation for the id field.
-	useridentity.DefaultID = useridentityDescID.Default.(func() uuid.UUID)
 }

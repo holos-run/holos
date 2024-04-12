@@ -12,8 +12,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/user"
-	"github.com/holos-run/holos/internal/ent/useridentity"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -74,8 +74,8 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			organization.Table: organization.ValidColumn,
 			user.Table:         user.ValidColumn,
-			useridentity.Table: useridentity.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

@@ -11,10 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
-	"github.com/holos-run/holos/internal/ent/useridentity"
 )
 
 // UserUpdate is the builder for updating User entities.
@@ -50,16 +48,30 @@ func (uu *UserUpdate) SetNillableEmail(s *string) *UserUpdate {
 	return uu
 }
 
-// SetEmailVerified sets the "email_verified" field.
-func (uu *UserUpdate) SetEmailVerified(b bool) *UserUpdate {
-	uu.mutation.SetEmailVerified(b)
+// SetIss sets the "iss" field.
+func (uu *UserUpdate) SetIss(s string) *UserUpdate {
+	uu.mutation.SetIss(s)
 	return uu
 }
 
-// SetNillableEmailVerified sets the "email_verified" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableEmailVerified(b *bool) *UserUpdate {
-	if b != nil {
-		uu.SetEmailVerified(*b)
+// SetNillableIss sets the "iss" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableIss(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetIss(*s)
+	}
+	return uu
+}
+
+// SetSub sets the "sub" field.
+func (uu *UserUpdate) SetSub(s string) *UserUpdate {
+	uu.mutation.SetSub(s)
+	return uu
+}
+
+// SetNillableSub sets the "sub" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableSub(s *string) *UserUpdate {
+	if s != nil {
+		uu.SetSub(*s)
 	}
 	return uu
 }
@@ -78,45 +90,9 @@ func (uu *UserUpdate) SetNillableName(s *string) *UserUpdate {
 	return uu
 }
 
-// AddIdentityIDs adds the "identities" edge to the UserIdentity entity by IDs.
-func (uu *UserUpdate) AddIdentityIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.AddIdentityIDs(ids...)
-	return uu
-}
-
-// AddIdentities adds the "identities" edges to the UserIdentity entity.
-func (uu *UserUpdate) AddIdentities(u ...*UserIdentity) *UserUpdate {
-	ids := make([]uuid.UUID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return uu.AddIdentityIDs(ids...)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
-}
-
-// ClearIdentities clears all "identities" edges to the UserIdentity entity.
-func (uu *UserUpdate) ClearIdentities() *UserUpdate {
-	uu.mutation.ClearIdentities()
-	return uu
-}
-
-// RemoveIdentityIDs removes the "identities" edge to UserIdentity entities by IDs.
-func (uu *UserUpdate) RemoveIdentityIDs(ids ...uuid.UUID) *UserUpdate {
-	uu.mutation.RemoveIdentityIDs(ids...)
-	return uu
-}
-
-// RemoveIdentities removes "identities" edges to UserIdentity entities.
-func (uu *UserUpdate) RemoveIdentities(u ...*UserIdentity) *UserUpdate {
-	ids := make([]uuid.UUID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return uu.RemoveIdentityIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -183,56 +159,14 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := uu.mutation.EmailVerified(); ok {
-		_spec.SetField(user.FieldEmailVerified, field.TypeBool, value)
+	if value, ok := uu.mutation.Iss(); ok {
+		_spec.SetField(user.FieldIss, field.TypeString, value)
+	}
+	if value, ok := uu.mutation.Sub(); ok {
+		_spec.SetField(user.FieldSub, field.TypeString, value)
 	}
 	if value, ok := uu.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
-	}
-	if uu.mutation.IdentitiesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.IdentitiesTable,
-			Columns: []string{user.IdentitiesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(useridentity.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.RemovedIdentitiesIDs(); len(nodes) > 0 && !uu.mutation.IdentitiesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.IdentitiesTable,
-			Columns: []string{user.IdentitiesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(useridentity.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uu.mutation.IdentitiesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.IdentitiesTable,
-			Columns: []string{user.IdentitiesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(useridentity.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -274,16 +208,30 @@ func (uuo *UserUpdateOne) SetNillableEmail(s *string) *UserUpdateOne {
 	return uuo
 }
 
-// SetEmailVerified sets the "email_verified" field.
-func (uuo *UserUpdateOne) SetEmailVerified(b bool) *UserUpdateOne {
-	uuo.mutation.SetEmailVerified(b)
+// SetIss sets the "iss" field.
+func (uuo *UserUpdateOne) SetIss(s string) *UserUpdateOne {
+	uuo.mutation.SetIss(s)
 	return uuo
 }
 
-// SetNillableEmailVerified sets the "email_verified" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableEmailVerified(b *bool) *UserUpdateOne {
-	if b != nil {
-		uuo.SetEmailVerified(*b)
+// SetNillableIss sets the "iss" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableIss(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetIss(*s)
+	}
+	return uuo
+}
+
+// SetSub sets the "sub" field.
+func (uuo *UserUpdateOne) SetSub(s string) *UserUpdateOne {
+	uuo.mutation.SetSub(s)
+	return uuo
+}
+
+// SetNillableSub sets the "sub" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableSub(s *string) *UserUpdateOne {
+	if s != nil {
+		uuo.SetSub(*s)
 	}
 	return uuo
 }
@@ -302,45 +250,9 @@ func (uuo *UserUpdateOne) SetNillableName(s *string) *UserUpdateOne {
 	return uuo
 }
 
-// AddIdentityIDs adds the "identities" edge to the UserIdentity entity by IDs.
-func (uuo *UserUpdateOne) AddIdentityIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.AddIdentityIDs(ids...)
-	return uuo
-}
-
-// AddIdentities adds the "identities" edges to the UserIdentity entity.
-func (uuo *UserUpdateOne) AddIdentities(u ...*UserIdentity) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return uuo.AddIdentityIDs(ids...)
-}
-
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
-}
-
-// ClearIdentities clears all "identities" edges to the UserIdentity entity.
-func (uuo *UserUpdateOne) ClearIdentities() *UserUpdateOne {
-	uuo.mutation.ClearIdentities()
-	return uuo
-}
-
-// RemoveIdentityIDs removes the "identities" edge to UserIdentity entities by IDs.
-func (uuo *UserUpdateOne) RemoveIdentityIDs(ids ...uuid.UUID) *UserUpdateOne {
-	uuo.mutation.RemoveIdentityIDs(ids...)
-	return uuo
-}
-
-// RemoveIdentities removes "identities" edges to UserIdentity entities.
-func (uuo *UserUpdateOne) RemoveIdentities(u ...*UserIdentity) *UserUpdateOne {
-	ids := make([]uuid.UUID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return uuo.RemoveIdentityIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -437,56 +349,14 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := uuo.mutation.EmailVerified(); ok {
-		_spec.SetField(user.FieldEmailVerified, field.TypeBool, value)
+	if value, ok := uuo.mutation.Iss(); ok {
+		_spec.SetField(user.FieldIss, field.TypeString, value)
+	}
+	if value, ok := uuo.mutation.Sub(); ok {
+		_spec.SetField(user.FieldSub, field.TypeString, value)
 	}
 	if value, ok := uuo.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
-	}
-	if uuo.mutation.IdentitiesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.IdentitiesTable,
-			Columns: []string{user.IdentitiesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(useridentity.FieldID, field.TypeUUID),
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.RemovedIdentitiesIDs(); len(nodes) > 0 && !uuo.mutation.IdentitiesCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.IdentitiesTable,
-			Columns: []string{user.IdentitiesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(useridentity.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := uuo.mutation.IdentitiesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.IdentitiesTable,
-			Columns: []string{user.IdentitiesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(useridentity.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues

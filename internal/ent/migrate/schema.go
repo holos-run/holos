@@ -8,13 +8,28 @@ import (
 )
 
 var (
+	// OrganizationsColumns holds the columns for the "organizations" table.
+	OrganizationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Unique: true},
+		{Name: "display_name", Type: field.TypeString},
+	}
+	// OrganizationsTable holds the schema information for the "organizations" table.
+	OrganizationsTable = &schema.Table{
+		Name:       "organizations",
+		Columns:    OrganizationsColumns,
+		PrimaryKey: []*schema.Column{OrganizationsColumns[0]},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "email_verified", Type: field.TypeBool, Default: false},
+		{Name: "iss", Type: field.TypeString},
+		{Name: "sub", Type: field.TypeString},
 		{Name: "name", Type: field.TypeString},
 	}
 	// UsersTable holds the schema information for the "users" table.
@@ -23,46 +38,12 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
-	// UserIdentitiesColumns holds the columns for the "user_identities" table.
-	UserIdentitiesColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
-		{Name: "created_at", Type: field.TypeTime},
-		{Name: "updated_at", Type: field.TypeTime},
-		{Name: "iss", Type: field.TypeString},
-		{Name: "sub", Type: field.TypeString},
-		{Name: "email", Type: field.TypeString},
-		{Name: "email_verified", Type: field.TypeBool, Default: false},
-		{Name: "name", Type: field.TypeString, Nullable: true},
-		{Name: "user_id", Type: field.TypeUUID},
-	}
-	// UserIdentitiesTable holds the schema information for the "user_identities" table.
-	UserIdentitiesTable = &schema.Table{
-		Name:       "user_identities",
-		Columns:    UserIdentitiesColumns,
-		PrimaryKey: []*schema.Column{UserIdentitiesColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "user_identities_users_identities",
-				Columns:    []*schema.Column{UserIdentitiesColumns[8]},
-				RefColumns: []*schema.Column{UsersColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-		Indexes: []*schema.Index{
-			{
-				Name:    "useridentity_iss_sub",
-				Unique:  true,
-				Columns: []*schema.Column{UserIdentitiesColumns[3], UserIdentitiesColumns[4]},
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		OrganizationsTable,
 		UsersTable,
-		UserIdentitiesTable,
 	}
 )
 
 func init() {
-	UserIdentitiesTable.ForeignKeys[0].RefTable = UsersTable
 }

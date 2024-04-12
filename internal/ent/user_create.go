@@ -14,7 +14,6 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/user"
-	"github.com/holos-run/holos/internal/ent/useridentity"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -59,17 +58,15 @@ func (uc *UserCreate) SetEmail(s string) *UserCreate {
 	return uc
 }
 
-// SetEmailVerified sets the "email_verified" field.
-func (uc *UserCreate) SetEmailVerified(b bool) *UserCreate {
-	uc.mutation.SetEmailVerified(b)
+// SetIss sets the "iss" field.
+func (uc *UserCreate) SetIss(s string) *UserCreate {
+	uc.mutation.SetIss(s)
 	return uc
 }
 
-// SetNillableEmailVerified sets the "email_verified" field if the given value is not nil.
-func (uc *UserCreate) SetNillableEmailVerified(b *bool) *UserCreate {
-	if b != nil {
-		uc.SetEmailVerified(*b)
-	}
+// SetSub sets the "sub" field.
+func (uc *UserCreate) SetSub(s string) *UserCreate {
+	uc.mutation.SetSub(s)
 	return uc
 }
 
@@ -91,21 +88,6 @@ func (uc *UserCreate) SetNillableID(u *uuid.UUID) *UserCreate {
 		uc.SetID(*u)
 	}
 	return uc
-}
-
-// AddIdentityIDs adds the "identities" edge to the UserIdentity entity by IDs.
-func (uc *UserCreate) AddIdentityIDs(ids ...uuid.UUID) *UserCreate {
-	uc.mutation.AddIdentityIDs(ids...)
-	return uc
-}
-
-// AddIdentities adds the "identities" edges to the UserIdentity entity.
-func (uc *UserCreate) AddIdentities(u ...*UserIdentity) *UserCreate {
-	ids := make([]uuid.UUID, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
-	}
-	return uc.AddIdentityIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -151,10 +133,6 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultUpdatedAt()
 		uc.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := uc.mutation.EmailVerified(); !ok {
-		v := user.DefaultEmailVerified
-		uc.mutation.SetEmailVerified(v)
-	}
 	if _, ok := uc.mutation.ID(); !ok {
 		v := user.DefaultID()
 		uc.mutation.SetID(v)
@@ -177,8 +155,11 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if _, ok := uc.mutation.EmailVerified(); !ok {
-		return &ValidationError{Name: "email_verified", err: errors.New(`ent: missing required field "User.email_verified"`)}
+	if _, ok := uc.mutation.Iss(); !ok {
+		return &ValidationError{Name: "iss", err: errors.New(`ent: missing required field "User.iss"`)}
+	}
+	if _, ok := uc.mutation.Sub(); !ok {
+		return &ValidationError{Name: "sub", err: errors.New(`ent: missing required field "User.sub"`)}
 	}
 	if _, ok := uc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "User.name"`)}
@@ -231,29 +212,17 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
 	}
-	if value, ok := uc.mutation.EmailVerified(); ok {
-		_spec.SetField(user.FieldEmailVerified, field.TypeBool, value)
-		_node.EmailVerified = value
+	if value, ok := uc.mutation.Iss(); ok {
+		_spec.SetField(user.FieldIss, field.TypeString, value)
+		_node.Iss = value
+	}
+	if value, ok := uc.mutation.Sub(); ok {
+		_spec.SetField(user.FieldSub, field.TypeString, value)
+		_node.Sub = value
 	}
 	if value, ok := uc.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
 		_node.Name = value
-	}
-	if nodes := uc.mutation.IdentitiesIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   user.IdentitiesTable,
-			Columns: []string{user.IdentitiesColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(useridentity.FieldID, field.TypeUUID),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
@@ -331,15 +300,27 @@ func (u *UserUpsert) UpdateEmail() *UserUpsert {
 	return u
 }
 
-// SetEmailVerified sets the "email_verified" field.
-func (u *UserUpsert) SetEmailVerified(v bool) *UserUpsert {
-	u.Set(user.FieldEmailVerified, v)
+// SetIss sets the "iss" field.
+func (u *UserUpsert) SetIss(v string) *UserUpsert {
+	u.Set(user.FieldIss, v)
 	return u
 }
 
-// UpdateEmailVerified sets the "email_verified" field to the value that was provided on create.
-func (u *UserUpsert) UpdateEmailVerified() *UserUpsert {
-	u.SetExcluded(user.FieldEmailVerified)
+// UpdateIss sets the "iss" field to the value that was provided on create.
+func (u *UserUpsert) UpdateIss() *UserUpsert {
+	u.SetExcluded(user.FieldIss)
+	return u
+}
+
+// SetSub sets the "sub" field.
+func (u *UserUpsert) SetSub(v string) *UserUpsert {
+	u.Set(user.FieldSub, v)
+	return u
+}
+
+// UpdateSub sets the "sub" field to the value that was provided on create.
+func (u *UserUpsert) UpdateSub() *UserUpsert {
+	u.SetExcluded(user.FieldSub)
 	return u
 }
 
@@ -434,17 +415,31 @@ func (u *UserUpsertOne) UpdateEmail() *UserUpsertOne {
 	})
 }
 
-// SetEmailVerified sets the "email_verified" field.
-func (u *UserUpsertOne) SetEmailVerified(v bool) *UserUpsertOne {
+// SetIss sets the "iss" field.
+func (u *UserUpsertOne) SetIss(v string) *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
-		s.SetEmailVerified(v)
+		s.SetIss(v)
 	})
 }
 
-// UpdateEmailVerified sets the "email_verified" field to the value that was provided on create.
-func (u *UserUpsertOne) UpdateEmailVerified() *UserUpsertOne {
+// UpdateIss sets the "iss" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateIss() *UserUpsertOne {
 	return u.Update(func(s *UserUpsert) {
-		s.UpdateEmailVerified()
+		s.UpdateIss()
+	})
+}
+
+// SetSub sets the "sub" field.
+func (u *UserUpsertOne) SetSub(v string) *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.SetSub(v)
+	})
+}
+
+// UpdateSub sets the "sub" field to the value that was provided on create.
+func (u *UserUpsertOne) UpdateSub() *UserUpsertOne {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateSub()
 	})
 }
 
@@ -708,17 +703,31 @@ func (u *UserUpsertBulk) UpdateEmail() *UserUpsertBulk {
 	})
 }
 
-// SetEmailVerified sets the "email_verified" field.
-func (u *UserUpsertBulk) SetEmailVerified(v bool) *UserUpsertBulk {
+// SetIss sets the "iss" field.
+func (u *UserUpsertBulk) SetIss(v string) *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
-		s.SetEmailVerified(v)
+		s.SetIss(v)
 	})
 }
 
-// UpdateEmailVerified sets the "email_verified" field to the value that was provided on create.
-func (u *UserUpsertBulk) UpdateEmailVerified() *UserUpsertBulk {
+// UpdateIss sets the "iss" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateIss() *UserUpsertBulk {
 	return u.Update(func(s *UserUpsert) {
-		s.UpdateEmailVerified()
+		s.UpdateIss()
+	})
+}
+
+// SetSub sets the "sub" field.
+func (u *UserUpsertBulk) SetSub(v string) *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.SetSub(v)
+	})
+}
+
+// UpdateSub sets the "sub" field to the value that was provided on create.
+func (u *UserUpsertBulk) UpdateSub() *UserUpsertBulk {
+	return u.Update(func(s *UserUpsert) {
+		s.UpdateSub()
 	})
 }
 

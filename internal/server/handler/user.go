@@ -6,7 +6,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/holos-run/holos/internal/ent"
-	"github.com/holos-run/holos/internal/ent/useridentity"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/pkg/errors"
@@ -14,13 +13,14 @@ import (
 )
 
 func createUser(ctx context.Context, client *ent.Client, name string, claims authn.Identity) (*ent.User, error) {
-	log := logger.FromContext(ctx).With("issue", 127)
+	log := logger.FromContext(ctx)
 	// Create the user, error if it already exists
 	user, err := client.User.
 		Create().
-		SetName(name).
 		SetEmail(claims.Email()).
-		SetEmailVerified(claims.Verified()).
+		SetIss(claims.Issuer()).
+		SetSub(claims.Subject()).
+		SetName(claims.Name()).
 		Save(ctx)
 	if err != nil {
 		err = connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
@@ -31,30 +31,7 @@ func createUser(ctx context.Context, client *ent.Client, name string, claims aut
 	log = log.With("user", user)
 	log.DebugContext(ctx, "created user")
 
-	link, err := client.UserIdentity.Create().
-		SetIss(claims.Issuer()).
-		SetSub(claims.Subject()).
-		SetEmail(claims.Email()).
-		SetEmailVerified(claims.Verified()).
-		SetName(claims.Name()).
-		SetUserID(user.ID).
-		Save(ctx)
-	if err != nil {
-		err = connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
-		log.ErrorContext(ctx, "could not create link", "err", err)
-		return user, err
-	}
-	log = log.With("link", link)
-	log.DebugContext(ctx, "created link")
 	return user, nil
-}
-
-func updateUser(ctx context.Context, user *ent.User, name *string) (*ent.User, error) {
-	if name == nil || *name == user.Name {
-		return user, nil
-	}
-	updated, err := user.Update().SetName(*name).Save(ctx)
-	return updated, errors.Wrap(err)
 }
 
 func (h *HolosHandler) RegisterUser(
@@ -66,39 +43,6 @@ func (h *HolosHandler) RegisterUser(
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
-
-	// Check if the user exists
-	entUser, err := h.db.UserIdentity.
-		Query().
-		Where(
-			useridentity.And(
-				useridentity.Iss(oidc.Issuer()),
-				useridentity.Sub(oidc.Subject()),
-			),
-		).
-		QueryUser().
-		Only(ctx)
-	if err == nil {
-		log.DebugContext(ctx, "already registered", "status", "exists")
-		user, err := updateUser(ctx, entUser, req.Msg.Name)
-		if err != nil {
-			slog.ErrorContext(ctx, "could not update", "err", err)
-			return nil, connect.NewError(connect.CodeInternal, err)
-		}
-		res := connect.NewResponse(
-			&holos.RegisterUserResponse{
-				User:          UserToRPC(user),
-				AlreadyExists: true,
-			})
-		return res, nil
-	}
-	var notFoundError *ent.NotFoundError
-	if !errors.As(err, &notFoundError) {
-		err = connect.NewError(connect.CodeInternal, errors.Wrap(err))
-		log.ErrorContext(ctx, "could not register", "err", err)
-		return nil, err
-	}
-	log.DebugContext(ctx, "not found needs to be created", "err", err)
 
 	var name string
 	if req.Msg.Name != nil {
