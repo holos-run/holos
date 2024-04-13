@@ -1,0 +1,52 @@
+@use '@angular/material' as mat;
+@use 'ngx-toastr/toastr';
+
+.toast-container {
+  .ngx-toastr {
+    min-height: 48px;
+    padding: 14px 16px;
+    color: rgba(255, 255, 255, .7);
+    background-color: #333;
+    border-radius: 4px;
+
+    @include mat.elevation(6);
+
+    &:hover {
+      @include mat.elevation(10);
+    }
+  }
+
+  .toast-success,
+  .toast-info,
+  .toast-warning,
+  .toast-error {
+    padding-left: 50px;
+    color: white;
+  }
+
+  .toast-info {
+    background-color: var(--toast-info-background-color);
+  }
+
+  .toast-success {
+    background-color: var(--toast-success-background-color);
+  }
+
+  .toast-warning {
+    background-color: var(--toast-warning-background-color);
+  }
+
+  .toast-error {
+    background-color: var(--toast-error-background-color);
+  }
+
+  .toast-close-button {
+    font-size: inherit;
+    text-shadow: 0 1px 0 rgba(0, 0, 0, .25);
+
+    &:hover {
+      color: inherit;
+      opacity: .6;
+    }
+  }
+}

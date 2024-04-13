@@ -1,0 +1,40 @@
+@use 'variables';
+@use 'mixins';
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: variables.$grid-gutter * -.5;
+  margin-left: variables.$grid-gutter * -.5;
+}
+
+.no-gutters {
+  margin-right: 0;
+  margin-left: 0;
+
+  > .col,
+  > [class*='col-'] {
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+
+@include mixins.make-grid-columns();
+
+// xsmall: 0,
+// small:  600px
+// medium: 960px
+// large:  1280px
+// xlarge: 1920px
+
+@each $breakpoint, $infix in variables.$breakpoint-infixs {
+  @if ($breakpoint== 'xsmall') {
+    @include mixins.loop-grid-columns(variables.$grid-columns, $infix);
+  }
+
+  @else {
+    @include mixins.bp-gt($breakpoint) {
+      @include mixins.loop-grid-columns(variables.$grid-columns, $infix);
+    }
+  }
+}

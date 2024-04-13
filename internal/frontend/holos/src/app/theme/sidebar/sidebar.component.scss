@@ -1,0 +1,37 @@
+@use '../style/breakpoints';
+
+.matero-sidebar-header {
+  position: relative;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--mat-toolbar-standard-height);
+  padding: 0 8px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--divider-color);
+
+  @include breakpoints.bp-lt(small) {
+    & {
+      height: var(--mat-toolbar-mobile-height);
+    }
+  }
+
+  // Colorful
+  .matero-header-white & {
+    background-color: white;
+  }
+}
+
+.matero-sidebar-main {
+  height: calc(100% - var(--mat-toolbar-standard-height));
+  overflow: auto;
+
+  @include breakpoints.bp-lt(small) {
+    & {
+      height: calc(100% - var(--mat-toolbar-mobile-height));
+    }
+  }
+}

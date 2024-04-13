@@ -1,0 +1,93 @@
+@use 'functions';
+
+// Utility Map
+
+$utilities: () !default;
+
+// Spacing
+
+$spacer: 16px !default;
+$spacers: (
+  0: 0,
+  2: $spacer * .125,
+  4: $spacer * .25,
+  8: $spacer * .5,
+  12: $spacer * .75,
+  16: $spacer,
+  24: $spacer * 1.5,
+  32: $spacer * 2,
+  48: $spacer * 3
+) !default;
+$negative-spacers: functions.negativify-map($spacers) !default;
+
+// Border
+
+$border-color: rgba(0, 0, 0, .12) !default;
+$borders: (
+  0: 0,
+  1: 1px solid $border-color,
+  2: 2px solid $border-color,
+  4: 4px solid $border-color,
+  8: 8px solid $border-color
+) !default;
+
+$border-widths: (
+  0: 0,
+  1: 1px,
+  2: 2px,
+  4: 4px,
+  8: 8px
+) !default;
+
+$border-styles: solid dashed dotted double hidden none !default;
+
+// Border radius
+
+$radius-base: 4px !default;
+$radius: (
+  0: 0,
+  4: $radius-base,
+  8: $radius-base * 2,
+  12: $radius-base * 3,
+  16: $radius-base * 4,
+  full: 9999px
+) !default;
+
+// Text
+
+$font-wieghts: (
+  100: 100,
+  200: 200,
+  300: 300,
+  400: 400,
+  500: 500,
+  600: 600,
+  700: 700,
+  800: 800,
+  900: 900
+) !default;
+
+$font-sizes: (
+  0: 0,
+  10: 10px,
+  12: 12px,
+  14: 14px,
+  16: 16px,
+  18: 18px,
+  20: 20px
+) !default;
+
+// Sizing
+
+$sizes: (
+  0: 0,
+  20: 20%,
+  25: 25%,
+  40: 40%,
+  50: 50%,
+  60: 60%,
+  75: 75%,
+  80: 80%,
+  full: 100%,
+  auto: auto
+) !default;

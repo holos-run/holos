@@ -1,0 +1,16 @@
+/** Override Material styles */
+
+.mat-mdc-card {
+  margin-bottom: var(--gutter);
+}
+
+.mat-mdc-accordion {
+  display: block;
+  margin-bottom: var(--gutter);
+}
+
+.form-field-full {
+  .mat-mdc-form-field {
+    width: 100%;
+  }
+}

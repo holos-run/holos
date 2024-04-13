@@ -1,0 +1,14 @@
+@mixin badge() {
+  display: inline-block;
+  min-width: 18px;
+  padding: .35em .65em;
+  font-size: .75em;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  background-color: #757575;
+  border-radius: 4px;
+}

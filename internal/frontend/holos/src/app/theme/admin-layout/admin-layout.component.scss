@@ -1,0 +1,150 @@
+@use '@angular/material' as mat;
+@use '../style/transitions';
+@use '../style/breakpoints';
+
+.matero-container-wrap,
+.matero-container {
+  height: 100%;
+}
+
+.matero-content {
+  position: relative;
+  padding: var(--gutter);
+}
+
+.matero-sidenav {
+  position: absolute;
+  overflow-x: hidden;
+  transition: transitions.swift-ease-out(width); // Only set width property
+}
+
+// Layout control
+.matero-header-above {
+  .matero-container {
+    height: calc(100% - var(--mat-toolbar-standard-height)) !important;
+
+    @include breakpoints.bp-lt(small) {
+      & {
+        height: calc(100% - var(--mat-toolbar-mobile-height)) !important;
+      }
+    }
+  }
+
+  .matero-sidebar-main {
+    height: 100% !important;
+  }
+}
+
+// Layout control
+.matero-sidenav-collapsed,
+.matero-sidenav-collapsed-fix {
+  .matero-sidenav {
+    width: var(--sidenav-collapsed-width);
+
+    .menu-name,
+    .menu-label,
+    .menu-badge,
+    .menu-caret,
+    .matero-user-panel-name,
+    .matero-user-panel-email,
+    .matero-user-panel-icons {
+      opacity: 0;
+    }
+
+    .matero-user-panel-avatar {
+      transform: scale(.5);
+    }
+
+    &:hover {
+      width: var(--sidenav-width);
+
+      .menu-name,
+      .menu-label,
+      .menu-badge,
+      .menu-caret,
+      .matero-user-panel-name,
+      .matero-user-panel-email,
+      .matero-user-panel-icons {
+        opacity: 1;
+      }
+
+      .matero-user-panel-avatar {
+        transform: scale(1);
+      }
+    }
+  }
+}
+
+// Layout control
+.matero-sidenav-collapsed {
+  .matero-content-wrap {
+    margin-left: var(--sidenav-collapsed-width) !important;
+
+    [dir='rtl'] & {
+      margin-right: var(--sidenav-collapsed-width) !important;
+      margin-left: auto !important;
+    }
+  }
+
+  &[dir='rtl'] .matero-content-wrap {
+    margin-right: var(--sidenav-collapsed-width) !important;
+    margin-left: auto !important;
+  }
+}
+
+// Layout control
+.matero-navbar-top {
+  .matero-topmenu {
+    top: 0;
+  }
+
+  .matero-branding {
+    margin-left: 16px;
+
+    [dir='rtl'] & {
+      margin-right: 16px;
+      margin-left: auto;
+    }
+  }
+}
+
+// Layout control
+.matero-header-fixed {
+  .matero-header {
+    position: sticky;
+    top: 0;
+    // Fix header's positioning problem on Firefox
+    // https://github.com/ng-matero/ng-matero/issues/522
+    display: block;
+  }
+
+  .matero-topmenu {
+    top: var(--mat-toolbar-standard-height);
+
+    @include breakpoints.bp-lt(small) {
+      & {
+        top: var(--mat-toolbar-mobile-height);
+      }
+    }
+  }
+}
+
+// Fix the init content width
+.matero-content-width-fix {
+  .matero-content-wrap {
+    margin-left: var(--sidenav-width) !important;
+
+    [dir='rtl'] & {
+      margin-right: var(--sidenav-width) !important;
+      margin-left: auto !important;
+    }
+  }
+}
+
+// Colorful
+.matero-header-white {
+  .matero-toolbar,
+  .matero-topmenu {
+    background-color: white;
+  }
+}

@@ -1,0 +1,60 @@
+<div class="d-flex w-full h-full">
+  <mat-card class="m-auto" style="max-width: 380px;">
+    <mat-card-header class="m-b-24">
+      <mat-card-title>
+        {{'register_welcome' | translate}}, <br />
+        {{'register_title' | translate}}
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form class="form-field-full" [formGroup]="registerForm">
+        <mat-form-field appearance="outline">
+          <mat-label>{{'username' | translate}}</mat-label>
+          <input matInput formControlName="username" required>
+          @if (registerForm.get('username')?.invalid) {
+            <mat-error>
+              <span>{{'validations.required' | translate}}</span>
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{'password' | translate}}</mat-label>
+          <input matInput type="password" formControlName="password" required>
+          @if (registerForm.get('password')?.invalid) {
+            <mat-error>
+              <span>{{'validations.required' | translate}}</span>
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>{{'confirm_password' | translate}}</mat-label>
+          <input matInput type="password" formControlName="confirmPassword" required>
+          @if (registerForm.get('confirmPassword')?.hasError('required')) {
+            <mat-error>
+              <span>{{'validations.required' | translate}}</span>
+            </mat-error>
+          }
+          @if (registerForm.get('confirmPassword')?.hasError('mismatch')) {
+            <mat-error
+              translate [translateParams]="{value: 'login.password' | translate}">
+              <span>{{'validations.inconsistent'}}</span>
+            </mat-error>
+          }
+        </mat-form-field>
+
+        <mat-checkbox>{{'read_and_agree' | translate}}</mat-checkbox>
+
+        <button class="w-full m-y-16" mat-raised-button color="primary">
+          {{'register' | translate}}
+        </button>
+
+        <div>{{'have_an_account' | translate}}?
+          <a routerLink="/auth/login">{{'login' | translate}}</a>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,56 @@
+@use '../style/transitions';
+
+.matero-user-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--divider-color);
+}
+
+// Set default width and height can avoid flashing before avatar image loaded.
+.matero-user-panel-avatar {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 8px;
+  border-radius: 50rem;
+  transition: transitions.swift-ease-out(transform);
+}
+
+.matero-user-panel-name,
+.matero-user-panel-email {
+  margin-top: 0;
+  margin-bottom: 4px;
+  font-weight: normal;
+}
+
+.matero-user-panel-name,
+.matero-user-panel-email,
+.matero-user-panel-icons {
+  opacity: 1;
+  transition: transitions.swift-ease-out(opacity);
+}
+
+.matero-user-panel-icons {
+  white-space: nowrap;
+
+  .mat-mdc-icon-button,
+  .mat-mdc-button-touch-target {
+    width: 32px;
+    height: 32px;
+  }
+
+  .mat-mdc-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+
+    mat-icon,
+    svg {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+    }
+  }
+}
