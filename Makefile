@@ -68,7 +68,7 @@ generate: ## Generate code.
 	go generate ./...
 
 .PHONY: build
-build: generate ## Build holos executable.
+build: generate frontend ## Build holos executable.
 	@echo "building ${BIN_NAME} ${VERSION}"
 	@echo "GOPATH=${GOPATH}"
 	go build -trimpath -o bin/$(BIN_NAME) -ldflags $(LD_FLAGS) $(REPO_PATH)/cmd/$(BIN_NAME)
@@ -126,8 +126,8 @@ frontend-deps: ## Setup npm and vite
 
 .PHONY: frontend
 frontend: buf
+	cd internal/frontend/holos && rm -rf dist
 	mkdir -p internal/frontend/holos/dist
-	cd internal/frontend/holos/dist && rm -rf app
 	cd internal/frontend/holos && ng build
 	touch internal/frontend/frontend.go
 
