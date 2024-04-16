@@ -8,6 +8,7 @@ import (
 	"github.com/holos-run/holos/internal/server"
 
 	"github.com/holos-run/holos/internal/cli/build"
+	"github.com/holos-run/holos/internal/cli/controller"
 	"github.com/holos-run/holos/internal/cli/create"
 	"github.com/holos-run/holos/internal/cli/get"
 	"github.com/holos-run/holos/internal/cli/kv"
@@ -69,6 +70,9 @@ func New(cfg *holos.Config) *cobra.Command {
 
 	// Server
 	rootCmd.AddCommand(server.New(cfg))
+
+	// Controller
+	rootCmd.AddCommand(controller.New(cfg))
 
 	return rootCmd
 }

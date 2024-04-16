@@ -1,0 +1,53 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nats.holos.run
+  namespace: istio-ingress
+spec:
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt
+  commonName: nats.holos.run
+  secretName: nats.holos.run
+  # 100 Names Limit
+  dnsNames:
+  - nats.holos.run
+  - nats.core1.holos.run
+  - nats.core2.holos.run
+  - nats.k1.holos.run
+  - nats.k2.holos.run
+  - nats.k3.holos.run
+  - nats.k4.holos.run
+  - nats.k5.holos.run
+  - nats.dev.holos.run
+  - nats.dev.core1.holos.run
+  - nats.dev.core2.holos.run
+  - nats.dev.k1.holos.run
+  - nats.dev.k2.holos.run
+  - nats.dev.k3.holos.run
+  - nats.dev.k4.holos.run
+  - nats.dev.k5.holos.run
+  - jeff.nats.dev.holos.run
+  - jeff.nats.dev.core1.holos.run
+  - jeff.nats.dev.core2.holos.run
+  - jeff.nats.dev.k1.holos.run
+  - jeff.nats.dev.k2.holos.run
+  - jeff.nats.dev.k3.holos.run
+  - jeff.nats.dev.k4.holos.run
+  - jeff.nats.dev.k5.holos.run
+  - gary.nats.dev.holos.run
+  - gary.nats.dev.core1.holos.run
+  - gary.nats.dev.core2.holos.run
+  - gary.nats.dev.k1.holos.run
+  - gary.nats.dev.k2.holos.run
+  - gary.nats.dev.k3.holos.run
+  - gary.nats.dev.k4.holos.run
+  - gary.nats.dev.k5.holos.run
+  - nate.nats.dev.holos.run
+  - nate.nats.dev.core1.holos.run
+  - nate.nats.dev.core2.holos.run
+  - nate.nats.dev.k1.holos.run
+  - nate.nats.dev.k2.holos.run
+  - nate.nats.dev.k3.holos.run
+  - nate.nats.dev.k4.holos.run
+  - nate.nats.dev.k5.holos.run
