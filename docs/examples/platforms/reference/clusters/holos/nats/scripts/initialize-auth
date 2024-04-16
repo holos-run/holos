@@ -1,0 +1,81 @@
+#! /bin/bash
+#
+# This script initializes authorization for a nats cluster.  The process is:
+#
+# Locally:
+# 1. Generate the nats operator jwt.
+# 2. Generate a SYS account jwt issued by the operator.
+# 3. Store both into vault
+#
+# When nats is deployed an ExternalSecret populates auth.conf which is included
+# into nats.conf.  This approach allows helm values to be used for most things
+# except for secrets.
+#
+# Clean up by removing the nsc directory.
+
+set -euo pipefail
+
+tmpdir="$(mktemp -d)"
+finish() {
+  [[ -d "$tmpdir" ]] && rm -rf "$tmpdir"
+}
+trap finish EXIT
+
+PARENT="$(cd "$(dirname $0)" && pwd)"
+: "${OPERATOR_NAME:="Holos"}"
+
+: "${OIX_NAMESPACE:=$(kubectl config view --minify --flatten -ojsonpath='{.contexts[0].context.namespace}')}"
+nsc="${HOME}/.bin/nsc"
+
+ROOT="${PARENT}/${OIX_NAMESPACE}/nsc"
+export NKEYS_PATH="${ROOT}/nkeys"
+export NSC_HOME="${ROOT}/accounts"
+
+mkdir -p "$NKEYS_PATH"
+mkdir -p "$NSC_HOME"
+
+# Install nsc if not already installed
+if ! [[ -x $nsc ]]; then
+  platform="$(kubectl version --output=json | jq .clientVersion.platform -r)"
+  platform="${platform//\//-}"
+  curl -fSLo "${tmpdir}/nsc.zip" "https://github.com/nats-io/nsc/releases/download/v2.8.6/nsc-${platform}.zip"
+  (cd "${tmpdir}" && unzip nsc.zip)
+  sudo install -o 0 -g 0 -m 0755 "${tmpdir}/nsc" $nsc
+fi
+
+echo "export NKEYS_PATH='${NKEYS_PATH}'" > "${ROOT}/nsc.env"
+echo "export NSC_HOME='${NSC_HOME}'" >> "${ROOT}/nsc.env"
+# use kubectl port-forward nats-headless 4222
+echo "export NATS_URL='nats://localhost:4222'" >> "${ROOT}/nsc.env"
+echo "export NATS_CREDS='${ROOT}/nkeys/creds/${OPERATOR_NAME}/SYS/sys.creds'" >> "${ROOT}/nsc.env"
+
+echo "export NATS_CA='${ROOT}/ca.crt'" >> "${ROOT}/nsc.env"
+echo "export NATS_CERT='${ROOT}/tls.crt'" >> "${ROOT}/nsc.env"
+echo "export NATS_KEY='${ROOT}/tls.key'" >> "${ROOT}/nsc.env"
+
+$nsc --data-dir="${ROOT}/stores" list operators
+
+# Create operator
+$nsc add operator --name "${OPERATOR_NAME}"
+# Create system account
+$nsc add account --name SYS
+$nsc add user    --name sys
+# Create account for STAN purposes.
+$nsc add account --name STAN
+$nsc add user    --name stan
+
+# Generate an auth config compatible with the StatefulSet mounting the
+# nats-jwt-pvc PersistentVolumeClaim at path /data/accounts
+$nsc generate config --sys-account SYS --nats-resolver \
+  | sed "s,dir.*jwt',dir: '/data/accounts'" \
+  > "${ROOT}/auth.conf"
+
+# Store the auth config in vault.
+# vault kv put kv/${OIX_CLUSTER_NAME}/kube-namespace/holos-dev/nats-auth-config "auth.conf=@${tmpdir}/auth.conf"
+# Store the SYS creds in vault for use by the nack controller.
+# vault kv put kv/${OIX_CLUSTER_NAME}/kube-namespace/holos-dev/nats-sys-creds "sys.creds=@${OIX_CLUSTER_NAME}/nsc/nkeys/creds/${OPERATOR_NAME}/SYS/sys.creds"
+
+echo "After deploying the nats component, use the get-cert command to fetch the client cert."
+
+echo "Use kubectl port-forward svc/nats-headless 4222" >&2
+echo "source ${ROOT}/nsc.env to make it all work." >&2
