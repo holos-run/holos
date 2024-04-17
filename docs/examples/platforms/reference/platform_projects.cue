@@ -2,6 +2,8 @@ package holos
 
 import "encoding/yaml"
 
+let SourceLoc = "platforms/reference/platform_projects.cue"
+
 // Platform level definition of a project.
 #Project: {
 	name: string
@@ -27,6 +29,23 @@ import "encoding/yaml"
 	project: #Project
 	let Project = project
 
+	// GatewayCerts consolidates project hostnames into per-stage certificates to avoid Letsencrypt rate limits
+	let GatewayCerts = {
+		// Initialize all stages, even if they have no environments.
+		for Stage in project.stages {
+			// Map the stage name to the CN of each host and finally to all dnsNames for the CN.
+			// Example:
+			// prod: app.holos.run: app.holos.run: app.holos.run
+			// prod: app.holos.run: app.k1.holos.run: app.k1.holos.run
+			// prod: app.holos.run: app.k2.holos.run: app.k2.holos.run
+			// prod: nats.holos.run: nats.holos.run: nats.holos.run
+			// prod: nats.holos.run: nats.k1.holos.run: nats.k1.holos.run
+			// prod: nats.holos.run: nats.k2.holos.run: nats.k2.holos.run
+			let Certs = #StageCanonicalNames & {stage: Stage, project: Project}
+			"\(Stage.name)": Certs.CanonicalNames
+		}
+	}
+
 	// GatewayServers maps Gateway spec.servers #GatewayServer values indexed by stage then name.
 	let GatewayServers = {
 		// Initialize all stages, even if they have no environments.
@@ -34,7 +53,7 @@ import "encoding/yaml"
 			(stage.name): {}
 		}
 
-		// For each stage, construct entries for the Gateway spec.servers.hosts field.
+		// For each env, construct entries for the Gateway spec.servers.hosts field.
 		for env in project.environments {
 			(env.stage): {
 				let Env = env
@@ -119,18 +138,18 @@ import "encoding/yaml"
 		for stage in project.stages {
 			"\(stage.slug)-certs": #KubernetesObjects & {
 				apiObjectMap: (#APIObjects & {
-					for host in GatewayServers[stage.name] {
-						let CN = host.tls.credentialName
+					for CN, DNSNames in GatewayCerts[stage.name] {
 						apiObjects: Certificate: (CN): #Certificate & {
 							metadata: name:      CN
 							metadata: namespace: "istio-ingress"
+							metadata: annotations: "app.holos.run/source": SourceLoc
 							spec: {
 								commonName: CN
-								dnsNames: [CN]
 								secretName: CN
+								dnsNames: [for x in DNSNames {x}]
 								issuerRef: {
 									kind: "ClusterIssuer"
-									name: "letsencrypt"
+									name: "letsencrypt-staging"
 								}
 							}
 						}

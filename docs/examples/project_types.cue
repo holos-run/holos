@@ -7,6 +7,8 @@ import "strings"
 // #Projects is a map of all the projects in the platform.
 #Projects: [Name=_]: #Project & {name: Name}
 
+_Projects: #Projects
+
 // The platform project is required and where platform services reside.  ArgoCD, Grafana, Prometheus, etc...
 #Projects: platform: _
 
@@ -94,7 +96,7 @@ import "strings"
 		if cluster != _|_ {
 			clusterSegments: [cluster]
 		}
-		let SEGMENTS = envSegments + [name] + stageSegments + clusterSegments + [#Platform.org.domain]
+		let SEGMENTS = envSegments + [name] + stageSegments + clusterSegments + [_Projects[project].domain]
 		let NAMESEGMENTS = ["https"] + SEGMENTS
 		host: {
 			name: strings.Join(SEGMENTS, ".")
@@ -192,6 +194,44 @@ import "strings"
 						name:     strings.Replace(strings.Join(NAMESEGMENTS, "-"), ".", "-", -1)
 						number:   443
 						protocol: "HTTPS"
+					}
+				}
+			}
+		}
+	}
+}
+
+// #StageDNSNames provides a CN and dnsNames for a project stage given a host
+// Primarily for consolidating dns names into one certificate to avoid letsencrypt rate limits.
+// Note, the project name is not part of the constructed dns names.
+#StageCanonicalNames: {
+	stage: #Stage
+	project: #Project & {
+		name: stage.project
+	}
+
+	// CanonicalNames is a mapping of CN to all dnsNames associated with the CN.
+	CanonicalNames: {
+		for host in project.hosts {
+			let Name = host.name
+
+			// Get a Canonical Name for the cert
+			let SEGMENTS = [Name] + stage.stageSegments + [project.domain]
+			let CN = strings.Join(SEGMENTS, ".")
+			"\(CN)": {
+				// CN is a member of it's own dnsNames entry.
+				"\(CN)": CN
+
+				// Map environment names and environment + cluster names.
+				for Env in project.environments {
+					if Env.stage == stage.name {
+						let Host = (Env.#host & {name: Name}).host.name
+						"\(Host)": Host
+
+						for Cluster in project.clusters {
+							let Host = (Env.#host & {name: Name, cluster: Cluster.name}).host.name
+							"\(Host)": Host
+						}
 					}
 				}
 			}

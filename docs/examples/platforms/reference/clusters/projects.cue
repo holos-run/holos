@@ -21,8 +21,15 @@ _Projects: #Projects & {
 
 	holos: {
 		resourceId: ZitadelProjectID
-		clusters: k1: _
-		clusters: k2: _
+		domain:     "holos.run"
+		clusters: core1: _
+		clusters: core2: _
+		clusters: k1:    _
+		clusters: k2:    _
+		clusters: k3:    _
+		clusters: k4:    _
+		clusters: k5:    _
+
 		environments: {
 			prod: stage: "prod"
 			dev: stage:  "dev"
@@ -30,6 +37,13 @@ _Projects: #Projects & {
 			gary: stage: dev.stage
 			nate: stage: dev.stage
 		}
+
+		// app is the holos web app and grpc api.
+		hosts: app: _
+		// provision is the choria broker provisioning system.
+		hosts: provision: _
+		// nats is the nats service holos controller machine room agents connect after provisioning.
+		hosts: nats: _
 	}
 
 	iam: {
