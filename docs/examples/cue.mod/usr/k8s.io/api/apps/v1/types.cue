@@ -4,3 +4,8 @@ package v1
 	apiVersion: "apps/v1"
 	kind:       "Deployment"
 }
+
+#StatefulSet: {
+	apiVersion: "apps/v1"
+	kind:       "StatefulSet"
+}

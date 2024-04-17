@@ -1,0 +1,16 @@
+workers: 4
+interval: 1m
+logfile: /dev/stdout
+loglevel: info
+helper: /app/.venv/bin/helper
+token: "{{ .Env.PROVISIONER_TOKEN }}"
+choria_insecure: false
+site: holos
+broker_provisioning_password: "{{ .Env.BROKER_PASSWORD }}"
+jwt_verify_cert: "{{ .Env.ISSUER }}"
+jwt_signing_key: /etc/provisioner/signer.seed
+jwt_signing_token: /etc/provisioner/signer.jwt
+
+features:
+  jwt: true
+  ed25519: true

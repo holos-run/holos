@@ -20,6 +20,7 @@ import "encoding/yaml"
 		ConfigMap?: [Name=_]: #ConfigMap & {metadata: name: Name}
 
 		Deployment?: [_]:            #Deployment
+		StatefulSet?: [_]:           #StatefulSet
 		RequestAuthentication?: [_]: #RequestAuthentication
 		AuthorizationPolicy?: [_]:   #AuthorizationPolicy
 	}

@@ -1,0 +1,220 @@
+# build output from https://github.com/holos-run/holos-infra/blob/main/experiments/components/holos-saas/broker/build
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: broker
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: broker
+    app.kubernetes.io/version: 0.1.0
+    helm.sh/chart: broker-0.1.0
+  name: broker
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: broker
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: broker
+    app.kubernetes.io/version: 0.1.0
+    helm.sh/chart: broker-0.1.0
+  name: broker
+spec:
+  clusterIP: None
+  ports:
+  - appProtocol: tcp
+    name: tcp-nats
+    port: 4222
+    protocol: TCP
+    targetPort: tcp-nats
+  - appProtocol: tcp
+    name: tcp-cluster
+    port: 5222
+    protocol: TCP
+    targetPort: tcp-cluster
+  - appProtocol: https
+    name: https-wss
+    port: 443
+    protocol: TCP
+    targetPort: https-wss
+  selector:
+    app.kubernetes.io/instance: broker
+    app.kubernetes.io/name: broker
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: broker
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: broker
+    app.kubernetes.io/version: 0.1.0
+    helm.sh/chart: broker-0.1.0
+  name: broker-lb
+spec:
+  externalTrafficPolicy: Local
+  loadBalancerIP: 1.2.3.4
+  ports:
+  - appProtocol: tcp
+    name: tcp-nats
+    port: 4222
+    protocol: TCP
+    targetPort: tcp-nats
+  - appProtocol: https
+    name: https-wss
+    port: 443
+    protocol: TCP
+    targetPort: https-wss
+  selector:
+    app.kubernetes.io/instance: broker
+    app.kubernetes.io/name: broker
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/instance: broker
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: broker
+    app.kubernetes.io/version: 0.1.0
+    helm.sh/chart: broker-0.1.0
+  name: broker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: broker
+      app.kubernetes.io/name: broker
+  serviceName: broker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: broker
+        app.kubernetes.io/name: broker
+    spec:
+      containers:
+      - command:
+        - choria
+        - broker
+        - run
+        - --config
+        - /etc/choria/broker.conf
+        image: registry.choria.io/choria/choria:latest
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http-stats
+        name: broker
+        ports:
+        - containerPort: 4222
+          name: tcp-nats
+          protocol: TCP
+        - containerPort: 4333
+          name: https-wss
+          protocol: TCP
+        - containerPort: 5222
+          name: tcp-cluster
+          protocol: TCP
+        - containerPort: 8222
+          name: http-stats
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http-stats
+        resources: {}
+        securityContext: {}
+        volumeMounts:
+        - mountPath: /etc/choria
+          name: broker
+        - mountPath: /etc/choria-tls
+          name: broker-tls
+      securityContext: {}
+      serviceAccountName: broker
+      volumes:
+      - name: broker
+        secret:
+          secretName: broker
+      - name: broker-tls
+        secret:
+          secretName: broker-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: broker-tls
+  namespace: holos-dev
+spec:
+  commonName: broker.holos-dev.svc.cluster.local
+  dnsNames:
+  - broker
+  - broker.holos-dev.svc
+  - broker.holos-dev.svc.cluster.local
+  - provision-broker
+  - provision-broker.holos-dev.svc
+  - provision-broker.holos-dev.svc.cluster.local
+  - '*.broker'
+  - '*.broker.holos-dev.svc'
+  - '*.broker.holos-dev.svc.cluster.local'
+  issuerRef:
+    kind: ClusterIssuer
+    name: cluster-issuer
+  secretName: broker-tls
+  usages:
+  - signing
+  - key encipherment
+  - server auth
+  - client auth
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: broker
+spec:
+  dataFrom:
+  - extract:
+      key: kv//kube-namespace/holos-dev/broker
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: SecretStore
+    name: core-vault
+  target:
+    creationPolicy: Owner
+    name: broker
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: broker-wss
+  namespace: holos-dev
+spec:
+  host: broker.holos-dev.svc.cluster.local
+  trafficPolicy:
+    tls:
+      credentialName: istio-ingress-mtls-cert
+      mode: MUTUAL
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: broker-wss
+  namespace: holos-dev
+spec:
+  gateways:
+  - istio-ingress/wildcard-pub-gw
+  hosts:
+  - provision.pub.k2.holos.run
+  http:
+  - route:
+    - destination:
+        host: broker.holos-dev.svc.cluster.local
+        port:
+          number: 443
+        tls:
+          mode: SIMPLE
+

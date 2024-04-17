@@ -15,6 +15,7 @@ import (
 	crt "cert-manager.io/certificate/v1"
 	gw "networking.istio.io/gateway/v1beta1"
 	vs "networking.istio.io/virtualservice/v1beta1"
+	dr "networking.istio.io/destinationrule/v1beta1"
 	ra "security.istio.io/requestauthentication/v1"
 	ap "security.istio.io/authorizationpolicy/v1"
 	pg "postgres-operator.crunchydata.com/postgrescluster/v1beta1"
@@ -77,7 +78,9 @@ _apiVersion: "holos.run/v1alpha1"
 #Job:                   #NamespaceObject & batchv1.#Job
 #CronJob:               #NamespaceObject & batchv1.#CronJob
 #Deployment:            #NamespaceObject & appsv1.#Deployment
+#StatefulSet:           #NamespaceObject & appsv1.#StatefulSet
 #VirtualService:        #NamespaceObject & vs.#VirtualService
+#DestinationRule:       #NamespaceObject & dr.#DestinationRule
 #RequestAuthentication: #NamespaceObject & ra.#RequestAuthentication
 #AuthorizationPolicy:   #NamespaceObject & ap.#AuthorizationPolicy
 #Certificate:           #NamespaceObject & crt.#Certificate

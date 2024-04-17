@@ -4,7 +4,7 @@ package holos
 
 let Namespace = "prod-platform"
 
-// FYI: kube-prometheus-stack is a large umbrella chart what brings in other large charts like
+// FYI: kube-prometheus-stack is a large umbrella chart that brings in other large charts like
 // [grafana](https://github.com/grafana/helm-charts/tree/main/charts/grafana).
 // This may make affect maintainability.  Consider breaking the integration down into
 // constituent charts represented as holos component instances.
@@ -77,7 +77,7 @@ spec: components: HelmChartList: [
 						token_url:           OIDC.token_endpoint
 						api_url:             OIDC.userinfo_endpoint
 						use_pkce:            true
-						name_attribute_path: name
+						name_attribute_path: "name"
 						// TODO: Lift the admin, editor, and viewer group names up to the plaform config struct.
 						role_attribute_path: "contains(groups[*], 'prod-cluster-admin') && 'Admin' || contains(groups[*], 'prod-cluster-editor') && 'Editor' || 'Viewer'"
 					}

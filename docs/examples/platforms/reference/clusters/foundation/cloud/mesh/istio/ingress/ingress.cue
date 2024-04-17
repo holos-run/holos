@@ -8,7 +8,7 @@ let ComponentName = "\(#InstancePrefix)-ingress"
 
 spec: components: HelmChartList: [
 	#HelmChart & {
-		_dependsOn: "prod-secrets-namespaces":       _
+		_dependsOn: "prod-secrets-stores":           _
 		_dependsOn: "\(#InstancePrefix)-istio-base": _
 		_dependsOn: "\(#InstancePrefix)-istiod":     _
 
@@ -76,6 +76,10 @@ let RedirectMetaName = {
 
 let OBJECTS = #APIObjects & {
 	apiObjects: {
+		ExternalSecret: "istio-ingress-mtls-cert": #ExternalSecret & {
+			metadata: name:      "istio-ingress-mtls-cert"
+			metadata: namespace: #TargetNamespace
+		}
 		Gateway: {
 			"\(RedirectMetaName.name)": #Gateway & {
 				metadata: RedirectMetaName
