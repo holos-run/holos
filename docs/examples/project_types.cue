@@ -93,15 +93,25 @@ _Projects: #Projects
 		name:     string
 		cluster?: string
 		clusterSegments: [...string]
+		wildcard: true | *false
 		if cluster != _|_ {
 			clusterSegments: [cluster]
 		}
-		let SEGMENTS = envSegments + [name] + stageSegments + clusterSegments + [_Projects[project].domain]
+		_EnvSegments: [...string]
+		if wildcard {
+			if len(envSegments) > 0 {
+				_EnvSegments: ["*"]
+			}
+		}
+		if !wildcard {
+			_EnvSegments: envSegments
+		}
+		let SEGMENTS = _EnvSegments + [name] + stageSegments + clusterSegments + [_Projects[project].domain]
 		let NAMESEGMENTS = ["https"] + SEGMENTS
 		host: {
 			name: strings.Join(SEGMENTS, ".")
 			port: {
-				name:     strings.Replace(strings.Join(NAMESEGMENTS, "-"), ".", "-", -1)
+				name:     strings.Replace(strings.Replace(strings.Join(NAMESEGMENTS, "-"), ".", "-", -1), "*", "wildcard", -1)
 				number:   443
 				protocol: "HTTPS"
 			}
@@ -209,9 +219,17 @@ _Projects: #Projects
 	project: #Project & {
 		name: stage.project
 	}
+	// Wildcard will consoldiate non-prod env specific names into a wildcard dns name
+	// to further avoid letsencry rate limits.  For example, *.app.dev.example.com
+	// replaces jeff.app.dev.example.com and gary.app.dev.example.com.
+	wildcard: true | *false
+	let Wildcard = wildcard
 
 	// CanonicalNames is a mapping of CN to all dnsNames associated with the CN.
 	CanonicalNames: {
+		// CN to Names
+		[CN=string]: [Name=string]: {name: Name}
+
 		for host in project.hosts {
 			let Name = host.name
 
@@ -220,17 +238,17 @@ _Projects: #Projects
 			let CN = strings.Join(SEGMENTS, ".")
 			"\(CN)": {
 				// CN is a member of it's own dnsNames entry.
-				"\(CN)": CN
+				"\(CN)": {name: CN}
 
 				// Map environment names and environment + cluster names.
 				for Env in project.environments {
 					if Env.stage == stage.name {
-						let Host = (Env.#host & {name: Name}).host.name
-						"\(Host)": Host
+						let Host = (Env.#host & {name: Name, wildcard: Wildcard}).host.name
+						"\(Host)": {name: Host}
 
 						for Cluster in project.clusters {
-							let Host = (Env.#host & {name: Name, cluster: Cluster.name}).host.name
-							"\(Host)": Host
+							let Host = (Env.#host & {name: Name, cluster: Cluster.name, wildcard: Wildcard}).host.name
+							"\(Host)": {name: Host}
 						}
 					}
 				}

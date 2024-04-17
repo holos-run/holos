@@ -41,7 +41,7 @@ let SourceLoc = "platforms/reference/platform_projects.cue"
 			// prod: nats.holos.run: nats.holos.run: nats.holos.run
 			// prod: nats.holos.run: nats.k1.holos.run: nats.k1.holos.run
 			// prod: nats.holos.run: nats.k2.holos.run: nats.k2.holos.run
-			let Certs = #StageCanonicalNames & {stage: Stage, project: Project}
+			let Certs = #StageCanonicalNames & {stage: Stage, project: Project, wildcard: true}
 			"\(Stage.name)": Certs.CanonicalNames
 		}
 	}
@@ -146,7 +146,7 @@ let SourceLoc = "platforms/reference/platform_projects.cue"
 							spec: {
 								commonName: CN
 								secretName: CN
-								dnsNames: [for x in DNSNames {x}]
+								dnsNames: [for x in DNSNames {x.name}]
 								issuerRef: {
 									kind: "ClusterIssuer"
 									name: "letsencrypt-staging"
