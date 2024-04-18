@@ -4,15 +4,23 @@ package holos
 
 let ZitadelProjectID = 257713952794870157
 
+let AllClusters = {
+	// platform level services typically run in the core cluster pair.
+	core1: _
+	core2: _
+	// for development, probably wouldn't run these services in the workload clusters.
+	k1: _
+	k2: _
+	k3: _
+	k4: _
+	k5: _
+}
+
 _Projects: #Projects & {
 	// The platform project is required and where platform services reside.  ArgoCD, Grafana, Prometheus, etc...
 	platform: {
 		resourceId: ZitadelProjectID
-		// platform level services typically run in the core cluster pair.
-		clusters: core1: _
-		clusters: core2: _
-		// for development, probably wouldn't run these services in the workload clusters.
-		clusters: k2: _
+		clusters:   AllClusters
 		// Services hosted in the platform project
 		hosts: argocd:     _
 		hosts: grafana:    _
@@ -22,13 +30,7 @@ _Projects: #Projects & {
 	holos: {
 		resourceId: ZitadelProjectID
 		domain:     "holos.run"
-		clusters: core1: _
-		clusters: core2: _
-		clusters: k1:    _
-		clusters: k2:    _
-		clusters: k3:    _
-		clusters: k4:    _
-		clusters: k5:    _
+		clusters:   AllClusters
 
 		environments: {
 			prod: stage: "prod"
