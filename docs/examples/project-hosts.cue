@@ -16,9 +16,10 @@ import "strings"
 			for Host in project.hosts {
 				// Global hostname, e.g. app.holos.run
 				let CertInfo = (#MakeCertInfo & {
-					host:   Host
-					env:    Env
-					domain: project.domain
+					host:       Host
+					env:        Env
+					domain:     project.domain
+					clusterMap: project.clusters
 				}).CertInfo
 
 				"\(CertInfo.fqdn)": CertInfo
@@ -26,10 +27,11 @@ import "strings"
 				// Cluster hostname, e.g. app.east1.holos.run, app.west1.holos.run
 				for Cluster in project.clusters {
 					let CertInfo = (#MakeCertInfo & {
-						host:    Host
-						env:     Env
-						domain:  project.domain
-						cluster: Cluster.name
+						host:       Host
+						env:        Env
+						domain:     project.domain
+						cluster:    Cluster.name
+						clusterMap: project.clusters
 					}).CertInfo
 
 					"\(CertInfo.fqdn)": CertInfo
@@ -42,10 +44,11 @@ import "strings"
 // #MakeCertInfo provides dns info for a certificate
 // Refer to: https://github.com/holos-run/holos/issues/66#issuecomment-2027562626
 #MakeCertInfo: {
-	host:    #Host
-	env:     #Environment
-	domain:  string
-	cluster: string
+	host:       #Host
+	env:        #Environment
+	domain:     string
+	cluster:    string
+	clusterMap: #ClusterMap
 
 	let Stage = #StageInfo & {name: env.stage, project: env.project}
 	let Env = env
@@ -91,6 +94,16 @@ import "strings"
 			slug:      Env.slug
 			namespace: Env.namespace
 		}
+
+		if cluster != _|_ {
+			// Host is valid on a single cluster.
+			clusters: "\(cluster)": _
+		}
+
+		if cluster == _|_ {
+			// Host is valid on all project clusters.
+			clusters: clusterMap
+		}
 	}
 }
 
@@ -108,7 +121,14 @@ import "strings"
 
 	stage: #StageOrEnvRef
 	env:   #StageOrEnvRef
+
+	// clusters represents the cluster names the fqdn is valid on.
+	clusters: #ClusterMap
+	// hosts are always valid on the provisioner cluster
+	clusters: provisioner: _
 }
+
+#ClusterMap: [Name=string]: #Cluster & {name: Name}
 
 #StageOrEnvRef: {
 	name:      string

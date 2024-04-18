@@ -31,20 +31,23 @@ import (
 	// GatewayServers maps Gateway spec.servers #GatewayServer values indexed by stage then name.
 	GatewayServers: {
 		for FQDN, Host in ProjectHosts {
-			"\(FQDN)": #GatewayServer & {
-				_CertInfo: Host
-				hosts: [
-					"\(Host.env.namespace)/\(FQDN)",
-					// Allow the authproxy VirtualService to match the project.authProxyPrefix path.
-					"\(Host.stage.namespace)/\(FQDN)",
-				]
-				port: {
-					name:     "https"
-					number:   443
-					protocol: "HTTPS"
+			// If the host is valid on the cluster being rendered
+			if Host.clusters[#ClusterName] != _|_ {
+				"\(FQDN)": #GatewayServer & {
+					_CertInfo: Host
+					hosts: [
+						"\(Host.env.namespace)/\(FQDN)",
+						// Allow the authproxy VirtualService to match the project.authProxyPrefix path.
+						"\(Host.stage.namespace)/\(FQDN)",
+					]
+					port: {
+						name:     "https"
+						number:   443
+						protocol: "HTTPS"
+					}
+					tls: credentialName: Host.canonical
+					tls: mode:           "SIMPLE"
 				}
-				tls: credentialName: Host.canonical
-				tls: mode:           "SIMPLE"
 			}
 		}
 	}
