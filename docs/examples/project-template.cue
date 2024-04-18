@@ -3,6 +3,7 @@ package holos
 import (
 	h "github.com/holos-run/holos/api/v1alpha1"
 	"encoding/yaml"
+	"strings"
 )
 
 // let SourceLoc = "project-template.cue"
@@ -41,7 +42,8 @@ import (
 						"\(Host.stage.namespace)/\(FQDN)",
 					]
 					port: {
-						name:     "https"
+						// NOTE: port names in servers must be unique: duplicate name https
+						name:     "https-" + strings.Replace(FQDN, ".", "-", -1)
 						number:   443
 						protocol: "HTTPS"
 					}
