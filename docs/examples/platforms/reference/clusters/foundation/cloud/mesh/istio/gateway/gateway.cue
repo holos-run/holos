@@ -21,12 +21,12 @@ spec: components: KubernetesObjectsList: [
 // GatewayServers represents all hosts for all VirtualServices in the cluster attached to Gateway/default
 // NOTE: This is a critical structure because the default Gateway should be used in most cases.
 let GatewayServers = {
+	// Critical Feature: Map all Project hosts to the default Gateway.
 	for Project in _Projects {
-		for server in (#ProjectTemplate & {project: Project}).ClusterGatewayServers {
-			(server.port.name): server
-		}
+		(#ProjectTemplate & {project: Project}).ClusterDefaultGatewayServers
 	}
 
+	// TODO: Refactor to use FQDN as key
 	for k, svc in #OptionalServices {
 		if svc.enabled && list.Contains(svc.clusterNames, #ClusterName) {
 			for server in svc.servers {
@@ -35,6 +35,7 @@ let GatewayServers = {
 		}
 	}
 
+	// TODO: Remove?  Why aren't these part of the platform project?
 	if #PlatformServers[#ClusterName] != _|_ {
 		for server in #PlatformServers[#ClusterName] {
 			(server.port.name): server

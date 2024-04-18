@@ -1,48 +1,38 @@
 package holos
 
-import "encoding/yaml"
+import (
+	h "github.com/holos-run/holos/api/v1alpha1"
+	"encoding/yaml"
+)
 
-let SourceLoc = "platforms/reference/platform_projects.cue"
+// let SourceLoc = "project-template.cue"
 
-// Platform level definition of a project.
-#Project: {
-	name: string
+#ProjectTemplate: {
+	project: #Project
 
-	// All projects have at least a prod environment and stage.
-	stages: prod: stageSegments: []
-	environments: prod: stage: "prod"
-	environments: prod: envSegments: []
-	stages: dev: _
-	environments: dev: stage: "dev"
-	environments: dev: envSegments: []
-	// Ensure at least the project name is a short hostname.  Additional may be added.
-	hosts: (name): _
+	// workload cluster resources
+	workload: resources: [Name=_]: h.#KubernetesObjects & {
+		metadata: name: Name
+	}
 
-	// environments share the stage segments of their stage.
-	environments: [_]: {
-		stage:         string
-		stageSegments: stages[stage].stageSegments
+	// provisioner cluster resources
+	provisioner: resources: [Name=_]: h.#KubernetesObjects & {
+		metadata: name: Name
 	}
 }
 
+// Reference Platform Project Template
 #ProjectTemplate: {
 	project: #Project
 	let Project = project
 
-	// GatewayCerts consolidates project hostnames into per-stage certificates to avoid Letsencrypt rate limits
-	let GatewayCerts = {
-		// Initialize all stages, even if they have no environments.
-		for Stage in project.stages {
-			// Map the stage name to the CN of each host and finally to all dnsNames for the CN.
-			// Example:
-			// prod: app.holos.run: app.holos.run: app.holos.run
-			// prod: app.holos.run: app.k1.holos.run: app.k1.holos.run
-			// prod: app.holos.run: app.k2.holos.run: app.k2.holos.run
-			// prod: nats.holos.run: nats.holos.run: nats.holos.run
-			// prod: nats.holos.run: nats.k1.holos.run: nats.k1.holos.run
-			// prod: nats.holos.run: nats.k2.holos.run: nats.k2.holos.run
-			let Certs = #StageCanonicalNames & {stage: Stage, project: Project, wildcard: true}
-			"\(Stage.name)": Certs.CanonicalNames
+	let ProjectHosts = (#ProjectHosts & {project: Project}).Hosts
+
+	let HostsByStage = {
+		for FQDN, HostInfo in ProjectHosts {
+			"\(HostInfo.stage.name)": {
+				"\(FQDN)": HostInfo
+			}
 		}
 	}
 
@@ -53,20 +43,22 @@ let SourceLoc = "platforms/reference/platform_projects.cue"
 			(stage.name): {}
 		}
 
-		// For each env, construct entries for the Gateway spec.servers.hosts field.
-		for env in project.environments {
-			(env.stage): {
-				let Env = env
-				let Stage = project.stages[env.stage]
-				for host in (#EnvHosts & {project: Project, env: Env}).hosts {
-					(host.name): #GatewayServer & {
+		for STAGE, HostInfoByFQDN in HostsByStage {
+			"\(STAGE)": {
+				for FQDN, Host in HostInfoByFQDN {
+					"\(FQDN)": #GatewayServer & {
+						_CertInfo: Host
 						hosts: [
-							"\(env.namespace)/\(host.name)",
+							"\(Host.env.namespace)/\(FQDN)",
 							// Allow the authproxy VirtualService to match the project.authProxyPrefix path.
-							"\(Stage.namespace)/\(host.name)",
+							"\(Host.stage.namespace)/\(FQDN)",
 						]
-						port: host.port
-						tls: credentialName: host.name
+						port: {
+							name:     "https"
+							number:   443
+							protocol: "HTTPS"
+						}
+						tls: credentialName: Host.canonical
 						tls: mode:           "SIMPLE"
 					}
 				}
@@ -74,14 +66,12 @@ let SourceLoc = "platforms/reference/platform_projects.cue"
 		}
 	}
 
-	// ClusterGatewayServers provides a struct of Gateway servers for the current cluster.
+	// ClusterDefaultGatewayServers provides a struct of Gateway servers for the current cluster.
 	// This is intended for Gateway/default to add all servers to the default gateway.
-	ClusterGatewayServers: {
+	ClusterDefaultGatewayServers: {
 		if project.clusters[#ClusterName] != _|_ {
-			for Stage in project.stages {
-				for server in GatewayServers[Stage.name] {
-					(server.port.name): server
-				}
+			for ServersByFQDN in GatewayServers {
+				ServersByFQDN
 			}
 		}
 	}
@@ -92,11 +82,11 @@ let SourceLoc = "platforms/reference/platform_projects.cue"
 			for stage in project.stages {
 				let Stage = stage
 
-				// Istio Gateway
+				// Certificates via ExternalSecret
 				"\(stage.slug)-gateway": #KubernetesObjects & {
 					apiObjectMap: (#APIObjects & {
 						for host in GatewayServers[stage.name] {
-							apiObjects: ExternalSecret: (host.tls.credentialName): metadata: namespace: "istio-ingress"
+							apiObjects: ExternalSecret: "\(host.tls.credentialName)": metadata: namespace: "istio-ingress"
 						}
 					}).apiObjectMap
 				}
@@ -131,90 +121,6 @@ let SourceLoc = "platforms/reference/platform_projects.cue"
 					}
 				}
 			}
-		}
-	}
-
-	provisioner: resources: {
-		for stage in project.stages {
-			"\(stage.slug)-certs": #KubernetesObjects & {
-				apiObjectMap: (#APIObjects & {
-					for CN, DNSNames in GatewayCerts[stage.name] {
-						apiObjects: Certificate: (CN): #Certificate & {
-							metadata: name:      CN
-							metadata: namespace: "istio-ingress"
-							metadata: annotations: "app.holos.run/source": SourceLoc
-							spec: {
-								commonName: CN
-								secretName: CN
-								dnsNames: [for x in DNSNames {x.name}]
-								issuerRef: {
-									kind: "ClusterIssuer"
-									name: "letsencrypt-staging"
-								}
-							}
-						}
-					}
-				}).apiObjectMap
-			}
-		}
-	}
-}
-
-let HTTPBIN = {
-	name:    string | *"httpbin"
-	project: #Project
-	env:     #Environment
-	let Name = name
-	let Stage = project.stages[env.stage]
-
-	let Metadata = {
-		name:      Name
-		namespace: env.namespace
-		labels: app: name
-	}
-	let Labels = {
-		"app.kubernetes.io/name":       Name
-		"app.kubernetes.io/instance":   env.slug
-		"app.kubernetes.io/part-of":    env.project
-		"security.holos.run/authproxy": Stage.extAuthzProviderName
-	}
-
-	apiObjects: {
-		Deployment: (Name): #Deployment & {
-			metadata: Metadata
-
-			spec: selector: matchLabels: Metadata.labels
-			spec: template: {
-				metadata: labels: Metadata.labels & #IstioSidecar & Labels
-				spec: securityContext: seccompProfile: type: "RuntimeDefault"
-				spec: containers: [{
-					name:  Name
-					image: "quay.io/holos/mccutchen/go-httpbin"
-					ports: [{containerPort: 8080}]
-					securityContext: {
-						seccompProfile: type: "RuntimeDefault"
-						allowPrivilegeEscalation: false
-						runAsNonRoot:             true
-						runAsUser:                8192
-						runAsGroup:               8192
-						capabilities: drop: ["ALL"]
-					}}]
-			}
-		}
-		Service: (Name): #Service & {
-			metadata: Metadata
-			spec: selector: Metadata.labels
-			spec: ports: [
-				{port: 80, targetPort: 8080, protocol: "TCP", name: "http"},
-			]
-		}
-		VirtualService: (Name): #VirtualService & {
-			metadata: Metadata
-			let Project = project
-			let Env = env
-			spec: hosts: [for host in (#EnvHosts & {project: Project, env: Env}).hosts {host.name}]
-			spec: gateways: ["istio-ingress/default"]
-			spec: http: [{route: [{destination: host: Name}]}]
 		}
 	}
 }
@@ -477,6 +383,65 @@ let AUTHPROXY = {
 				protocol:   "TCP"
 				targetPort: 6379
 			}]
+		}
+	}
+}
+
+let HTTPBIN = {
+	name:    string | *"httpbin"
+	project: #Project
+	env:     #Environment
+	let Name = name
+	let Stage = project.stages[env.stage]
+
+	let Metadata = {
+		name:      Name
+		namespace: env.namespace
+		labels: app: name
+	}
+	let Labels = {
+		"app.kubernetes.io/name":       Name
+		"app.kubernetes.io/instance":   env.slug
+		"app.kubernetes.io/part-of":    env.project
+		"security.holos.run/authproxy": Stage.extAuthzProviderName
+	}
+
+	apiObjects: {
+		Deployment: (Name): #Deployment & {
+			metadata: Metadata
+
+			spec: selector: matchLabels: Metadata.labels
+			spec: template: {
+				metadata: labels: Metadata.labels & #IstioSidecar & Labels
+				spec: securityContext: seccompProfile: type: "RuntimeDefault"
+				spec: containers: [{
+					name:  Name
+					image: "quay.io/holos/mccutchen/go-httpbin"
+					ports: [{containerPort: 8080}]
+					securityContext: {
+						seccompProfile: type: "RuntimeDefault"
+						allowPrivilegeEscalation: false
+						runAsNonRoot:             true
+						runAsUser:                8192
+						runAsGroup:               8192
+						capabilities: drop: ["ALL"]
+					}}]
+			}
+		}
+		Service: (Name): #Service & {
+			metadata: Metadata
+			spec: selector: Metadata.labels
+			spec: ports: [
+				{port: 80, targetPort: 8080, protocol: "TCP", name: "http"},
+			]
+		}
+		VirtualService: (Name): #VirtualService & {
+			metadata: Metadata
+			let Project = project
+			let Env = env
+			spec: hosts: [for host in (#EnvHosts & {project: Project, env: Env}).hosts {host.name}]
+			spec: gateways: ["istio-ingress/default"]
+			spec: http: [{route: [{destination: host: Name}]}]
 		}
 	}
 }

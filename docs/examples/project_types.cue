@@ -1,7 +1,5 @@
 package holos
 
-import h "github.com/holos-run/holos/api/v1alpha1"
-
 import "strings"
 
 // #Projects is a map of all the projects in the platform.
@@ -61,7 +59,7 @@ _Projects: #Projects
 		}
 	}
 
-	// features is YAGNI maybe? 
+	// Thes are useful to enable / disable.
 	features: [Name=string]: #Feature & {name: Name}
 	features: authproxy: _
 	features: httpbin:   _
@@ -119,17 +117,26 @@ _Projects: #Projects
 	}
 }
 
-#Stage: {
+#StageInfo: {
 	name:    string
 	project: string
 	slug:    "\(name)-\(project)"
 	// namespace is the system namespace for the project stage
 	namespace: "\(name)-\(project)-system"
+}
+
+#Stage: {
+	#StageInfo
+	name:      string
+	project:   string
+	namespace: string
+	slug:      string
+
 	// Manage a system namespace for each stage
 	namespaces: [Name=_]: name: Name
-	namespaces: (namespace): _
+	namespaces: "\(namespace)": _
 	// stageSegments are the stage portion of the dns segments
-	stageSegments: [...string] | *[name]
+	stageSegments: [] | *[name]
 	// authProxyClientID is the ClientID registered with the oidc issuer.
 	authProxyClientID: string
 	// extAuthzProviderName is the provider name in the mesh config
@@ -140,20 +147,6 @@ _Projects: #Projects
 	name:        string
 	description: string
 	enabled:     true | *false
-}
-
-#ProjectTemplate: {
-	project: #Project
-
-	// workload cluster resources
-	workload: resources: [Name=_]: h.#KubernetesObjects & {
-		metadata: name: Name
-	}
-
-	// provisioner cluster resources
-	provisioner: resources: [Name=_]: h.#KubernetesObjects & {
-		metadata: name: Name
-	}
 }
 
 // #EnvHosts provides hostnames given a project and environment.
@@ -178,7 +171,7 @@ _Projects: #Projects
 }
 
 // #StageDomains provides hostnames given a project and stage.  Primarily for the
-// auth proxy.
+// auth proxy cookie domains.
 // Refer to https://github.com/holos-run/holos/issues/66#issuecomment-2027562626
 #StageDomains: {
 	// names are the leading prefix names to create hostnames for.
@@ -204,52 +197,6 @@ _Projects: #Projects
 						name:     strings.Replace(strings.Join(NAMESEGMENTS, "-"), ".", "-", -1)
 						number:   443
 						protocol: "HTTPS"
-					}
-				}
-			}
-		}
-	}
-}
-
-// #StageDNSNames provides a CN and dnsNames for a project stage given a host
-// Primarily for consolidating dns names into one certificate to avoid letsencrypt rate limits.
-// Note, the project name is not part of the constructed dns names.
-#StageCanonicalNames: {
-	stage: #Stage
-	project: #Project & {
-		name: stage.project
-	}
-	// Wildcard will consoldiate non-prod env specific names into a wildcard dns name
-	// to further avoid letsencry rate limits.  For example, *.app.dev.example.com
-	// replaces jeff.app.dev.example.com and gary.app.dev.example.com.
-	wildcard: true | *false
-	let Wildcard = wildcard
-
-	// CanonicalNames is a mapping of CN to all dnsNames associated with the CN.
-	CanonicalNames: {
-		// CN to Names
-		[CN=string]: [Name=string]: {name: Name}
-
-		for host in project.hosts {
-			let Name = host.name
-
-			// Get a Canonical Name for the cert
-			let SEGMENTS = [Name] + stage.stageSegments + [project.domain]
-			let CN = strings.Join(SEGMENTS, ".")
-			"\(CN)": {
-				// CN is a member of it's own dnsNames entry.
-				"\(CN)": {name: CN}
-
-				// Map environment names and environment + cluster names.
-				for Env in project.environments {
-					if Env.stage == stage.name {
-						let Host = (Env.#host & {name: Name, wildcard: Wildcard}).host.name
-						"\(Host)": {name: Host}
-
-						for Cluster in project.clusters {
-							let Host = (Env.#host & {name: Name, cluster: Cluster.name, wildcard: Wildcard}).host.name
-							"\(Host)": {name: Host}
-						}
 					}
 				}
 			}
