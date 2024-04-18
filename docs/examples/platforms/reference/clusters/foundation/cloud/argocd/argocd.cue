@@ -71,14 +71,14 @@ let IstioInject = [{op: "add", path: "/spec/template/metadata/labels/sidecar.ist
 	}
 }
 
-// Probably shouldn't use the authproxy struct and should instead define an identity provider struct.
-let AuthProxySpec = #AuthProxySpec & #Platform.authproxy
+let OAuthClient = #Platform.oauthClients.argocd.spec
 
 let OIDCConfig = {
-	name:     "Holos Platform"
-	issuer:   AuthProxySpec.issuer
-	clientID: #Platform.argocd.clientID
-	requestedIDTokenClaims: groups: essential: true
-	requestedScopes: ["openid", "profile", "email", "groups", "urn:zitadel:iam:org:domain:primary:\(AuthProxySpec.orgDomain)"]
+	name:                     "Holos Platform"
+	issuer:                   OAuthClient.issuer
+	clientID:                 OAuthClient.clientID
+	requestedScopes:          OAuthClient.scopesList
 	enablePKCEAuthentication: true
+
+	requestedIDTokenClaims: groups: essential: true
 }
