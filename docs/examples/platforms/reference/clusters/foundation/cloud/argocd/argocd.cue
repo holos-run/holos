@@ -74,10 +74,11 @@ let IstioInject = [{op: "add", path: "/spec/template/metadata/labels/sidecar.ist
 let OAuthClient = #Platform.oauthClients.argocd.spec
 
 let OIDCConfig = {
-	name:                     "Holos Platform"
-	issuer:                   OAuthClient.issuer
-	clientID:                 OAuthClient.clientID
-	requestedScopes:          OAuthClient.scopesList
+	name:            "Holos Platform"
+	issuer:          OAuthClient.issuer
+	clientID:        OAuthClient.clientID
+	requestedScopes: OAuthClient.scopesList
+	// Set redirect uri to https://argocd.example.com/pkce/verify
 	enablePKCEAuthentication: true
 
 	requestedIDTokenClaims: groups: essential: true
