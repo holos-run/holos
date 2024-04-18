@@ -24,7 +24,7 @@ package holos
 						dnsNames: [for x in _dnsNames {x}]
 						issuerRef: {
 							kind: "ClusterIssuer"
-							name: "letsencrypt-staging"
+							name: "letsencrypt"
 						}
 					}
 				}
