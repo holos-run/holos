@@ -7,13 +7,23 @@ import "strings"
 #ProjectHosts: {
 	project: #Project
 
-	// Hosts map key fqdn to host to reduce into structs organized by stage, canonical name, etc...
-	// The flat nature and long list of properties is intended to make it straight
-	// forward to derive another struct for Gateways, VirtualServices,
-	// Certificates, AuthProxy cookie domains, etc...
+	// Hosts map key fqdn to host to reduce into structs organized by stage,
+	// canonical name, etc...  The flat nature and long list of properties is
+	// intended to make it straight forward to derive another struct for Gateways,
+	// VirtualServices, Certificates, AuthProxy cookie domains, etc...
 	Hosts: {
 		for Env in project.environments {
 			for Host in project.hosts {
+				// Global hostname, e.g. app.holos.run
+				let CertInfo = (#MakeCertInfo & {
+					host:   Host
+					env:    Env
+					domain: project.domain
+				}).CertInfo
+
+				"\(CertInfo.fqdn)": CertInfo
+
+				// Cluster hostname, e.g. app.east1.holos.run, app.west1.holos.run
 				for Cluster in project.clusters {
 					let CertInfo = (#MakeCertInfo & {
 						host:    Host
@@ -70,10 +80,6 @@ import "strings"
 		wildcard:  strings.Join(WILDCARD, ".")
 		canonical: strings.Join(CANONICAL, ".")
 
-		if cluster != _|_ {
-			cluster: cluster
-		}
-
 		project: name: Env.project
 		stage: #StageOrEnvRef & {
 			name:      Stage.name
@@ -96,9 +102,6 @@ import "strings"
 	canonical: string
 	// wildcard may replace the left most segment fqdn with a wildcard to consolidate cert dnsNames.  If not a wildcad, must be fqdn
 	wildcard: string
-
-	// Cluster is defined if the cert is associated with a cluster.
-	cluster?: string
 
 	// Project, stage and env attributes for mapping and collecting.
 	project: name: string

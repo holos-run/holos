@@ -26,10 +26,10 @@ import (
 	project: #Project
 	let Project = project
 
-	let ProjectHosts = (#ProjectHosts & {project: Project}).Hosts
+	ProjectHosts: (#ProjectHosts & {project: Project}).Hosts
 
 	// GatewayServers maps Gateway spec.servers #GatewayServer values indexed by stage then name.
-	let GatewayServers = {
+	GatewayServers: {
 		for FQDN, Host in ProjectHosts {
 			"\(FQDN)": #GatewayServer & {
 				_CertInfo: Host
