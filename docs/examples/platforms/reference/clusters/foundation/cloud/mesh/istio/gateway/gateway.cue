@@ -53,6 +53,11 @@ let OBJECTS = #APIObjects & {
 			spec: servers: [for x in GatewayServers {x}]
 		}
 
+		// Manage an ExternalSecret for each server defined in the default Gateway to sync the cert.
+		for Server in Gateway.default.spec.servers {
+			ExternalSecret: "\(Server.tls.credentialName)": metadata: namespace: "istio-ingress"
+		}
+
 		for k, svc in #OptionalServices {
 			if svc.enabled && list.Contains(svc.clusterNames, #ClusterName) {
 				for k, s in svc.servers {

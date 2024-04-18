@@ -18,7 +18,7 @@ func makeRenderRunFunc(cfg *holos.Config) command.RunFunc {
 		}
 
 		ctx := cmd.Context()
-		log := logger.FromContext(ctx)
+		log := logger.FromContext(ctx).With("cluster", cfg.ClusterName())
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
 		results, err := build.Run(cmd.Context())
 		if err != nil {

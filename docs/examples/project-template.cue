@@ -58,19 +58,11 @@ import (
 	}
 
 	workload: resources: {
-		// Provide resources only if the project is managed on --cluster-name
+		// Provide resources only if the project is managed on the cluster specified
+		// by --cluster-name
 		if project.clusters[#ClusterName] != _|_ {
 			for stage in project.stages {
 				let Stage = stage
-
-				// Certificates via ExternalSecret
-				"\(stage.slug)-gateway": #KubernetesObjects & {
-					apiObjectMap: (#APIObjects & {
-						for host in GatewayServers[stage.name] {
-							apiObjects: ExternalSecret: "\(host.tls.credentialName)": metadata: namespace: "istio-ingress"
-						}
-					}).apiObjectMap
-				}
 
 				// Manage auth-proxy in each stage
 				if project.features.authproxy.enabled {
