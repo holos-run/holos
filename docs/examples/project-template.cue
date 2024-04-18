@@ -28,40 +28,23 @@ import (
 
 	let ProjectHosts = (#ProjectHosts & {project: Project}).Hosts
 
-	let HostsByStage = {
-		for FQDN, HostInfo in ProjectHosts {
-			"\(HostInfo.stage.name)": {
-				"\(FQDN)": HostInfo
-			}
-		}
-	}
-
 	// GatewayServers maps Gateway spec.servers #GatewayServer values indexed by stage then name.
 	let GatewayServers = {
-		// Initialize all stages, even if they have no environments.
-		for stage in project.stages {
-			(stage.name): {}
-		}
-
-		for STAGE, HostInfoByFQDN in HostsByStage {
-			"\(STAGE)": {
-				for FQDN, Host in HostInfoByFQDN {
-					"\(FQDN)": #GatewayServer & {
-						_CertInfo: Host
-						hosts: [
-							"\(Host.env.namespace)/\(FQDN)",
-							// Allow the authproxy VirtualService to match the project.authProxyPrefix path.
-							"\(Host.stage.namespace)/\(FQDN)",
-						]
-						port: {
-							name:     "https"
-							number:   443
-							protocol: "HTTPS"
-						}
-						tls: credentialName: Host.canonical
-						tls: mode:           "SIMPLE"
-					}
+		for FQDN, Host in ProjectHosts {
+			"\(FQDN)": #GatewayServer & {
+				_CertInfo: Host
+				hosts: [
+					"\(Host.env.namespace)/\(FQDN)",
+					// Allow the authproxy VirtualService to match the project.authProxyPrefix path.
+					"\(Host.stage.namespace)/\(FQDN)",
+				]
+				port: {
+					name:     "https"
+					number:   443
+					protocol: "HTTPS"
 				}
+				tls: credentialName: Host.canonical
+				tls: mode:           "SIMPLE"
 			}
 		}
 	}
@@ -70,9 +53,7 @@ import (
 	// This is intended for Gateway/default to add all servers to the default gateway.
 	ClusterDefaultGatewayServers: {
 		if project.clusters[#ClusterName] != _|_ {
-			for ServersByFQDN in GatewayServers {
-				ServersByFQDN
-			}
+			GatewayServers
 		}
 	}
 
