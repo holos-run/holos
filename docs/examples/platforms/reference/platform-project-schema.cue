@@ -11,8 +11,6 @@ package holos
 	stages: dev: _
 	environments: dev: stage: "dev"
 	environments: dev: envSegments: []
-	// Ensure at least the project name is a short hostname.  Additional may be added.
-	hosts: (name): _
 
 	// environments share the stage segments of their stage.
 	environments: [_]: {
