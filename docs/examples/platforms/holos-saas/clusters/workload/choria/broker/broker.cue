@@ -137,11 +137,20 @@ let OBJECTS = #APIObjects & {
 			}
 		}
 		DestinationRule: "\(Broker)-wss": #DestinationRule & {
-			metadata: Metadata
+			_decriptions: "Configures Istio to connect to Choria using a cert issued by the Platform Issuer"
+			metadata:     Metadata
 			spec: host: "\(Broker).\(Namespace).svc.cluster.local"
 			spec: trafficPolicy: tls: {
 				credentialName: "istio-ingress-mtls-cert"
 				mode:           "MUTUAL"
+				// subjectAltNames is important, otherwise istio will fail to verify the
+				// choria broker upstream server.  make sure this matches a value
+				// present in the choria broker's cert.
+				//
+				//  kubectl get secret choria-broker-tls -o json | jq --exit-status
+				//  '.data | map_values(@base64d)' | jq .\"tls.crt\" -r | openssl x509
+				//  -text -noout -in -
+				subjectAltNames: [spec.host]
 			}
 		}
 		VirtualService: "\(Broker)-wss": #VirtualService & {
