@@ -29,6 +29,7 @@ let OBJECTS = #APIObjects & {
 				metadata: name:      PlatformIssuer
 				metadata: namespace: Namespace
 				spec: {
+					duration:   "999999h"
 					isCA:       true
 					commonName: PlatformIssuer
 					secretName: PlatformIssuer
