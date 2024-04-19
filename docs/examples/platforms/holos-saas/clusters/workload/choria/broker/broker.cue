@@ -1,20 +1,20 @@
 package holos
 
 let Namespace = "jeff-holos"
-let Broker = "broker"
+let Broker = "choria-broker"
 
 spec: components: KubernetesObjectsList: [
 	#KubernetesObjects & {
 		_dependsOn: "prod-secrets-stores": _
 
-		metadata: name: "\(Namespace)-broker"
+		metadata: name: "\(Namespace)-\(Broker)"
 		apiObjectMap: OBJECTS.apiObjectMap
 	},
 ]
 
 let SelectorLabels = {
-	"app.kubernetes.io/instance": Broker
-	"app.kubernetes.io/name":     Broker
+	"app.kubernetes.io/part-of": "choria"
+	"app.kubernetes.io/name":    Broker
 }
 
 let Metadata = {
@@ -29,8 +29,8 @@ let OBJECTS = #APIObjects & {
 			metadata: name:      "\(Broker)-tls"
 			metadata: namespace: Namespace
 		}
-		ExternalSecret: "choria-\(Broker)": #ExternalSecret & {
-			metadata: name:      "choria-\(Broker)"
+		ExternalSecret: "\(Broker)": #ExternalSecret & {
+			metadata: name:      Broker
 			metadata: namespace: Namespace
 		}
 		StatefulSet: "\(Broker)": {
@@ -92,7 +92,7 @@ let OBJECTS = #APIObjects & {
 					volumes: [
 						{
 							name: Broker
-							secret: secretName: "choria-\(Broker)"
+							secret: secretName: Broker
 						},
 						{
 							name: "\(Broker)-tls"

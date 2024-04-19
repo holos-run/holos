@@ -1,13 +1,13 @@
 package holos
 
 let Namespace = "jeff-holos"
-let Broker = "broker"
+let Broker = "choria-broker"
 
 spec: components: KubernetesObjectsList: [
 	#KubernetesObjects & {
 		_dependsOn: "prod-platform-issuer": _
 
-		metadata: name: "\(Namespace)-broker"
+		metadata: name: "\(Namespace)-\(Broker)"
 		apiObjectMap: OBJECTS.apiObjectMap
 	},
 ]
@@ -31,9 +31,6 @@ let OBJECTS = #APIObjects & {
 					Broker,
 					"\(Broker).\(Namespace).svc",
 					"\(Broker).\(Namespace).svc.cluster.local",
-					"provision-\(Broker)",
-					"provision-\(Broker).\(Namespace).svc",
-					"provision-\(Broker).\(Namespace).svc.cluster.local",
 					"*.\(Broker)",
 					"*.\(Broker).\(Namespace).svc",
 					"*.\(Broker).\(Namespace).svc.cluster.local",

@@ -6,6 +6,9 @@ export PROVISIONER_TOKEN="$(LC_ALL=C tr -dc "[:alpha:]" </dev/random | tr '[:upp
 
 set -xeuo pipefail
 
+# Make sure gomplate is available
+gomplate --version
+
 PARENT="$(cd $(dirname "$0") && pwd)"
 TOPLEVEL="$(cd "${PARENT}" && git rev-parse --show-toplevel)"
 : "${NAMESPACE:=jeff-holos}"
@@ -33,7 +36,7 @@ echo -n "${PROVISIONER_TOKEN}" > ./provisioner/token
 # Provisioner signer
 choria jwt keys ./provisioner/signer.seed ./provisioner/signer.public
 choria jwt client ./provisioner/signer.jwt provisioner_signer ./issuer/issuer.seed \
-  --public-key "$(<provisioner/signer.public)" --server-provisioner --validity $((999*365))d --issuer
+  --public-key "$(<provisioner/signer.public)" --server-provisioner --validity $((100*365))d --issuer
 
 # Provisioner Secret
 mkdir -p provisioner/secret
@@ -57,5 +60,5 @@ choria jwt keys ./agents/signer.seed ./agents/signer.public
 # Now save the secrets
 holos create secret --append-hash=false --namespace $NAMESPACE choria-issuer --from-file=issuer
 holos create secret --append-hash=false --namespace $NAMESPACE choria-broker --from-file=broker
-holos create secret --append-hash=false --namespace $NAMESPACE choria-provisioner --from-file=provisioner
+holos create secret --append-hash=false --namespace $NAMESPACE choria-provisioner --from-file=provisioner/secret
 holos create secret --append-hash=false --namespace $NAMESPACE choria-agents --from-file=agents
