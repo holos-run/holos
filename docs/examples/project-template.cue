@@ -27,6 +27,9 @@ import (
 	project: #Project
 	let Project = project
 
+	// ProjectHosts represents all of the hosts associated with a project indexed
+	// by FQDN with #CertInfo values.  Slice and dice this struct as needed to
+	// work with hosts in the platform.
 	ProjectHosts: (#ProjectHosts & {project: Project}).Hosts
 
 	// GatewayServers maps Gateway spec.servers #GatewayServer values indexed by stage then name.

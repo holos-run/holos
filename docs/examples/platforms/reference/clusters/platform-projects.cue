@@ -43,9 +43,9 @@ _Projects: #Projects & {
 		// app is the holos web app and grpc api.
 		hosts: app: _
 		// provision is the choria broker provisioning system.
-		hosts: provision: _
+		hosts: provision: NoAuthorizationPolicy: true
 		// nats is the nats service holos controller machine room agents connect after provisioning.
-		hosts: nats: _
+		hosts: nats: NoAuthorizationPolicy: true
 	}
 
 	iam: {

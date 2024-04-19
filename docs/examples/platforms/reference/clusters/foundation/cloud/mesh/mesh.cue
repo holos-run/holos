@@ -298,7 +298,7 @@ _IngressAuthProxy: {
 _AuthPolicyRules: #AuthPolicyRules & {
 	hosts: {
 		let Vault = "vault.core.ois.run"
-		(Vault): {
+		"\(Vault)": {
 			slug: "vault"
 			// Rules for when to route requests through the auth proxy
 			spec: rules: [
@@ -318,6 +318,23 @@ _AuthPolicyRules: #AuthPolicyRules & {
 					}]
 				},
 			]
+		}
+	}
+}
+
+// Exclude project hosts from the auth proxy if configured to do so.  The
+// intended effect is to exclude the host from the blanket `authproxy-custom`
+// AuthorizationPolicy rule _without_ adding a specialized AuthorizationPolicy
+// for the same host.  This has the effect of completely excluding the host from
+// authorization policy.
+for Project in _Projects {
+	let ProjectHosts = (#ProjectHosts & {project: Project}).Hosts
+
+	for FQDN, Host in ProjectHosts {
+		if Host.NoAuthorizationPolicy {
+			if Host.clusters[#ClusterName] != _|_ {
+				_AuthPolicyRules: hosts: "\(Host.fqdn)": NoAuthorizationPolicy: true
+			}
 		}
 	}
 }

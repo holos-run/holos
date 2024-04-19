@@ -104,6 +104,8 @@ import "strings"
 			// Host is valid on all project clusters.
 			clusters: clusterMap
 		}
+
+		NoAuthorizationPolicy: host.NoAuthorizationPolicy
 	}
 }
 
@@ -126,6 +128,10 @@ import "strings"
 	clusters: #ClusterMap
 	// hosts are always valid on the provisioner cluster
 	clusters: provisioner: _
+
+	// NoAuthorizationPolicy excludes the host from the auth proxy integrated with
+	// the default ingress Gateway.
+	NoAuthorizationPolicy: true | *false
 }
 
 #ClusterMap: [Name=string]: #Cluster & {name: Name}

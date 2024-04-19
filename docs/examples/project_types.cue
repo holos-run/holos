@@ -68,8 +68,13 @@ _Projects: #Projects
 // #Cluster defines a cluster
 #Cluster: name: string
 
-// #Host defines a short hostname
-#Host: name: string
+#Host: {
+	// #Host defines a short hostname
+	name: string
+	// NoAuthorizationPolicy excludes the host from the auth proxy integrated with
+	// the default ingress Gateway.
+	NoAuthorizationPolicy: true | *false
+}
 
 #Environment: {
 	// name uniquely identifies the environment within the scope of the project.
