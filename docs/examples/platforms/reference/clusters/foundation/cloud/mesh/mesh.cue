@@ -271,11 +271,14 @@ _IngressAuthProxy: {
 					rules: [
 						{
 							to: [{
+								// Refer to https://istio.io/latest/docs/ops/best-practices/security/#writing-host-match-policies
 								operation: notHosts: [
 									// Never send requests for the login service through the authorizer, would block login.
 									AuthProxySpec.issuerHost,
+									"\(AuthProxySpec.issuerHost):*",
 									// Exclude hosts with specialized rules from the catch-all.
 									for x in _AuthPolicyRules.hosts {x.name},
+									for x in _AuthPolicyRules.hosts {"\(x.name):*"},
 								]
 							}]
 							when: [
