@@ -30,15 +30,15 @@ jq --exit-status -r '.spec.hosts[0]' vs.json > host
 
 # Get the issuer.seed
 holos -n $NAMESPACE get secret choria-issuer --to-file issuer.seed
-# The broker password is set in the provisioning.jwt using the `choria jwt prov
-# --token` flag.
-holos -n $NAMESPACE get secret choria-broker --to-file password
 
-# The --token flag value must be the same value set in the
-# plugin.choria.network.provisioning.client_password setting in broker.conf
+# Get the provisioner token to embed in the provisioning.jwt file.
+holos -n $NAMESPACE get secret choria-provisioner --to-file token
+
+# The --token flag value must be the same value set in the token field of provisioner.yaml
 # Refer to https://github.com/ripienaar/machine-room-mvp/blob/main/example/setup/setup.sh#L41
-choria jwt prov provisioning.jwt issuer.seed \
-  --token "$(<password)" \
+# Refer to https://github.com/ripienaar/machine-room-mvp/blob/main/example/setup/templates/provisioner/provisioner.yaml#L6
+choria jwt prov provisioning.jwt "issuer.seed" \
+  --token "$(<token)" \
   --urls wss://$(<host):443 \
   --default \
   --protocol-v2 \
