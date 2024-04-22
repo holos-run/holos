@@ -99,6 +99,7 @@ docker_build_with_restart(
         '--listen-port={}'.format(listen_port),
         '--oidc-issuer=https://login.ois.run',
         '--oidc-audience=262096764402729854@holos_platform',
+        '--log-level=debug',
         '--metrics-port={}'.format(metrics_port),
     ],
     dockerfile='./hack/tilt/Dockerfile',

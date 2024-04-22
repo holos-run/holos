@@ -101,7 +101,12 @@ func (s *Server) registerConnectRpc() error {
 
 	h := handler.NewHolosHandler(s.db)
 	holosPath, holosHandler := holosconnect.NewHolosServiceHandler(h, connect.WithInterceptors(validator))
-	authenticatingHandler := authn.Handler(s.authenticator, s.cfg.ServerConfig.OIDCAudiences(), holosHandler)
+	authenticatingHandler := authn.Handler(
+		s.authenticator,
+		s.cfg.ServerConfig.OIDCAudiences(),
+		s.cfg.ServerConfig.AuthHeader(),
+		holosHandler,
+	)
 	s.mux.Handle(holosPath, s.middlewares(authenticatingHandler))
 
 	reflector := grpcreflect.NewStaticReflector(holosconnect.HolosServiceName)
