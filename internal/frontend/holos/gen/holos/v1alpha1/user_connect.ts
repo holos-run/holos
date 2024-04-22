@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetUserClaimsRequest, GetUserClaimsResponse, RegisterUserRequest, RegisterUserResponse } from "./user_pb.js";
+import { GetUserClaimsRequest, GetUserClaimsResponse, GetUserRequest, GetUserResponse, RegisterUserRequest, RegisterUserResponse } from "./user_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -28,6 +28,15 @@ export const UserService = {
       name: "GetUserClaims",
       I: GetUserClaimsRequest,
       O: GetUserClaimsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc holos.v1alpha1.UserService.GetUser
+     */
+    getUser: {
+      name: "GetUser",
+      I: GetUserRequest,
+      O: GetUserResponse,
       kind: MethodKind.Unary,
     },
   }

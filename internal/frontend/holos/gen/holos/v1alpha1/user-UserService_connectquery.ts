@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import { MethodKind } from "@bufbuild/protobuf";
-import { GetUserClaimsRequest, GetUserClaimsResponse, RegisterUserRequest, RegisterUserResponse } from "./user_pb.js";
+import { GetUserClaimsRequest, GetUserClaimsResponse, GetUserRequest, GetUserResponse, RegisterUserRequest, RegisterUserResponse } from "./user_pb.js";
 
 /**
  * @generated from rpc holos.v1alpha1.UserService.RegisterUser
@@ -29,6 +29,20 @@ export const getUserClaims = {
   kind: MethodKind.Unary,
   I: GetUserClaimsRequest,
   O: GetUserClaimsResponse,
+  service: {
+    typeName: "holos.v1alpha1.UserService"
+  }
+} as const;
+
+/**
+ * @generated from rpc holos.v1alpha1.UserService.GetUser
+ */
+export const getUser = {
+  localName: "getUser",
+  name: "GetUser",
+  kind: MethodKind.Unary,
+  I: GetUserRequest,
+  O: GetUserResponse,
   service: {
     typeName: "holos.v1alpha1.UserService"
   }
