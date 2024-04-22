@@ -11,16 +11,17 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func NewHolosHandler(db *ent.Client) *HolosHandler {
-	return &HolosHandler{db: db}
+// NewUserHandler returns a new UserService implementation.
+func NewUserHandler(db *ent.Client) *UserHandler {
+	return &UserHandler{db: db}
 }
 
-// HolosHandler implements the connect service handler interface.
-type HolosHandler struct {
+// UserHandler implements the UserService interface.
+type UserHandler struct {
 	db *ent.Client
 }
 
-func (h *HolosHandler) GetUserClaims(
+func (h *UserHandler) GetUserClaims(
 	ctx context.Context,
 	req *connect.Request[holos.GetUserClaimsRequest],
 ) (*connect.Response[holos.GetUserClaimsResponse], error) {

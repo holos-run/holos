@@ -92,6 +92,17 @@ func (s *Server) registerHandlers() {
 	s.mux.Handle("/", s.middlewares(s.notFoundHandler()))
 }
 
+// handle wraps handler with holos authentication and registers the handler with the server mux.
+func (s *Server) handle(pattern string, handler http.Handler) {
+	authenticatingHandler := authn.Handler(
+		s.authenticator,
+		s.cfg.ServerConfig.OIDCAudiences(),
+		s.cfg.ServerConfig.AuthHeader(),
+		handler,
+	)
+	s.mux.Handle(pattern, authenticatingHandler)
+}
+
 func (s *Server) registerConnectRpc() error {
 	// Validator for all rpc messages
 	validator, err := validate.NewInterceptor()
@@ -99,17 +110,12 @@ func (s *Server) registerConnectRpc() error {
 		return errors.Wrap(fmt.Errorf("could not initialize proto validation interceptor: %w", err))
 	}
 
-	h := handler.NewHolosHandler(s.db)
-	holosPath, holosHandler := holosconnect.NewHolosServiceHandler(h, connect.WithInterceptors(validator))
-	authenticatingHandler := authn.Handler(
-		s.authenticator,
-		s.cfg.ServerConfig.OIDCAudiences(),
-		s.cfg.ServerConfig.AuthHeader(),
-		holosHandler,
-	)
-	s.mux.Handle(holosPath, s.middlewares(authenticatingHandler))
+	opts := connect.WithInterceptors(validator)
 
-	reflector := grpcreflect.NewStaticReflector(holosconnect.HolosServiceName)
+	s.handle(holosconnect.NewUserServiceHandler(handler.NewUserHandler(s.db), opts))
+
+	reflector := grpcreflect.NewStaticReflector(holosconnect.UserServiceName)
+
 	s.mux.Handle(grpcreflect.NewHandlerV1(reflector))
 	s.mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
 

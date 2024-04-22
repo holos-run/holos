@@ -17,18 +17,6 @@ message Timestamps {
   google.protobuf.Timestamp updated_at = 2 [(buf.validate.field).timestamp.lt_now = true];
 }
 
-// Empty request, claims are pulled from the id token
-message GetUserClaimsRequest {}
-
-// UserClaims represents id token claims
-message GetUserClaimsResponse {
-  string iss = 1;
-  string sub = 2;
-  string email = 3 [(buf.validate.field).string.email = true];
-  bool email_verified = 4;
-  string name = 5 [(buf.validate.field).string.max_len = 100];
-}
-
 // User represents a human user in the system.  See db schema in ent/schema/user.go
 message User {
   // Unique id assigned by the server.
@@ -48,7 +36,19 @@ message RegisterUserResponse {
   bool already_exists = 2;
 }
 
-service HolosService {
-  rpc GetUserClaims(GetUserClaimsRequest) returns (GetUserClaimsResponse) {}
+// Empty request, claims are pulled from the id token
+message GetUserClaimsRequest {}
+
+// UserClaims represents id token claims
+message GetUserClaimsResponse {
+  string iss = 1;
+  string sub = 2;
+  string email = 3 [(buf.validate.field).string.email = true];
+  bool email_verified = 4;
+  string name = 5 [(buf.validate.field).string.max_len = 100];
+}
+
+service UserService {
   rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {}
+  rpc GetUserClaims(GetUserClaimsRequest) returns (GetUserClaimsResponse) {}
 }

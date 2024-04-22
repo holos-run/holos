@@ -34,7 +34,7 @@ func createUser(ctx context.Context, client *ent.Client, name string, claims aut
 	return user, nil
 }
 
-func (h *HolosHandler) RegisterUser(
+func (h *UserHandler) RegisterUser(
 	ctx context.Context,
 	req *connect.Request[holos.RegisterUserRequest],
 ) (*connect.Response[holos.RegisterUserResponse], error) {
