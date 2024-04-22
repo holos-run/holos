@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	"connectrpc.com/connect"
+	"connectrpc.com/grpcreflect"
 	"connectrpc.com/validate"
 	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/internal/errors"
@@ -102,6 +103,10 @@ func (s *Server) registerConnectRpc() error {
 	holosPath, holosHandler := holosconnect.NewHolosServiceHandler(h, connect.WithInterceptors(validator))
 	authenticatingHandler := authn.Handler(s.authenticator, s.cfg.ServerConfig.OIDCAudiences(), holosHandler)
 	s.mux.Handle(holosPath, s.middlewares(authenticatingHandler))
+
+	reflector := grpcreflect.NewStaticReflector(holosconnect.HolosServiceName)
+	s.mux.Handle(grpcreflect.NewHandlerV1(reflector))
+	s.mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))
 
 	return nil
 }
