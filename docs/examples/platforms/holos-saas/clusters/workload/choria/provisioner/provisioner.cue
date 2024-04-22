@@ -45,11 +45,7 @@ let OBJECTS = #APIObjects & {
 					containers: [
 						{
 							name: Provisioner
-							command: [
-								"/usr/sbin/choria-provisioner",
-								"--config=/etc/provisioner/provisioner.yaml",
-								"--choria-config=/etc/provisioner/choria.cfg",
-							]
+							command: ["bash", "/etc/provisioner/entrypoint"]
 							// skopeo inspect docker://registry.choria.io/choria/provisioner | jq .RepoTags
 							image:           "registry.choria.io/choria/provisioner:0.15.1"
 							imagePullPolicy: "IfNotPresent"

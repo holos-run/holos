@@ -1,0 +1,9 @@
+#! /bin/bash
+#
+
+set -xeuo pipefail
+
+mkdir -p /home/choria/bin
+install -m 0755 /etc/provisioner/helper.rb /home/choria/bin/helper.rb
+
+exec /usr/sbin/choria-provisioner --config=/etc/provisioner/provisioner.yaml --choria-config=/etc/provisioner/choria.cfg

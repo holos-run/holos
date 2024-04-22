@@ -2,7 +2,8 @@ workers: 4
 interval: 1m
 logfile: /dev/stdout
 loglevel: info
-helper: /etc/provisioner/helper.rb
+# The entrypoint script installs this helper script.
+helper: /home/choria/bin/helper.rb
 token: "{{ .Env.PROVISIONER_TOKEN }}"
 choria_insecure: false
 site: holos
