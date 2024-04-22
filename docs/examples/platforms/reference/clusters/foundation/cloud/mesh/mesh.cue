@@ -18,6 +18,10 @@ _IngressAuthProxy: {
 	Domains: (#Platform.org.domain):                    _
 	Domains: "\(#ClusterName).\(#Platform.org.domain)": _
 
+	// TODO: This should be generated from ProjectHosts
+	Domains: "holos.run":                 _
+	Domains: "\(#ClusterName).holos.run": _
+
 	let Metadata = {
 		name:      string
 		namespace: Namespace

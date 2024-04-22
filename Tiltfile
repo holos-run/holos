@@ -190,7 +190,7 @@ k8s_resource(
     ],
     resource_deps=[compile_id],
     links=[
-        link('https://{}.holos.dev.k2.ois.run/app/'.format(developer), "Holos Web UI")
+        link('https://{}.app.dev.k2.holos.run/ui/'.format(developer), "Holos Web UI")
     ],
 )
 
@@ -200,11 +200,6 @@ k8s_resource(
     new_name=auth_id,
     objects=[
       '{}:virtualservice'.format(holos_server),
-      '{}-allow-groups:authorizationpolicy'.format(holos_server),
-      '{}-allow-nothing:authorizationpolicy'.format(holos_server),
-      '{}-allow-well-known-paths:authorizationpolicy'.format(holos_server),
-      '{}-auth:authorizationpolicy'.format(holos_server),
-      '{}:requestauthentication'.format(holos_server),
     ],
 )
 
