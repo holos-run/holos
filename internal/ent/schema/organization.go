@@ -5,9 +5,7 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// User holds the schema definition for the User entity, the internal
-// representation and identity of a single human user. Users are scoped
-// globally.
+// Organization represents an organization account.
 type Organization struct {
 	ent.Schema
 }

@@ -1,4 +1,4 @@
-package login
+package token
 
 import (
 	"context"
@@ -14,15 +14,14 @@ import (
 
 // New returns a new login command.
 func New(cfg *holos.Config) *cobra.Command {
-	cmd := command.New("login")
-	cmd.Short = "log in by caching credentials"
-	var printClaims bool
+	cmd := command.New("token")
+	cmd.Short = "write id token to stdout"
+	cmd.Long = "Useful with curl / grpcurl -H $(holos token)"
 
 	config := token.NewConfig()
 	cmd.Flags().AddGoFlagSet(config.FlagSet())
 
 	fs := &flag.FlagSet{}
-	fs.BoolVar(&printClaims, "print-claims", false, "print id token claims")
 	cmd.Flags().AddGoFlagSet(fs)
 
 	cmd.RunE = func(c *cobra.Command, args []string) error {
@@ -36,11 +35,8 @@ func New(cfg *holos.Config) *cobra.Command {
 			return fmt.Errorf("could not get token: %w", err)
 		}
 
-		claims := token.Claims()
-		slog.Info("logged in as "+claims.Email, "name", claims.Name, "exp", token.Expiry, "email", claims.Email)
-		if printClaims {
-			fmt.Fprintln(cmd.OutOrStdout(), token.Pretty)
-		}
+		fmt.Fprintf(cmd.OutOrStdout(), token.Bearer)
+
 		return nil
 	}
 

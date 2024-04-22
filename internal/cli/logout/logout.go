@@ -13,6 +13,7 @@ import (
 
 func New(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("logout")
+	cmd.Short = "log out by deleting cached credentials"
 	cmd.RunE = func(c *cobra.Command, args []string) error {
 		if err := os.RemoveAll(token.CacheDir); err != nil {
 			return errors.Wrap(fmt.Errorf("could not logout: %w", err))
