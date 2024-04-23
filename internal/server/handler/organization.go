@@ -2,13 +2,17 @@ package handler
 
 import (
 	"context"
-	"log/slog"
+	"fmt"
+	"math/rand"
+	"strings"
+	"unicode"
 
 	"connectrpc.com/connect"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent"
-	"github.com/holos-run/holos/internal/ent/organization"
+	"github.com/holos-run/holos/internal/ent/user"
 	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -24,48 +28,106 @@ type OrganizationHandler struct {
 	db *ent.Client
 }
 
-func (h *OrganizationHandler) GetOrganization(
+func (h *OrganizationHandler) GetCallerOrganizations(
 	ctx context.Context,
-	req *connect.Request[holos.GetOrganizationRequest],
-) (*connect.Response[holos.GetOrganizationResponse], error) {
-	name := req.Msg.GetName()
-
-	entity, err := h.db.Organization.Query().Where(organization.Name(name)).Only(ctx)
+	req *connect.Request[holos.GetCallerOrganizationsRequest],
+) (*connect.Response[holos.GetCallerOrganizationsResponse], error) {
+	authnID, err := authn.FromContext(ctx)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 
-	res := connect.NewResponse(&holos.GetOrganizationResponse{Organization: OrganizationToRPC(entity)})
+	dbUser, err := h.db.User.Query().
+		Where(
+			user.Iss(authnID.Issuer()),
+			user.Sub(authnID.Subject()),
+		).
+		WithOrganizations().
+		Only(ctx)
+	if err != nil {
+		if ent.MaskNotFound(err) == nil {
+			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
+		} else {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+		}
+	}
+
+	rpcOrgs := make([]*holos.Organization, 0, len(dbUser.Edges.Organizations))
+	for _, dbOrg := range dbUser.Edges.Organizations {
+		rpcOrgs = append(rpcOrgs, OrganizationToRPC(dbOrg))
+	}
+
+	res := connect.NewResponse(&holos.GetCallerOrganizationsResponse{
+		User:          UserToRPC(dbUser),
+		Organizations: rpcOrgs,
+	})
 	return res, nil
 }
 
-func (h *OrganizationHandler) RegisterOrganization(
+func (h *OrganizationHandler) CreateCallerOrganization(
 	ctx context.Context,
-	req *connect.Request[holos.RegisterOrganizationRequest],
-) (*connect.Response[holos.RegisterOrganizationResponse], error) {
-	log := logger.FromContext(ctx)
-	creator, err := getAuthenticatedUser(ctx, h.db)
+	req *connect.Request[holos.CreateCallerOrganizationRequest],
+) (*connect.Response[holos.CreateCallerOrganizationResponse], error) {
+	authnID, err := authn.FromContext(ctx)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+	// todo get user by iss, sub
+	dbUser, err := getUser(ctx, h.db, authnID.Email())
+	if err != nil {
+		if ent.MaskNotFound(err) == nil {
+			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
+		} else {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+		}
 	}
 
-	var createdOrganization *ent.Organization
-	err = WithTx(ctx, h.db, func(tx *ent.Tx) error {
-		createdOrganization, err = createOrganization(ctx, tx.Client(), req.Msg.GetName(), req.Msg.GetDisplayName(), creator.ID)
+	var org *ent.Organization
+	err = WithTx(ctx, h.db, func(tx *ent.Tx) (err error) {
+		org, err = h.db.Organization.Create().
+			SetName(cleanAndAppendRandom(authnID.Name())).
+			SetDisplayName(authnID.Name() + "'s Org").
+			SetCreatorID(dbUser.ID).
+			Save(ctx)
+		if err != nil {
+			return err
+		}
+		dbUser, err = dbUser.Update().
+			AddOrganizations(org).
+			Save(ctx)
 		return err
 	})
 	if err != nil {
-		slog.ErrorContext(ctx, "could not save transaction", "err", err)
-		return nil, err
+		return nil, connect.NewError(connect.CodeInternal, errors.Wrap(err))
 	}
 
-	log = log.With("organization", createdOrganization)
-	log.InfoContext(ctx, "registered", "event", "registration", "resource", "organization")
+	// TODO: prefetch organizations
+	dbOrgs, err := dbUser.QueryOrganizations().All(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.Wrap(err))
+	}
+	rpcOrgs := make([]*holos.Organization, 0, len(dbOrgs))
+	for _, dbOrg := range dbOrgs {
+		rpcOrgs = append(rpcOrgs, OrganizationToRPC(dbOrg))
+	}
 
-	res := connect.NewResponse(&holos.RegisterOrganizationResponse{
-		Organization: OrganizationToRPC(createdOrganization),
+	res := connect.NewResponse(&holos.CreateCallerOrganizationResponse{
+		User:          UserToRPC(dbUser),
+		Organizations: rpcOrgs,
 	})
 	return res, nil
+}
+
+func cleanAndAppendRandom(s string) string {
+	mapping := func(r rune) rune {
+		if unicode.IsLetter(r) {
+			return unicode.ToLower(r)
+		}
+		return -1
+	}
+	cleaned := strings.Map(mapping, s)
+	randNum := rand.Intn(1_000_000)
+	return fmt.Sprintf("%s-%06d", cleaned, randNum)
 }
 
 // OrganizationToRPC returns an *holos.Organization adapted from *ent.Organization u.

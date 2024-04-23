@@ -4,45 +4,45 @@
 // @ts-nocheck
 
 import { MethodKind } from "@bufbuild/protobuf";
-import { GetUserClaimsRequest, GetUserClaimsResponse, GetUserRequest, GetUserResponse, RegisterUserRequest, RegisterUserResponse } from "./user_pb.js";
+import { CreateCallerUserRequest, CreateCallerUserResponse, GetCallerClaimsRequest, GetCallerClaimsResponse, GetCallerUserRequest, GetCallerUserResponse } from "./user_pb.js";
 
 /**
- * @generated from rpc holos.v1alpha1.UserService.RegisterUser
+ * @generated from rpc holos.v1alpha1.UserService.GetCallerClaims
  */
-export const registerUser = {
-  localName: "registerUser",
-  name: "RegisterUser",
+export const getCallerClaims = {
+  localName: "getCallerClaims",
+  name: "GetCallerClaims",
   kind: MethodKind.Unary,
-  I: RegisterUserRequest,
-  O: RegisterUserResponse,
+  I: GetCallerClaimsRequest,
+  O: GetCallerClaimsResponse,
   service: {
     typeName: "holos.v1alpha1.UserService"
   }
 } as const;
 
 /**
- * @generated from rpc holos.v1alpha1.UserService.GetUserClaims
+ * @generated from rpc holos.v1alpha1.UserService.GetCallerUser
  */
-export const getUserClaims = {
-  localName: "getUserClaims",
-  name: "GetUserClaims",
+export const getCallerUser = {
+  localName: "getCallerUser",
+  name: "GetCallerUser",
   kind: MethodKind.Unary,
-  I: GetUserClaimsRequest,
-  O: GetUserClaimsResponse,
+  I: GetCallerUserRequest,
+  O: GetCallerUserResponse,
   service: {
     typeName: "holos.v1alpha1.UserService"
   }
 } as const;
 
 /**
- * @generated from rpc holos.v1alpha1.UserService.GetUser
+ * @generated from rpc holos.v1alpha1.UserService.CreateCallerUser
  */
-export const getUser = {
-  localName: "getUser",
-  name: "GetUser",
+export const createCallerUser = {
+  localName: "createCallerUser",
+  name: "CreateCallerUser",
   kind: MethodKind.Unary,
-  I: GetUserRequest,
-  O: GetUserResponse,
+  I: CreateCallerUserRequest,
+  O: CreateCallerUserResponse,
   service: {
     typeName: "holos.v1alpha1.UserService"
   }

@@ -71,14 +71,6 @@ func (oc *OrganizationCreate) SetCreatorID(u uuid.UUID) *OrganizationCreate {
 	return oc
 }
 
-// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
-func (oc *OrganizationCreate) SetNillableCreatorID(u *uuid.UUID) *OrganizationCreate {
-	if u != nil {
-		oc.SetCreatorID(*u)
-	}
-	return oc
-}
-
 // SetID sets the "id" field.
 func (oc *OrganizationCreate) SetID(u uuid.UUID) *OrganizationCreate {
 	oc.mutation.SetID(u)
@@ -96,6 +88,21 @@ func (oc *OrganizationCreate) SetNillableID(u *uuid.UUID) *OrganizationCreate {
 // SetCreator sets the "creator" edge to the User entity.
 func (oc *OrganizationCreate) SetCreator(u *User) *OrganizationCreate {
 	return oc.SetCreatorID(u.ID)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (oc *OrganizationCreate) AddUserIDs(ids ...uuid.UUID) *OrganizationCreate {
+	oc.mutation.AddUserIDs(ids...)
+	return oc
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (oc *OrganizationCreate) AddUsers(u ...*User) *OrganizationCreate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return oc.AddUserIDs(ids...)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -166,6 +173,12 @@ func (oc *OrganizationCreate) check() error {
 	if _, ok := oc.mutation.DisplayName(); !ok {
 		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "Organization.display_name"`)}
 	}
+	if _, ok := oc.mutation.CreatorID(); !ok {
+		return &ValidationError{Name: "creator_id", err: errors.New(`ent: missing required field "Organization.creator_id"`)}
+	}
+	if _, ok := oc.mutation.CreatorID(); !ok {
+		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required edge "Organization.creator"`)}
+	}
 	return nil
 }
 
@@ -233,6 +246,22 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.CreatorID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := oc.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   organization.UsersTable,
+			Columns: organization.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
@@ -332,12 +361,6 @@ func (u *OrganizationUpsert) SetCreatorID(v uuid.UUID) *OrganizationUpsert {
 // UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
 func (u *OrganizationUpsert) UpdateCreatorID() *OrganizationUpsert {
 	u.SetExcluded(organization.FieldCreatorID)
-	return u
-}
-
-// ClearCreatorID clears the value of the "creator_id" field.
-func (u *OrganizationUpsert) ClearCreatorID() *OrganizationUpsert {
-	u.SetNull(organization.FieldCreatorID)
 	return u
 }
 
@@ -445,13 +468,6 @@ func (u *OrganizationUpsertOne) SetCreatorID(v uuid.UUID) *OrganizationUpsertOne
 func (u *OrganizationUpsertOne) UpdateCreatorID() *OrganizationUpsertOne {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.UpdateCreatorID()
-	})
-}
-
-// ClearCreatorID clears the value of the "creator_id" field.
-func (u *OrganizationUpsertOne) ClearCreatorID() *OrganizationUpsertOne {
-	return u.Update(func(s *OrganizationUpsert) {
-		s.ClearCreatorID()
 	})
 }
 
@@ -726,13 +742,6 @@ func (u *OrganizationUpsertBulk) SetCreatorID(v uuid.UUID) *OrganizationUpsertBu
 func (u *OrganizationUpsertBulk) UpdateCreatorID() *OrganizationUpsertBulk {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.UpdateCreatorID()
-	})
-}
-
-// ClearCreatorID clears the value of the "creator_id" field.
-func (u *OrganizationUpsertBulk) ClearCreatorID() *OrganizationUpsertBulk {
-	return u.Update(func(s *OrganizationUpsert) {
-		s.ClearCreatorID()
 	})
 }
 

@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetUserClaimsRequest, GetUserClaimsResponse, GetUserRequest, GetUserResponse, RegisterUserRequest, RegisterUserResponse } from "./user_pb.js";
+import { CreateCallerUserRequest, CreateCallerUserResponse, GetCallerClaimsRequest, GetCallerClaimsResponse, GetCallerUserRequest, GetCallerUserResponse } from "./user_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -13,30 +13,30 @@ export const UserService = {
   typeName: "holos.v1alpha1.UserService",
   methods: {
     /**
-     * @generated from rpc holos.v1alpha1.UserService.RegisterUser
+     * @generated from rpc holos.v1alpha1.UserService.GetCallerClaims
      */
-    registerUser: {
-      name: "RegisterUser",
-      I: RegisterUserRequest,
-      O: RegisterUserResponse,
+    getCallerClaims: {
+      name: "GetCallerClaims",
+      I: GetCallerClaimsRequest,
+      O: GetCallerClaimsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc holos.v1alpha1.UserService.GetUserClaims
+     * @generated from rpc holos.v1alpha1.UserService.GetCallerUser
      */
-    getUserClaims: {
-      name: "GetUserClaims",
-      I: GetUserClaimsRequest,
-      O: GetUserClaimsResponse,
+    getCallerUser: {
+      name: "GetCallerUser",
+      I: GetCallerUserRequest,
+      O: GetCallerUserResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc holos.v1alpha1.UserService.GetUser
+     * @generated from rpc holos.v1alpha1.UserService.CreateCallerUser
      */
-    getUser: {
-      name: "GetUser",
-      I: GetUserRequest,
-      O: GetUserResponse,
+    createCallerUser: {
+      name: "CreateCallerUser",
+      I: CreateCallerUserRequest,
+      O: CreateCallerUserResponse,
       kind: MethodKind.Unary,
     },
   }

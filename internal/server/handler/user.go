@@ -24,65 +24,59 @@ type UserHandler struct {
 	db *ent.Client
 }
 
-func (h *UserHandler) GetUserClaims(
+func (h *UserHandler) GetCallerClaims(
 	ctx context.Context,
-	req *connect.Request[holos.GetUserClaimsRequest],
-) (*connect.Response[holos.GetUserClaimsResponse], error) {
-	authnIdentity, err := authn.FromContext(ctx)
+	req *connect.Request[holos.GetCallerClaimsRequest],
+) (*connect.Response[holos.GetCallerClaimsResponse], error) {
+	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
-	res := connect.NewResponse(&holos.GetUserClaimsResponse{
-		Iss:           authnIdentity.Issuer(),
-		Sub:           authnIdentity.Subject(),
-		Email:         authnIdentity.Email(),
-		EmailVerified: authnIdentity.Verified(),
-		Name:          authnIdentity.Name(),
+	res := connect.NewResponse(&holos.GetCallerClaimsResponse{
+		Claims: &holos.Claims{
+			Iss:           authnID.Issuer(),
+			Sub:           authnID.Subject(),
+			Email:         authnID.Email(),
+			EmailVerified: authnID.Verified(),
+			Name:          authnID.Name(),
+			Groups:        authnID.Groups(),
+		},
 	})
 	return res, nil
 }
 
-func (h *UserHandler) GetUser(
+func (h *UserHandler) GetCallerUser(
 	ctx context.Context,
-	req *connect.Request[holos.GetUserRequest],
-) (*connect.Response[holos.GetUserResponse], error) {
-	email := req.Msg.GetEmail()
-	if email == "" {
-		id, err := authn.FromContext(ctx)
-		if err != nil {
+	req *connect.Request[holos.GetCallerUserRequest],
+) (*connect.Response[holos.GetCallerUserResponse], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+	dbUser, err := getUser(ctx, h.db, authnID.Email())
+	if err != nil {
+		if ent.MaskNotFound(err) == nil {
+			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
+		} else {
 			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 		}
-		email = id.Email()
 	}
-	dbUser, err := getUser(ctx, h.db, email)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
-	}
-
-	res := connect.NewResponse(&holos.GetUserResponse{User: UserToRPC(dbUser)})
+	res := connect.NewResponse(&holos.GetCallerUserResponse{User: UserToRPC(dbUser)})
 	return res, nil
 }
 
-func (h *UserHandler) RegisterUser(
+func (h *UserHandler) CreateCallerUser(
 	ctx context.Context,
-	req *connect.Request[holos.RegisterUserRequest],
-) (*connect.Response[holos.RegisterUserResponse], error) {
-	log := logger.FromContext(ctx).With("issue", 127)
-	oidc, err := authn.FromContext(ctx)
+	req *connect.Request[holos.CreateCallerUserRequest],
+) (*connect.Response[holos.CreateCallerUserResponse], error) {
+	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 
-	var name string
-	if req.Msg.Name != nil {
-		name = req.Msg.GetName()
-	} else {
-		name = oidc.Name()
-	}
-
 	var createdUser *ent.User
 	err = WithTx(ctx, h.db, func(tx *ent.Tx) error {
-		createdUser, err = createUser(ctx, tx.Client(), name, oidc)
+		createdUser, err = createUser(ctx, tx.Client(), authnID.Name(), authnID)
 		return err
 	})
 	if err != nil {
@@ -90,10 +84,7 @@ func (h *UserHandler) RegisterUser(
 		return nil, err
 	}
 
-	log = log.With("user.id", createdUser.ID, "user.name", createdUser.Name)
-	log.InfoContext(ctx, "registered user", "event", "registration")
-
-	res := connect.NewResponse(&holos.RegisterUserResponse{
+	res := connect.NewResponse(&holos.CreateCallerUserResponse{
 		User: UserToRPC(createdUser),
 	})
 	return res, nil

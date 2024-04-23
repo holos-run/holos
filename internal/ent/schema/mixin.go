@@ -19,8 +19,6 @@ type BaseMixin struct {
 
 func (BaseMixin) Fields() []ent.Field {
 	return []ent.Field{
-		// org_id represents the tenant id of the entity.
-		// field.UUID("org_id", uuid.UUID{}).Default(newUUID),
 		// id represents the identity of the entity.
 		field.UUID("id", uuid.UUID{}).Default(newUUID),
 	}

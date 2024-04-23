@@ -311,16 +311,6 @@ func CreatorIDNotIn(vs ...uuid.UUID) predicate.Organization {
 	return predicate.Organization(sql.FieldNotIn(FieldCreatorID, vs...))
 }
 
-// CreatorIDIsNil applies the IsNil predicate on the "creator_id" field.
-func CreatorIDIsNil() predicate.Organization {
-	return predicate.Organization(sql.FieldIsNull(FieldCreatorID))
-}
-
-// CreatorIDNotNil applies the NotNil predicate on the "creator_id" field.
-func CreatorIDNotNil() predicate.Organization {
-	return predicate.Organization(sql.FieldNotNull(FieldCreatorID))
-}
-
 // HasCreator applies the HasEdge predicate on the "creator" edge.
 func HasCreator() predicate.Organization {
 	return predicate.Organization(func(s *sql.Selector) {
@@ -336,6 +326,29 @@ func HasCreator() predicate.Organization {
 func HasCreatorWith(preds ...predicate.User) predicate.Organization {
 	return predicate.Organization(func(s *sql.Selector) {
 		step := newCreatorStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasUsers applies the HasEdge predicate on the "users" edge.
+func HasUsers() predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, UsersTable, UsersPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUsersWith applies the HasEdge predicate on the "users" edge with a given conditions (other predicates).
+func HasUsersWith(preds ...predicate.User) predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := newUsersStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

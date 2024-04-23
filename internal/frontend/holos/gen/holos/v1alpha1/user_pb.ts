@@ -73,124 +73,108 @@ export class User extends Message<User> {
 }
 
 /**
- * @generated from message holos.v1alpha1.RegisterUserRequest
+ * @generated from message holos.v1alpha1.CreateCallerUserRequest
  */
-export class RegisterUserRequest extends Message<RegisterUserRequest> {
-  /**
-   * @generated from field: optional string name = 1;
-   */
-  name?: string;
-
-  constructor(data?: PartialMessage<RegisterUserRequest>) {
+export class CreateCallerUserRequest extends Message<CreateCallerUserRequest> {
+  constructor(data?: PartialMessage<CreateCallerUserRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.RegisterUserRequest";
+  static readonly typeName = "holos.v1alpha1.CreateCallerUserRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RegisterUserRequest {
-    return new RegisterUserRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateCallerUserRequest {
+    return new CreateCallerUserRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RegisterUserRequest {
-    return new RegisterUserRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateCallerUserRequest {
+    return new CreateCallerUserRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RegisterUserRequest {
-    return new RegisterUserRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateCallerUserRequest {
+    return new CreateCallerUserRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: RegisterUserRequest | PlainMessage<RegisterUserRequest> | undefined, b: RegisterUserRequest | PlainMessage<RegisterUserRequest> | undefined): boolean {
-    return proto3.util.equals(RegisterUserRequest, a, b);
+  static equals(a: CreateCallerUserRequest | PlainMessage<CreateCallerUserRequest> | undefined, b: CreateCallerUserRequest | PlainMessage<CreateCallerUserRequest> | undefined): boolean {
+    return proto3.util.equals(CreateCallerUserRequest, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.RegisterUserResponse
+ * @generated from message holos.v1alpha1.CreateCallerUserResponse
  */
-export class RegisterUserResponse extends Message<RegisterUserResponse> {
+export class CreateCallerUserResponse extends Message<CreateCallerUserResponse> {
   /**
    * @generated from field: holos.v1alpha1.User user = 1;
    */
   user?: User;
 
-  /**
-   * @generated from field: bool already_exists = 2;
-   */
-  alreadyExists = false;
-
-  constructor(data?: PartialMessage<RegisterUserResponse>) {
+  constructor(data?: PartialMessage<CreateCallerUserResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.RegisterUserResponse";
+  static readonly typeName = "holos.v1alpha1.CreateCallerUserResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "user", kind: "message", T: User },
-    { no: 2, name: "already_exists", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RegisterUserResponse {
-    return new RegisterUserResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateCallerUserResponse {
+    return new CreateCallerUserResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RegisterUserResponse {
-    return new RegisterUserResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateCallerUserResponse {
+    return new CreateCallerUserResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RegisterUserResponse {
-    return new RegisterUserResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateCallerUserResponse {
+    return new CreateCallerUserResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: RegisterUserResponse | PlainMessage<RegisterUserResponse> | undefined, b: RegisterUserResponse | PlainMessage<RegisterUserResponse> | undefined): boolean {
-    return proto3.util.equals(RegisterUserResponse, a, b);
+  static equals(a: CreateCallerUserResponse | PlainMessage<CreateCallerUserResponse> | undefined, b: CreateCallerUserResponse | PlainMessage<CreateCallerUserResponse> | undefined): boolean {
+    return proto3.util.equals(CreateCallerUserResponse, a, b);
   }
 }
 
 /**
- * Empty request, claims are pulled from the id token
- *
- * @generated from message holos.v1alpha1.GetUserClaimsRequest
+ * @generated from message holos.v1alpha1.GetCallerClaimsRequest
  */
-export class GetUserClaimsRequest extends Message<GetUserClaimsRequest> {
-  constructor(data?: PartialMessage<GetUserClaimsRequest>) {
+export class GetCallerClaimsRequest extends Message<GetCallerClaimsRequest> {
+  constructor(data?: PartialMessage<GetCallerClaimsRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetUserClaimsRequest";
+  static readonly typeName = "holos.v1alpha1.GetCallerClaimsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetUserClaimsRequest {
-    return new GetUserClaimsRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCallerClaimsRequest {
+    return new GetCallerClaimsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetUserClaimsRequest {
-    return new GetUserClaimsRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetCallerClaimsRequest {
+    return new GetCallerClaimsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetUserClaimsRequest {
-    return new GetUserClaimsRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetCallerClaimsRequest {
+    return new GetCallerClaimsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetUserClaimsRequest | PlainMessage<GetUserClaimsRequest> | undefined, b: GetUserClaimsRequest | PlainMessage<GetUserClaimsRequest> | undefined): boolean {
-    return proto3.util.equals(GetUserClaimsRequest, a, b);
+  static equals(a: GetCallerClaimsRequest | PlainMessage<GetCallerClaimsRequest> | undefined, b: GetCallerClaimsRequest | PlainMessage<GetCallerClaimsRequest> | undefined): boolean {
+    return proto3.util.equals(GetCallerClaimsRequest, a, b);
   }
 }
 
 /**
- * UserClaims represents id token claims
- *
- * @generated from message holos.v1alpha1.GetUserClaimsResponse
+ * @generated from message holos.v1alpha1.Claims
  */
-export class GetUserClaimsResponse extends Message<GetUserClaimsResponse> {
+export class Claims extends Message<Claims> {
   /**
    * @generated from field: string iss = 1;
    */
@@ -216,113 +200,150 @@ export class GetUserClaimsResponse extends Message<GetUserClaimsResponse> {
    */
   name = "";
 
-  constructor(data?: PartialMessage<GetUserClaimsResponse>) {
+  /**
+   * @generated from field: repeated string groups = 6;
+   */
+  groups: string[] = [];
+
+  constructor(data?: PartialMessage<Claims>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetUserClaimsResponse";
+  static readonly typeName = "holos.v1alpha1.Claims";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "iss", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "sub", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "email", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "email_verified", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 5, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "groups", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetUserClaimsResponse {
-    return new GetUserClaimsResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Claims {
+    return new Claims().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetUserClaimsResponse {
-    return new GetUserClaimsResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Claims {
+    return new Claims().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetUserClaimsResponse {
-    return new GetUserClaimsResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Claims {
+    return new Claims().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetUserClaimsResponse | PlainMessage<GetUserClaimsResponse> | undefined, b: GetUserClaimsResponse | PlainMessage<GetUserClaimsResponse> | undefined): boolean {
-    return proto3.util.equals(GetUserClaimsResponse, a, b);
+  static equals(a: Claims | PlainMessage<Claims> | undefined, b: Claims | PlainMessage<Claims> | undefined): boolean {
+    return proto3.util.equals(Claims, a, b);
+  }
+}
+
+/**
+ * UserClaims represents id token claims
+ *
+ * @generated from message holos.v1alpha1.GetCallerClaimsResponse
+ */
+export class GetCallerClaimsResponse extends Message<GetCallerClaimsResponse> {
+  /**
+   * @generated from field: holos.v1alpha1.Claims claims = 1;
+   */
+  claims?: Claims;
+
+  constructor(data?: PartialMessage<GetCallerClaimsResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.v1alpha1.GetCallerClaimsResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "claims", kind: "message", T: Claims },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCallerClaimsResponse {
+    return new GetCallerClaimsResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetCallerClaimsResponse {
+    return new GetCallerClaimsResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetCallerClaimsResponse {
+    return new GetCallerClaimsResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetCallerClaimsResponse | PlainMessage<GetCallerClaimsResponse> | undefined, b: GetCallerClaimsResponse | PlainMessage<GetCallerClaimsResponse> | undefined): boolean {
+    return proto3.util.equals(GetCallerClaimsResponse, a, b);
   }
 }
 
 /**
  * Empty request, claims are pulled from the id token
  *
- * @generated from message holos.v1alpha1.GetUserRequest
+ * @generated from message holos.v1alpha1.GetCallerUserRequest
  */
-export class GetUserRequest extends Message<GetUserRequest> {
-  /**
-   * email to look up, or email of authenticated id token if not specified.
-   *
-   * @generated from field: optional string email = 1;
-   */
-  email?: string;
-
-  constructor(data?: PartialMessage<GetUserRequest>) {
+export class GetCallerUserRequest extends Message<GetCallerUserRequest> {
+  constructor(data?: PartialMessage<GetCallerUserRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetUserRequest";
+  static readonly typeName = "holos.v1alpha1.GetCallerUserRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "email", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetUserRequest {
-    return new GetUserRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCallerUserRequest {
+    return new GetCallerUserRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetUserRequest {
-    return new GetUserRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetCallerUserRequest {
+    return new GetCallerUserRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetUserRequest {
-    return new GetUserRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetCallerUserRequest {
+    return new GetCallerUserRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetUserRequest | PlainMessage<GetUserRequest> | undefined, b: GetUserRequest | PlainMessage<GetUserRequest> | undefined): boolean {
-    return proto3.util.equals(GetUserRequest, a, b);
+  static equals(a: GetCallerUserRequest | PlainMessage<GetCallerUserRequest> | undefined, b: GetCallerUserRequest | PlainMessage<GetCallerUserRequest> | undefined): boolean {
+    return proto3.util.equals(GetCallerUserRequest, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.GetUserResponse
+ * @generated from message holos.v1alpha1.GetCallerUserResponse
  */
-export class GetUserResponse extends Message<GetUserResponse> {
+export class GetCallerUserResponse extends Message<GetCallerUserResponse> {
   /**
    * @generated from field: holos.v1alpha1.User user = 1;
    */
   user?: User;
 
-  constructor(data?: PartialMessage<GetUserResponse>) {
+  constructor(data?: PartialMessage<GetCallerUserResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetUserResponse";
+  static readonly typeName = "holos.v1alpha1.GetCallerUserResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "user", kind: "message", T: User },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetUserResponse {
-    return new GetUserResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCallerUserResponse {
+    return new GetCallerUserResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetUserResponse {
-    return new GetUserResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetCallerUserResponse {
+    return new GetCallerUserResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetUserResponse {
-    return new GetUserResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetCallerUserResponse {
+    return new GetCallerUserResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetUserResponse | PlainMessage<GetUserResponse> | undefined, b: GetUserResponse | PlainMessage<GetUserResponse> | undefined): boolean {
-    return proto3.util.equals(GetUserResponse, a, b);
+  static equals(a: GetCallerUserResponse | PlainMessage<GetCallerUserResponse> | undefined, b: GetCallerUserResponse | PlainMessage<GetCallerUserResponse> | undefined): boolean {
+    return proto3.util.equals(GetCallerUserResponse, a, b);
   }
 }
 

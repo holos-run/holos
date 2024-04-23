@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { GetOrganizationRequest, GetOrganizationResponse, RegisterOrganizationRequest, RegisterOrganizationResponse } from "./organization_pb.js";
+import { CreateCallerOrganizationRequest, CreateCallerOrganizationResponse, GetCallerOrganizationsRequest, GetCallerOrganizationsResponse } from "./organization_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -13,21 +13,21 @@ export const OrganizationService = {
   typeName: "holos.v1alpha1.OrganizationService",
   methods: {
     /**
-     * @generated from rpc holos.v1alpha1.OrganizationService.RegisterOrganization
+     * @generated from rpc holos.v1alpha1.OrganizationService.GetCallerOrganizations
      */
-    registerOrganization: {
-      name: "RegisterOrganization",
-      I: RegisterOrganizationRequest,
-      O: RegisterOrganizationResponse,
+    getCallerOrganizations: {
+      name: "GetCallerOrganizations",
+      I: GetCallerOrganizationsRequest,
+      O: GetCallerOrganizationsResponse,
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc holos.v1alpha1.OrganizationService.GetOrganization
+     * @generated from rpc holos.v1alpha1.OrganizationService.CreateCallerOrganization
      */
-    getOrganization: {
-      name: "GetOrganization",
-      I: GetOrganizationRequest,
-      O: GetOrganizationResponse,
+    createCallerOrganization: {
+      name: "CreateCallerOrganization",
+      I: CreateCallerOrganizationRequest,
+      O: CreateCallerOrganizationResponse,
       kind: MethodKind.Unary,
     },
   }

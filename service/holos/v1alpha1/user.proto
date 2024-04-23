@@ -21,39 +21,37 @@ message User {
   Timestamps timestamps = 5;
 }
 
-message RegisterUserRequest {
-  optional string name = 1 [(buf.validate.field).string.max_len = 100];
-}
+message CreateCallerUserRequest {}
 
-message RegisterUserResponse {
+message CreateCallerUserResponse {
   User user = 1;
-  bool already_exists = 2;
 }
 
-// Empty request, claims are pulled from the id token
-message GetUserClaimsRequest {}
+message GetCallerClaimsRequest {}
 
-// UserClaims represents id token claims
-message GetUserClaimsResponse {
+message Claims {
   string iss = 1;
   string sub = 2;
   string email = 3 [(buf.validate.field).string.email = true];
   bool email_verified = 4;
   string name = 5 [(buf.validate.field).string.max_len = 100];
+  repeated string groups = 6;
+}
+
+// UserClaims represents id token claims
+message GetCallerClaimsResponse {
+  Claims claims = 1;
 }
 
 // Empty request, claims are pulled from the id token
-message GetUserRequest {
-  // email to look up, or email of authenticated id token if not specified.
-  optional string email = 1 [(buf.validate.field).string.email = true];
-}
+message GetCallerUserRequest {}
 
-message GetUserResponse {
+message GetCallerUserResponse {
   User user = 1;
 }
 
 service UserService {
-  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {}
-  rpc GetUserClaims(GetUserClaimsRequest) returns (GetUserClaimsResponse) {}
-  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+  rpc GetCallerClaims(GetCallerClaimsRequest) returns (GetCallerClaimsResponse) {}
+  rpc GetCallerUser(GetCallerUserRequest) returns (GetCallerUserResponse) {}
+  rpc CreateCallerUser(CreateCallerUserRequest) returns (CreateCallerUserResponse) {}
 }

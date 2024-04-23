@@ -47,6 +47,8 @@ type Identity interface {
 	Verified() bool
 	// Name is usually set on the initial id token, often omitted by google in refreshed id tokens.
 	Name() string
+	// Groups is the groups claim.
+	Groups() []string
 }
 
 // key is an unexported type for keys defined in this package to prevent
@@ -102,11 +104,12 @@ func NewVerifier(ctx context.Context, log *slog.Logger, issuer string) (*oidc.ID
 }
 
 type claims struct {
-	Issuer   string `json:"iss"`
-	Subject  string `json:"sub"`
-	Email    string `json:"email"`
-	Verified bool   `json:"email_verified"`
-	Name     string `json:"name"`
+	Issuer   string   `json:"iss"`
+	Subject  string   `json:"sub"`
+	Email    string   `json:"email"`
+	Verified bool     `json:"email_verified"`
+	Name     string   `json:"name"`
+	Groups   []string `json:"groups"`
 }
 
 type user struct {
@@ -127,6 +130,10 @@ func (u user) Name() string {
 
 func (u user) Email() string {
 	return u.claims.Email
+}
+
+func (u user) Groups() []string {
+	return u.claims.Groups
 }
 
 func (u user) Verified() bool {

@@ -78,15 +78,24 @@ func (ou *OrganizationUpdate) SetNillableCreatorID(u *uuid.UUID) *OrganizationUp
 	return ou
 }
 
-// ClearCreatorID clears the value of the "creator_id" field.
-func (ou *OrganizationUpdate) ClearCreatorID() *OrganizationUpdate {
-	ou.mutation.ClearCreatorID()
-	return ou
-}
-
 // SetCreator sets the "creator" edge to the User entity.
 func (ou *OrganizationUpdate) SetCreator(u *User) *OrganizationUpdate {
 	return ou.SetCreatorID(u.ID)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (ou *OrganizationUpdate) AddUserIDs(ids ...uuid.UUID) *OrganizationUpdate {
+	ou.mutation.AddUserIDs(ids...)
+	return ou
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (ou *OrganizationUpdate) AddUsers(u ...*User) *OrganizationUpdate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return ou.AddUserIDs(ids...)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -98,6 +107,27 @@ func (ou *OrganizationUpdate) Mutation() *OrganizationMutation {
 func (ou *OrganizationUpdate) ClearCreator() *OrganizationUpdate {
 	ou.mutation.ClearCreator()
 	return ou
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (ou *OrganizationUpdate) ClearUsers() *OrganizationUpdate {
+	ou.mutation.ClearUsers()
+	return ou
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (ou *OrganizationUpdate) RemoveUserIDs(ids ...uuid.UUID) *OrganizationUpdate {
+	ou.mutation.RemoveUserIDs(ids...)
+	return ou
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (ou *OrganizationUpdate) RemoveUsers(u ...*User) *OrganizationUpdate {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return ou.RemoveUserIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -143,6 +173,9 @@ func (ou *OrganizationUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Organization.name": %w`, err)}
 		}
 	}
+	if _, ok := ou.mutation.CreatorID(); ou.mutation.CreatorCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Organization.creator"`)
+	}
 	return nil
 }
 
@@ -186,6 +219,51 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Inverse: false,
 			Table:   organization.CreatorTable,
 			Columns: []string{organization.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ou.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   organization.UsersTable,
+			Columns: organization.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.RemovedUsersIDs(); len(nodes) > 0 && !ou.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   organization.UsersTable,
+			Columns: organization.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   organization.UsersTable,
+			Columns: organization.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -264,15 +342,24 @@ func (ouo *OrganizationUpdateOne) SetNillableCreatorID(u *uuid.UUID) *Organizati
 	return ouo
 }
 
-// ClearCreatorID clears the value of the "creator_id" field.
-func (ouo *OrganizationUpdateOne) ClearCreatorID() *OrganizationUpdateOne {
-	ouo.mutation.ClearCreatorID()
-	return ouo
-}
-
 // SetCreator sets the "creator" edge to the User entity.
 func (ouo *OrganizationUpdateOne) SetCreator(u *User) *OrganizationUpdateOne {
 	return ouo.SetCreatorID(u.ID)
+}
+
+// AddUserIDs adds the "users" edge to the User entity by IDs.
+func (ouo *OrganizationUpdateOne) AddUserIDs(ids ...uuid.UUID) *OrganizationUpdateOne {
+	ouo.mutation.AddUserIDs(ids...)
+	return ouo
+}
+
+// AddUsers adds the "users" edges to the User entity.
+func (ouo *OrganizationUpdateOne) AddUsers(u ...*User) *OrganizationUpdateOne {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return ouo.AddUserIDs(ids...)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -284,6 +371,27 @@ func (ouo *OrganizationUpdateOne) Mutation() *OrganizationMutation {
 func (ouo *OrganizationUpdateOne) ClearCreator() *OrganizationUpdateOne {
 	ouo.mutation.ClearCreator()
 	return ouo
+}
+
+// ClearUsers clears all "users" edges to the User entity.
+func (ouo *OrganizationUpdateOne) ClearUsers() *OrganizationUpdateOne {
+	ouo.mutation.ClearUsers()
+	return ouo
+}
+
+// RemoveUserIDs removes the "users" edge to User entities by IDs.
+func (ouo *OrganizationUpdateOne) RemoveUserIDs(ids ...uuid.UUID) *OrganizationUpdateOne {
+	ouo.mutation.RemoveUserIDs(ids...)
+	return ouo
+}
+
+// RemoveUsers removes "users" edges to User entities.
+func (ouo *OrganizationUpdateOne) RemoveUsers(u ...*User) *OrganizationUpdateOne {
+	ids := make([]uuid.UUID, len(u))
+	for i := range u {
+		ids[i] = u[i].ID
+	}
+	return ouo.RemoveUserIDs(ids...)
 }
 
 // Where appends a list predicates to the OrganizationUpdate builder.
@@ -341,6 +449,9 @@ func (ouo *OrganizationUpdateOne) check() error {
 		if err := organization.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Organization.name": %w`, err)}
 		}
+	}
+	if _, ok := ouo.mutation.CreatorID(); ouo.mutation.CreatorCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Organization.creator"`)
 	}
 	return nil
 }
@@ -402,6 +513,51 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 			Inverse: false,
 			Table:   organization.CreatorTable,
 			Columns: []string{organization.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ouo.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   organization.UsersTable,
+			Columns: organization.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.RemovedUsersIDs(); len(nodes) > 0 && !ouo.mutation.UsersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   organization.UsersTable,
+			Columns: organization.UsersPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.UsersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   organization.UsersTable,
+			Columns: organization.UsersPrimaryKey,
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
