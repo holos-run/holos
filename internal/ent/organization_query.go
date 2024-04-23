@@ -13,15 +13,17 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/predicate"
+	"github.com/holos-run/holos/internal/ent/user"
 )
 
 // OrganizationQuery is the builder for querying Organization entities.
 type OrganizationQuery struct {
 	config
-	ctx        *QueryContext
-	order      []organization.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Organization
+	ctx         *QueryContext
+	order       []organization.OrderOption
+	inters      []Interceptor
+	predicates  []predicate.Organization
+	withCreator *UserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -56,6 +58,28 @@ func (oq *OrganizationQuery) Unique(unique bool) *OrganizationQuery {
 func (oq *OrganizationQuery) Order(o ...organization.OrderOption) *OrganizationQuery {
 	oq.order = append(oq.order, o...)
 	return oq
+}
+
+// QueryCreator chains the current query on the "creator" edge.
+func (oq *OrganizationQuery) QueryCreator() *UserQuery {
+	query := (&UserClient{config: oq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := oq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := oq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, organization.CreatorTable, organization.CreatorColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Organization entity from the query.
@@ -245,15 +269,27 @@ func (oq *OrganizationQuery) Clone() *OrganizationQuery {
 		return nil
 	}
 	return &OrganizationQuery{
-		config:     oq.config,
-		ctx:        oq.ctx.Clone(),
-		order:      append([]organization.OrderOption{}, oq.order...),
-		inters:     append([]Interceptor{}, oq.inters...),
-		predicates: append([]predicate.Organization{}, oq.predicates...),
+		config:      oq.config,
+		ctx:         oq.ctx.Clone(),
+		order:       append([]organization.OrderOption{}, oq.order...),
+		inters:      append([]Interceptor{}, oq.inters...),
+		predicates:  append([]predicate.Organization{}, oq.predicates...),
+		withCreator: oq.withCreator.Clone(),
 		// clone intermediate query.
 		sql:  oq.sql.Clone(),
 		path: oq.path,
 	}
+}
+
+// WithCreator tells the query-builder to eager-load the nodes that are connected to
+// the "creator" edge. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrganizationQuery) WithCreator(opts ...func(*UserQuery)) *OrganizationQuery {
+	query := (&UserClient{config: oq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	oq.withCreator = query
+	return oq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -332,8 +368,11 @@ func (oq *OrganizationQuery) prepareQuery(ctx context.Context) error {
 
 func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Organization, error) {
 	var (
-		nodes = []*Organization{}
-		_spec = oq.querySpec()
+		nodes       = []*Organization{}
+		_spec       = oq.querySpec()
+		loadedTypes = [1]bool{
+			oq.withCreator != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Organization).scanValues(nil, columns)
@@ -341,6 +380,7 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Organization{config: oq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -352,7 +392,43 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := oq.withCreator; query != nil {
+		if err := oq.loadCreator(ctx, query, nodes, nil,
+			func(n *Organization, e *User) { n.Edges.Creator = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (oq *OrganizationQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *User)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Organization)
+	for i := range nodes {
+		fk := nodes[i].CreatorID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "creator_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
 }
 
 func (oq *OrganizationQuery) sqlCount(ctx context.Context) (int, error) {
@@ -379,6 +455,9 @@ func (oq *OrganizationQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != organization.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if oq.withCreator != nil {
+			_spec.Node.AddColumnOnce(organization.FieldCreatorID)
 		}
 	}
 	if ps := oq.predicates; len(ps) > 0 {

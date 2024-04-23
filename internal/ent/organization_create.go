@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
+	"github.com/holos-run/holos/internal/ent/user"
 )
 
 // OrganizationCreate is the builder for creating a Organization entity.
@@ -64,6 +65,20 @@ func (oc *OrganizationCreate) SetDisplayName(s string) *OrganizationCreate {
 	return oc
 }
 
+// SetCreatorID sets the "creator_id" field.
+func (oc *OrganizationCreate) SetCreatorID(u uuid.UUID) *OrganizationCreate {
+	oc.mutation.SetCreatorID(u)
+	return oc
+}
+
+// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
+func (oc *OrganizationCreate) SetNillableCreatorID(u *uuid.UUID) *OrganizationCreate {
+	if u != nil {
+		oc.SetCreatorID(*u)
+	}
+	return oc
+}
+
 // SetID sets the "id" field.
 func (oc *OrganizationCreate) SetID(u uuid.UUID) *OrganizationCreate {
 	oc.mutation.SetID(u)
@@ -76,6 +91,11 @@ func (oc *OrganizationCreate) SetNillableID(u *uuid.UUID) *OrganizationCreate {
 		oc.SetID(*u)
 	}
 	return oc
+}
+
+// SetCreator sets the "creator" edge to the User entity.
+func (oc *OrganizationCreate) SetCreator(u *User) *OrganizationCreate {
+	return oc.SetCreatorID(u.ID)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -198,6 +218,23 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 		_spec.SetField(organization.FieldDisplayName, field.TypeString, value)
 		_node.DisplayName = value
 	}
+	if nodes := oc.mutation.CreatorIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   organization.CreatorTable,
+			Columns: []string{organization.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.CreatorID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
 	return _node, _spec
 }
 
@@ -283,6 +320,24 @@ func (u *OrganizationUpsert) SetDisplayName(v string) *OrganizationUpsert {
 // UpdateDisplayName sets the "display_name" field to the value that was provided on create.
 func (u *OrganizationUpsert) UpdateDisplayName() *OrganizationUpsert {
 	u.SetExcluded(organization.FieldDisplayName)
+	return u
+}
+
+// SetCreatorID sets the "creator_id" field.
+func (u *OrganizationUpsert) SetCreatorID(v uuid.UUID) *OrganizationUpsert {
+	u.Set(organization.FieldCreatorID, v)
+	return u
+}
+
+// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
+func (u *OrganizationUpsert) UpdateCreatorID() *OrganizationUpsert {
+	u.SetExcluded(organization.FieldCreatorID)
+	return u
+}
+
+// ClearCreatorID clears the value of the "creator_id" field.
+func (u *OrganizationUpsert) ClearCreatorID() *OrganizationUpsert {
+	u.SetNull(organization.FieldCreatorID)
 	return u
 }
 
@@ -376,6 +431,27 @@ func (u *OrganizationUpsertOne) SetDisplayName(v string) *OrganizationUpsertOne 
 func (u *OrganizationUpsertOne) UpdateDisplayName() *OrganizationUpsertOne {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.UpdateDisplayName()
+	})
+}
+
+// SetCreatorID sets the "creator_id" field.
+func (u *OrganizationUpsertOne) SetCreatorID(v uuid.UUID) *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetCreatorID(v)
+	})
+}
+
+// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
+func (u *OrganizationUpsertOne) UpdateCreatorID() *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateCreatorID()
+	})
+}
+
+// ClearCreatorID clears the value of the "creator_id" field.
+func (u *OrganizationUpsertOne) ClearCreatorID() *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.ClearCreatorID()
 	})
 }
 
@@ -636,6 +712,27 @@ func (u *OrganizationUpsertBulk) SetDisplayName(v string) *OrganizationUpsertBul
 func (u *OrganizationUpsertBulk) UpdateDisplayName() *OrganizationUpsertBulk {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.UpdateDisplayName()
+	})
+}
+
+// SetCreatorID sets the "creator_id" field.
+func (u *OrganizationUpsertBulk) SetCreatorID(v uuid.UUID) *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetCreatorID(v)
+	})
+}
+
+// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
+func (u *OrganizationUpsertBulk) UpdateCreatorID() *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateCreatorID()
+	})
+}
+
+// ClearCreatorID clears the value of the "creator_id" field.
+func (u *OrganizationUpsertBulk) ClearCreatorID() *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.ClearCreatorID()
 	})
 }
 

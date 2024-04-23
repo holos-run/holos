@@ -144,3 +144,20 @@ func createUser(ctx context.Context, client *ent.Client, name string, claims aut
 
 	return user, nil
 }
+
+func getAuthenticatedUser(ctx context.Context, client *ent.Client) (*ent.User, error) {
+	authnIdentity, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+	log := logger.FromContext(ctx).With("iss", authnIdentity.Issuer(), "sub", authnIdentity.Subject(), "email", authnIdentity.Email())
+	user, err := client.User.Query().Where(
+		user.Iss(authnIdentity.Issuer()),
+		user.Sub(authnIdentity.Subject()),
+	).Only(ctx)
+	if err != nil {
+		log.DebugContext(ctx, "could not get user", "err", err)
+		return nil, errors.Wrap(err)
+	}
+	return user, nil
+}

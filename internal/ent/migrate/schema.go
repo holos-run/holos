@@ -15,12 +15,21 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "display_name", Type: field.TypeString},
+		{Name: "creator_id", Type: field.TypeUUID, Nullable: true},
 	}
 	// OrganizationsTable holds the schema information for the "organizations" table.
 	OrganizationsTable = &schema.Table{
 		Name:       "organizations",
 		Columns:    OrganizationsColumns,
 		PrimaryKey: []*schema.Column{OrganizationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "organizations_users_creator",
+				Columns:    []*schema.Column{OrganizationsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -53,4 +62,5 @@ var (
 )
 
 func init() {
+	OrganizationsTable.ForeignKeys[0].RefTable = UsersTable
 }

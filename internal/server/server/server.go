@@ -113,8 +113,12 @@ func (s *Server) registerConnectRpc() error {
 	opts := connect.WithInterceptors(validator)
 
 	s.handle(holosconnect.NewUserServiceHandler(handler.NewUserHandler(s.db), opts))
+	s.handle(holosconnect.NewOrganizationServiceHandler(handler.NewOrganizationHandler(s.db), opts))
 
-	reflector := grpcreflect.NewStaticReflector(holosconnect.UserServiceName)
+	reflector := grpcreflect.NewStaticReflector(
+		holosconnect.UserServiceName,
+		holosconnect.OrganizationServiceName,
+	)
 
 	s.mux.Handle(grpcreflect.NewHandlerV1(reflector))
 	s.mux.Handle(grpcreflect.NewHandlerV1Alpha(reflector))

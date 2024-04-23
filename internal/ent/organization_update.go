@@ -11,8 +11,10 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/predicate"
+	"github.com/holos-run/holos/internal/ent/user"
 )
 
 // OrganizationUpdate is the builder for updating Organization entities.
@@ -62,9 +64,40 @@ func (ou *OrganizationUpdate) SetNillableDisplayName(s *string) *OrganizationUpd
 	return ou
 }
 
+// SetCreatorID sets the "creator_id" field.
+func (ou *OrganizationUpdate) SetCreatorID(u uuid.UUID) *OrganizationUpdate {
+	ou.mutation.SetCreatorID(u)
+	return ou
+}
+
+// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
+func (ou *OrganizationUpdate) SetNillableCreatorID(u *uuid.UUID) *OrganizationUpdate {
+	if u != nil {
+		ou.SetCreatorID(*u)
+	}
+	return ou
+}
+
+// ClearCreatorID clears the value of the "creator_id" field.
+func (ou *OrganizationUpdate) ClearCreatorID() *OrganizationUpdate {
+	ou.mutation.ClearCreatorID()
+	return ou
+}
+
+// SetCreator sets the "creator" edge to the User entity.
+func (ou *OrganizationUpdate) SetCreator(u *User) *OrganizationUpdate {
+	return ou.SetCreatorID(u.ID)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (ou *OrganizationUpdate) Mutation() *OrganizationMutation {
 	return ou.mutation
+}
+
+// ClearCreator clears the "creator" edge to the User entity.
+func (ou *OrganizationUpdate) ClearCreator() *OrganizationUpdate {
+	ou.mutation.ClearCreator()
+	return ou
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -134,6 +167,35 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ou.mutation.DisplayName(); ok {
 		_spec.SetField(organization.FieldDisplayName, field.TypeString, value)
 	}
+	if ou.mutation.CreatorCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   organization.CreatorTable,
+			Columns: []string{organization.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ou.mutation.CreatorIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   organization.CreatorTable,
+			Columns: []string{organization.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ou.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{organization.Label}
@@ -188,9 +250,40 @@ func (ouo *OrganizationUpdateOne) SetNillableDisplayName(s *string) *Organizatio
 	return ouo
 }
 
+// SetCreatorID sets the "creator_id" field.
+func (ouo *OrganizationUpdateOne) SetCreatorID(u uuid.UUID) *OrganizationUpdateOne {
+	ouo.mutation.SetCreatorID(u)
+	return ouo
+}
+
+// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
+func (ouo *OrganizationUpdateOne) SetNillableCreatorID(u *uuid.UUID) *OrganizationUpdateOne {
+	if u != nil {
+		ouo.SetCreatorID(*u)
+	}
+	return ouo
+}
+
+// ClearCreatorID clears the value of the "creator_id" field.
+func (ouo *OrganizationUpdateOne) ClearCreatorID() *OrganizationUpdateOne {
+	ouo.mutation.ClearCreatorID()
+	return ouo
+}
+
+// SetCreator sets the "creator" edge to the User entity.
+func (ouo *OrganizationUpdateOne) SetCreator(u *User) *OrganizationUpdateOne {
+	return ouo.SetCreatorID(u.ID)
+}
+
 // Mutation returns the OrganizationMutation object of the builder.
 func (ouo *OrganizationUpdateOne) Mutation() *OrganizationMutation {
 	return ouo.mutation
+}
+
+// ClearCreator clears the "creator" edge to the User entity.
+func (ouo *OrganizationUpdateOne) ClearCreator() *OrganizationUpdateOne {
+	ouo.mutation.ClearCreator()
+	return ouo
 }
 
 // Where appends a list predicates to the OrganizationUpdate builder.
@@ -289,6 +382,35 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 	}
 	if value, ok := ouo.mutation.DisplayName(); ok {
 		_spec.SetField(organization.FieldDisplayName, field.TypeString, value)
+	}
+	if ouo.mutation.CreatorCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   organization.CreatorTable,
+			Columns: []string{organization.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ouo.mutation.CreatorIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   organization.CreatorTable,
+			Columns: []string{organization.CreatorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Organization{config: ouo.config}
 	_spec.Assign = _node.assignValues

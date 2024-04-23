@@ -15,6 +15,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/user"
 )
@@ -313,6 +314,22 @@ func (c *OrganizationClient) GetX(ctx context.Context, id uuid.UUID) *Organizati
 		panic(err)
 	}
 	return obj
+}
+
+// QueryCreator queries the creator edge of a Organization.
+func (c *OrganizationClient) QueryCreator(o *Organization) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, organization.CreatorTable, organization.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
 }
 
 // Hooks returns the client hooks.

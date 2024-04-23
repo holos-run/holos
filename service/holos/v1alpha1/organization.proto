@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package holos.v1alpha1;
+
+option go_package = "github.com/holos-run/holos/service/gen/holos/v1alpha1;holos";
+
+// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+import "buf/validate/validate.proto";
+import "holos/v1alpha1/timestamps.proto";
+
+// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+
+message Organization {
+  // Unique id assigned by the server.
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string name = 2 [(buf.validate.field).string.max_len = 100];
+  string display_name = 3 [(buf.validate.field).string.max_len = 100];
+  Timestamps timestamps = 4;
+}
+
+message RegisterOrganizationRequest {
+  optional string name = 1 [(buf.validate.field).string.max_len = 100];
+  optional string display_name = 2 [(buf.validate.field).string.max_len = 100];
+}
+
+message RegisterOrganizationResponse {
+  Organization organization = 1;
+  bool already_exists = 2;
+}
+
+// Empty request, claims are pulled from the id token
+message GetOrganizationRequest {
+  // name to look up
+  optional string name = 1 [(buf.validate.field).string.max_len = 100];
+}
+
+message GetOrganizationResponse {
+  Organization organization = 1;
+}
+
+service OrganizationService {
+  rpc RegisterOrganization(RegisterOrganizationRequest) returns (RegisterOrganizationResponse) {}
+  rpc GetOrganization(GetOrganizationRequest) returns (GetOrganizationResponse) {}
+}

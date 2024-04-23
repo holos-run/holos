@@ -33,17 +33,19 @@ const (
 // OrganizationMutation represents an operation that mutates the Organization nodes in the graph.
 type OrganizationMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	created_at    *time.Time
-	updated_at    *time.Time
-	name          *string
-	display_name  *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Organization, error)
-	predicates    []predicate.Organization
+	op             Op
+	typ            string
+	id             *uuid.UUID
+	created_at     *time.Time
+	updated_at     *time.Time
+	name           *string
+	display_name   *string
+	clearedFields  map[string]struct{}
+	creator        *uuid.UUID
+	clearedcreator bool
+	done           bool
+	oldValue       func(context.Context) (*Organization, error)
+	predicates     []predicate.Organization
 }
 
 var _ ent.Mutation = (*OrganizationMutation)(nil)
@@ -294,6 +296,82 @@ func (m *OrganizationMutation) ResetDisplayName() {
 	m.display_name = nil
 }
 
+// SetCreatorID sets the "creator_id" field.
+func (m *OrganizationMutation) SetCreatorID(u uuid.UUID) {
+	m.creator = &u
+}
+
+// CreatorID returns the value of the "creator_id" field in the mutation.
+func (m *OrganizationMutation) CreatorID() (r uuid.UUID, exists bool) {
+	v := m.creator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatorID returns the old "creator_id" field's value of the Organization entity.
+// If the Organization object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrganizationMutation) OldCreatorID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatorID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatorID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatorID: %w", err)
+	}
+	return oldValue.CreatorID, nil
+}
+
+// ClearCreatorID clears the value of the "creator_id" field.
+func (m *OrganizationMutation) ClearCreatorID() {
+	m.creator = nil
+	m.clearedFields[organization.FieldCreatorID] = struct{}{}
+}
+
+// CreatorIDCleared returns if the "creator_id" field was cleared in this mutation.
+func (m *OrganizationMutation) CreatorIDCleared() bool {
+	_, ok := m.clearedFields[organization.FieldCreatorID]
+	return ok
+}
+
+// ResetCreatorID resets all changes to the "creator_id" field.
+func (m *OrganizationMutation) ResetCreatorID() {
+	m.creator = nil
+	delete(m.clearedFields, organization.FieldCreatorID)
+}
+
+// ClearCreator clears the "creator" edge to the User entity.
+func (m *OrganizationMutation) ClearCreator() {
+	m.clearedcreator = true
+	m.clearedFields[organization.FieldCreatorID] = struct{}{}
+}
+
+// CreatorCleared reports if the "creator" edge to the User entity was cleared.
+func (m *OrganizationMutation) CreatorCleared() bool {
+	return m.CreatorIDCleared() || m.clearedcreator
+}
+
+// CreatorIDs returns the "creator" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CreatorID instead. It exists only for internal usage by the builders.
+func (m *OrganizationMutation) CreatorIDs() (ids []uuid.UUID) {
+	if id := m.creator; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCreator resets all changes to the "creator" edge.
+func (m *OrganizationMutation) ResetCreator() {
+	m.creator = nil
+	m.clearedcreator = false
+}
+
 // Where appends a list predicates to the OrganizationMutation builder.
 func (m *OrganizationMutation) Where(ps ...predicate.Organization) {
 	m.predicates = append(m.predicates, ps...)
@@ -328,7 +406,7 @@ func (m *OrganizationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OrganizationMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.created_at != nil {
 		fields = append(fields, organization.FieldCreatedAt)
 	}
@@ -340,6 +418,9 @@ func (m *OrganizationMutation) Fields() []string {
 	}
 	if m.display_name != nil {
 		fields = append(fields, organization.FieldDisplayName)
+	}
+	if m.creator != nil {
+		fields = append(fields, organization.FieldCreatorID)
 	}
 	return fields
 }
@@ -357,6 +438,8 @@ func (m *OrganizationMutation) Field(name string) (ent.Value, bool) {
 		return m.Name()
 	case organization.FieldDisplayName:
 		return m.DisplayName()
+	case organization.FieldCreatorID:
+		return m.CreatorID()
 	}
 	return nil, false
 }
@@ -374,6 +457,8 @@ func (m *OrganizationMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldName(ctx)
 	case organization.FieldDisplayName:
 		return m.OldDisplayName(ctx)
+	case organization.FieldCreatorID:
+		return m.OldCreatorID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Organization field %s", name)
 }
@@ -411,6 +496,13 @@ func (m *OrganizationMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDisplayName(v)
 		return nil
+	case organization.FieldCreatorID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatorID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Organization field %s", name)
 }
@@ -440,7 +532,11 @@ func (m *OrganizationMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *OrganizationMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(organization.FieldCreatorID) {
+		fields = append(fields, organization.FieldCreatorID)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -453,6 +549,11 @@ func (m *OrganizationMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *OrganizationMutation) ClearField(name string) error {
+	switch name {
+	case organization.FieldCreatorID:
+		m.ClearCreatorID()
+		return nil
+	}
 	return fmt.Errorf("unknown Organization nullable field %s", name)
 }
 
@@ -472,25 +573,37 @@ func (m *OrganizationMutation) ResetField(name string) error {
 	case organization.FieldDisplayName:
 		m.ResetDisplayName()
 		return nil
+	case organization.FieldCreatorID:
+		m.ResetCreatorID()
+		return nil
 	}
 	return fmt.Errorf("unknown Organization field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *OrganizationMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.creator != nil {
+		edges = append(edges, organization.EdgeCreator)
+	}
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
 func (m *OrganizationMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case organization.EdgeCreator:
+		if id := m.creator; id != nil {
+			return []ent.Value{*id}
+		}
+	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *OrganizationMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
 	return edges
 }
 
@@ -502,25 +615,42 @@ func (m *OrganizationMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *OrganizationMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
+	edges := make([]string, 0, 1)
+	if m.clearedcreator {
+		edges = append(edges, organization.EdgeCreator)
+	}
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
 func (m *OrganizationMutation) EdgeCleared(name string) bool {
+	switch name {
+	case organization.EdgeCreator:
+		return m.clearedcreator
+	}
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
 func (m *OrganizationMutation) ClearEdge(name string) error {
+	switch name {
+	case organization.EdgeCreator:
+		m.ClearCreator()
+		return nil
+	}
 	return fmt.Errorf("unknown Organization unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
 func (m *OrganizationMutation) ResetEdge(name string) error {
+	switch name {
+	case organization.EdgeCreator:
+		m.ResetCreator()
+		return nil
+	}
 	return fmt.Errorf("unknown Organization edge %s", name)
 }
 
