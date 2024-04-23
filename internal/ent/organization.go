@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
+	"github.com/holos-run/holos/internal/ent/user"
 )
 
 // Organization is the model entity for the Organization schema.
@@ -25,8 +26,44 @@ type Organization struct {
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// DisplayName holds the value of the "display_name" field.
-	DisplayName  string `json:"display_name,omitempty"`
+	DisplayName string `json:"display_name,omitempty"`
+	// CreatorID holds the value of the "creator_id" field.
+	CreatorID uuid.UUID `json:"creator_id,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the OrganizationQuery when eager-loading is set.
+	Edges        OrganizationEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// OrganizationEdges holds the relations/edges for other nodes in the graph.
+type OrganizationEdges struct {
+	// Creator holds the value of the creator edge.
+	Creator *User `json:"creator,omitempty"`
+	// Users holds the value of the users edge.
+	Users []*User `json:"users,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// CreatorOrErr returns the Creator value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e OrganizationEdges) CreatorOrErr() (*User, error) {
+	if e.Creator != nil {
+		return e.Creator, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "creator"}
+}
+
+// UsersOrErr returns the Users value or an error if the edge
+// was not loaded in eager-loading.
+func (e OrganizationEdges) UsersOrErr() ([]*User, error) {
+	if e.loadedTypes[1] {
+		return e.Users, nil
+	}
+	return nil, &NotLoadedError{edge: "users"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -38,7 +75,7 @@ func (*Organization) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case organization.FieldCreatedAt, organization.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case organization.FieldID:
+		case organization.FieldID, organization.FieldCreatorID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -85,6 +122,12 @@ func (o *Organization) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				o.DisplayName = value.String
 			}
+		case organization.FieldCreatorID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field creator_id", values[i])
+			} else if value != nil {
+				o.CreatorID = *value
+			}
 		default:
 			o.selectValues.Set(columns[i], values[i])
 		}
@@ -96,6 +139,16 @@ func (o *Organization) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (o *Organization) Value(name string) (ent.Value, error) {
 	return o.selectValues.Get(name)
+}
+
+// QueryCreator queries the "creator" edge of the Organization entity.
+func (o *Organization) QueryCreator() *UserQuery {
+	return NewOrganizationClient(o.config).QueryCreator(o)
+}
+
+// QueryUsers queries the "users" edge of the Organization entity.
+func (o *Organization) QueryUsers() *UserQuery {
+	return NewOrganizationClient(o.config).QueryUsers(o)
 }
 
 // Update returns a builder for updating this Organization.
@@ -132,6 +185,9 @@ func (o *Organization) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("display_name=")
 	builder.WriteString(o.DisplayName)
+	builder.WriteString(", ")
+	builder.WriteString("creator_id=")
+	builder.WriteString(fmt.Sprintf("%v", o.CreatorID))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -1,11 +1,12 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
 	"github.com/gofrs/uuid"
-	"time"
 )
 
 func newUUID() uuid.UUID {
@@ -18,6 +19,7 @@ type BaseMixin struct {
 
 func (BaseMixin) Fields() []ent.Field {
 	return []ent.Field{
+		// id represents the identity of the entity.
 		field.UUID("id", uuid.UUID{}).Default(newUUID),
 	}
 }

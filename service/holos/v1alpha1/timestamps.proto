@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package holos.v1alpha1;
+
+option go_package = "github.com/holos-run/holos/service/gen/holos/v1alpha1;holos";
+
+import "google/protobuf/timestamp.proto";
+// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+import "buf/validate/validate.proto";
+
+// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+
+message Timestamps {
+  // Created at timestamp
+  google.protobuf.Timestamp created_at = 1 [(buf.validate.field).timestamp.lt_now = true];
+  // Updated at timestamp
+  google.protobuf.Timestamp updated_at = 2 [(buf.validate.field).timestamp.lt_now = true];
+}

@@ -11,6 +11,7 @@ import (
 
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -282,6 +283,7 @@ func getenv(key, defaultValue string) string {
 type ServerConfig struct {
 	oidcIssuer     string      // --oidc-issuer
 	oidcAudiences  stringSlice // --oidc-audience
+	authHeader     string      // --auth-header
 	listenAndServe bool        // --no-serve
 	listenPort     int         // --listen-port
 	metricsPort    int         // --metrics-port
@@ -297,6 +299,10 @@ func (c *ServerConfig) OIDCIssuer() string {
 // OIDCAudiences returns the configured allowed id token aud claim values.
 func (c *ServerConfig) OIDCAudiences() []string {
 	return c.oidcAudiences
+}
+
+func (c *ServerConfig) AuthHeader() string {
+	return c.authHeader
 }
 
 // DatabaseURI represents the database connection uri.
@@ -326,6 +332,7 @@ func (c *ServerConfig) FlagSet() *flag.FlagSet {
 	f := flag.NewFlagSet("", flag.ContinueOnError)
 	f.StringVar(&c.oidcIssuer, "oidc-issuer", c.oidcIssuer, "oidc issuer url.")
 	f.Var(&c.oidcAudiences, "oidc-audience", "allowed oidc audiences.")
+	f.StringVar(&c.authHeader, "auth-header", authn.Header, "bearer token header.")
 	f.BoolVar(&c.listenAndServe, "serve", true, "listen and serve requests.")
 	f.IntVar(&c.listenPort, "listen-port", 3000, "service listen port.")
 	f.IntVar(&c.metricsPort, "metrics-port", 9090, "metrics listen port.")

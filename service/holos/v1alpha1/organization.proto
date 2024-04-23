@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package holos.v1alpha1;
+
+option go_package = "github.com/holos-run/holos/service/gen/holos/v1alpha1;holos";
+
+// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+import "buf/validate/validate.proto";
+import "holos/v1alpha1/timestamps.proto";
+import "holos/v1alpha1/user.proto";
+
+// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+
+message Organization {
+  // Unique id assigned by the server.
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string name = 2 [(buf.validate.field).string.max_len = 100];
+  string display_name = 3 [(buf.validate.field).string.max_len = 100];
+  Timestamps timestamps = 4;
+}
+
+message GetCallerOrganizationsRequest {}
+
+message GetCallerOrganizationsResponse {
+  User user = 1;
+  repeated Organization organizations = 2;
+}
+
+message CreateCallerOrganizationRequest {}
+
+message CreateCallerOrganizationResponse {
+  User user = 1;
+  repeated Organization organizations = 2;
+}
+
+service OrganizationService {
+  rpc GetCallerOrganizations(GetCallerOrganizationsRequest) returns (GetCallerOrganizationsResponse) {}
+  rpc CreateCallerOrganization(CreateCallerOrganizationRequest) returns (CreateCallerOrganizationResponse) {}
+}

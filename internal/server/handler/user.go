@@ -6,11 +6,113 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/holos-run/holos/internal/ent"
+	"github.com/holos-run/holos/internal/ent/user"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
+
+// NewUserHandler returns a new UserService implementation.
+func NewUserHandler(db *ent.Client) *UserHandler {
+	return &UserHandler{db: db}
+}
+
+// UserHandler implements the UserService interface.
+type UserHandler struct {
+	db *ent.Client
+}
+
+func (h *UserHandler) GetCallerClaims(
+	ctx context.Context,
+	req *connect.Request[holos.GetCallerClaimsRequest],
+) (*connect.Response[holos.GetCallerClaimsResponse], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+	res := connect.NewResponse(&holos.GetCallerClaimsResponse{
+		Claims: &holos.Claims{
+			Iss:           authnID.Issuer(),
+			Sub:           authnID.Subject(),
+			Email:         authnID.Email(),
+			EmailVerified: authnID.Verified(),
+			Name:          authnID.Name(),
+			Groups:        authnID.Groups(),
+		},
+	})
+	return res, nil
+}
+
+func (h *UserHandler) GetCallerUser(
+	ctx context.Context,
+	req *connect.Request[holos.GetCallerUserRequest],
+) (*connect.Response[holos.GetCallerUserResponse], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+	dbUser, err := getUser(ctx, h.db, authnID.Email())
+	if err != nil {
+		if ent.MaskNotFound(err) == nil {
+			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
+		} else {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+		}
+	}
+	res := connect.NewResponse(&holos.GetCallerUserResponse{User: UserToRPC(dbUser)})
+	return res, nil
+}
+
+func (h *UserHandler) CreateCallerUser(
+	ctx context.Context,
+	req *connect.Request[holos.CreateCallerUserRequest],
+) (*connect.Response[holos.CreateCallerUserResponse], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
+	var createdUser *ent.User
+	err = WithTx(ctx, h.db, func(tx *ent.Tx) error {
+		createdUser, err = createUser(ctx, tx.Client(), authnID.Name(), authnID)
+		return err
+	})
+	if err != nil {
+		slog.ErrorContext(ctx, "could not save transaction", "err", err)
+		return nil, err
+	}
+
+	res := connect.NewResponse(&holos.CreateCallerUserResponse{
+		User: UserToRPC(createdUser),
+	})
+	return res, nil
+}
+
+// UserToRPC returns an *holos.User adapted from *ent.User u.
+func UserToRPC(u *ent.User) *holos.User {
+	iamUser := holos.User{
+		Id:    u.ID.String(),
+		Email: u.Email,
+		Name:  u.Name,
+		Timestamps: &holos.Timestamps{
+			CreatedAt: timestamppb.New(u.CreatedAt),
+			UpdatedAt: timestamppb.New(u.UpdatedAt),
+		},
+	}
+	return &iamUser
+}
+
+func getUser(ctx context.Context, client *ent.Client, email string) (*ent.User, error) {
+	log := logger.FromContext(ctx)
+	user, err := client.User.Query().Where(user.Email(email)).Only(ctx)
+	if err != nil {
+		log.DebugContext(ctx, "could not get user", "err", err, "email", email)
+		return nil, errors.Wrap(err)
+	}
+	return user, nil
+}
 
 func createUser(ctx context.Context, client *ent.Client, name string, claims authn.Identity) (*ent.User, error) {
 	log := logger.FromContext(ctx)
@@ -20,7 +122,7 @@ func createUser(ctx context.Context, client *ent.Client, name string, claims aut
 		SetEmail(claims.Email()).
 		SetIss(claims.Issuer()).
 		SetSub(claims.Subject()).
-		SetName(claims.Name()).
+		SetName(name).
 		Save(ctx)
 	if err != nil {
 		err = connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
@@ -29,43 +131,24 @@ func createUser(ctx context.Context, client *ent.Client, name string, claims aut
 	}
 
 	log = log.With("user", user)
-	log.DebugContext(ctx, "created user")
+	log.InfoContext(ctx, "created user")
 
 	return user, nil
 }
 
-func (h *HolosHandler) RegisterUser(
-	ctx context.Context,
-	req *connect.Request[holos.RegisterUserRequest],
-) (*connect.Response[holos.RegisterUserResponse], error) {
-	log := logger.FromContext(ctx).With("issue", 127)
-	oidc, err := authn.FromContext(ctx)
+func getAuthenticatedUser(ctx context.Context, client *ent.Client) (*ent.User, error) {
+	authnIdentity, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
-
-	var name string
-	if req.Msg.Name != nil {
-		name = req.Msg.GetName()
-	} else {
-		name = oidc.Name()
-	}
-
-	var createdUser *ent.User
-	err = WithTx(ctx, h.db, func(tx *ent.Tx) error {
-		createdUser, err = createUser(ctx, tx.Client(), name, oidc)
-		return err
-	})
+	log := logger.FromContext(ctx).With("iss", authnIdentity.Issuer(), "sub", authnIdentity.Subject(), "email", authnIdentity.Email())
+	user, err := client.User.Query().Where(
+		user.Iss(authnIdentity.Issuer()),
+		user.Sub(authnIdentity.Subject()),
+	).Only(ctx)
 	if err != nil {
-		slog.ErrorContext(ctx, "could not save transaction", "err", err)
-		return nil, err
+		log.DebugContext(ctx, "could not get user", "err", err)
+		return nil, errors.Wrap(err)
 	}
-
-	log = log.With("user.id", createdUser.ID, "user.name", createdUser.Name)
-	log.InfoContext(ctx, "registered user", "event", "registration")
-
-	res := connect.NewResponse(&holos.RegisterUserResponse{
-		User: UserToRPC(createdUser),
-	})
-	return res, nil
+	return user, nil
 }

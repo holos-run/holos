@@ -15,6 +15,8 @@ import (
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 )
 
+const Header = "x-oidc-id-token"
+
 // Verifier is the interface that wraps the basic Verify method to verify an
 // oidc id token is authentic. Intended for use in request handlers.
 type Verifier interface {
@@ -45,6 +47,8 @@ type Identity interface {
 	Verified() bool
 	// Name is usually set on the initial id token, often omitted by google in refreshed id tokens.
 	Name() string
+	// Groups is the groups claim.
+	Groups() []string
 }
 
 // key is an unexported type for keys defined in this package to prevent
@@ -100,11 +104,12 @@ func NewVerifier(ctx context.Context, log *slog.Logger, issuer string) (*oidc.ID
 }
 
 type claims struct {
-	Issuer   string `json:"iss"`
-	Subject  string `json:"sub"`
-	Email    string `json:"email"`
-	Verified bool   `json:"email_verified"`
-	Name     string `json:"name"`
+	Issuer   string   `json:"iss"`
+	Subject  string   `json:"sub"`
+	Email    string   `json:"email"`
+	Verified bool     `json:"email_verified"`
+	Name     string   `json:"name"`
+	Groups   []string `json:"groups"`
 }
 
 type user struct {
@@ -127,13 +132,17 @@ func (u user) Email() string {
 	return u.claims.Email
 }
 
+func (u user) Groups() []string {
+	return u.claims.Groups
+}
+
 func (u user) Verified() bool {
 	return u.claims.Verified
 }
 
 // Handler returns a handler that verifies the request is authentic and adds a
 // Identity to the request context.
-func Handler(v Verifier, allowedAudiences []string, next http.Handler) http.Handler {
+func Handler(v Verifier, allowedAudiences []string, header string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var rawIDToken string
 		start := time.Now()
@@ -142,7 +151,7 @@ func Handler(v Verifier, allowedAudiences []string, next http.Handler) http.Hand
 
 		// Check the X-Auth-Request-Access-Token header set by Istio ExternalAuthorization
 		if rawIDToken == "" {
-			rawIDToken = r.Header.Get("X-Auth-Request-Access-Token")
+			rawIDToken = r.Header.Get(header)
 		}
 
 		// Validate the authorization bearer token

@@ -145,7 +145,7 @@ func (hf *handlerFactory) NewHandler(t testing.TB) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := logger.NewContext(r.Context(), testutils.TestLogger(t))
 		r = r.WithContext(ctx)
-		authn.Handler(hf.verifier, []string{clientID}, http.HandlerFunc(myHandler)).ServeHTTP(w, r)
+		authn.Handler(hf.verifier, []string{clientID}, authn.Header, http.HandlerFunc(myHandler)).ServeHTTP(w, r)
 	})
 }
 

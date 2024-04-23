@@ -15,12 +15,21 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "display_name", Type: field.TypeString},
+		{Name: "creator_id", Type: field.TypeUUID},
 	}
 	// OrganizationsTable holds the schema information for the "organizations" table.
 	OrganizationsTable = &schema.Table{
 		Name:       "organizations",
 		Columns:    OrganizationsColumns,
 		PrimaryKey: []*schema.Column{OrganizationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "organizations_users_creator",
+				Columns:    []*schema.Column{OrganizationsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -37,13 +46,49 @@ var (
 		Name:       "users",
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_iss_sub",
+				Unique:  true,
+				Columns: []*schema.Column{UsersColumns[4], UsersColumns[5]},
+			},
+		},
+	}
+	// OrganizationUsersColumns holds the columns for the "organization_users" table.
+	OrganizationUsersColumns = []*schema.Column{
+		{Name: "organization_id", Type: field.TypeUUID},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// OrganizationUsersTable holds the schema information for the "organization_users" table.
+	OrganizationUsersTable = &schema.Table{
+		Name:       "organization_users",
+		Columns:    OrganizationUsersColumns,
+		PrimaryKey: []*schema.Column{OrganizationUsersColumns[0], OrganizationUsersColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "organization_users_organization_id",
+				Columns:    []*schema.Column{OrganizationUsersColumns[0]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "organization_users_user_id",
+				Columns:    []*schema.Column{OrganizationUsersColumns[1]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		OrganizationsTable,
 		UsersTable,
+		OrganizationUsersTable,
 	}
 )
 
 func init() {
+	OrganizationsTable.ForeignKeys[0].RefTable = UsersTable
+	OrganizationUsersTable.ForeignKeys[0].RefTable = OrganizationsTable
+	OrganizationUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

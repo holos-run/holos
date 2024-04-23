@@ -2,7 +2,9 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 )
 
 // User holds the schema definition for the User entity, the internal
@@ -26,5 +28,18 @@ func (User) Fields() []ent.Field {
 		field.String("iss"),
 		field.String("sub"),
 		field.String("name"),
+	}
+}
+
+func (User) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.From("organizations", Organization.Type).
+			Ref("users"),
+	}
+}
+
+func (User) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("iss", "sub").Unique(),
 	}
 }
