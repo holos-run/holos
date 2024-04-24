@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { UserService } from './gen/holos/v1alpha1/user_connect';
 import { ObservableClient } from '../connect/observable-client';
-import { switchMap } from 'rxjs/operators';
+import { shareReplay, switchMap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import { Claims } from './gen/holos/v1alpha1/user_pb';
 
@@ -18,7 +18,9 @@ export class HolosUserService {
         } else {
           return of(null)
         }
-      })
+      }),
+      // Consolidate to one api call for all subscribers
+      shareReplay(1)
     )
   }
 
