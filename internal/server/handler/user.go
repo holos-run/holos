@@ -40,6 +40,9 @@ func (h *UserHandler) GetCallerClaims(
 			EmailVerified: authnID.Verified(),
 			Name:          authnID.Name(),
 			Groups:        authnID.Groups(),
+			GivenName:     authnID.GivenName(),
+			FamilyName:    authnID.FamilyName(),
+			Picture:       authnID.Picture(),
 		},
 	})
 	return res, nil

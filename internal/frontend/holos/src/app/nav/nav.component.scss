@@ -15,3 +15,13 @@
   top: 0;
   z-index: 1;
 }
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.avatar-container {
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+}

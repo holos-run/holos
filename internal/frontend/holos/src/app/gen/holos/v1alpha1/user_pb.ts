@@ -205,6 +205,21 @@ export class Claims extends Message<Claims> {
    */
   groups: string[] = [];
 
+  /**
+   * @generated from field: string given_name = 7;
+   */
+  givenName = "";
+
+  /**
+   * @generated from field: string family_name = 8;
+   */
+  familyName = "";
+
+  /**
+   * @generated from field: string picture = 9;
+   */
+  picture = "";
+
   constructor(data?: PartialMessage<Claims>) {
     super();
     proto3.util.initPartial(data, this);
@@ -219,6 +234,9 @@ export class Claims extends Message<Claims> {
     { no: 4, name: "email_verified", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
     { no: 5, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 6, name: "groups", kind: "scalar", T: 9 /* ScalarType.STRING */, repeated: true },
+    { no: 7, name: "given_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 8, name: "family_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 9, name: "picture", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Claims {
