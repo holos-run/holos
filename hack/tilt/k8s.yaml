@@ -103,11 +103,40 @@ spec:
   hosts:
     - '{developer}.app.dev.k2.holos.run'
   http:
-    - route:
+    - name: "coffee-ui"
+      match:
+      - uri:
+          prefix: "/ui"
+      route:
+      - destination:
+          host: coffee
+          port:
+            number: 4200
+    - name: "holos-api"
+      route:
         - destination:
             host: '{name}'
             port:
               number: {listen_port}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coffee
+spec:
+  ports:
+  - protocol: TCP
+    port: 4200
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: coffee
+subsets:
+  - addresses:
+    - ip: 192.168.2.21
+    ports:
+    - port: 4200
 ---
 apiVersion: v1
 kind: ServiceAccount
