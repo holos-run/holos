@@ -25,3 +25,12 @@
   width: 100%;
   border-radius: 50%;
 }
+
+button {
+  &.image {
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+  }
+}

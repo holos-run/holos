@@ -1,0 +1,28 @@
+@if (claims$ | async; as claims) {
+  <button mat-icon-button [matMenuTriggerFor]="menu">
+    @if (claims.picture) {
+      <img class="profile-picture" [src]="claims.picture" alt="Profile"/>
+    } @else {
+      <mat-icon>account_circle</mat-icon>
+    }
+  </button>
+
+  <mat-menu class="accounts-menu" #menu="matMenu">
+    <mat-card class="accounts-card">
+      <mat-card-header>
+        <div mat-card-avatar class="accounts-header-image" [ngStyle]="{'background-image': claims.picture ? 'url(' + claims.picture +')' : 'url(/ui/assets/img/account_circle.svg)'}">
+        </div>
+        <mat-card-title>{{ claims.name }}</mat-card-title>
+        <mat-card-subtitle>{{ claims.email }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-actions>
+        <a mat-menu-item href="{{claims.iss}}/ui/console/users/me?id=general">
+          Profile
+        </a>
+        <a mat-menu-item href="{{claims.iss}}/oidc/v1/end_session">
+          Logout
+        </a>
+      </mat-card-actions>
+    </mat-card>
+  </mat-menu>
+}

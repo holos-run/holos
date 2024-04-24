@@ -24,14 +24,9 @@
       }
       <span>Holos</span>
       <span class="toolbar-spacer"></span>
-      <button mat-button>
-        <span *ngIf="user$ | async; let user">
-          <div class="avatar-container">
-            <img src="{{ user.claims?.picture }}" alt="profile avatar image"/>
-          </div>
-          {{ user.claims?.givenName }}
-        </span>
-      </button>
+      @if (claims$ | async; as claims) {
+        <app-profile-button [claims$]="claims$"></app-profile-button>
+      }
     </mat-toolbar>
     <!-- Add Content Here -->
     <router-outlet></router-outlet>

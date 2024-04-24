@@ -16,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideClient(UserService),
     importProvidersFrom(
       ConnectModule.forRoot({
-        baseUrl: "https://jeff.app.dev.k2.holos.run"
+        baseUrl: window.location.origin
       }),
     ),
   ]
