@@ -40,6 +40,9 @@ func (h *UserHandler) GetCallerClaims(
 			EmailVerified: authnID.Verified(),
 			Name:          authnID.Name(),
 			Groups:        authnID.Groups(),
+			GivenName:     authnID.GivenName(),
+			FamilyName:    authnID.FamilyName(),
+			Picture:       authnID.Picture(),
 		},
 	})
 	return res, nil
@@ -133,22 +136,5 @@ func createUser(ctx context.Context, client *ent.Client, name string, claims aut
 	log = log.With("user", user)
 	log.InfoContext(ctx, "created user")
 
-	return user, nil
-}
-
-func getAuthenticatedUser(ctx context.Context, client *ent.Client) (*ent.User, error) {
-	authnIdentity, err := authn.FromContext(ctx)
-	if err != nil {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
-	}
-	log := logger.FromContext(ctx).With("iss", authnIdentity.Issuer(), "sub", authnIdentity.Subject(), "email", authnIdentity.Email())
-	user, err := client.User.Query().Where(
-		user.Iss(authnIdentity.Issuer()),
-		user.Sub(authnIdentity.Subject()),
-	).Only(ctx)
-	if err != nil {
-		log.DebugContext(ctx, "could not get user", "err", err)
-		return nil, errors.Wrap(err)
-	}
 	return user, nil
 }

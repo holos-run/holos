@@ -8,12 +8,10 @@ import (
 	"unicode"
 
 	"connectrpc.com/connect"
-	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/internal/ent/user"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
-	"github.com/holos-run/holos/internal/server/middleware/logger"
 	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -67,7 +65,7 @@ func (h *OrganizationHandler) GetCallerOrganizations(
 func (h *OrganizationHandler) CreateCallerOrganization(
 	ctx context.Context,
 	req *connect.Request[holos.CreateCallerOrganizationRequest],
-) (*connect.Response[holos.CreateCallerOrganizationResponse], error) {
+) (*connect.Response[holos.GetCallerOrganizationsResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -86,7 +84,7 @@ func (h *OrganizationHandler) CreateCallerOrganization(
 	err = WithTx(ctx, h.db, func(tx *ent.Tx) (err error) {
 		org, err = h.db.Organization.Create().
 			SetName(cleanAndAppendRandom(authnID.Name())).
-			SetDisplayName(authnID.Name() + "'s Org").
+			SetDisplayName(authnID.GivenName() + "'s Org").
 			SetCreatorID(dbUser.ID).
 			Save(ctx)
 		if err != nil {
@@ -111,7 +109,7 @@ func (h *OrganizationHandler) CreateCallerOrganization(
 		rpcOrgs = append(rpcOrgs, OrganizationToRPC(dbOrg))
 	}
 
-	res := connect.NewResponse(&holos.CreateCallerOrganizationResponse{
+	res := connect.NewResponse(&holos.GetCallerOrganizationsResponse{
 		User:          UserToRPC(dbUser),
 		Organizations: rpcOrgs,
 	})
@@ -126,7 +124,7 @@ func cleanAndAppendRandom(s string) string {
 		return -1
 	}
 	cleaned := strings.Map(mapping, s)
-	randNum := rand.Intn(1_000_000)
+	randNum := rand.Intn(900_000) + 100_000
 	return fmt.Sprintf("%s-%06d", cleaned, randNum)
 }
 
@@ -142,25 +140,4 @@ func OrganizationToRPC(org *ent.Organization) *holos.Organization {
 		},
 	}
 	return &rpcEntity
-}
-
-func createOrganization(ctx context.Context, client *ent.Client, name string, displayName string, creatorID uuid.UUID) (*ent.Organization, error) {
-	log := logger.FromContext(ctx)
-	// Create the user, error if it already exists
-	entity, err := client.Organization.
-		Create().
-		SetName(name).
-		SetDisplayName(displayName).
-		SetCreatorID(creatorID).
-		Save(ctx)
-	if err != nil {
-		err = connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
-		log.ErrorContext(ctx, "could not create user", "err", err)
-		return entity, err
-	}
-
-	log = log.With("organization", entity)
-	log.InfoContext(ctx, "created")
-
-	return entity, nil
 }

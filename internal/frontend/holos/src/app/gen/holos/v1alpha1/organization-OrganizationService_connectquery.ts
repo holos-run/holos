@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import { MethodKind } from "@bufbuild/protobuf";
-import { CreateCallerOrganizationRequest, CreateCallerOrganizationResponse, GetCallerOrganizationsRequest, GetCallerOrganizationsResponse } from "./organization_pb.js";
+import { CreateCallerOrganizationRequest, GetCallerOrganizationsRequest, GetCallerOrganizationsResponse } from "./organization_pb.js";
 
 /**
  * @generated from rpc holos.v1alpha1.OrganizationService.GetCallerOrganizations
@@ -28,7 +28,7 @@ export const createCallerOrganization = {
   name: "CreateCallerOrganization",
   kind: MethodKind.Unary,
   I: CreateCallerOrganizationRequest,
-  O: CreateCallerOrganizationResponse,
+  O: GetCallerOrganizationsResponse,
   service: {
     typeName: "holos.v1alpha1.OrganizationService"
   }

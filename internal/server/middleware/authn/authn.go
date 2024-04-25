@@ -49,6 +49,12 @@ type Identity interface {
 	Name() string
 	// Groups is the groups claim.
 	Groups() []string
+	// GivenName is the given name of the user.
+	GivenName() string
+	// FamilyName is the family name of the user.
+	FamilyName() string
+	// Picture is an optional avatar image url for the user.
+	Picture() string
 }
 
 // key is an unexported type for keys defined in this package to prevent
@@ -104,12 +110,15 @@ func NewVerifier(ctx context.Context, log *slog.Logger, issuer string) (*oidc.ID
 }
 
 type claims struct {
-	Issuer   string   `json:"iss"`
-	Subject  string   `json:"sub"`
-	Email    string   `json:"email"`
-	Verified bool     `json:"email_verified"`
-	Name     string   `json:"name"`
-	Groups   []string `json:"groups"`
+	Issuer     string   `json:"iss"`
+	Subject    string   `json:"sub"`
+	Email      string   `json:"email"`
+	Verified   bool     `json:"email_verified"`
+	Name       string   `json:"name"`
+	Groups     []string `json:"groups"`
+	GivenName  string   `json:"given_name"`
+	FamilyName string   `json:"family_name"`
+	Picture    string   `json:"picture"`
 }
 
 type user struct {
@@ -134,6 +143,18 @@ func (u user) Email() string {
 
 func (u user) Groups() []string {
 	return u.claims.Groups
+}
+
+func (u user) GivenName() string {
+	return u.claims.GivenName
+}
+
+func (u user) FamilyName() string {
+	return u.claims.FamilyName
+}
+
+func (u user) Picture() string {
+	return u.claims.Picture
 }
 
 func (u user) Verified() bool {

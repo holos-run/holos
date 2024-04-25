@@ -3,7 +3,9 @@
       [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
       [mode]="(isHandset$ | async) ? 'over' : 'side'"
       [opened]="(isHandset$ | async) === false">
-    <mat-toolbar>Menu</mat-toolbar>
+    <mat-toolbar>
+      <span>Menu</span>
+    </mat-toolbar>
     <mat-nav-list>
       <a mat-list-item routerLink="/home" routerLinkActive="active-link">Home</a>
       <a mat-list-item routerLink="/clusters" routerLinkActive="active-link">Clusters</a>
@@ -21,6 +23,15 @@
         </button>
       }
       <span>Holos</span>
+      <span class="toolbar-spacer"></span>
+      <span>
+        @if (org$ | async; as org) {
+          <button mat-button (click)="refreshOrg()">
+          {{ org.displayName }}
+          </button>
+        }
+      </span>
+      <app-profile-button [claims$]="claims$"></app-profile-button>
     </mat-toolbar>
     <!-- Add Content Here -->
     <router-outlet></router-outlet>

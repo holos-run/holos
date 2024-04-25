@@ -36,6 +36,9 @@ message Claims {
   bool email_verified = 4;
   string name = 5 [(buf.validate.field).string.max_len = 100];
   repeated string groups = 6;
+  string given_name = 7;
+  string family_name = 8;
+  string picture = 9;
 }
 
 // UserClaims represents id token claims
