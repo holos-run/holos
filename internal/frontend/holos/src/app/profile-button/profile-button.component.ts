@@ -6,6 +6,7 @@ import { Observable, map, takeLast } from 'rxjs';
 import { AsyncPipe, NgIf, NgStyle } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { Organization } from '../gen/holos/v1alpha1/organization_pb';
 
 @Component({
   selector: 'app-profile-button',
@@ -24,4 +25,5 @@ import { MatCardModule } from '@angular/material/card';
 })
 export class ProfileButtonComponent {
   @Input({ required: true }) claims$!: Observable<Claims | null>;
+  @Input({ required: true }) organizations$!: Observable<Organization[] | null>;
 }

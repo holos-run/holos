@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { HolosUserService } from './holos-user.service';
+import { UserService } from './user.service';
 
-describe('HolosUserService', () => {
-  let service: HolosUserService;
+describe('UserService', () => {
+  let service: UserService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(HolosUserService);
+    service = TestBed.inject(UserService);
   });
 
   it('should be created', () => {

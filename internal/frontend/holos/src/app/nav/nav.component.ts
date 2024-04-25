@@ -11,8 +11,10 @@ import { map, shareReplay } from 'rxjs/operators';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { Claims } from '../gen/holos/v1alpha1/user_pb';
-import { HolosUserService } from '../holos-user.service';
 import { ProfileButtonComponent } from '../profile-button/profile-button.component';
+import { UserService } from '../services/user.service';
+import { Organization } from '../gen/holos/v1alpha1/organization_pb';
+import { OrganizationService } from '../services/organization.service';
 
 @Component({
   selector: 'app-nav',
@@ -36,9 +38,11 @@ import { ProfileButtonComponent } from '../profile-button/profile-button.compone
 })
 export class NavComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
-  private userService = inject(HolosUserService);
+  private userService = inject(UserService);
+  private orgService = inject(OrganizationService);
 
   claims$!: Observable<Claims | null>;
+  organizations$!: Observable<Organization[] | null>;
 
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
@@ -48,5 +52,6 @@ export class NavComponent implements OnInit {
 
   ngOnInit(): void {
     this.claims$ = this.userService.getClaims();
+    this.organizations$ = this.orgService.getOrganizations();
   }
 }

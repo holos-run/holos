@@ -25,7 +25,7 @@
       <span>Holos</span>
       <span class="toolbar-spacer"></span>
       @if (claims$ | async; as claims) {
-        <app-profile-button [claims$]="claims$"></app-profile-button>
+        <app-profile-button [claims$]="claims$" [organizations$]="organizations$"></app-profile-button>
       }
     </mat-toolbar>
     <!-- Add Content Here -->
