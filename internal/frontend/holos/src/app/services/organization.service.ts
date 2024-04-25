@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@angular/core';
 import { OrganizationService as ConnectOrganizationService } from '../gen/holos/v1alpha1/organization_connect';
 import { ObservableClient } from '../../connect/observable-client';
-import { Observable, switchMap, of, shareReplay, catchError } from 'rxjs';
-import { Organization } from '../gen/holos/v1alpha1/organization_pb';
+import { Observable, switchMap, of, shareReplay, catchError, BehaviorSubject } from 'rxjs';
+import { GetCallerOrganizationsResponse, Organization } from '../gen/holos/v1alpha1/organization_pb';
 import { UserService } from './user.service';
 import { Code, ConnectError } from '@connectrpc/connect';
 
@@ -10,54 +10,58 @@ import { Code, ConnectError } from '@connectrpc/connect';
   providedIn: 'root'
 })
 export class OrganizationService {
-  getOrganizations(): Observable<Organization[] | null> {
+  private callerOrganizationsTrigger$ = new BehaviorSubject<void>(undefined);
+  private callerOrganizations$: Observable<GetCallerOrganizationsResponse>;
+
+  private fetchCallerOrganizations(): Observable<GetCallerOrganizationsResponse> {
     return this.client.getCallerOrganizations({ request: {} }).pipe(
       switchMap(resp => {
-        if (resp && resp.organizations) {
-          if (resp.organizations.length > 0) {
-            return of(resp.organizations)
-          } else {
-            return this.addOrganization()
-          }
-        } else {
-          return of(null)
+        if (resp && resp.organizations.length > 0) {
+          return of(resp)
         }
+        return this.client.createCallerOrganization({ request: {} })
       }),
       catchError(err => {
         if (err instanceof ConnectError) {
           if (err.code == Code.NotFound) {
             return this.userService.createUser().pipe(
-              switchMap(user => {
-                if (user) {
-                  return this.addOrganization()
-                } else {
-                  return of(null)
-                }
-              })
+              switchMap(user => this.client.createCallerOrganization({ request: {} }))
             )
           }
         }
-        return of(null)
+        console.error('Error fetching data:', err);
+        throw err;
       }),
-      shareReplay(1)
     )
   }
 
-  addOrganization(): Observable<Organization[] | null> {
-    return this.client.createCallerOrganization({ request: {} }).pipe(
-      switchMap(resp => {
-        if (resp && resp.organizations) {
-          return of(resp.organizations)
-        } else {
-          return of(null)
-        }
-      })
+  getOrganizations(): Observable<Organization[]> {
+    return this.callerOrganizations$.pipe(
+      switchMap(resp => of(resp.organizations))
     )
   }
 
+  activeOrg(): Observable<Organization | undefined> {
+    return this.callerOrganizations$.pipe(
+      switchMap(resp => of(resp.organizations.at(-1)))
+    )
+  }
+
+  refreshOrganizations(): void {
+    this.callerOrganizationsTrigger$.next()
+  }
 
   constructor(
     @Inject(ConnectOrganizationService) private client: ObservableClient<typeof ConnectOrganizationService>,
     private userService: UserService,
-  ) { }
+  ) {
+    this.callerOrganizations$ = this.callerOrganizationsTrigger$.pipe(
+      switchMap(() => this.fetchCallerOrganizations()),
+      shareReplay(1),
+      catchError(err => {
+        console.error('Error fetching data:', err);
+        throw err;
+      })
+    );
+  }
 }

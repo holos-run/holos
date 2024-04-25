@@ -15,15 +15,6 @@
         <mat-card-title>{{ claims.name }}</mat-card-title>
         <mat-card-subtitle>{{ claims.email }}</mat-card-subtitle>
       </mat-card-header>
-      <mat-card-content>
-        <ul>
-        @if (organizations$ | async; as orgs) {
-          @for (org of orgs; track org.id) {
-            <li>{{org.displayName}}</li>
-          }
-        }
-        </ul>
-      </mat-card-content>
       <mat-card-actions>
         <a mat-menu-item href="{{claims.iss}}/ui/console/users/me?id=general">
           Profile

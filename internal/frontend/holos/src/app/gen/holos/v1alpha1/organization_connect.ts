@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateCallerOrganizationRequest, CreateCallerOrganizationResponse, GetCallerOrganizationsRequest, GetCallerOrganizationsResponse } from "./organization_pb.js";
+import { CreateCallerOrganizationRequest, GetCallerOrganizationsRequest, GetCallerOrganizationsResponse } from "./organization_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -27,7 +27,7 @@ export const OrganizationService = {
     createCallerOrganization: {
       name: "CreateCallerOrganization",
       I: CreateCallerOrganizationRequest,
-      O: CreateCallerOrganizationResponse,
+      O: GetCallerOrganizationsResponse,
       kind: MethodKind.Unary,
     },
   }

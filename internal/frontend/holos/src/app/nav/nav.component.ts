@@ -42,7 +42,11 @@ export class NavComponent implements OnInit {
   private orgService = inject(OrganizationService);
 
   claims$!: Observable<Claims | null>;
-  organizations$!: Observable<Organization[] | null>;
+  org$!: Observable<Organization | undefined>;
+
+  refreshOrg(): void {
+    this.orgService.refreshOrganizations()
+  }
 
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
@@ -52,6 +56,6 @@ export class NavComponent implements OnInit {
 
   ngOnInit(): void {
     this.claims$ = this.userService.getClaims();
-    this.organizations$ = this.orgService.getOrganizations();
+    this.org$ = this.orgService.activeOrg();
   }
 }

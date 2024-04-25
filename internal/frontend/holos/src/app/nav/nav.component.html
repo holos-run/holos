@@ -24,9 +24,14 @@
       }
       <span>Holos</span>
       <span class="toolbar-spacer"></span>
-      @if (claims$ | async; as claims) {
-        <app-profile-button [claims$]="claims$" [organizations$]="organizations$"></app-profile-button>
-      }
+      <span>
+        @if (org$ | async; as org) {
+          <button mat-button (click)="refreshOrg()">
+          {{ org.displayName }}
+          </button>
+        }
+      </span>
+      <app-profile-button [claims$]="claims$"></app-profile-button>
     </mat-toolbar>
     <!-- Add Content Here -->
     <router-outlet></router-outlet>

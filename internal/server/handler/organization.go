@@ -65,7 +65,7 @@ func (h *OrganizationHandler) GetCallerOrganizations(
 func (h *OrganizationHandler) CreateCallerOrganization(
 	ctx context.Context,
 	req *connect.Request[holos.CreateCallerOrganizationRequest],
-) (*connect.Response[holos.CreateCallerOrganizationResponse], error) {
+) (*connect.Response[holos.GetCallerOrganizationsResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -84,7 +84,7 @@ func (h *OrganizationHandler) CreateCallerOrganization(
 	err = WithTx(ctx, h.db, func(tx *ent.Tx) (err error) {
 		org, err = h.db.Organization.Create().
 			SetName(cleanAndAppendRandom(authnID.Name())).
-			SetDisplayName(authnID.Name() + "'s Org").
+			SetDisplayName(authnID.GivenName() + "'s Org").
 			SetCreatorID(dbUser.ID).
 			Save(ctx)
 		if err != nil {
@@ -109,7 +109,7 @@ func (h *OrganizationHandler) CreateCallerOrganization(
 		rpcOrgs = append(rpcOrgs, OrganizationToRPC(dbOrg))
 	}
 
-	res := connect.NewResponse(&holos.CreateCallerOrganizationResponse{
+	res := connect.NewResponse(&holos.GetCallerOrganizationsResponse{
 		User:          UserToRPC(dbUser),
 		Organizations: rpcOrgs,
 	})
@@ -124,7 +124,7 @@ func cleanAndAppendRandom(s string) string {
 		return -1
 	}
 	cleaned := strings.Map(mapping, s)
-	randNum := rand.Intn(1_000_000)
+	randNum := rand.Intn(900_000) + 100_000
 	return fmt.Sprintf("%s-%06d", cleaned, randNum)
 }
 
