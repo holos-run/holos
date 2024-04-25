@@ -1,6 +1,7 @@
 package render
 
 import (
+	"flag"
 	"fmt"
 
 	"github.com/holos-run/holos/internal/cli/command"
@@ -11,8 +12,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func makeRenderRunFunc(cfg *holos.Config) command.RunFunc {
-	return func(cmd *cobra.Command, args []string) error {
+// New returns the render subcommand for the root command
+func New(cfg *holos.Config) *cobra.Command {
+	cmd := command.New("render [directory...]")
+	cmd.Args = cobra.MinimumNArgs(1)
+	cmd.Short = "write kubernetes api objects to the filesystem"
+	cmd.Flags().SortFlags = false
+	cmd.Flags().AddGoFlagSet(cfg.WriteFlagSet())
+	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
+
+	var printInstances bool
+	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
+	flagSet.BoolVar(&printInstances, "print-instances", false, "expand /... paths for xargs")
+	cmd.Flags().AddGoFlagSet(flagSet)
+
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if cfg.ClusterName() == "" {
 			return errors.Wrap(fmt.Errorf("missing cluster name"))
 		}
@@ -20,6 +34,18 @@ func makeRenderRunFunc(cfg *holos.Config) command.RunFunc {
 		ctx := cmd.Context()
 		log := logger.FromContext(ctx).With("cluster", cfg.ClusterName())
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
+
+		if printInstances {
+			instances, err := build.Instances(ctx)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			for _, instance := range instances {
+				fmt.Fprintln(cmd.OutOrStdout(), instance.Dir)
+			}
+			return nil
+		}
+
 		results, err := build.Run(cmd.Context())
 		if err != nil {
 			return errors.Wrap(err)
@@ -45,16 +71,5 @@ func makeRenderRunFunc(cfg *holos.Config) command.RunFunc {
 		}
 		return nil
 	}
-}
-
-// New returns the render subcommand for the root command
-func New(cfg *holos.Config) *cobra.Command {
-	cmd := command.New("render [directory...]")
-	cmd.Args = cobra.MinimumNArgs(1)
-	cmd.Short = "write kubernetes api objects to the filesystem"
-	cmd.Flags().SortFlags = false
-	cmd.Flags().AddGoFlagSet(cfg.WriteFlagSet())
-	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
-	cmd.RunE = makeRenderRunFunc(cfg)
 	return cmd
 }
