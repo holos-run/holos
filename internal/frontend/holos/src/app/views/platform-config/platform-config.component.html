@@ -1,0 +1,56 @@
+<mat-tab-group>
+  <mat-tab label="Organization">
+    <form [formGroup]="form" (ngSubmit)="onSubmit(model)">
+      <mat-card class="config-card">
+        <mat-card-header>
+          <mat-card-title>Organization</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Organization config values are used to derive more specific configuration values throughout the platform.</p>
+          <formly-form [form]="form" [fields]="fields" [model]="model">
+          </formly-form>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" type="submit">Submit</button>
+        </mat-card-actions>
+      </mat-card>
+    </form>
+
+  </mat-tab>
+  <mat-tab label="Integrations">
+    <form [formGroup]="form" (ngSubmit)="onSubmit(model)">
+      <mat-card class="config-card">
+        <mat-card-header>
+          <mat-card-title>Integrations</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Configure integrations with your DNS and version control service providers.</p>
+          <formly-form [form]="form" [fields]="integrationFields" [model]="model">
+          </formly-form>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" type="submit">Submit</button>
+        </mat-card-actions>
+      </mat-card>
+    </form>
+
+  </mat-tab>
+  <mat-tab label="Provisioner">
+    <form [formGroup]="form" (ngSubmit)="onSubmit(model)">
+      <mat-card class="config-card">
+        <mat-card-header>
+          <mat-card-title>Provisioner Cluster</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Provide the connection details used to sync secrets among platform clusters.</p>
+          <formly-form [form]="form" [fields]="provisionerFields" [model]="model">
+          </formly-form>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" type="submit">Submit</button>
+        </mat-card-actions>
+      </mat-card>
+    </form>
+  </mat-tab>
+  <mat-tab label="OAuth Clients"></mat-tab>
+</mat-tab-group>
