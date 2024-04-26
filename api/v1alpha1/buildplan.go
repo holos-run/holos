@@ -9,8 +9,9 @@ import (
 type BuildPlan struct {
 	TypeMeta `json:",inline" yaml:",inline"`
 	// Metadata represents the holos component name
-	Metadata ObjectMeta    `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-	Spec     BuildPlanSpec `json:"spec,omitempty" yaml:"spec,omitempty"`
+	Metadata ObjectMeta     `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Spec     BuildPlanSpec  `json:"spec,omitempty" yaml:"spec,omitempty"`
+	Platform map[string]any `json:"platform,omitempty" yaml:"platform,omitempty"`
 }
 
 type BuildPlanSpec struct {
