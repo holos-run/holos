@@ -61,26 +61,3 @@ import (
 		}
 	}
 }
-
-// #PlatformSpec represents configuration values defined by the platform
-// designer.  This definition is intended to be merged with a more specific
-// definition provided by the platform designer.
-#PlatformSpec: {[string]: _}
-
-// #Holos represents the holos reserved field in the #Platform schema defined by the holos development team.
-#Holos: {
-	// flags represents config values provided by holos command line flags.
-	flags: {
-		// cluster represents the holos render --cluster-name flag.
-		cluster: string @tag(cluster, type=string)
-	}
-}
-
-#Platform: {
-	#HolosTypeMeta
-	kind:       "Platform"
-	apiVersion: "app.holos.run/v1alpha1"
-	metadata:   #HolosObjectMeta
-	spec:       #PlatformSpec
-	holos:      #Holos
-}
