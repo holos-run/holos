@@ -27,6 +27,14 @@ const (
 	FieldDisplayName = "display_name"
 	// FieldCreatorID holds the string denoting the creator_id field in the database.
 	FieldCreatorID = "creator_id"
+	// FieldConfigForm holds the string denoting the config_form field in the database.
+	FieldConfigForm = "config_form"
+	// FieldConfigValues holds the string denoting the config_values field in the database.
+	FieldConfigValues = "config_values"
+	// FieldConfigCue holds the string denoting the config_cue field in the database.
+	FieldConfigCue = "config_cue"
+	// FieldConfigDefinition holds the string denoting the config_definition field in the database.
+	FieldConfigDefinition = "config_definition"
 	// EdgeCreator holds the string denoting the creator edge name in mutations.
 	EdgeCreator = "creator"
 	// EdgeOrganization holds the string denoting the organization edge name in mutations.
@@ -58,6 +66,10 @@ var Columns = []string{
 	FieldName,
 	FieldDisplayName,
 	FieldCreatorID,
+	FieldConfigForm,
+	FieldConfigValues,
+	FieldConfigCue,
+	FieldConfigDefinition,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -119,6 +131,11 @@ func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
 // ByCreatorID orders the results by the creator_id field.
 func ByCreatorID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCreatorID, opts...).ToFunc()
+}
+
+// ByConfigDefinition orders the results by the config_definition field.
+func ByConfigDefinition(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldConfigDefinition, opts...).ToFunc()
 }
 
 // ByCreatorField orders the results by creator field.

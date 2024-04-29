@@ -78,6 +78,38 @@ func (pc *PlatformCreate) SetCreatorID(u uuid.UUID) *PlatformCreate {
 	return pc
 }
 
+// SetConfigForm sets the "config_form" field.
+func (pc *PlatformCreate) SetConfigForm(b []byte) *PlatformCreate {
+	pc.mutation.SetConfigForm(b)
+	return pc
+}
+
+// SetConfigValues sets the "config_values" field.
+func (pc *PlatformCreate) SetConfigValues(b []byte) *PlatformCreate {
+	pc.mutation.SetConfigValues(b)
+	return pc
+}
+
+// SetConfigCue sets the "config_cue" field.
+func (pc *PlatformCreate) SetConfigCue(b []byte) *PlatformCreate {
+	pc.mutation.SetConfigCue(b)
+	return pc
+}
+
+// SetConfigDefinition sets the "config_definition" field.
+func (pc *PlatformCreate) SetConfigDefinition(s string) *PlatformCreate {
+	pc.mutation.SetConfigDefinition(s)
+	return pc
+}
+
+// SetNillableConfigDefinition sets the "config_definition" field if the given value is not nil.
+func (pc *PlatformCreate) SetNillableConfigDefinition(s *string) *PlatformCreate {
+	if s != nil {
+		pc.SetConfigDefinition(*s)
+	}
+	return pc
+}
+
 // SetID sets the "id" field.
 func (pc *PlatformCreate) SetID(u uuid.UUID) *PlatformCreate {
 	pc.mutation.SetID(u)
@@ -240,6 +272,22 @@ func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
 		_node.DisplayName = value
 	}
+	if value, ok := pc.mutation.ConfigForm(); ok {
+		_spec.SetField(platform.FieldConfigForm, field.TypeBytes, value)
+		_node.ConfigForm = value
+	}
+	if value, ok := pc.mutation.ConfigValues(); ok {
+		_spec.SetField(platform.FieldConfigValues, field.TypeBytes, value)
+		_node.ConfigValues = value
+	}
+	if value, ok := pc.mutation.ConfigCue(); ok {
+		_spec.SetField(platform.FieldConfigCue, field.TypeBytes, value)
+		_node.ConfigCue = value
+	}
+	if value, ok := pc.mutation.ConfigDefinition(); ok {
+		_spec.SetField(platform.FieldConfigDefinition, field.TypeString, value)
+		_node.ConfigDefinition = value
+	}
 	if nodes := pc.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
@@ -386,6 +434,78 @@ func (u *PlatformUpsert) UpdateCreatorID() *PlatformUpsert {
 	return u
 }
 
+// SetConfigForm sets the "config_form" field.
+func (u *PlatformUpsert) SetConfigForm(v []byte) *PlatformUpsert {
+	u.Set(platform.FieldConfigForm, v)
+	return u
+}
+
+// UpdateConfigForm sets the "config_form" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateConfigForm() *PlatformUpsert {
+	u.SetExcluded(platform.FieldConfigForm)
+	return u
+}
+
+// ClearConfigForm clears the value of the "config_form" field.
+func (u *PlatformUpsert) ClearConfigForm() *PlatformUpsert {
+	u.SetNull(platform.FieldConfigForm)
+	return u
+}
+
+// SetConfigValues sets the "config_values" field.
+func (u *PlatformUpsert) SetConfigValues(v []byte) *PlatformUpsert {
+	u.Set(platform.FieldConfigValues, v)
+	return u
+}
+
+// UpdateConfigValues sets the "config_values" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateConfigValues() *PlatformUpsert {
+	u.SetExcluded(platform.FieldConfigValues)
+	return u
+}
+
+// ClearConfigValues clears the value of the "config_values" field.
+func (u *PlatformUpsert) ClearConfigValues() *PlatformUpsert {
+	u.SetNull(platform.FieldConfigValues)
+	return u
+}
+
+// SetConfigCue sets the "config_cue" field.
+func (u *PlatformUpsert) SetConfigCue(v []byte) *PlatformUpsert {
+	u.Set(platform.FieldConfigCue, v)
+	return u
+}
+
+// UpdateConfigCue sets the "config_cue" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateConfigCue() *PlatformUpsert {
+	u.SetExcluded(platform.FieldConfigCue)
+	return u
+}
+
+// ClearConfigCue clears the value of the "config_cue" field.
+func (u *PlatformUpsert) ClearConfigCue() *PlatformUpsert {
+	u.SetNull(platform.FieldConfigCue)
+	return u
+}
+
+// SetConfigDefinition sets the "config_definition" field.
+func (u *PlatformUpsert) SetConfigDefinition(v string) *PlatformUpsert {
+	u.Set(platform.FieldConfigDefinition, v)
+	return u
+}
+
+// UpdateConfigDefinition sets the "config_definition" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateConfigDefinition() *PlatformUpsert {
+	u.SetExcluded(platform.FieldConfigDefinition)
+	return u
+}
+
+// ClearConfigDefinition clears the value of the "config_definition" field.
+func (u *PlatformUpsert) ClearConfigDefinition() *PlatformUpsert {
+	u.SetNull(platform.FieldConfigDefinition)
+	return u
+}
+
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -504,6 +624,90 @@ func (u *PlatformUpsertOne) SetCreatorID(v uuid.UUID) *PlatformUpsertOne {
 func (u *PlatformUpsertOne) UpdateCreatorID() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
 		s.UpdateCreatorID()
+	})
+}
+
+// SetConfigForm sets the "config_form" field.
+func (u *PlatformUpsertOne) SetConfigForm(v []byte) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfigForm(v)
+	})
+}
+
+// UpdateConfigForm sets the "config_form" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateConfigForm() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfigForm()
+	})
+}
+
+// ClearConfigForm clears the value of the "config_form" field.
+func (u *PlatformUpsertOne) ClearConfigForm() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfigForm()
+	})
+}
+
+// SetConfigValues sets the "config_values" field.
+func (u *PlatformUpsertOne) SetConfigValues(v []byte) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfigValues(v)
+	})
+}
+
+// UpdateConfigValues sets the "config_values" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateConfigValues() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfigValues()
+	})
+}
+
+// ClearConfigValues clears the value of the "config_values" field.
+func (u *PlatformUpsertOne) ClearConfigValues() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfigValues()
+	})
+}
+
+// SetConfigCue sets the "config_cue" field.
+func (u *PlatformUpsertOne) SetConfigCue(v []byte) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfigCue(v)
+	})
+}
+
+// UpdateConfigCue sets the "config_cue" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateConfigCue() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfigCue()
+	})
+}
+
+// ClearConfigCue clears the value of the "config_cue" field.
+func (u *PlatformUpsertOne) ClearConfigCue() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfigCue()
+	})
+}
+
+// SetConfigDefinition sets the "config_definition" field.
+func (u *PlatformUpsertOne) SetConfigDefinition(v string) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfigDefinition(v)
+	})
+}
+
+// UpdateConfigDefinition sets the "config_definition" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateConfigDefinition() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfigDefinition()
+	})
+}
+
+// ClearConfigDefinition clears the value of the "config_definition" field.
+func (u *PlatformUpsertOne) ClearConfigDefinition() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfigDefinition()
 	})
 }
 
@@ -792,6 +996,90 @@ func (u *PlatformUpsertBulk) SetCreatorID(v uuid.UUID) *PlatformUpsertBulk {
 func (u *PlatformUpsertBulk) UpdateCreatorID() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
 		s.UpdateCreatorID()
+	})
+}
+
+// SetConfigForm sets the "config_form" field.
+func (u *PlatformUpsertBulk) SetConfigForm(v []byte) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfigForm(v)
+	})
+}
+
+// UpdateConfigForm sets the "config_form" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateConfigForm() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfigForm()
+	})
+}
+
+// ClearConfigForm clears the value of the "config_form" field.
+func (u *PlatformUpsertBulk) ClearConfigForm() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfigForm()
+	})
+}
+
+// SetConfigValues sets the "config_values" field.
+func (u *PlatformUpsertBulk) SetConfigValues(v []byte) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfigValues(v)
+	})
+}
+
+// UpdateConfigValues sets the "config_values" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateConfigValues() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfigValues()
+	})
+}
+
+// ClearConfigValues clears the value of the "config_values" field.
+func (u *PlatformUpsertBulk) ClearConfigValues() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfigValues()
+	})
+}
+
+// SetConfigCue sets the "config_cue" field.
+func (u *PlatformUpsertBulk) SetConfigCue(v []byte) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfigCue(v)
+	})
+}
+
+// UpdateConfigCue sets the "config_cue" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateConfigCue() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfigCue()
+	})
+}
+
+// ClearConfigCue clears the value of the "config_cue" field.
+func (u *PlatformUpsertBulk) ClearConfigCue() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfigCue()
+	})
+}
+
+// SetConfigDefinition sets the "config_definition" field.
+func (u *PlatformUpsertBulk) SetConfigDefinition(v string) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetConfigDefinition(v)
+	})
+}
+
+// UpdateConfigDefinition sets the "config_definition" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateConfigDefinition() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateConfigDefinition()
+	})
+}
+
+// ClearConfigDefinition clears the value of the "config_definition" field.
+func (u *PlatformUpsertBulk) ClearConfigDefinition() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.ClearConfigDefinition()
 	})
 }
 

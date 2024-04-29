@@ -38,6 +38,10 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
 		{Name: "display_name", Type: field.TypeString},
+		{Name: "config_form", Type: field.TypeBytes, Nullable: true},
+		{Name: "config_values", Type: field.TypeBytes, Nullable: true},
+		{Name: "config_cue", Type: field.TypeBytes, Nullable: true},
+		{Name: "config_definition", Type: field.TypeString, Nullable: true},
 		{Name: "creator_id", Type: field.TypeUUID},
 		{Name: "org_id", Type: field.TypeUUID},
 	}
@@ -49,15 +53,22 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "platforms_users_creator",
-				Columns:    []*schema.Column{PlatformsColumns[5]},
+				Columns:    []*schema.Column{PlatformsColumns[9]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
 			{
 				Symbol:     "platforms_organizations_organization",
-				Columns:    []*schema.Column{PlatformsColumns[6]},
+				Columns:    []*schema.Column{PlatformsColumns[10]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "platform_org_id_name",
+				Unique:  true,
+				Columns: []*schema.Column{PlatformsColumns[10], PlatformsColumns[3]},
 			},
 		},
 	}

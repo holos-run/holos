@@ -12,17 +12,25 @@ import "holos/v1alpha1/user.proto";
 
 // For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
 
+message Config {
+  bytes form = 1;
+  bytes values = 2;
+  bytes cue = 3;
+  string definition = 4;
+}
+
 message Platform {
   // Unique id assigned by the server.
-  string id = 1 [(buf.validate.field).string.uuid = true];
-  string name = 2 [(buf.validate.field).string.max_len = 100];
-  string display_name = 3 [(buf.validate.field).string.max_len = 100];
+  string id = 1;
+  Timestamps timestamps = 2;
 
-  // platform spec here?
-  // platform spec form config here?
-
-  Timestamps timestamps = 4;
-  Creator creator = 5;
+  // Organization ID resource owner.
+  string org_id = 3 [(buf.validate.field).string.uuid = true];
+  // name is the platform short name as a dns label.
+  string name = 4 [(buf.validate.field).string.max_len = 100];
+  string display_name = 5 [(buf.validate.field).string.max_len = 100];
+  Creator creator = 6;
+  Config config = 7;
 }
 
 message GetPlatformsRequest {
@@ -30,14 +38,11 @@ message GetPlatformsRequest {
 }
 
 message GetPlatformsResponse {
-  string org_id = 1 [(buf.validate.field).string.uuid = true];
   repeated Platform platforms = 2;
 }
 
 message AddPlatformRequest {
-  string org_id = 1 [(buf.validate.field).string.uuid = true];
-  string name = 2 [(buf.validate.field).string.max_len = 100];
-  string display_name = 3 [(buf.validate.field).string.max_len = 100];
+  Platform platform = 1;
 }
 
 service PlatformService {

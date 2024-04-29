@@ -32,6 +32,14 @@ type Platform struct {
 	DisplayName string `json:"display_name,omitempty"`
 	// CreatorID holds the value of the "creator_id" field.
 	CreatorID uuid.UUID `json:"creator_id,omitempty"`
+	// Opaque JSON bytes representing the platform config form.
+	ConfigForm []byte `json:"config_form,omitempty"`
+	// Opaque JSON bytes representing the platform config values.
+	ConfigValues []byte `json:"config_values,omitempty"`
+	// Opaque bytes representing the CUE definition of the config struct.
+	ConfigCue []byte `json:"config_cue,omitempty"`
+	// The definition name to vet config_values against config_cue e.g. '#PlatformSpec'
+	ConfigDefinition string `json:"config_definition,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the PlatformQuery when eager-loading is set.
 	Edges        PlatformEdges `json:"edges"`
@@ -76,7 +84,9 @@ func (*Platform) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case platform.FieldName, platform.FieldDisplayName:
+		case platform.FieldConfigForm, platform.FieldConfigValues, platform.FieldConfigCue:
+			values[i] = new([]byte)
+		case platform.FieldName, platform.FieldDisplayName, platform.FieldConfigDefinition:
 			values[i] = new(sql.NullString)
 		case platform.FieldCreatedAt, platform.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -138,6 +148,30 @@ func (pl *Platform) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field creator_id", values[i])
 			} else if value != nil {
 				pl.CreatorID = *value
+			}
+		case platform.FieldConfigForm:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field config_form", values[i])
+			} else if value != nil {
+				pl.ConfigForm = *value
+			}
+		case platform.FieldConfigValues:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field config_values", values[i])
+			} else if value != nil {
+				pl.ConfigValues = *value
+			}
+		case platform.FieldConfigCue:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field config_cue", values[i])
+			} else if value != nil {
+				pl.ConfigCue = *value
+			}
+		case platform.FieldConfigDefinition:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field config_definition", values[i])
+			} else if value.Valid {
+				pl.ConfigDefinition = value.String
 			}
 		default:
 			pl.selectValues.Set(columns[i], values[i])
@@ -202,6 +236,18 @@ func (pl *Platform) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("creator_id=")
 	builder.WriteString(fmt.Sprintf("%v", pl.CreatorID))
+	builder.WriteString(", ")
+	builder.WriteString("config_form=")
+	builder.WriteString(fmt.Sprintf("%v", pl.ConfigForm))
+	builder.WriteString(", ")
+	builder.WriteString("config_values=")
+	builder.WriteString(fmt.Sprintf("%v", pl.ConfigValues))
+	builder.WriteString(", ")
+	builder.WriteString("config_cue=")
+	builder.WriteString(fmt.Sprintf("%v", pl.ConfigCue))
+	builder.WriteString(", ")
+	builder.WriteString("config_definition=")
+	builder.WriteString(pl.ConfigDefinition)
 	builder.WriteByte(')')
 	return builder.String()
 }

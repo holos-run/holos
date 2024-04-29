@@ -9,6 +9,61 @@ import { Timestamps } from "./timestamps_pb.js";
 import { Creator } from "./user_pb.js";
 
 /**
+ * @generated from message holos.v1alpha1.Config
+ */
+export class Config extends Message<Config> {
+  /**
+   * @generated from field: bytes form = 1;
+   */
+  form = new Uint8Array(0);
+
+  /**
+   * @generated from field: bytes values = 2;
+   */
+  values = new Uint8Array(0);
+
+  /**
+   * @generated from field: bytes cue = 3;
+   */
+  cue = new Uint8Array(0);
+
+  /**
+   * @generated from field: string definition = 4;
+   */
+  definition = "";
+
+  constructor(data?: PartialMessage<Config>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.v1alpha1.Config";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "form", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 2, name: "values", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 3, name: "cue", kind: "scalar", T: 12 /* ScalarType.BYTES */ },
+    { no: 4, name: "definition", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Config {
+    return new Config().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Config {
+    return new Config().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Config {
+    return new Config().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: Config | PlainMessage<Config> | undefined, b: Config | PlainMessage<Config> | undefined): boolean {
+    return proto3.util.equals(Config, a, b);
+  }
+}
+
+/**
  * @generated from message holos.v1alpha1.Platform
  */
 export class Platform extends Message<Platform> {
@@ -20,24 +75,38 @@ export class Platform extends Message<Platform> {
   id = "";
 
   /**
-   * @generated from field: string name = 2;
-   */
-  name = "";
-
-  /**
-   * @generated from field: string display_name = 3;
-   */
-  displayName = "";
-
-  /**
-   * @generated from field: holos.v1alpha1.Timestamps timestamps = 4;
+   * @generated from field: holos.v1alpha1.Timestamps timestamps = 2;
    */
   timestamps?: Timestamps;
 
   /**
-   * @generated from field: holos.v1alpha1.Creator creator = 5;
+   * Organization ID resource owner.
+   *
+   * @generated from field: string org_id = 3;
+   */
+  orgId = "";
+
+  /**
+   * name is the platform short name as a dns label.
+   *
+   * @generated from field: string name = 4;
+   */
+  name = "";
+
+  /**
+   * @generated from field: string display_name = 5;
+   */
+  displayName = "";
+
+  /**
+   * @generated from field: holos.v1alpha1.Creator creator = 6;
    */
   creator?: Creator;
+
+  /**
+   * @generated from field: holos.v1alpha1.Config config = 7;
+   */
+  config?: Config;
 
   constructor(data?: PartialMessage<Platform>) {
     super();
@@ -48,10 +117,12 @@ export class Platform extends Message<Platform> {
   static readonly typeName = "holos.v1alpha1.Platform";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "display_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "timestamps", kind: "message", T: Timestamps },
-    { no: 5, name: "creator", kind: "message", T: Creator },
+    { no: 2, name: "timestamps", kind: "message", T: Timestamps },
+    { no: 3, name: "org_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 4, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 5, name: "display_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 6, name: "creator", kind: "message", T: Creator },
+    { no: 7, name: "config", kind: "message", T: Config },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Platform {
@@ -113,11 +184,6 @@ export class GetPlatformsRequest extends Message<GetPlatformsRequest> {
  */
 export class GetPlatformsResponse extends Message<GetPlatformsResponse> {
   /**
-   * @generated from field: string org_id = 1;
-   */
-  orgId = "";
-
-  /**
    * @generated from field: repeated holos.v1alpha1.Platform platforms = 2;
    */
   platforms: Platform[] = [];
@@ -130,7 +196,6 @@ export class GetPlatformsResponse extends Message<GetPlatformsResponse> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "holos.v1alpha1.GetPlatformsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "org_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "platforms", kind: "message", T: Platform, repeated: true },
   ]);
 
@@ -156,19 +221,9 @@ export class GetPlatformsResponse extends Message<GetPlatformsResponse> {
  */
 export class AddPlatformRequest extends Message<AddPlatformRequest> {
   /**
-   * @generated from field: string org_id = 1;
+   * @generated from field: holos.v1alpha1.Platform platform = 1;
    */
-  orgId = "";
-
-  /**
-   * @generated from field: string name = 2;
-   */
-  name = "";
-
-  /**
-   * @generated from field: string display_name = 3;
-   */
-  displayName = "";
+  platform?: Platform;
 
   constructor(data?: PartialMessage<AddPlatformRequest>) {
     super();
@@ -178,9 +233,7 @@ export class AddPlatformRequest extends Message<AddPlatformRequest> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "holos.v1alpha1.AddPlatformRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "org_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "display_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "platform", kind: "message", T: Platform },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): AddPlatformRequest {

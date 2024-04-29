@@ -86,6 +86,26 @@ func CreatorID(v uuid.UUID) predicate.Platform {
 	return predicate.Platform(sql.FieldEQ(FieldCreatorID, v))
 }
 
+// ConfigForm applies equality check predicate on the "config_form" field. It's identical to ConfigFormEQ.
+func ConfigForm(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldConfigForm, v))
+}
+
+// ConfigValues applies equality check predicate on the "config_values" field. It's identical to ConfigValuesEQ.
+func ConfigValues(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldConfigValues, v))
+}
+
+// ConfigCue applies equality check predicate on the "config_cue" field. It's identical to ConfigCueEQ.
+func ConfigCue(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldConfigCue, v))
+}
+
+// ConfigDefinition applies equality check predicate on the "config_definition" field. It's identical to ConfigDefinitionEQ.
+func ConfigDefinition(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldConfigDefinition, v))
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.Platform {
 	return predicate.Platform(sql.FieldEQ(FieldCreatedAt, v))
@@ -334,6 +354,231 @@ func CreatorIDIn(vs ...uuid.UUID) predicate.Platform {
 // CreatorIDNotIn applies the NotIn predicate on the "creator_id" field.
 func CreatorIDNotIn(vs ...uuid.UUID) predicate.Platform {
 	return predicate.Platform(sql.FieldNotIn(FieldCreatorID, vs...))
+}
+
+// ConfigFormEQ applies the EQ predicate on the "config_form" field.
+func ConfigFormEQ(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldConfigForm, v))
+}
+
+// ConfigFormNEQ applies the NEQ predicate on the "config_form" field.
+func ConfigFormNEQ(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldNEQ(FieldConfigForm, v))
+}
+
+// ConfigFormIn applies the In predicate on the "config_form" field.
+func ConfigFormIn(vs ...[]byte) predicate.Platform {
+	return predicate.Platform(sql.FieldIn(FieldConfigForm, vs...))
+}
+
+// ConfigFormNotIn applies the NotIn predicate on the "config_form" field.
+func ConfigFormNotIn(vs ...[]byte) predicate.Platform {
+	return predicate.Platform(sql.FieldNotIn(FieldConfigForm, vs...))
+}
+
+// ConfigFormGT applies the GT predicate on the "config_form" field.
+func ConfigFormGT(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldGT(FieldConfigForm, v))
+}
+
+// ConfigFormGTE applies the GTE predicate on the "config_form" field.
+func ConfigFormGTE(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldGTE(FieldConfigForm, v))
+}
+
+// ConfigFormLT applies the LT predicate on the "config_form" field.
+func ConfigFormLT(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldLT(FieldConfigForm, v))
+}
+
+// ConfigFormLTE applies the LTE predicate on the "config_form" field.
+func ConfigFormLTE(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldLTE(FieldConfigForm, v))
+}
+
+// ConfigFormIsNil applies the IsNil predicate on the "config_form" field.
+func ConfigFormIsNil() predicate.Platform {
+	return predicate.Platform(sql.FieldIsNull(FieldConfigForm))
+}
+
+// ConfigFormNotNil applies the NotNil predicate on the "config_form" field.
+func ConfigFormNotNil() predicate.Platform {
+	return predicate.Platform(sql.FieldNotNull(FieldConfigForm))
+}
+
+// ConfigValuesEQ applies the EQ predicate on the "config_values" field.
+func ConfigValuesEQ(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldConfigValues, v))
+}
+
+// ConfigValuesNEQ applies the NEQ predicate on the "config_values" field.
+func ConfigValuesNEQ(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldNEQ(FieldConfigValues, v))
+}
+
+// ConfigValuesIn applies the In predicate on the "config_values" field.
+func ConfigValuesIn(vs ...[]byte) predicate.Platform {
+	return predicate.Platform(sql.FieldIn(FieldConfigValues, vs...))
+}
+
+// ConfigValuesNotIn applies the NotIn predicate on the "config_values" field.
+func ConfigValuesNotIn(vs ...[]byte) predicate.Platform {
+	return predicate.Platform(sql.FieldNotIn(FieldConfigValues, vs...))
+}
+
+// ConfigValuesGT applies the GT predicate on the "config_values" field.
+func ConfigValuesGT(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldGT(FieldConfigValues, v))
+}
+
+// ConfigValuesGTE applies the GTE predicate on the "config_values" field.
+func ConfigValuesGTE(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldGTE(FieldConfigValues, v))
+}
+
+// ConfigValuesLT applies the LT predicate on the "config_values" field.
+func ConfigValuesLT(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldLT(FieldConfigValues, v))
+}
+
+// ConfigValuesLTE applies the LTE predicate on the "config_values" field.
+func ConfigValuesLTE(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldLTE(FieldConfigValues, v))
+}
+
+// ConfigValuesIsNil applies the IsNil predicate on the "config_values" field.
+func ConfigValuesIsNil() predicate.Platform {
+	return predicate.Platform(sql.FieldIsNull(FieldConfigValues))
+}
+
+// ConfigValuesNotNil applies the NotNil predicate on the "config_values" field.
+func ConfigValuesNotNil() predicate.Platform {
+	return predicate.Platform(sql.FieldNotNull(FieldConfigValues))
+}
+
+// ConfigCueEQ applies the EQ predicate on the "config_cue" field.
+func ConfigCueEQ(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldConfigCue, v))
+}
+
+// ConfigCueNEQ applies the NEQ predicate on the "config_cue" field.
+func ConfigCueNEQ(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldNEQ(FieldConfigCue, v))
+}
+
+// ConfigCueIn applies the In predicate on the "config_cue" field.
+func ConfigCueIn(vs ...[]byte) predicate.Platform {
+	return predicate.Platform(sql.FieldIn(FieldConfigCue, vs...))
+}
+
+// ConfigCueNotIn applies the NotIn predicate on the "config_cue" field.
+func ConfigCueNotIn(vs ...[]byte) predicate.Platform {
+	return predicate.Platform(sql.FieldNotIn(FieldConfigCue, vs...))
+}
+
+// ConfigCueGT applies the GT predicate on the "config_cue" field.
+func ConfigCueGT(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldGT(FieldConfigCue, v))
+}
+
+// ConfigCueGTE applies the GTE predicate on the "config_cue" field.
+func ConfigCueGTE(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldGTE(FieldConfigCue, v))
+}
+
+// ConfigCueLT applies the LT predicate on the "config_cue" field.
+func ConfigCueLT(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldLT(FieldConfigCue, v))
+}
+
+// ConfigCueLTE applies the LTE predicate on the "config_cue" field.
+func ConfigCueLTE(v []byte) predicate.Platform {
+	return predicate.Platform(sql.FieldLTE(FieldConfigCue, v))
+}
+
+// ConfigCueIsNil applies the IsNil predicate on the "config_cue" field.
+func ConfigCueIsNil() predicate.Platform {
+	return predicate.Platform(sql.FieldIsNull(FieldConfigCue))
+}
+
+// ConfigCueNotNil applies the NotNil predicate on the "config_cue" field.
+func ConfigCueNotNil() predicate.Platform {
+	return predicate.Platform(sql.FieldNotNull(FieldConfigCue))
+}
+
+// ConfigDefinitionEQ applies the EQ predicate on the "config_definition" field.
+func ConfigDefinitionEQ(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionNEQ applies the NEQ predicate on the "config_definition" field.
+func ConfigDefinitionNEQ(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldNEQ(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionIn applies the In predicate on the "config_definition" field.
+func ConfigDefinitionIn(vs ...string) predicate.Platform {
+	return predicate.Platform(sql.FieldIn(FieldConfigDefinition, vs...))
+}
+
+// ConfigDefinitionNotIn applies the NotIn predicate on the "config_definition" field.
+func ConfigDefinitionNotIn(vs ...string) predicate.Platform {
+	return predicate.Platform(sql.FieldNotIn(FieldConfigDefinition, vs...))
+}
+
+// ConfigDefinitionGT applies the GT predicate on the "config_definition" field.
+func ConfigDefinitionGT(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldGT(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionGTE applies the GTE predicate on the "config_definition" field.
+func ConfigDefinitionGTE(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldGTE(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionLT applies the LT predicate on the "config_definition" field.
+func ConfigDefinitionLT(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldLT(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionLTE applies the LTE predicate on the "config_definition" field.
+func ConfigDefinitionLTE(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldLTE(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionContains applies the Contains predicate on the "config_definition" field.
+func ConfigDefinitionContains(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldContains(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionHasPrefix applies the HasPrefix predicate on the "config_definition" field.
+func ConfigDefinitionHasPrefix(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldHasPrefix(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionHasSuffix applies the HasSuffix predicate on the "config_definition" field.
+func ConfigDefinitionHasSuffix(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldHasSuffix(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionIsNil applies the IsNil predicate on the "config_definition" field.
+func ConfigDefinitionIsNil() predicate.Platform {
+	return predicate.Platform(sql.FieldIsNull(FieldConfigDefinition))
+}
+
+// ConfigDefinitionNotNil applies the NotNil predicate on the "config_definition" field.
+func ConfigDefinitionNotNil() predicate.Platform {
+	return predicate.Platform(sql.FieldNotNull(FieldConfigDefinition))
+}
+
+// ConfigDefinitionEqualFold applies the EqualFold predicate on the "config_definition" field.
+func ConfigDefinitionEqualFold(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldEqualFold(FieldConfigDefinition, v))
+}
+
+// ConfigDefinitionContainsFold applies the ContainsFold predicate on the "config_definition" field.
+func ConfigDefinitionContainsFold(v string) predicate.Platform {
+	return predicate.Platform(sql.FieldContainsFold(FieldConfigDefinition, v))
 }
 
 // HasCreator applies the HasEdge predicate on the "creator" edge.

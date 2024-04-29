@@ -40,7 +40,7 @@ func (h *PlatformHandler) AddPlatform(
 	ctx context.Context,
 	req *connect.Request[holos.AddPlatformRequest],
 ) (*connect.Response[holos.GetPlatformsResponse], error) {
-	dbUser, dbOrg, err := getAuthnUsersOrg(ctx, req.Msg.OrgId, h.db)
+	dbUser, dbOrg, err := getAuthnUsersOrg(ctx, req.Msg.Platform.OrgId, h.db)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
@@ -48,8 +48,12 @@ func (h *PlatformHandler) AddPlatform(
 	platform, err := h.db.Platform.Create().
 		SetOrgID(dbOrg.ID).
 		SetCreatorID(dbUser.ID).
-		SetName(req.Msg.Name).
-		SetDisplayName(req.Msg.DisplayName).
+		SetName(req.Msg.Platform.Name).
+		SetDisplayName(req.Msg.Platform.DisplayName).
+		SetConfigForm(req.Msg.Platform.Config.Form).
+		SetConfigValues(req.Msg.Platform.Config.Values).
+		SetConfigCue(req.Msg.Platform.Config.Cue).
+		SetConfigDefinition(req.Msg.Platform.Config.Definition).
 		Save(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
@@ -66,6 +70,12 @@ func PlatformToRPC(platform *ent.Platform) *holos.Platform {
 		Id:          platform.ID.String(),
 		Name:        platform.Name,
 		DisplayName: platform.DisplayName,
+		Config: &holos.Config{
+			Form:       platform.ConfigForm,
+			Values:     platform.ConfigValues,
+			Cue:        platform.ConfigCue,
+			Definition: platform.ConfigDefinition,
+		},
 		Timestamps: &holos.Timestamps{
 			CreatedAt: timestamppb.New(platform.CreatedAt),
 			UpdatedAt: timestamppb.New(platform.UpdatedAt),
@@ -101,6 +111,7 @@ func getAuthnUsersOrg(ctx context.Context, orgID string, db *ent.Client) (*ent.U
 		return nil, nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 
+	// Check the user is a member of the organization.
 	var reqDBOrg *ent.Organization
 	wantOrgIDs := make([]uuid.UUID, 0, len(dbUser.Edges.Organizations))
 	for _, org := range dbUser.Edges.Organizations {
@@ -131,7 +142,6 @@ func getPlatformsResponse(reqDBOrg *ent.Organization) *connect.Response[holos.Ge
 	}
 
 	return connect.NewResponse(&holos.GetPlatformsResponse{
-		OrgId:     reqDBOrg.ID.String(),
 		Platforms: rpcPlatforms,
 	})
 }

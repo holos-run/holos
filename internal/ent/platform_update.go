@@ -93,6 +93,62 @@ func (pu *PlatformUpdate) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdate {
 	return pu
 }
 
+// SetConfigForm sets the "config_form" field.
+func (pu *PlatformUpdate) SetConfigForm(b []byte) *PlatformUpdate {
+	pu.mutation.SetConfigForm(b)
+	return pu
+}
+
+// ClearConfigForm clears the value of the "config_form" field.
+func (pu *PlatformUpdate) ClearConfigForm() *PlatformUpdate {
+	pu.mutation.ClearConfigForm()
+	return pu
+}
+
+// SetConfigValues sets the "config_values" field.
+func (pu *PlatformUpdate) SetConfigValues(b []byte) *PlatformUpdate {
+	pu.mutation.SetConfigValues(b)
+	return pu
+}
+
+// ClearConfigValues clears the value of the "config_values" field.
+func (pu *PlatformUpdate) ClearConfigValues() *PlatformUpdate {
+	pu.mutation.ClearConfigValues()
+	return pu
+}
+
+// SetConfigCue sets the "config_cue" field.
+func (pu *PlatformUpdate) SetConfigCue(b []byte) *PlatformUpdate {
+	pu.mutation.SetConfigCue(b)
+	return pu
+}
+
+// ClearConfigCue clears the value of the "config_cue" field.
+func (pu *PlatformUpdate) ClearConfigCue() *PlatformUpdate {
+	pu.mutation.ClearConfigCue()
+	return pu
+}
+
+// SetConfigDefinition sets the "config_definition" field.
+func (pu *PlatformUpdate) SetConfigDefinition(s string) *PlatformUpdate {
+	pu.mutation.SetConfigDefinition(s)
+	return pu
+}
+
+// SetNillableConfigDefinition sets the "config_definition" field if the given value is not nil.
+func (pu *PlatformUpdate) SetNillableConfigDefinition(s *string) *PlatformUpdate {
+	if s != nil {
+		pu.SetConfigDefinition(*s)
+	}
+	return pu
+}
+
+// ClearConfigDefinition clears the value of the "config_definition" field.
+func (pu *PlatformUpdate) ClearConfigDefinition() *PlatformUpdate {
+	pu.mutation.ClearConfigDefinition()
+	return pu
+}
+
 // SetCreator sets the "creator" edge to the User entity.
 func (pu *PlatformUpdate) SetCreator(u *User) *PlatformUpdate {
 	return pu.SetCreatorID(u.ID)
@@ -198,6 +254,30 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := pu.mutation.DisplayName(); ok {
 		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
+	}
+	if value, ok := pu.mutation.ConfigForm(); ok {
+		_spec.SetField(platform.FieldConfigForm, field.TypeBytes, value)
+	}
+	if pu.mutation.ConfigFormCleared() {
+		_spec.ClearField(platform.FieldConfigForm, field.TypeBytes)
+	}
+	if value, ok := pu.mutation.ConfigValues(); ok {
+		_spec.SetField(platform.FieldConfigValues, field.TypeBytes, value)
+	}
+	if pu.mutation.ConfigValuesCleared() {
+		_spec.ClearField(platform.FieldConfigValues, field.TypeBytes)
+	}
+	if value, ok := pu.mutation.ConfigCue(); ok {
+		_spec.SetField(platform.FieldConfigCue, field.TypeBytes, value)
+	}
+	if pu.mutation.ConfigCueCleared() {
+		_spec.ClearField(platform.FieldConfigCue, field.TypeBytes)
+	}
+	if value, ok := pu.mutation.ConfigDefinition(); ok {
+		_spec.SetField(platform.FieldConfigDefinition, field.TypeString, value)
+	}
+	if pu.mutation.ConfigDefinitionCleared() {
+		_spec.ClearField(platform.FieldConfigDefinition, field.TypeString)
 	}
 	if pu.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -339,6 +419,62 @@ func (puo *PlatformUpdateOne) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdate
 	return puo
 }
 
+// SetConfigForm sets the "config_form" field.
+func (puo *PlatformUpdateOne) SetConfigForm(b []byte) *PlatformUpdateOne {
+	puo.mutation.SetConfigForm(b)
+	return puo
+}
+
+// ClearConfigForm clears the value of the "config_form" field.
+func (puo *PlatformUpdateOne) ClearConfigForm() *PlatformUpdateOne {
+	puo.mutation.ClearConfigForm()
+	return puo
+}
+
+// SetConfigValues sets the "config_values" field.
+func (puo *PlatformUpdateOne) SetConfigValues(b []byte) *PlatformUpdateOne {
+	puo.mutation.SetConfigValues(b)
+	return puo
+}
+
+// ClearConfigValues clears the value of the "config_values" field.
+func (puo *PlatformUpdateOne) ClearConfigValues() *PlatformUpdateOne {
+	puo.mutation.ClearConfigValues()
+	return puo
+}
+
+// SetConfigCue sets the "config_cue" field.
+func (puo *PlatformUpdateOne) SetConfigCue(b []byte) *PlatformUpdateOne {
+	puo.mutation.SetConfigCue(b)
+	return puo
+}
+
+// ClearConfigCue clears the value of the "config_cue" field.
+func (puo *PlatformUpdateOne) ClearConfigCue() *PlatformUpdateOne {
+	puo.mutation.ClearConfigCue()
+	return puo
+}
+
+// SetConfigDefinition sets the "config_definition" field.
+func (puo *PlatformUpdateOne) SetConfigDefinition(s string) *PlatformUpdateOne {
+	puo.mutation.SetConfigDefinition(s)
+	return puo
+}
+
+// SetNillableConfigDefinition sets the "config_definition" field if the given value is not nil.
+func (puo *PlatformUpdateOne) SetNillableConfigDefinition(s *string) *PlatformUpdateOne {
+	if s != nil {
+		puo.SetConfigDefinition(*s)
+	}
+	return puo
+}
+
+// ClearConfigDefinition clears the value of the "config_definition" field.
+func (puo *PlatformUpdateOne) ClearConfigDefinition() *PlatformUpdateOne {
+	puo.mutation.ClearConfigDefinition()
+	return puo
+}
+
 // SetCreator sets the "creator" edge to the User entity.
 func (puo *PlatformUpdateOne) SetCreator(u *User) *PlatformUpdateOne {
 	return puo.SetCreatorID(u.ID)
@@ -474,6 +610,30 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	}
 	if value, ok := puo.mutation.DisplayName(); ok {
 		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
+	}
+	if value, ok := puo.mutation.ConfigForm(); ok {
+		_spec.SetField(platform.FieldConfigForm, field.TypeBytes, value)
+	}
+	if puo.mutation.ConfigFormCleared() {
+		_spec.ClearField(platform.FieldConfigForm, field.TypeBytes)
+	}
+	if value, ok := puo.mutation.ConfigValues(); ok {
+		_spec.SetField(platform.FieldConfigValues, field.TypeBytes, value)
+	}
+	if puo.mutation.ConfigValuesCleared() {
+		_spec.ClearField(platform.FieldConfigValues, field.TypeBytes)
+	}
+	if value, ok := puo.mutation.ConfigCue(); ok {
+		_spec.SetField(platform.FieldConfigCue, field.TypeBytes, value)
+	}
+	if puo.mutation.ConfigCueCleared() {
+		_spec.ClearField(platform.FieldConfigCue, field.TypeBytes)
+	}
+	if value, ok := puo.mutation.ConfigDefinition(); ok {
+		_spec.SetField(platform.FieldConfigDefinition, field.TypeString, value)
+	}
+	if puo.mutation.ConfigDefinitionCleared() {
+		_spec.ClearField(platform.FieldConfigDefinition, field.TypeString)
 	}
 	if puo.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{

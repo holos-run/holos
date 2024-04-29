@@ -812,6 +812,10 @@ type PlatformMutation struct {
 	updated_at          *time.Time
 	name                *string
 	display_name        *string
+	config_form         *[]byte
+	config_values       *[]byte
+	config_cue          *[]byte
+	config_definition   *string
 	clearedFields       map[string]struct{}
 	creator             *uuid.UUID
 	clearedcreator      bool
@@ -1142,6 +1146,202 @@ func (m *PlatformMutation) ResetCreatorID() {
 	m.creator = nil
 }
 
+// SetConfigForm sets the "config_form" field.
+func (m *PlatformMutation) SetConfigForm(b []byte) {
+	m.config_form = &b
+}
+
+// ConfigForm returns the value of the "config_form" field in the mutation.
+func (m *PlatformMutation) ConfigForm() (r []byte, exists bool) {
+	v := m.config_form
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigForm returns the old "config_form" field's value of the Platform entity.
+// If the Platform object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlatformMutation) OldConfigForm(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigForm is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigForm requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigForm: %w", err)
+	}
+	return oldValue.ConfigForm, nil
+}
+
+// ClearConfigForm clears the value of the "config_form" field.
+func (m *PlatformMutation) ClearConfigForm() {
+	m.config_form = nil
+	m.clearedFields[platform.FieldConfigForm] = struct{}{}
+}
+
+// ConfigFormCleared returns if the "config_form" field was cleared in this mutation.
+func (m *PlatformMutation) ConfigFormCleared() bool {
+	_, ok := m.clearedFields[platform.FieldConfigForm]
+	return ok
+}
+
+// ResetConfigForm resets all changes to the "config_form" field.
+func (m *PlatformMutation) ResetConfigForm() {
+	m.config_form = nil
+	delete(m.clearedFields, platform.FieldConfigForm)
+}
+
+// SetConfigValues sets the "config_values" field.
+func (m *PlatformMutation) SetConfigValues(b []byte) {
+	m.config_values = &b
+}
+
+// ConfigValues returns the value of the "config_values" field in the mutation.
+func (m *PlatformMutation) ConfigValues() (r []byte, exists bool) {
+	v := m.config_values
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigValues returns the old "config_values" field's value of the Platform entity.
+// If the Platform object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlatformMutation) OldConfigValues(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigValues is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigValues requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigValues: %w", err)
+	}
+	return oldValue.ConfigValues, nil
+}
+
+// ClearConfigValues clears the value of the "config_values" field.
+func (m *PlatformMutation) ClearConfigValues() {
+	m.config_values = nil
+	m.clearedFields[platform.FieldConfigValues] = struct{}{}
+}
+
+// ConfigValuesCleared returns if the "config_values" field was cleared in this mutation.
+func (m *PlatformMutation) ConfigValuesCleared() bool {
+	_, ok := m.clearedFields[platform.FieldConfigValues]
+	return ok
+}
+
+// ResetConfigValues resets all changes to the "config_values" field.
+func (m *PlatformMutation) ResetConfigValues() {
+	m.config_values = nil
+	delete(m.clearedFields, platform.FieldConfigValues)
+}
+
+// SetConfigCue sets the "config_cue" field.
+func (m *PlatformMutation) SetConfigCue(b []byte) {
+	m.config_cue = &b
+}
+
+// ConfigCue returns the value of the "config_cue" field in the mutation.
+func (m *PlatformMutation) ConfigCue() (r []byte, exists bool) {
+	v := m.config_cue
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigCue returns the old "config_cue" field's value of the Platform entity.
+// If the Platform object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlatformMutation) OldConfigCue(ctx context.Context) (v []byte, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigCue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigCue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigCue: %w", err)
+	}
+	return oldValue.ConfigCue, nil
+}
+
+// ClearConfigCue clears the value of the "config_cue" field.
+func (m *PlatformMutation) ClearConfigCue() {
+	m.config_cue = nil
+	m.clearedFields[platform.FieldConfigCue] = struct{}{}
+}
+
+// ConfigCueCleared returns if the "config_cue" field was cleared in this mutation.
+func (m *PlatformMutation) ConfigCueCleared() bool {
+	_, ok := m.clearedFields[platform.FieldConfigCue]
+	return ok
+}
+
+// ResetConfigCue resets all changes to the "config_cue" field.
+func (m *PlatformMutation) ResetConfigCue() {
+	m.config_cue = nil
+	delete(m.clearedFields, platform.FieldConfigCue)
+}
+
+// SetConfigDefinition sets the "config_definition" field.
+func (m *PlatformMutation) SetConfigDefinition(s string) {
+	m.config_definition = &s
+}
+
+// ConfigDefinition returns the value of the "config_definition" field in the mutation.
+func (m *PlatformMutation) ConfigDefinition() (r string, exists bool) {
+	v := m.config_definition
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldConfigDefinition returns the old "config_definition" field's value of the Platform entity.
+// If the Platform object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlatformMutation) OldConfigDefinition(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldConfigDefinition is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldConfigDefinition requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldConfigDefinition: %w", err)
+	}
+	return oldValue.ConfigDefinition, nil
+}
+
+// ClearConfigDefinition clears the value of the "config_definition" field.
+func (m *PlatformMutation) ClearConfigDefinition() {
+	m.config_definition = nil
+	m.clearedFields[platform.FieldConfigDefinition] = struct{}{}
+}
+
+// ConfigDefinitionCleared returns if the "config_definition" field was cleared in this mutation.
+func (m *PlatformMutation) ConfigDefinitionCleared() bool {
+	_, ok := m.clearedFields[platform.FieldConfigDefinition]
+	return ok
+}
+
+// ResetConfigDefinition resets all changes to the "config_definition" field.
+func (m *PlatformMutation) ResetConfigDefinition() {
+	m.config_definition = nil
+	delete(m.clearedFields, platform.FieldConfigDefinition)
+}
+
 // ClearCreator clears the "creator" edge to the User entity.
 func (m *PlatformMutation) ClearCreator() {
 	m.clearedcreator = true
@@ -1243,7 +1443,7 @@ func (m *PlatformMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PlatformMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 10)
 	if m.created_at != nil {
 		fields = append(fields, platform.FieldCreatedAt)
 	}
@@ -1261,6 +1461,18 @@ func (m *PlatformMutation) Fields() []string {
 	}
 	if m.creator != nil {
 		fields = append(fields, platform.FieldCreatorID)
+	}
+	if m.config_form != nil {
+		fields = append(fields, platform.FieldConfigForm)
+	}
+	if m.config_values != nil {
+		fields = append(fields, platform.FieldConfigValues)
+	}
+	if m.config_cue != nil {
+		fields = append(fields, platform.FieldConfigCue)
+	}
+	if m.config_definition != nil {
+		fields = append(fields, platform.FieldConfigDefinition)
 	}
 	return fields
 }
@@ -1282,6 +1494,14 @@ func (m *PlatformMutation) Field(name string) (ent.Value, bool) {
 		return m.DisplayName()
 	case platform.FieldCreatorID:
 		return m.CreatorID()
+	case platform.FieldConfigForm:
+		return m.ConfigForm()
+	case platform.FieldConfigValues:
+		return m.ConfigValues()
+	case platform.FieldConfigCue:
+		return m.ConfigCue()
+	case platform.FieldConfigDefinition:
+		return m.ConfigDefinition()
 	}
 	return nil, false
 }
@@ -1303,6 +1523,14 @@ func (m *PlatformMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldDisplayName(ctx)
 	case platform.FieldCreatorID:
 		return m.OldCreatorID(ctx)
+	case platform.FieldConfigForm:
+		return m.OldConfigForm(ctx)
+	case platform.FieldConfigValues:
+		return m.OldConfigValues(ctx)
+	case platform.FieldConfigCue:
+		return m.OldConfigCue(ctx)
+	case platform.FieldConfigDefinition:
+		return m.OldConfigDefinition(ctx)
 	}
 	return nil, fmt.Errorf("unknown Platform field %s", name)
 }
@@ -1354,6 +1582,34 @@ func (m *PlatformMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCreatorID(v)
 		return nil
+	case platform.FieldConfigForm:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigForm(v)
+		return nil
+	case platform.FieldConfigValues:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigValues(v)
+		return nil
+	case platform.FieldConfigCue:
+		v, ok := value.([]byte)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigCue(v)
+		return nil
+	case platform.FieldConfigDefinition:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetConfigDefinition(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Platform field %s", name)
 }
@@ -1383,7 +1639,20 @@ func (m *PlatformMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *PlatformMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(platform.FieldConfigForm) {
+		fields = append(fields, platform.FieldConfigForm)
+	}
+	if m.FieldCleared(platform.FieldConfigValues) {
+		fields = append(fields, platform.FieldConfigValues)
+	}
+	if m.FieldCleared(platform.FieldConfigCue) {
+		fields = append(fields, platform.FieldConfigCue)
+	}
+	if m.FieldCleared(platform.FieldConfigDefinition) {
+		fields = append(fields, platform.FieldConfigDefinition)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1396,6 +1665,20 @@ func (m *PlatformMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *PlatformMutation) ClearField(name string) error {
+	switch name {
+	case platform.FieldConfigForm:
+		m.ClearConfigForm()
+		return nil
+	case platform.FieldConfigValues:
+		m.ClearConfigValues()
+		return nil
+	case platform.FieldConfigCue:
+		m.ClearConfigCue()
+		return nil
+	case platform.FieldConfigDefinition:
+		m.ClearConfigDefinition()
+		return nil
+	}
 	return fmt.Errorf("unknown Platform nullable field %s", name)
 }
 
@@ -1420,6 +1703,18 @@ func (m *PlatformMutation) ResetField(name string) error {
 		return nil
 	case platform.FieldCreatorID:
 		m.ResetCreatorID()
+		return nil
+	case platform.FieldConfigForm:
+		m.ResetConfigForm()
+		return nil
+	case platform.FieldConfigValues:
+		m.ResetConfigValues()
+		return nil
+	case platform.FieldConfigCue:
+		m.ResetConfigCue()
+		return nil
+	case platform.FieldConfigDefinition:
+		m.ResetConfigDefinition()
 		return nil
 	}
 	return fmt.Errorf("unknown Platform field %s", name)
