@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PlatformConfigComponent } from './platform-config.component';
+import { PlatformsComponent } from './platforms.component';
 
-describe('PlatformConfigComponent', () => {
-  let component: PlatformConfigComponent;
-  let fixture: ComponentFixture<PlatformConfigComponent>;
+describe('PlatformsComponent', () => {
+  let component: PlatformsComponent;
+  let fixture: ComponentFixture<PlatformsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PlatformConfigComponent]
+      imports: [PlatformsComponent]
     })
     .compileComponents();
     
-    fixture = TestBed.createComponent(PlatformConfigComponent);
+    fixture = TestBed.createComponent(PlatformsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

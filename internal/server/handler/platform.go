@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	"connectrpc.com/connect"
 	"github.com/gofrs/uuid"
@@ -53,10 +54,10 @@ func (h *PlatformHandler) AddPlatform(
 		SetCreatorID(dbUser.ID).
 		SetName(req.Msg.Platform.Name).
 		SetDisplayName(req.Msg.Platform.DisplayName).
-		SetConfigForm(req.Msg.Platform.Config.Form).
-		SetConfigValues(req.Msg.Platform.Config.Values).
-		SetConfigCue(req.Msg.Platform.Config.Cue).
-		SetConfigDefinition(req.Msg.Platform.Config.Definition).
+		SetConfigForm(req.Msg.Platform.RawConfig.Form).
+		SetConfigValues(req.Msg.Platform.RawConfig.Values).
+		SetConfigCue(req.Msg.Platform.RawConfig.Cue).
+		SetConfigDefinition(req.Msg.Platform.RawConfig.Definition).
 		Save(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
@@ -66,6 +67,36 @@ func (h *PlatformHandler) AddPlatform(
 	resp.Msg.Platforms = append(resp.Msg.Platforms, PlatformToRPC(platform))
 
 	return resp, nil
+}
+
+func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[holos.GetPlatformRequest]) (*connect.Response[holos.GetPlatformResponse], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
+	platformID, err := uuid.FromString(req.Msg.PlatformId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	p, err := h.db.Platform.Query().
+		Where(platform.ID(platformID)).
+		Where(platform.HasOrganizationWith(
+			organization.HasUsersWith(
+				user.Iss(authnID.Issuer()),
+				user.Sub(authnID.Subject()),
+			))).
+		Only(ctx)
+	if err != nil {
+		if ent.MaskNotFound(err) == nil {
+			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
+		} else {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+		}
+	}
+
+	return connect.NewResponse(&holos.GetPlatformResponse{Platform: PlatformToRPC(p)}), nil
 }
 
 // GetForm provides the FormlyFieldConfig for the platform to make the web ui form for user input.
@@ -97,27 +128,24 @@ func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[holo
 		}
 	}
 
-	var resp holos.PlatformForm
-	// Unmamarshal the spec.sections field stored in the database.
-	if err := json.Unmarshal(p.ConfigForm, &resp); err != nil {
-		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
-	}
-
-	res := connect.NewResponse(&resp)
+	rpcPlatform := PlatformToRPC(p)
+	res := connect.NewResponse(rpcPlatform.Config.Form)
 	return res, nil
 }
 
 func PlatformToRPC(platform *ent.Platform) *holos.Platform {
+	var form holos.PlatformForm
+	if err := json.Unmarshal(platform.ConfigForm, &form); err != nil {
+		slog.Error("could not unmarshal platform config form", "platform_id", platform.ID.String(), "err", err)
+		return nil
+	}
+
 	return &holos.Platform{
 		Id:          platform.ID.String(),
 		Name:        platform.Name,
 		DisplayName: platform.DisplayName,
-		Config: &holos.Config{
-			Form:       platform.ConfigForm,
-			Values:     platform.ConfigValues,
-			Cue:        platform.ConfigCue,
-			Definition: platform.ConfigDefinition,
-		},
+		OrgId:       platform.OrgID.String(),
+		Config:      &holos.Config{Form: &form},
 		Timestamps: &holos.Timestamps{
 			CreatedAt: timestamppb.New(platform.CreatedAt),
 			UpdatedAt: timestamppb.New(platform.UpdatedAt),

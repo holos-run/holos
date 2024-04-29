@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddPlatformRequest, GetPlatformFormRequest, GetPlatformsRequest, GetPlatformsResponse, PlatformForm } from "./platform_pb.js";
+import { AddPlatformRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse } from "./platform_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -31,12 +31,12 @@ export const PlatformService = {
       kind: MethodKind.Unary,
     },
     /**
-     * @generated from rpc holos.v1alpha1.PlatformService.GetForm
+     * @generated from rpc holos.v1alpha1.PlatformService.GetPlatform
      */
-    getForm: {
-      name: "GetForm",
-      I: GetPlatformFormRequest,
-      O: PlatformForm,
+    getPlatform: {
+      name: "GetPlatform",
+      I: GetPlatformRequest,
+      O: GetPlatformResponse,
       kind: MethodKind.Unary,
     },
   }
