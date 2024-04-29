@@ -33,19 +33,59 @@ message Platform {
   Config config = 7;
 }
 
+message FieldConfigProps {
+  string label = 1;
+  string placeholder = 2;
+  string description = 3;
+  bool required = 4;
+}
+
+message FieldConfig {
+  string key = 1;
+  string type = 2;
+  FieldConfigProps props = 3;
+}
+
+message ConfigSection {
+  string name = 1;
+  string displayName = 2;
+  string description = 3;
+  repeated FieldConfig fieldConfigs = 4;
+}
+
+message PlatformFormSpec {
+  repeated ConfigSection sections = 1;
+}
+
 message GetPlatformsRequest {
   string org_id = 1 [(buf.validate.field).string.uuid = true];
 }
 
 message GetPlatformsResponse {
-  repeated Platform platforms = 2;
+  repeated Platform platforms = 1;
 }
 
 message AddPlatformRequest {
   Platform platform = 1;
 }
 
+message GetPlatformFormRequest {
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message MetadataName {
+  string name = 1;
+}
+
+message PlatformForm {
+  string apiVersion = 1;
+  string kind = 2;
+  MetadataName metadata = 3;
+  PlatformFormSpec spec = 4;
+}
+
 service PlatformService {
   rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse) {}
   rpc AddPlatform(AddPlatformRequest) returns (GetPlatformsResponse) {}
+  rpc GetForm(GetPlatformFormRequest) returns (PlatformForm) {}
 }

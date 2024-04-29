@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import { MethodKind } from "@bufbuild/protobuf";
-import { AddPlatformRequest, GetPlatformsRequest, GetPlatformsResponse } from "./platform_pb.js";
+import { AddPlatformRequest, GetPlatformFormRequest, GetPlatformsRequest, GetPlatformsResponse, PlatformForm } from "./platform_pb.js";
 
 /**
  * @generated from rpc holos.v1alpha1.PlatformService.GetPlatforms
@@ -29,6 +29,20 @@ export const addPlatform = {
   kind: MethodKind.Unary,
   I: AddPlatformRequest,
   O: GetPlatformsResponse,
+  service: {
+    typeName: "holos.v1alpha1.PlatformService"
+  }
+} as const;
+
+/**
+ * @generated from rpc holos.v1alpha1.PlatformService.GetForm
+ */
+export const getForm = {
+  localName: "getForm",
+  name: "GetForm",
+  kind: MethodKind.Unary,
+  I: GetPlatformFormRequest,
+  O: PlatformForm,
   service: {
     typeName: "holos.v1alpha1.PlatformService"
   }

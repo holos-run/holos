@@ -2,11 +2,14 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"connectrpc.com/connect"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent"
+	"github.com/holos-run/holos/internal/ent/organization"
+	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
@@ -63,6 +66,45 @@ func (h *PlatformHandler) AddPlatform(
 	resp.Msg.Platforms = append(resp.Msg.Platforms, PlatformToRPC(platform))
 
 	return resp, nil
+}
+
+// GetForm provides the FormlyFieldConfig for the platform to make the web ui form for user input.
+func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[holos.GetPlatformFormRequest]) (*connect.Response[holos.PlatformForm], error) {
+	// Boilerplate to get the platform by id where the user is a member of the org.
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
+	platformID, err := uuid.FromString(req.Msg.PlatformId)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	p, err := h.db.Platform.Query().
+		Where(platform.ID(platformID)).
+		Where(platform.HasOrganizationWith(
+			organization.HasUsersWith(
+				user.Iss(authnID.Issuer()),
+				user.Sub(authnID.Subject()),
+			))).
+		Only(ctx)
+	if err != nil {
+		if ent.MaskNotFound(err) == nil {
+			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
+		} else {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+		}
+	}
+
+	var resp holos.PlatformForm
+	// Unmamarshal the spec.sections field stored in the database.
+	if err := json.Unmarshal(p.ConfigForm, &resp); err != nil {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+	}
+
+	res := connect.NewResponse(&resp)
+	return res, nil
 }
 
 func PlatformToRPC(platform *ent.Platform) *holos.Platform {
