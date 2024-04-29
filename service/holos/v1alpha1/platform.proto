@@ -8,6 +8,7 @@ option go_package = "github.com/holos-run/holos/service/gen/holos/v1alpha1;holos
 import "buf/validate/validate.proto";
 import "holos/v1alpha1/timestamps.proto";
 import "holos/v1alpha1/organization.proto";
+import "holos/v1alpha1/user.proto";
 
 // For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
 
@@ -21,6 +22,7 @@ message Platform {
   // platform spec form config here?
 
   Timestamps timestamps = 4;
+  Creator creator = 5;
 }
 
 message GetPlatformsRequest {

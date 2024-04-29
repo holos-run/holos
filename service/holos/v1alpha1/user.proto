@@ -41,6 +41,10 @@ message Claims {
   string picture = 9;
 }
 
+message Creator {
+  string id = 1 [(buf.validate.field).string.uuid = true];
+}
+
 // UserClaims represents id token claims
 message GetCallerClaimsResponse {
   Claims claims = 1;

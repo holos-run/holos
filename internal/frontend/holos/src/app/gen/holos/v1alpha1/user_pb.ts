@@ -257,6 +257,43 @@ export class Claims extends Message<Claims> {
 }
 
 /**
+ * @generated from message holos.v1alpha1.Creator
+ */
+export class Creator extends Message<Creator> {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  constructor(data?: PartialMessage<Creator>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.v1alpha1.Creator";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Creator {
+    return new Creator().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Creator {
+    return new Creator().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Creator {
+    return new Creator().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: Creator | PlainMessage<Creator> | undefined, b: Creator | PlainMessage<Creator> | undefined): boolean {
+    return proto3.util.equals(Creator, a, b);
+  }
+}
+
+/**
  * UserClaims represents id token claims
  *
  * @generated from message holos.v1alpha1.GetCallerClaimsResponse

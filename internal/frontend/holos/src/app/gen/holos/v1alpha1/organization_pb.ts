@@ -6,7 +6,7 @@
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3 } from "@bufbuild/protobuf";
 import { Timestamps } from "./timestamps_pb.js";
-import { User } from "./user_pb.js";
+import { Creator, User } from "./user_pb.js";
 
 /**
  * @generated from message holos.v1alpha1.Organization
@@ -34,6 +34,11 @@ export class Organization extends Message<Organization> {
    */
   timestamps?: Timestamps;
 
+  /**
+   * @generated from field: holos.v1alpha1.Creator creator = 5;
+   */
+  creator?: Creator;
+
   constructor(data?: PartialMessage<Organization>) {
     super();
     proto3.util.initPartial(data, this);
@@ -46,6 +51,7 @@ export class Organization extends Message<Organization> {
     { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "display_name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 4, name: "timestamps", kind: "message", T: Timestamps },
+    { no: 5, name: "creator", kind: "message", T: Creator },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Organization {

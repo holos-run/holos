@@ -82,7 +82,7 @@ func (h *OrganizationHandler) CreateCallerOrganization(
 
 	var org *ent.Organization
 	err = WithTx(ctx, h.db, func(tx *ent.Tx) (err error) {
-		org, err = h.db.Organization.Create().
+		org, err = tx.Organization.Create().
 			SetName(cleanAndAppendRandom(authnID.Name())).
 			SetDisplayName(authnID.GivenName() + "'s Org").
 			SetCreatorID(dbUser.ID).
@@ -137,6 +137,9 @@ func OrganizationToRPC(org *ent.Organization) *holos.Organization {
 		Timestamps: &holos.Timestamps{
 			CreatedAt: timestamppb.New(org.CreatedAt),
 			UpdatedAt: timestamppb.New(org.UpdatedAt),
+		},
+		Creator: &holos.Creator{
+			Id: org.CreatorID.String(),
 		},
 	}
 	return &rpcEntity
