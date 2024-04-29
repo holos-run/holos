@@ -31,6 +31,36 @@ var (
 			},
 		},
 	}
+	// PlatformsColumns holds the columns for the "platforms" table.
+	PlatformsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString},
+		{Name: "display_name", Type: field.TypeString},
+		{Name: "creator_id", Type: field.TypeUUID},
+		{Name: "org_id", Type: field.TypeUUID},
+	}
+	// PlatformsTable holds the schema information for the "platforms" table.
+	PlatformsTable = &schema.Table{
+		Name:       "platforms",
+		Columns:    PlatformsColumns,
+		PrimaryKey: []*schema.Column{PlatformsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "platforms_users_creator",
+				Columns:    []*schema.Column{PlatformsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "platforms_organizations_organization",
+				Columns:    []*schema.Column{PlatformsColumns[6]},
+				RefColumns: []*schema.Column{OrganizationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
@@ -82,6 +112,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		OrganizationsTable,
+		PlatformsTable,
 		UsersTable,
 		OrganizationUsersTable,
 	}
@@ -89,6 +120,8 @@ var (
 
 func init() {
 	OrganizationsTable.ForeignKeys[0].RefTable = UsersTable
+	PlatformsTable.ForeignKeys[0].RefTable = UsersTable
+	PlatformsTable.ForeignKeys[1].RefTable = OrganizationsTable
 	OrganizationUsersTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrganizationUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

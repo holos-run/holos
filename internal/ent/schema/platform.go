@@ -7,34 +7,35 @@ import (
 	"github.com/gofrs/uuid"
 )
 
-// Organization represents an organization account.
-type Organization struct {
+type Platform struct {
 	ent.Schema
 }
 
-func (Organization) Mixin() []ent.Mixin {
+func (Platform) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		BaseMixin{},
 		TimeMixin{},
 	}
 }
 
-func (Organization) Fields() []ent.Field {
+func (Platform) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("name").NotEmpty().Unique(),
+		field.UUID("org_id", uuid.UUID{}),
+		field.String("name").NotEmpty(),
 		field.String("display_name"),
 		field.UUID("creator_id", uuid.UUID{}),
 	}
 }
 
-func (Organization) Edges() []ent.Edge {
+func (Platform) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("creator", User.Type).
 			Field("creator_id").
 			Unique().
 			Required(),
-		edge.To("users", User.Type),
-		edge.From("platforms", Platform.Type).
-			Ref("organization"),
+		edge.To("organization", Organization.Type).
+			Field("org_id").
+			Unique().
+			Required(),
 	}
 }

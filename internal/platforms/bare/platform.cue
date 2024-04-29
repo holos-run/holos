@@ -22,4 +22,4 @@ package holos
 // #PlatformSpec represents configuration values defined by the platform
 // designer.  Config values are organized by section, then simple strings for
 // each section.
-#PlatformSpec: {[NAME=string]: #ConfigSection & {name: NAME}}
+#PlatformSpec: {[string]: {[string]: string | bool | [...string]}}

@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
+	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
 )
 
@@ -103,6 +104,21 @@ func (oc *OrganizationCreate) AddUsers(u ...*User) *OrganizationCreate {
 		ids[i] = u[i].ID
 	}
 	return oc.AddUserIDs(ids...)
+}
+
+// AddPlatformIDs adds the "platforms" edge to the Platform entity by IDs.
+func (oc *OrganizationCreate) AddPlatformIDs(ids ...uuid.UUID) *OrganizationCreate {
+	oc.mutation.AddPlatformIDs(ids...)
+	return oc
+}
+
+// AddPlatforms adds the "platforms" edges to the Platform entity.
+func (oc *OrganizationCreate) AddPlatforms(p ...*Platform) *OrganizationCreate {
+	ids := make([]uuid.UUID, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return oc.AddPlatformIDs(ids...)
 }
 
 // Mutation returns the OrganizationMutation object of the builder.
@@ -257,6 +273,22 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := oc.mutation.PlatformsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: true,
+			Table:   organization.PlatformsTable,
+			Columns: []string{organization.PlatformsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

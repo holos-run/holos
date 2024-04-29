@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
+	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/schema"
 	"github.com/holos-run/holos/internal/ent/user"
 )
@@ -40,6 +41,31 @@ func init() {
 	organizationDescID := organizationMixinFields0[0].Descriptor()
 	// organization.DefaultID holds the default value on creation for the id field.
 	organization.DefaultID = organizationDescID.Default.(func() uuid.UUID)
+	platformMixin := schema.Platform{}.Mixin()
+	platformMixinFields0 := platformMixin[0].Fields()
+	_ = platformMixinFields0
+	platformMixinFields1 := platformMixin[1].Fields()
+	_ = platformMixinFields1
+	platformFields := schema.Platform{}.Fields()
+	_ = platformFields
+	// platformDescCreatedAt is the schema descriptor for created_at field.
+	platformDescCreatedAt := platformMixinFields1[0].Descriptor()
+	// platform.DefaultCreatedAt holds the default value on creation for the created_at field.
+	platform.DefaultCreatedAt = platformDescCreatedAt.Default.(func() time.Time)
+	// platformDescUpdatedAt is the schema descriptor for updated_at field.
+	platformDescUpdatedAt := platformMixinFields1[1].Descriptor()
+	// platform.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	platform.DefaultUpdatedAt = platformDescUpdatedAt.Default.(func() time.Time)
+	// platform.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	platform.UpdateDefaultUpdatedAt = platformDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// platformDescName is the schema descriptor for name field.
+	platformDescName := platformFields[1].Descriptor()
+	// platform.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	platform.NameValidator = platformDescName.Validators[0].(func(string) error)
+	// platformDescID is the schema descriptor for id field.
+	platformDescID := platformMixinFields0[0].Descriptor()
+	// platform.DefaultID holds the default value on creation for the id field.
+	platform.DefaultID = platformDescID.Default.(func() uuid.UUID)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

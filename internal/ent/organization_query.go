@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
+	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
 )
@@ -20,12 +21,13 @@ import (
 // OrganizationQuery is the builder for querying Organization entities.
 type OrganizationQuery struct {
 	config
-	ctx         *QueryContext
-	order       []organization.OrderOption
-	inters      []Interceptor
-	predicates  []predicate.Organization
-	withCreator *UserQuery
-	withUsers   *UserQuery
+	ctx           *QueryContext
+	order         []organization.OrderOption
+	inters        []Interceptor
+	predicates    []predicate.Organization
+	withCreator   *UserQuery
+	withUsers     *UserQuery
+	withPlatforms *PlatformQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -99,6 +101,28 @@ func (oq *OrganizationQuery) QueryUsers() *UserQuery {
 			sqlgraph.From(organization.Table, organization.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, organization.UsersTable, organization.UsersPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryPlatforms chains the current query on the "platforms" edge.
+func (oq *OrganizationQuery) QueryPlatforms() *PlatformQuery {
+	query := (&PlatformClient{config: oq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := oq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := oq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, selector),
+			sqlgraph.To(platform.Table, platform.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, true, organization.PlatformsTable, organization.PlatformsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
 		return fromU, nil
@@ -293,13 +317,14 @@ func (oq *OrganizationQuery) Clone() *OrganizationQuery {
 		return nil
 	}
 	return &OrganizationQuery{
-		config:      oq.config,
-		ctx:         oq.ctx.Clone(),
-		order:       append([]organization.OrderOption{}, oq.order...),
-		inters:      append([]Interceptor{}, oq.inters...),
-		predicates:  append([]predicate.Organization{}, oq.predicates...),
-		withCreator: oq.withCreator.Clone(),
-		withUsers:   oq.withUsers.Clone(),
+		config:        oq.config,
+		ctx:           oq.ctx.Clone(),
+		order:         append([]organization.OrderOption{}, oq.order...),
+		inters:        append([]Interceptor{}, oq.inters...),
+		predicates:    append([]predicate.Organization{}, oq.predicates...),
+		withCreator:   oq.withCreator.Clone(),
+		withUsers:     oq.withUsers.Clone(),
+		withPlatforms: oq.withPlatforms.Clone(),
 		// clone intermediate query.
 		sql:  oq.sql.Clone(),
 		path: oq.path,
@@ -325,6 +350,17 @@ func (oq *OrganizationQuery) WithUsers(opts ...func(*UserQuery)) *OrganizationQu
 		opt(query)
 	}
 	oq.withUsers = query
+	return oq
+}
+
+// WithPlatforms tells the query-builder to eager-load the nodes that are connected to
+// the "platforms" edge. The optional arguments are used to configure the query builder of the edge.
+func (oq *OrganizationQuery) WithPlatforms(opts ...func(*PlatformQuery)) *OrganizationQuery {
+	query := (&PlatformClient{config: oq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	oq.withPlatforms = query
 	return oq
 }
 
@@ -406,9 +442,10 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	var (
 		nodes       = []*Organization{}
 		_spec       = oq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			oq.withCreator != nil,
 			oq.withUsers != nil,
+			oq.withPlatforms != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -439,6 +476,13 @@ func (oq *OrganizationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 		if err := oq.loadUsers(ctx, query, nodes,
 			func(n *Organization) { n.Edges.Users = []*User{} },
 			func(n *Organization, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := oq.withPlatforms; query != nil {
+		if err := oq.loadPlatforms(ctx, query, nodes,
+			func(n *Organization) { n.Edges.Platforms = []*Platform{} },
+			func(n *Organization, e *Platform) { n.Edges.Platforms = append(n.Edges.Platforms, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -532,6 +576,36 @@ func (oq *OrganizationQuery) loadUsers(ctx context.Context, query *UserQuery, no
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (oq *OrganizationQuery) loadPlatforms(ctx context.Context, query *PlatformQuery, nodes []*Organization, init func(*Organization), assign func(*Organization, *Platform)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Organization)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(platform.FieldOrgID)
+	}
+	query.Where(predicate.Platform(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(organization.PlatformsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OrgID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "org_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

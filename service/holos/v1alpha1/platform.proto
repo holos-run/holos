@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package holos.v1alpha1;
+
+option go_package = "github.com/holos-run/holos/service/gen/holos/v1alpha1;holos";
+
+// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+import "buf/validate/validate.proto";
+import "holos/v1alpha1/timestamps.proto";
+import "holos/v1alpha1/organization.proto";
+
+// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+
+message Platform {
+  // Unique id assigned by the server.
+  string id = 1 [(buf.validate.field).string.uuid = true];
+  string name = 2 [(buf.validate.field).string.max_len = 100];
+  string display_name = 3 [(buf.validate.field).string.max_len = 100];
+
+  // platform spec here?
+  // platform spec form config here?
+
+  Timestamps timestamps = 4;
+}
+
+message GetPlatformsRequest {
+  string org_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message GetPlatformsResponse {
+  string org_id = 1 [(buf.validate.field).string.uuid = true];
+  repeated Platform platforms = 2;
+}
+
+message AddPlatformRequest {
+  string org_id = 1 [(buf.validate.field).string.uuid = true];
+  string name = 2 [(buf.validate.field).string.max_len = 100];
+  string display_name = 3 [(buf.validate.field).string.max_len = 100];
+}
+
+service PlatformService {
+  rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse) {}
+  rpc AddPlatform(AddPlatformRequest) returns (GetPlatformsResponse) {}
+}
