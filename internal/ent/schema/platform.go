@@ -6,6 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/gofrs/uuid"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 type Platform struct {
@@ -25,12 +26,12 @@ func (Platform) Fields() []ent.Field {
 		field.String("name").NotEmpty(),
 		field.String("display_name"),
 		field.UUID("creator_id", uuid.UUID{}),
-		field.Bytes("config_form").
+		field.JSON("config_form", &holos.PlatformForm{}).
 			Optional().
-			Comment("Opaque JSON bytes representing the platform config form."),
-		field.Bytes("config_values").
+			Comment("JSON holos.PlatformForm representing the platform data entry form."),
+		field.JSON("config_values", &holos.ConfigValues{}).
 			Optional().
-			Comment("Opaque JSON bytes representing the platform config values."),
+			Comment("JSON holos.ConfigValues representing the platform config values."),
 		field.Bytes("config_cue").
 			Optional().
 			Comment("Opaque bytes representing the CUE definition of the config struct."),

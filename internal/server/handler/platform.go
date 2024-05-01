@@ -49,13 +49,23 @@ func (h *PlatformHandler) AddPlatform(
 		return nil, errors.Wrap(err)
 	}
 
+	var hf holos.PlatformForm
+	if err := json.Unmarshal(req.Msg.Platform.RawConfig.Form, &hf); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	var hv holos.ConfigValues
+	if err := json.Unmarshal(req.Msg.Platform.RawConfig.Values, &hv); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
 	platform, err := h.db.Platform.Create().
 		SetOrgID(dbOrg.ID).
 		SetCreatorID(dbUser.ID).
 		SetName(req.Msg.Platform.Name).
 		SetDisplayName(req.Msg.Platform.DisplayName).
-		SetConfigForm(req.Msg.Platform.RawConfig.Form).
-		SetConfigValues(req.Msg.Platform.RawConfig.Values).
+		SetConfigForm(&hf).
+		SetConfigValues(&hv).
 		SetConfigCue(req.Msg.Platform.RawConfig.Cue).
 		SetConfigDefinition(req.Msg.Platform.RawConfig.Definition).
 		Save(ctx)
@@ -129,18 +139,13 @@ func (h *PlatformHandler) PutPlatformConfig(ctx context.Context, req *connect.Re
 
 	slog.WarnContext(ctx, "todo: validate the platform config against cue definitions", "action", "todo", "cue", len(p.ConfigCue))
 
-	values, err := json.Marshal(req.Msg.Values)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
-	}
-
 	up, err := h.db.Platform.UpdateOneID(id).
 		Where(platform.HasOrganizationWith(
 			organization.HasUsersWith(
 				user.Iss(authnID.Issuer()),
 				user.Sub(authnID.Subject()),
 			))).
-		SetConfigValues(values).
+		SetConfigValues(req.Msg.Values).
 		Save(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
@@ -150,25 +155,14 @@ func (h *PlatformHandler) PutPlatformConfig(ctx context.Context, req *connect.Re
 }
 
 func PlatformToRPC(platform *ent.Platform) *holos.Platform {
-	log := slog.Default().With("platform_name", platform.Name, "platform_id", platform.ID.String())
-	var form holos.PlatformForm
-	if err := json.Unmarshal(platform.ConfigForm, &form); err != nil {
-		log.Warn("could not unmarshal platform config form", "err", err)
-	}
-
-	var values holos.ConfigValues
-	if err := json.Unmarshal(platform.ConfigValues, &values); err != nil {
-		log.Warn("could not unmarshal platform config values", "err", err)
-	}
-
 	return &holos.Platform{
 		Id:          platform.ID.String(),
 		Name:        platform.Name,
 		DisplayName: platform.DisplayName,
 		OrgId:       platform.OrgID.String(),
 		Config: &holos.Config{
-			Form:   &form,
-			Values: &values,
+			Form:   platform.ConfigForm,
+			Values: platform.ConfigValues,
 		},
 		Timestamps: &holos.Timestamps{
 			CreatedAt: timestamppb.New(platform.CreatedAt),

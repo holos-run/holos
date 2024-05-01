@@ -16,6 +16,7 @@ import (
 	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 // PlatformUpdate is the builder for updating Platform entities.
@@ -94,8 +95,8 @@ func (pu *PlatformUpdate) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdate {
 }
 
 // SetConfigForm sets the "config_form" field.
-func (pu *PlatformUpdate) SetConfigForm(b []byte) *PlatformUpdate {
-	pu.mutation.SetConfigForm(b)
+func (pu *PlatformUpdate) SetConfigForm(hf *holos.PlatformForm) *PlatformUpdate {
+	pu.mutation.SetConfigForm(hf)
 	return pu
 }
 
@@ -106,8 +107,8 @@ func (pu *PlatformUpdate) ClearConfigForm() *PlatformUpdate {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (pu *PlatformUpdate) SetConfigValues(b []byte) *PlatformUpdate {
-	pu.mutation.SetConfigValues(b)
+func (pu *PlatformUpdate) SetConfigValues(hv *holos.ConfigValues) *PlatformUpdate {
+	pu.mutation.SetConfigValues(hv)
 	return pu
 }
 
@@ -256,16 +257,16 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
 	}
 	if value, ok := pu.mutation.ConfigForm(); ok {
-		_spec.SetField(platform.FieldConfigForm, field.TypeBytes, value)
+		_spec.SetField(platform.FieldConfigForm, field.TypeJSON, value)
 	}
 	if pu.mutation.ConfigFormCleared() {
-		_spec.ClearField(platform.FieldConfigForm, field.TypeBytes)
+		_spec.ClearField(platform.FieldConfigForm, field.TypeJSON)
 	}
 	if value, ok := pu.mutation.ConfigValues(); ok {
-		_spec.SetField(platform.FieldConfigValues, field.TypeBytes, value)
+		_spec.SetField(platform.FieldConfigValues, field.TypeJSON, value)
 	}
 	if pu.mutation.ConfigValuesCleared() {
-		_spec.ClearField(platform.FieldConfigValues, field.TypeBytes)
+		_spec.ClearField(platform.FieldConfigValues, field.TypeJSON)
 	}
 	if value, ok := pu.mutation.ConfigCue(); ok {
 		_spec.SetField(platform.FieldConfigCue, field.TypeBytes, value)
@@ -420,8 +421,8 @@ func (puo *PlatformUpdateOne) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdate
 }
 
 // SetConfigForm sets the "config_form" field.
-func (puo *PlatformUpdateOne) SetConfigForm(b []byte) *PlatformUpdateOne {
-	puo.mutation.SetConfigForm(b)
+func (puo *PlatformUpdateOne) SetConfigForm(hf *holos.PlatformForm) *PlatformUpdateOne {
+	puo.mutation.SetConfigForm(hf)
 	return puo
 }
 
@@ -432,8 +433,8 @@ func (puo *PlatformUpdateOne) ClearConfigForm() *PlatformUpdateOne {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (puo *PlatformUpdateOne) SetConfigValues(b []byte) *PlatformUpdateOne {
-	puo.mutation.SetConfigValues(b)
+func (puo *PlatformUpdateOne) SetConfigValues(hv *holos.ConfigValues) *PlatformUpdateOne {
+	puo.mutation.SetConfigValues(hv)
 	return puo
 }
 
@@ -612,16 +613,16 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
 	}
 	if value, ok := puo.mutation.ConfigForm(); ok {
-		_spec.SetField(platform.FieldConfigForm, field.TypeBytes, value)
+		_spec.SetField(platform.FieldConfigForm, field.TypeJSON, value)
 	}
 	if puo.mutation.ConfigFormCleared() {
-		_spec.ClearField(platform.FieldConfigForm, field.TypeBytes)
+		_spec.ClearField(platform.FieldConfigForm, field.TypeJSON)
 	}
 	if value, ok := puo.mutation.ConfigValues(); ok {
-		_spec.SetField(platform.FieldConfigValues, field.TypeBytes, value)
+		_spec.SetField(platform.FieldConfigValues, field.TypeJSON, value)
 	}
 	if puo.mutation.ConfigValuesCleared() {
-		_spec.ClearField(platform.FieldConfigValues, field.TypeBytes)
+		_spec.ClearField(platform.FieldConfigValues, field.TypeJSON)
 	}
 	if value, ok := puo.mutation.ConfigCue(); ok {
 		_spec.SetField(platform.FieldConfigCue, field.TypeBytes, value)

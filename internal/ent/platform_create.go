@@ -16,6 +16,7 @@ import (
 	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 // PlatformCreate is the builder for creating a Platform entity.
@@ -79,14 +80,14 @@ func (pc *PlatformCreate) SetCreatorID(u uuid.UUID) *PlatformCreate {
 }
 
 // SetConfigForm sets the "config_form" field.
-func (pc *PlatformCreate) SetConfigForm(b []byte) *PlatformCreate {
-	pc.mutation.SetConfigForm(b)
+func (pc *PlatformCreate) SetConfigForm(hf *holos.PlatformForm) *PlatformCreate {
+	pc.mutation.SetConfigForm(hf)
 	return pc
 }
 
 // SetConfigValues sets the "config_values" field.
-func (pc *PlatformCreate) SetConfigValues(b []byte) *PlatformCreate {
-	pc.mutation.SetConfigValues(b)
+func (pc *PlatformCreate) SetConfigValues(hv *holos.ConfigValues) *PlatformCreate {
+	pc.mutation.SetConfigValues(hv)
 	return pc
 }
 
@@ -273,11 +274,11 @@ func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 		_node.DisplayName = value
 	}
 	if value, ok := pc.mutation.ConfigForm(); ok {
-		_spec.SetField(platform.FieldConfigForm, field.TypeBytes, value)
+		_spec.SetField(platform.FieldConfigForm, field.TypeJSON, value)
 		_node.ConfigForm = value
 	}
 	if value, ok := pc.mutation.ConfigValues(); ok {
-		_spec.SetField(platform.FieldConfigValues, field.TypeBytes, value)
+		_spec.SetField(platform.FieldConfigValues, field.TypeJSON, value)
 		_node.ConfigValues = value
 	}
 	if value, ok := pc.mutation.ConfigCue(); ok {
@@ -435,7 +436,7 @@ func (u *PlatformUpsert) UpdateCreatorID() *PlatformUpsert {
 }
 
 // SetConfigForm sets the "config_form" field.
-func (u *PlatformUpsert) SetConfigForm(v []byte) *PlatformUpsert {
+func (u *PlatformUpsert) SetConfigForm(v *holos.PlatformForm) *PlatformUpsert {
 	u.Set(platform.FieldConfigForm, v)
 	return u
 }
@@ -453,7 +454,7 @@ func (u *PlatformUpsert) ClearConfigForm() *PlatformUpsert {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (u *PlatformUpsert) SetConfigValues(v []byte) *PlatformUpsert {
+func (u *PlatformUpsert) SetConfigValues(v *holos.ConfigValues) *PlatformUpsert {
 	u.Set(platform.FieldConfigValues, v)
 	return u
 }
@@ -628,7 +629,7 @@ func (u *PlatformUpsertOne) UpdateCreatorID() *PlatformUpsertOne {
 }
 
 // SetConfigForm sets the "config_form" field.
-func (u *PlatformUpsertOne) SetConfigForm(v []byte) *PlatformUpsertOne {
+func (u *PlatformUpsertOne) SetConfigForm(v *holos.PlatformForm) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetConfigForm(v)
 	})
@@ -649,7 +650,7 @@ func (u *PlatformUpsertOne) ClearConfigForm() *PlatformUpsertOne {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (u *PlatformUpsertOne) SetConfigValues(v []byte) *PlatformUpsertOne {
+func (u *PlatformUpsertOne) SetConfigValues(v *holos.ConfigValues) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetConfigValues(v)
 	})
@@ -1000,7 +1001,7 @@ func (u *PlatformUpsertBulk) UpdateCreatorID() *PlatformUpsertBulk {
 }
 
 // SetConfigForm sets the "config_form" field.
-func (u *PlatformUpsertBulk) SetConfigForm(v []byte) *PlatformUpsertBulk {
+func (u *PlatformUpsertBulk) SetConfigForm(v *holos.PlatformForm) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetConfigForm(v)
 	})
@@ -1021,7 +1022,7 @@ func (u *PlatformUpsertBulk) ClearConfigForm() *PlatformUpsertBulk {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (u *PlatformUpsertBulk) SetConfigValues(v []byte) *PlatformUpsertBulk {
+func (u *PlatformUpsertBulk) SetConfigValues(v *holos.ConfigValues) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetConfigValues(v)
 	})

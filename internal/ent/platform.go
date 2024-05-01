@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 // Platform is the model entity for the Platform schema.
@@ -32,10 +34,10 @@ type Platform struct {
 	DisplayName string `json:"display_name,omitempty"`
 	// CreatorID holds the value of the "creator_id" field.
 	CreatorID uuid.UUID `json:"creator_id,omitempty"`
-	// Opaque JSON bytes representing the platform config form.
-	ConfigForm []byte `json:"config_form,omitempty"`
-	// Opaque JSON bytes representing the platform config values.
-	ConfigValues []byte `json:"config_values,omitempty"`
+	// JSON holos.PlatformForm representing the platform data entry form.
+	ConfigForm *holos.PlatformForm `json:"config_form,omitempty"`
+	// JSON holos.ConfigValues representing the platform config values.
+	ConfigValues *holos.ConfigValues `json:"config_values,omitempty"`
 	// Opaque bytes representing the CUE definition of the config struct.
 	ConfigCue []byte `json:"config_cue,omitempty"`
 	// The definition name to vet config_values against config_cue e.g. '#PlatformSpec'
@@ -152,14 +154,18 @@ func (pl *Platform) assignValues(columns []string, values []any) error {
 		case platform.FieldConfigForm:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field config_form", values[i])
-			} else if value != nil {
-				pl.ConfigForm = *value
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &pl.ConfigForm); err != nil {
+					return fmt.Errorf("unmarshal field config_form: %w", err)
+				}
 			}
 		case platform.FieldConfigValues:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field config_values", values[i])
-			} else if value != nil {
-				pl.ConfigValues = *value
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &pl.ConfigValues); err != nil {
+					return fmt.Errorf("unmarshal field config_values: %w", err)
+				}
 			}
 		case platform.FieldConfigCue:
 			if value, ok := values[i].(*[]byte); !ok {

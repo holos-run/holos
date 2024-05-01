@@ -86,16 +86,6 @@ func CreatorID(v uuid.UUID) predicate.Platform {
 	return predicate.Platform(sql.FieldEQ(FieldCreatorID, v))
 }
 
-// ConfigForm applies equality check predicate on the "config_form" field. It's identical to ConfigFormEQ.
-func ConfigForm(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldConfigForm, v))
-}
-
-// ConfigValues applies equality check predicate on the "config_values" field. It's identical to ConfigValuesEQ.
-func ConfigValues(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldConfigValues, v))
-}
-
 // ConfigCue applies equality check predicate on the "config_cue" field. It's identical to ConfigCueEQ.
 func ConfigCue(v []byte) predicate.Platform {
 	return predicate.Platform(sql.FieldEQ(FieldConfigCue, v))
@@ -356,46 +346,6 @@ func CreatorIDNotIn(vs ...uuid.UUID) predicate.Platform {
 	return predicate.Platform(sql.FieldNotIn(FieldCreatorID, vs...))
 }
 
-// ConfigFormEQ applies the EQ predicate on the "config_form" field.
-func ConfigFormEQ(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldConfigForm, v))
-}
-
-// ConfigFormNEQ applies the NEQ predicate on the "config_form" field.
-func ConfigFormNEQ(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldNEQ(FieldConfigForm, v))
-}
-
-// ConfigFormIn applies the In predicate on the "config_form" field.
-func ConfigFormIn(vs ...[]byte) predicate.Platform {
-	return predicate.Platform(sql.FieldIn(FieldConfigForm, vs...))
-}
-
-// ConfigFormNotIn applies the NotIn predicate on the "config_form" field.
-func ConfigFormNotIn(vs ...[]byte) predicate.Platform {
-	return predicate.Platform(sql.FieldNotIn(FieldConfigForm, vs...))
-}
-
-// ConfigFormGT applies the GT predicate on the "config_form" field.
-func ConfigFormGT(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldGT(FieldConfigForm, v))
-}
-
-// ConfigFormGTE applies the GTE predicate on the "config_form" field.
-func ConfigFormGTE(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldGTE(FieldConfigForm, v))
-}
-
-// ConfigFormLT applies the LT predicate on the "config_form" field.
-func ConfigFormLT(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldLT(FieldConfigForm, v))
-}
-
-// ConfigFormLTE applies the LTE predicate on the "config_form" field.
-func ConfigFormLTE(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldLTE(FieldConfigForm, v))
-}
-
 // ConfigFormIsNil applies the IsNil predicate on the "config_form" field.
 func ConfigFormIsNil() predicate.Platform {
 	return predicate.Platform(sql.FieldIsNull(FieldConfigForm))
@@ -404,46 +354,6 @@ func ConfigFormIsNil() predicate.Platform {
 // ConfigFormNotNil applies the NotNil predicate on the "config_form" field.
 func ConfigFormNotNil() predicate.Platform {
 	return predicate.Platform(sql.FieldNotNull(FieldConfigForm))
-}
-
-// ConfigValuesEQ applies the EQ predicate on the "config_values" field.
-func ConfigValuesEQ(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldConfigValues, v))
-}
-
-// ConfigValuesNEQ applies the NEQ predicate on the "config_values" field.
-func ConfigValuesNEQ(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldNEQ(FieldConfigValues, v))
-}
-
-// ConfigValuesIn applies the In predicate on the "config_values" field.
-func ConfigValuesIn(vs ...[]byte) predicate.Platform {
-	return predicate.Platform(sql.FieldIn(FieldConfigValues, vs...))
-}
-
-// ConfigValuesNotIn applies the NotIn predicate on the "config_values" field.
-func ConfigValuesNotIn(vs ...[]byte) predicate.Platform {
-	return predicate.Platform(sql.FieldNotIn(FieldConfigValues, vs...))
-}
-
-// ConfigValuesGT applies the GT predicate on the "config_values" field.
-func ConfigValuesGT(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldGT(FieldConfigValues, v))
-}
-
-// ConfigValuesGTE applies the GTE predicate on the "config_values" field.
-func ConfigValuesGTE(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldGTE(FieldConfigValues, v))
-}
-
-// ConfigValuesLT applies the LT predicate on the "config_values" field.
-func ConfigValuesLT(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldLT(FieldConfigValues, v))
-}
-
-// ConfigValuesLTE applies the LTE predicate on the "config_values" field.
-func ConfigValuesLTE(v []byte) predicate.Platform {
-	return predicate.Platform(sql.FieldLTE(FieldConfigValues, v))
 }
 
 // ConfigValuesIsNil applies the IsNil predicate on the "config_values" field.
