@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
-import { Message, proto3 } from "@bufbuild/protobuf";
+import { Any, Message, proto3 } from "@bufbuild/protobuf";
 import { Timestamps } from "./timestamps_pb.js";
 import { Creator } from "./user_pb.js";
 
@@ -74,6 +74,13 @@ export class Config extends Message<Config> {
    */
   form?: PlatformForm;
 
+  /**
+   * Values are the user supplied config values organized by section.
+   *
+   * @generated from field: holos.v1alpha1.ConfigValues values = 2;
+   */
+  values?: ConfigValues;
+
   constructor(data?: PartialMessage<Config>) {
     super();
     proto3.util.initPartial(data, this);
@@ -83,6 +90,7 @@ export class Config extends Message<Config> {
   static readonly typeName = "holos.v1alpha1.Config";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "form", kind: "message", T: PlatformForm },
+    { no: 2, name: "values", kind: "message", T: ConfigValues },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Config {
@@ -99,6 +107,158 @@ export class Config extends Message<Config> {
 
   static equals(a: Config | PlainMessage<Config> | undefined, b: Config | PlainMessage<Config> | undefined): boolean {
     return proto3.util.equals(Config, a, b);
+  }
+}
+
+/**
+ * ConfigValues reflects the marshalled representation of ConfigValuesAny for transmission and storage.
+ *
+ * @generated from message holos.v1alpha1.ConfigValues
+ */
+export class ConfigValues extends Message<ConfigValues> {
+  /**
+   * @generated from field: map<string, holos.v1alpha1.ConfigValuesSection> sections = 1;
+   */
+  sections: { [key: string]: ConfigValuesSection } = {};
+
+  constructor(data?: PartialMessage<ConfigValues>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.v1alpha1.ConfigValues";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "sections", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: ConfigValuesSection} },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConfigValues {
+    return new ConfigValues().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ConfigValues {
+    return new ConfigValues().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ConfigValues {
+    return new ConfigValues().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ConfigValues | PlainMessage<ConfigValues> | undefined, b: ConfigValues | PlainMessage<ConfigValues> | undefined): boolean {
+    return proto3.util.equals(ConfigValues, a, b);
+  }
+}
+
+/**
+ * @generated from message holos.v1alpha1.ConfigValuesSection
+ */
+export class ConfigValuesSection extends Message<ConfigValuesSection> {
+  /**
+   * @generated from field: map<string, string> values = 1;
+   */
+  values: { [key: string]: string } = {};
+
+  constructor(data?: PartialMessage<ConfigValuesSection>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.v1alpha1.ConfigValuesSection";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "values", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "scalar", T: 9 /* ScalarType.STRING */} },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConfigValuesSection {
+    return new ConfigValuesSection().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ConfigValuesSection {
+    return new ConfigValuesSection().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ConfigValuesSection {
+    return new ConfigValuesSection().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ConfigValuesSection | PlainMessage<ConfigValuesSection> | undefined, b: ConfigValuesSection | PlainMessage<ConfigValuesSection> | undefined): boolean {
+    return proto3.util.equals(ConfigValuesSection, a, b);
+  }
+}
+
+/**
+ * ConfigValuesAny reflects the unmarshalled representation of ConfigValues for use by clients.
+ *
+ * @generated from message holos.v1alpha1.ConfigValuesAny
+ */
+export class ConfigValuesAny extends Message<ConfigValuesAny> {
+  /**
+   * @generated from field: map<string, holos.v1alpha1.ConfigValuesSectionAny> sections = 1;
+   */
+  sections: { [key: string]: ConfigValuesSectionAny } = {};
+
+  constructor(data?: PartialMessage<ConfigValuesAny>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.v1alpha1.ConfigValuesAny";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "sections", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: ConfigValuesSectionAny} },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConfigValuesAny {
+    return new ConfigValuesAny().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ConfigValuesAny {
+    return new ConfigValuesAny().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ConfigValuesAny {
+    return new ConfigValuesAny().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ConfigValuesAny | PlainMessage<ConfigValuesAny> | undefined, b: ConfigValuesAny | PlainMessage<ConfigValuesAny> | undefined): boolean {
+    return proto3.util.equals(ConfigValuesAny, a, b);
+  }
+}
+
+/**
+ * @generated from message holos.v1alpha1.ConfigValuesSectionAny
+ */
+export class ConfigValuesSectionAny extends Message<ConfigValuesSectionAny> {
+  /**
+   * @generated from field: map<string, google.protobuf.Any> values = 1;
+   */
+  values: { [key: string]: Any } = {};
+
+  constructor(data?: PartialMessage<ConfigValuesSectionAny>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.v1alpha1.ConfigValuesSectionAny";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "values", kind: "map", K: 9 /* ScalarType.STRING */, V: {kind: "message", T: Any} },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConfigValuesSectionAny {
+    return new ConfigValuesSectionAny().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ConfigValuesSectionAny {
+    return new ConfigValuesSectionAny().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ConfigValuesSectionAny {
+    return new ConfigValuesSectionAny().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: ConfigValuesSectionAny | PlainMessage<ConfigValuesSectionAny> | undefined, b: ConfigValuesSectionAny | PlainMessage<ConfigValuesSectionAny> | undefined): boolean {
+    return proto3.util.equals(ConfigValuesSectionAny, a, b);
   }
 }
 
@@ -573,43 +733,6 @@ export class GetPlatformRequest extends Message<GetPlatformRequest> {
 }
 
 /**
- * @generated from message holos.v1alpha1.GetPlatformFormRequest
- */
-export class GetPlatformFormRequest extends Message<GetPlatformFormRequest> {
-  /**
-   * @generated from field: string platform_id = 1;
-   */
-  platformId = "";
-
-  constructor(data?: PartialMessage<GetPlatformFormRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetPlatformFormRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetPlatformFormRequest {
-    return new GetPlatformFormRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetPlatformFormRequest {
-    return new GetPlatformFormRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetPlatformFormRequest {
-    return new GetPlatformFormRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: GetPlatformFormRequest | PlainMessage<GetPlatformFormRequest> | undefined, b: GetPlatformFormRequest | PlainMessage<GetPlatformFormRequest> | undefined): boolean {
-    return proto3.util.equals(GetPlatformFormRequest, a, b);
-  }
-}
-
-/**
  * @generated from message holos.v1alpha1.MetadataName
  */
 export class MetadataName extends Message<MetadataName> {
@@ -698,6 +821,49 @@ export class PlatformForm extends Message<PlatformForm> {
 
   static equals(a: PlatformForm | PlainMessage<PlatformForm> | undefined, b: PlatformForm | PlainMessage<PlatformForm> | undefined): boolean {
     return proto3.util.equals(PlatformForm, a, b);
+  }
+}
+
+/**
+ * @generated from message holos.v1alpha1.PutPlatformConfigRequest
+ */
+export class PutPlatformConfigRequest extends Message<PutPlatformConfigRequest> {
+  /**
+   * @generated from field: string platform_id = 1;
+   */
+  platformId = "";
+
+  /**
+   * @generated from field: holos.v1alpha1.ConfigValues values = 2;
+   */
+  values?: ConfigValues;
+
+  constructor(data?: PartialMessage<PutPlatformConfigRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.v1alpha1.PutPlatformConfigRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "values", kind: "message", T: ConfigValues },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PutPlatformConfigRequest {
+    return new PutPlatformConfigRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PutPlatformConfigRequest {
+    return new PutPlatformConfigRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PutPlatformConfigRequest {
+    return new PutPlatformConfigRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PutPlatformConfigRequest | PlainMessage<PutPlatformConfigRequest> | undefined, b: PutPlatformConfigRequest | PlainMessage<PutPlatformConfigRequest> | undefined): boolean {
+    return proto3.util.equals(PutPlatformConfigRequest, a, b);
   }
 }
 

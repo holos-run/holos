@@ -9,6 +9,7 @@ import "buf/validate/validate.proto";
 import "holos/v1alpha1/timestamps.proto";
 import "holos/v1alpha1/organization.proto";
 import "holos/v1alpha1/user.proto";
+import "google/protobuf/any.proto";
 
 // For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
 
@@ -22,6 +23,26 @@ message RawConfig {
 
 message Config {
   PlatformForm form = 1;
+  // Values are the user supplied config values organized by section.
+  ConfigValues values = 2;
+}
+
+// ConfigValues reflects the marshalled representation of ConfigValuesAny for transmission and storage.
+message ConfigValues {
+  map<string, ConfigValuesSection> sections = 1;
+}
+
+message ConfigValuesSection {
+  map<string, string> values = 1;
+}
+
+// ConfigValuesAny reflects the unmarshalled representation of ConfigValues for use by clients.
+message ConfigValuesAny {
+  map<string, ConfigValuesSectionAny> sections = 1;
+}
+
+message ConfigValuesSectionAny {
+  map<string, google.protobuf.Any> values = 1;
 }
 
 message Platform {
@@ -85,10 +106,6 @@ message GetPlatformRequest {
   string platform_id = 1 [(buf.validate.field).string.uuid = true];
 }
 
-message GetPlatformFormRequest {
-  string platform_id = 1 [(buf.validate.field).string.uuid = true];
-}
-
 message MetadataName {
   string name = 1;
 }
@@ -100,8 +117,14 @@ message PlatformForm {
   PlatformFormSpec spec = 4;
 }
 
+message PutPlatformConfigRequest {
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+  ConfigValues values = 2;
+}
+
 service PlatformService {
-  rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse) {}
   rpc AddPlatform(AddPlatformRequest) returns (GetPlatformsResponse) {}
+  rpc GetPlatforms(GetPlatformsRequest) returns (GetPlatformsResponse) {}
   rpc GetPlatform(GetPlatformRequest) returns (GetPlatformResponse) {}
+  rpc PutPlatformConfig(PutPlatformConfigRequest) returns (GetPlatformResponse) {}
 }

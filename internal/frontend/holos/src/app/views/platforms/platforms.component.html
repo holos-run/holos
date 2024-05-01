@@ -1,7 +1,7 @@
 <div class="grid-container">
   <mat-nav-list>
     <h3 mat-subheader>Platforms</h3>
-    @for (platform of platforms$ | async; track platform.id) {
+    @for (platform of (platforms$ | async); track platform.id) {
     <mat-list-item>
       <a [routerLink]="['/platform', platform.id]">
         {{ platform.displayName ? platform.displayName : platform.name }}

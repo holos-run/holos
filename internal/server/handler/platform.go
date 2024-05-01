@@ -99,21 +99,20 @@ func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[
 	return connect.NewResponse(&holos.GetPlatformResponse{Platform: PlatformToRPC(p)}), nil
 }
 
-// GetForm provides the FormlyFieldConfig for the platform to make the web ui form for user input.
-func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[holos.GetPlatformFormRequest]) (*connect.Response[holos.PlatformForm], error) {
-	// Boilerplate to get the platform by id where the user is a member of the org.
+func (h *PlatformHandler) PutPlatformConfig(ctx context.Context, req *connect.Request[holos.PutPlatformConfigRequest]) (*connect.Response[holos.GetPlatformResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 
-	platformID, err := uuid.FromString(req.Msg.PlatformId)
+	id, err := uuid.FromString(req.Msg.PlatformId)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
 	}
 
+	// Get the platform so we can validate the values.
 	p, err := h.db.Platform.Query().
-		Where(platform.ID(platformID)).
+		Where(platform.ID(id)).
 		Where(platform.HasOrganizationWith(
 			organization.HasUsersWith(
 				user.Iss(authnID.Issuer()),
@@ -128,16 +127,38 @@ func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[holo
 		}
 	}
 
-	rpcPlatform := PlatformToRPC(p)
-	res := connect.NewResponse(rpcPlatform.Config.Form)
-	return res, nil
+	slog.WarnContext(ctx, "todo: validate the platform config against cue definitions", "action", "todo", "cue", len(p.ConfigCue))
+
+	values, err := json.Marshal(req.Msg.Values)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	up, err := h.db.Platform.UpdateOneID(id).
+		Where(platform.HasOrganizationWith(
+			organization.HasUsersWith(
+				user.Iss(authnID.Issuer()),
+				user.Sub(authnID.Subject()),
+			))).
+		SetConfigValues(values).
+		Save(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+	}
+
+	return connect.NewResponse(&holos.GetPlatformResponse{Platform: PlatformToRPC(up)}), nil
 }
 
 func PlatformToRPC(platform *ent.Platform) *holos.Platform {
+	log := slog.Default().With("platform_name", platform.Name, "platform_id", platform.ID.String())
 	var form holos.PlatformForm
 	if err := json.Unmarshal(platform.ConfigForm, &form); err != nil {
-		slog.Error("could not unmarshal platform config form", "platform_id", platform.ID.String(), "err", err)
-		return nil
+		log.Warn("could not unmarshal platform config form", "err", err)
+	}
+
+	var values holos.ConfigValues
+	if err := json.Unmarshal(platform.ConfigValues, &values); err != nil {
+		log.Warn("could not unmarshal platform config values", "err", err)
 	}
 
 	return &holos.Platform{
@@ -145,7 +166,10 @@ func PlatformToRPC(platform *ent.Platform) *holos.Platform {
 		Name:        platform.Name,
 		DisplayName: platform.DisplayName,
 		OrgId:       platform.OrgID.String(),
-		Config:      &holos.Config{Form: &form},
+		Config: &holos.Config{
+			Form:   &form,
+			Values: &values,
+		},
 		Timestamps: &holos.Timestamps{
 			CreatedAt: timestamppb.New(platform.CreatedAt),
 			UpdatedAt: timestamppb.New(platform.UpdatedAt),

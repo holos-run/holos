@@ -4,21 +4,7 @@
 // @ts-nocheck
 
 import { MethodKind } from "@bufbuild/protobuf";
-import { AddPlatformRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse } from "./platform_pb.js";
-
-/**
- * @generated from rpc holos.v1alpha1.PlatformService.GetPlatforms
- */
-export const getPlatforms = {
-  localName: "getPlatforms",
-  name: "GetPlatforms",
-  kind: MethodKind.Unary,
-  I: GetPlatformsRequest,
-  O: GetPlatformsResponse,
-  service: {
-    typeName: "holos.v1alpha1.PlatformService"
-  }
-} as const;
+import { AddPlatformRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse, PutPlatformConfigRequest } from "./platform_pb.js";
 
 /**
  * @generated from rpc holos.v1alpha1.PlatformService.AddPlatform
@@ -35,6 +21,20 @@ export const addPlatform = {
 } as const;
 
 /**
+ * @generated from rpc holos.v1alpha1.PlatformService.GetPlatforms
+ */
+export const getPlatforms = {
+  localName: "getPlatforms",
+  name: "GetPlatforms",
+  kind: MethodKind.Unary,
+  I: GetPlatformsRequest,
+  O: GetPlatformsResponse,
+  service: {
+    typeName: "holos.v1alpha1.PlatformService"
+  }
+} as const;
+
+/**
  * @generated from rpc holos.v1alpha1.PlatformService.GetPlatform
  */
 export const getPlatform = {
@@ -42,6 +42,20 @@ export const getPlatform = {
   name: "GetPlatform",
   kind: MethodKind.Unary,
   I: GetPlatformRequest,
+  O: GetPlatformResponse,
+  service: {
+    typeName: "holos.v1alpha1.PlatformService"
+  }
+} as const;
+
+/**
+ * @generated from rpc holos.v1alpha1.PlatformService.PutPlatformConfig
+ */
+export const putPlatformConfig = {
+  localName: "putPlatformConfig",
+  name: "PutPlatformConfig",
+  kind: MethodKind.Unary,
+  I: PutPlatformConfigRequest,
   O: GetPlatformResponse,
   service: {
     typeName: "holos.v1alpha1.PlatformService"

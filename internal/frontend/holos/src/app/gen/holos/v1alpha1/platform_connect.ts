@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddPlatformRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse } from "./platform_pb.js";
+import { AddPlatformRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse, PutPlatformConfigRequest } from "./platform_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -12,15 +12,6 @@ import { MethodKind } from "@bufbuild/protobuf";
 export const PlatformService = {
   typeName: "holos.v1alpha1.PlatformService",
   methods: {
-    /**
-     * @generated from rpc holos.v1alpha1.PlatformService.GetPlatforms
-     */
-    getPlatforms: {
-      name: "GetPlatforms",
-      I: GetPlatformsRequest,
-      O: GetPlatformsResponse,
-      kind: MethodKind.Unary,
-    },
     /**
      * @generated from rpc holos.v1alpha1.PlatformService.AddPlatform
      */
@@ -31,11 +22,29 @@ export const PlatformService = {
       kind: MethodKind.Unary,
     },
     /**
+     * @generated from rpc holos.v1alpha1.PlatformService.GetPlatforms
+     */
+    getPlatforms: {
+      name: "GetPlatforms",
+      I: GetPlatformsRequest,
+      O: GetPlatformsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
      * @generated from rpc holos.v1alpha1.PlatformService.GetPlatform
      */
     getPlatform: {
       name: "GetPlatform",
       I: GetPlatformRequest,
+      O: GetPlatformResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc holos.v1alpha1.PlatformService.PutPlatformConfig
+     */
+    putPlatformConfig: {
+      name: "PutPlatformConfig",
+      I: PutPlatformConfigRequest,
       O: GetPlatformResponse,
       kind: MethodKind.Unary,
     },
