@@ -1,12 +1,11 @@
 <div class="grid-container">
   <mat-nav-list>
     <h3 mat-subheader>Platforms</h3>
+    <p>Select a platform to manage.</p>
     @for (platform of (platforms$ | async); track platform.id) {
-    <mat-list-item>
-      <a [routerLink]="['/platform', platform.id]">
-        {{ platform.displayName ? platform.displayName : platform.name }}
-      </a>
-    </mat-list-item>
+    <a mat-list-item [routerLink]="['/platform', platform.id]">
+      {{ platform.displayName ? platform.displayName : platform.name }}
+    </a>
     }
   </mat-nav-list>
 </div>
