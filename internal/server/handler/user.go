@@ -68,10 +68,7 @@ func (h *UserHandler) GetCallerUser(
 	return res, nil
 }
 
-func (h *UserHandler) CreateCallerUser(
-	ctx context.Context,
-	req *connect.Request[holos.CreateCallerUserRequest],
-) (*connect.Response[holos.CreateCallerUserResponse], error) {
+func (h *UserHandler) createCallerUser(ctx context.Context) (*ent.User, error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -84,6 +81,18 @@ func (h *UserHandler) CreateCallerUser(
 	})
 	if err != nil {
 		slog.ErrorContext(ctx, "could not save transaction", "err", err)
+		return nil, err
+	}
+
+	return createdUser, nil
+}
+
+func (h *UserHandler) CreateCallerUser(
+	ctx context.Context,
+	req *connect.Request[holos.CreateCallerUserRequest],
+) (*connect.Response[holos.CreateCallerUserResponse], error) {
+	createdUser, err := h.createCallerUser(ctx)
+	if err != nil {
 		return nil, err
 	}
 
