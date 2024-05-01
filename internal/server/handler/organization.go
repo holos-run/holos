@@ -11,6 +11,7 @@ import (
 	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/internal/ent/user"
 	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -66,12 +67,12 @@ func (h *OrganizationHandler) CreateCallerOrganization(
 	ctx context.Context,
 	req *connect.Request[holos.CreateCallerOrganizationRequest],
 ) (*connect.Response[holos.GetCallerOrganizationsResponse], error) {
+	log := logger.FromContext(ctx)
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
-	// todo get user by iss, sub
-	dbUser, err := getUser(ctx, h.db, authnID.Email())
+	dbUser, err := getUser(ctx, h.db, authnID.Issuer(), authnID.Subject())
 	if err != nil {
 		if ent.MaskNotFound(err) == nil {
 			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
@@ -90,14 +91,14 @@ func (h *OrganizationHandler) CreateCallerOrganization(
 		if err != nil {
 			return err
 		}
-		dbUser, err = dbUser.Update().
-			AddOrganizations(org).
-			Save(ctx)
-		return err
+		return tx.Organization.UpdateOne(org).AddUsers(dbUser).Exec(ctx)
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.Wrap(err))
 	}
+	log = log.With("organization", org)
+
+	log.InfoContext(ctx, "created organization")
 
 	// TODO: prefetch organizations
 	dbOrgs, err := dbUser.QueryOrganizations().All(ctx)

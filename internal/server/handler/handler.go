@@ -9,32 +9,37 @@ package handler
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/holos-run/holos/internal/ent"
+	"github.com/holos-run/holos/internal/server/middleware/logger"
 )
 
 // WithTx runs callbacks in a transaction as described in https://entgo.io/docs/transactions/#best-practices
 func WithTx(ctx context.Context, client *ent.Client, fn func(tx *ent.Tx) error) error {
+	log := logger.FromContext(ctx)
 	tx, err := client.Tx(ctx)
 	if err != nil {
 		return err
 	}
 	defer func() {
 		if v := recover(); v != nil {
-			slog.ErrorContext(ctx, "panic", "v", v)
+			log.ErrorContext(ctx, "panic", "v", v)
 			_ = tx.Rollback()
 			panic(v)
 		}
 	}()
 	if err := fn(tx); err != nil {
 		if rerr := tx.Rollback(); rerr != nil {
-			err = fmt.Errorf("%w: rolling back transaction: %v", err, rerr)
+			log.ErrorContext(ctx, "could not roll back tx", "err", rerr)
+			err = fmt.Errorf("coult not roll back tx: %w: %w", rerr, err)
+		} else {
+			log.WarnContext(ctx, "rolled back failed tx", "err", err)
 		}
 		return err
 	}
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("committing transaction: %w", err)
+		log.ErrorContext(ctx, "could not commit transaction", "err", err)
+		return fmt.Errorf("could not commit: %w", err)
 	}
 	return nil
 }

@@ -56,7 +56,7 @@ func (h *UserHandler) GetCallerUser(
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
-	dbUser, err := getUser(ctx, h.db, authnID.Email())
+	dbUser, err := getUser(ctx, h.db, authnID.Issuer(), authnID.Subject())
 	if err != nil {
 		if ent.MaskNotFound(err) == nil {
 			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
@@ -107,11 +107,16 @@ func UserToRPC(u *ent.User) *holos.User {
 	return &iamUser
 }
 
-func getUser(ctx context.Context, client *ent.Client, email string) (*ent.User, error) {
+func getUser(ctx context.Context, client *ent.Client, iss string, sub string) (*ent.User, error) {
 	log := logger.FromContext(ctx)
-	user, err := client.User.Query().Where(user.Email(email)).Only(ctx)
+	user, err := client.User.Query().
+		Where(
+			user.Iss(iss),
+			user.Sub(sub),
+		).
+		Only(ctx)
 	if err != nil {
-		log.DebugContext(ctx, "could not get user", "err", err, "email", email)
+		log.DebugContext(ctx, "could not get user", "err", err, "iss", iss, "sub", sub)
 		return nil, errors.Wrap(err)
 	}
 	return user, nil
