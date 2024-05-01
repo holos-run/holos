@@ -50,13 +50,17 @@ func (h *PlatformHandler) AddPlatform(
 	}
 
 	var hf holos.PlatformForm
-	if err := json.Unmarshal(req.Msg.Platform.RawConfig.Form, &hf); err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	if len(req.Msg.Platform.RawConfig.Form) > 0 {
+		if err := json.Unmarshal(req.Msg.Platform.RawConfig.Form, &hf); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+		}
 	}
 
 	var hv holos.ConfigValues
-	if err := json.Unmarshal(req.Msg.Platform.RawConfig.Values, &hv); err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	if len(req.Msg.Platform.RawConfig.Values) > 0 {
+		if err := json.Unmarshal(req.Msg.Platform.RawConfig.Values, &hv); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+		}
 	}
 
 	platform, err := h.db.Platform.Create().
