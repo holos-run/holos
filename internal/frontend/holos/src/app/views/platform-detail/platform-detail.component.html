@@ -6,7 +6,7 @@
         @for (section of platform.config?.form?.spec?.sections; track section.name) {
           <h2>{{section.displayName ? section.displayName : section.name }}</h2>
           <p>{{ section.description }}</p>
-          <formly-form [form]="form" [fields]="section.fieldConfigs" [model]="model.sections[section.name].values"></formly-form>
+          <formly-form [form]="form" [fields]="section.fieldConfigs" [model]="model[section.name]"></formly-form>
         }
         <p></p>
         <button type="submit" mat-flat-button color="primary">Submit</button>

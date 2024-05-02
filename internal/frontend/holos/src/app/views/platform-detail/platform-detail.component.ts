@@ -1,7 +1,7 @@
 import { Component, Input, inject } from '@angular/core';
-import { Observable, filter, map, shareReplay } from 'rxjs';
-import { PlatformService } from '../../services/platform.service';
-import { ConfigValues, ConfigValuesAny, ConfigValuesSection, ConfigValuesSectionAny, Platform } from '../../gen/holos/v1alpha1/platform_pb';
+import { Observable, map, shareReplay } from 'rxjs';
+import { Model, PlatformService } from '../../services/platform.service';
+import { Platform } from '../../gen/holos/v1alpha1/platform_pb';
 import { MatTab, MatTabGroup } from '@angular/material/tabs';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -34,22 +34,13 @@ export class PlatformDetailComponent {
   platform$!: Observable<Platform>;
 
   form = new FormGroup({});
-  model = new ConfigValuesAny({});
+  model: Model = {};
 
-  onSubmit(model: ConfigValuesAny) {
-    if (this.form.valid) {
-      const jsonEncodedValues = new ConfigValues({})
-      const sections = Object.entries(this.model.sections)
-      for (const [sectionName, section] of sections) {
-        jsonEncodedValues.sections[sectionName] = new ConfigValuesSection({})
-        const fields = Object.entries(section.values)
-        for (const [fieldName, value] of fields) {
-          jsonEncodedValues.sections[sectionName].values[fieldName] = JSON.stringify(value)
-        }
-      }
-      // Make the RPC call to put the values.
-      this.service.putConfig(this.platformId, jsonEncodedValues).pipe(shareReplay(1)).subscribe()
-    }
+  onSubmit(model: Model) {
+    console.log(model)
+    // if (this.form.valid) {
+    this.service.putConfig(this.platformId, model).pipe(shareReplay(1)).subscribe()
+    // }
   }
 
   @Input()
@@ -59,23 +50,20 @@ export class PlatformDetailComponent {
       map(project => {
         // Initialize the model container for each section of the form config
         project.config?.form?.spec?.sections.forEach(section => {
-          this.model.sections[section.name] = new ConfigValuesSectionAny({})
+          this.model[section.name] = {}
         })
-        // Copy current values into the model
-        if (project.config?.values?.sections !== undefined) {
-          const sections = Object.entries(project.config.values.sections)
-          for (const [sectionName, section] of sections) {
-            const fields = Object.entries(section.values)
-            for (const [fieldName, value] of fields) {
-              this.model.sections[sectionName].values[fieldName] = JSON.parse(value)
-            }
-          }
+        // Load existing values into the form
+        const sections = project.config?.values?.sections
+        if (sections !== undefined) {
+          Object.keys(sections).forEach(sectionName => {
+            Object.keys(sections[sectionName].fields).forEach(fieldName => {
+              this.model[sectionName][fieldName] = sections[sectionName].fields[fieldName].toJson()
+            })
+          })
         }
-
         return project
       }),
       shareReplay(1)
     )
   }
-
 }

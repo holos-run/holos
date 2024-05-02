@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddPlatformRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse, PutPlatformConfigRequest } from "./platform_pb.js";
+import { AddPlatformRequest, ConfigValues, GetPlatformConfigRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse, PutPlatformConfigRequest } from "./platform_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -46,6 +46,17 @@ export const PlatformService = {
       name: "PutPlatformConfig",
       I: PutPlatformConfigRequest,
       O: GetPlatformResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * GetConfig provides the unmarshalled config values for use with CUE
+     *
+     * @generated from rpc holos.v1alpha1.PlatformService.GetConfig
+     */
+    getConfig: {
+      name: "GetConfig",
+      I: GetPlatformConfigRequest,
+      O: ConfigValues,
       kind: MethodKind.Unary,
     },
   }

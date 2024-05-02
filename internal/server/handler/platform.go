@@ -83,13 +83,8 @@ func (h *PlatformHandler) AddPlatform(
 	return resp, nil
 }
 
-func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[holos.GetPlatformRequest]) (*connect.Response[holos.GetPlatformResponse], error) {
-	authnID, err := authn.FromContext(ctx)
-	if err != nil {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
-	}
-
-	platformID, err := uuid.FromString(req.Msg.PlatformId)
+func (h *PlatformHandler) getPlatform(ctx context.Context, id string, uid authn.Identity) (*ent.Platform, error) {
+	platformID, err := uuid.FromString(id)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
 	}
@@ -98,8 +93,8 @@ func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[
 		Where(platform.ID(platformID)).
 		Where(platform.HasOrganizationWith(
 			organization.HasUsersWith(
-				user.Iss(authnID.Issuer()),
-				user.Sub(authnID.Subject()),
+				user.Iss(uid.Issuer()),
+				user.Sub(uid.Subject()),
 			))).
 		Only(ctx)
 	if err != nil {
@@ -108,6 +103,20 @@ func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[
 		} else {
 			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 		}
+	}
+
+	return p, nil
+}
+
+func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[holos.GetPlatformRequest]) (*connect.Response[holos.GetPlatformResponse], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
+	p, err := h.getPlatform(ctx, req.Msg.PlatformId, authnID)
+	if err != nil {
+		return nil, errors.Wrap(err)
 	}
 
 	return connect.NewResponse(&holos.GetPlatformResponse{Platform: PlatformToRPC(p)}), nil
@@ -156,6 +165,20 @@ func (h *PlatformHandler) PutPlatformConfig(ctx context.Context, req *connect.Re
 	}
 
 	return connect.NewResponse(&holos.GetPlatformResponse{Platform: PlatformToRPC(up)}), nil
+}
+
+func (h *PlatformHandler) GetConfig(ctx context.Context, req *connect.Request[holos.GetPlatformConfigRequest]) (*connect.Response[holos.ConfigValues], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
+	p, err := h.getPlatform(ctx, req.Msg.PlatformId, authnID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	return connect.NewResponse(p.ConfigValues), nil
 }
 
 func PlatformToRPC(platform *ent.Platform) *holos.Platform {
