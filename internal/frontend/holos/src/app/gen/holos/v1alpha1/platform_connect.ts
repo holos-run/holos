@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddPlatformRequest, ConfigValues, GetPlatformConfigRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse, PutPlatformConfigRequest } from "./platform_pb.js";
+import { AddPlatformRequest, GetPlatformConfigRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse, PlatformConfig, PutPlatformConfigRequest } from "./platform_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -56,7 +56,7 @@ export const PlatformService = {
     getConfig: {
       name: "GetConfig",
       I: GetPlatformConfigRequest,
-      O: ConfigValues,
+      O: PlatformConfig,
       kind: MethodKind.Unary,
     },
   }

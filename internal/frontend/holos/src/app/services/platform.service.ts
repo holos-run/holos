@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@angular/core';
 import { PlatformService as ConnectPlatformService } from '../gen/holos/v1alpha1/platform_connect';
 import { Observable, filter, of, switchMap } from 'rxjs';
 import { ObservableClient } from '../../connect/observable-client';
-import { Config, ConfigSection, ConfigValues, GetPlatformsRequest, Platform, PutPlatformConfigRequest } from '../gen/holos/v1alpha1/platform_pb';
+import { UserDefinedSection, UserDefinedConfig, GetPlatformsRequest, Platform, PutPlatformConfigRequest } from '../gen/holos/v1alpha1/platform_pb';
 import { Organization } from '../gen/holos/v1alpha1/organization_pb';
 import { Struct, Value } from '@bufbuild/protobuf';
 
@@ -39,10 +39,10 @@ export class PlatformService {
   }
 
   putConfig(id: string, model: Model): Observable<Platform> {
-    const values = new ConfigValues
+    const values = new UserDefinedConfig
     // Set string values from the model
     Object.keys(model).forEach(sectionName => {
-      values.sections[sectionName] = new ConfigSection
+      values.sections[sectionName] = new UserDefinedSection
       Object.keys(model[sectionName]).forEach(fieldName => {
         const val = new Value
         val.fromJson(model[sectionName][fieldName])

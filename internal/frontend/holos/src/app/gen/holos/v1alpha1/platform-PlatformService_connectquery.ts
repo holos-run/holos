@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import { MethodKind } from "@bufbuild/protobuf";
-import { AddPlatformRequest, ConfigValues, GetPlatformConfigRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse, PutPlatformConfigRequest } from "./platform_pb.js";
+import { AddPlatformRequest, GetPlatformConfigRequest, GetPlatformRequest, GetPlatformResponse, GetPlatformsRequest, GetPlatformsResponse, PlatformConfig, PutPlatformConfigRequest } from "./platform_pb.js";
 
 /**
  * @generated from rpc holos.v1alpha1.PlatformService.AddPlatform
@@ -72,7 +72,7 @@ export const getConfig = {
   name: "GetConfig",
   kind: MethodKind.Unary,
   I: GetPlatformConfigRequest,
-  O: ConfigValues,
+  O: PlatformConfig,
   service: {
     typeName: "holos.v1alpha1.PlatformService"
   }

@@ -56,7 +56,7 @@ func (h *PlatformHandler) AddPlatform(
 		}
 	}
 
-	var hv holos.ConfigValues
+	var hv holos.UserDefinedConfig
 	if len(req.Msg.Platform.RawConfig.Values) > 0 {
 		if err := json.Unmarshal(req.Msg.Platform.RawConfig.Values, &hv); err != nil {
 			return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
@@ -167,7 +167,7 @@ func (h *PlatformHandler) PutPlatformConfig(ctx context.Context, req *connect.Re
 	return connect.NewResponse(&holos.GetPlatformResponse{Platform: PlatformToRPC(up)}), nil
 }
 
-func (h *PlatformHandler) GetConfig(ctx context.Context, req *connect.Request[holos.GetPlatformConfigRequest]) (*connect.Response[holos.ConfigValues], error) {
+func (h *PlatformHandler) GetConfig(ctx context.Context, req *connect.Request[holos.GetPlatformConfigRequest]) (*connect.Response[holos.PlatformConfig], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -178,7 +178,17 @@ func (h *PlatformHandler) GetConfig(ctx context.Context, req *connect.Request[ho
 		return nil, errors.Wrap(err)
 	}
 
-	return connect.NewResponse(p.ConfigValues), nil
+	pc := &holos.PlatformConfig{
+		Platform: &holos.PlatformStruct{
+			Spec: &holos.PlatformSpec{
+				Config: &holos.PlatformSpecConfig{
+					User: p.ConfigValues,
+				},
+			},
+		},
+	}
+
+	return connect.NewResponse(pc), nil
 }
 
 func PlatformToRPC(platform *ent.Platform) *holos.Platform {

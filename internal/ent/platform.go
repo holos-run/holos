@@ -37,7 +37,7 @@ type Platform struct {
 	// JSON holos.PlatformForm representing the platform data entry form.
 	ConfigForm *holos.PlatformForm `json:"config_form,omitempty"`
 	// JSON holos.ConfigValues representing the platform config values.
-	ConfigValues *holos.ConfigValues `json:"config_values,omitempty"`
+	ConfigValues *holos.UserDefinedConfig `json:"config_values,omitempty"`
 	// Opaque bytes representing the CUE definition of the config struct.
 	ConfigCue []byte `json:"config_cue,omitempty"`
 	// The definition name to vet config_values against config_cue e.g. '#PlatformSpec'

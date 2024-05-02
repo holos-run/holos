@@ -814,7 +814,7 @@ type PlatformMutation struct {
 	name                *string
 	display_name        *string
 	config_form         **holos.PlatformForm
-	config_values       **holos.ConfigValues
+	config_values       **holos.UserDefinedConfig
 	config_cue          *[]byte
 	config_definition   *string
 	clearedFields       map[string]struct{}
@@ -1197,12 +1197,12 @@ func (m *PlatformMutation) ResetConfigForm() {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (m *PlatformMutation) SetConfigValues(hv *holos.ConfigValues) {
-	m.config_values = &hv
+func (m *PlatformMutation) SetConfigValues(hdc *holos.UserDefinedConfig) {
+	m.config_values = &hdc
 }
 
 // ConfigValues returns the value of the "config_values" field in the mutation.
-func (m *PlatformMutation) ConfigValues() (r *holos.ConfigValues, exists bool) {
+func (m *PlatformMutation) ConfigValues() (r *holos.UserDefinedConfig, exists bool) {
 	v := m.config_values
 	if v == nil {
 		return
@@ -1213,7 +1213,7 @@ func (m *PlatformMutation) ConfigValues() (r *holos.ConfigValues, exists bool) {
 // OldConfigValues returns the old "config_values" field's value of the Platform entity.
 // If the Platform object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PlatformMutation) OldConfigValues(ctx context.Context) (v *holos.ConfigValues, err error) {
+func (m *PlatformMutation) OldConfigValues(ctx context.Context) (v *holos.UserDefinedConfig, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldConfigValues is only allowed on UpdateOne operations")
 	}
@@ -1591,7 +1591,7 @@ func (m *PlatformMutation) SetField(name string, value ent.Value) error {
 		m.SetConfigForm(v)
 		return nil
 	case platform.FieldConfigValues:
-		v, ok := value.(*holos.ConfigValues)
+		v, ok := value.(*holos.UserDefinedConfig)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

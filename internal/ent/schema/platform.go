@@ -29,7 +29,7 @@ func (Platform) Fields() []ent.Field {
 		field.JSON("config_form", &holos.PlatformForm{}).
 			Optional().
 			Comment("JSON holos.PlatformForm representing the platform data entry form."),
-		field.JSON("config_values", &holos.ConfigValues{}).
+		field.JSON("config_values", &holos.UserDefinedConfig{}).
 			Optional().
 			Comment("JSON holos.ConfigValues representing the platform config values."),
 		field.Bytes("config_cue").

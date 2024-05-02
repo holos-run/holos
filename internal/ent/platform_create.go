@@ -86,8 +86,8 @@ func (pc *PlatformCreate) SetConfigForm(hf *holos.PlatformForm) *PlatformCreate 
 }
 
 // SetConfigValues sets the "config_values" field.
-func (pc *PlatformCreate) SetConfigValues(hv *holos.ConfigValues) *PlatformCreate {
-	pc.mutation.SetConfigValues(hv)
+func (pc *PlatformCreate) SetConfigValues(hdc *holos.UserDefinedConfig) *PlatformCreate {
+	pc.mutation.SetConfigValues(hdc)
 	return pc
 }
 
@@ -454,7 +454,7 @@ func (u *PlatformUpsert) ClearConfigForm() *PlatformUpsert {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (u *PlatformUpsert) SetConfigValues(v *holos.ConfigValues) *PlatformUpsert {
+func (u *PlatformUpsert) SetConfigValues(v *holos.UserDefinedConfig) *PlatformUpsert {
 	u.Set(platform.FieldConfigValues, v)
 	return u
 }
@@ -650,7 +650,7 @@ func (u *PlatformUpsertOne) ClearConfigForm() *PlatformUpsertOne {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (u *PlatformUpsertOne) SetConfigValues(v *holos.ConfigValues) *PlatformUpsertOne {
+func (u *PlatformUpsertOne) SetConfigValues(v *holos.UserDefinedConfig) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetConfigValues(v)
 	})
@@ -1022,7 +1022,7 @@ func (u *PlatformUpsertBulk) ClearConfigForm() *PlatformUpsertBulk {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (u *PlatformUpsertBulk) SetConfigValues(v *holos.ConfigValues) *PlatformUpsertBulk {
+func (u *PlatformUpsertBulk) SetConfigValues(v *holos.UserDefinedConfig) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetConfigValues(v)
 	})

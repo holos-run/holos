@@ -107,8 +107,8 @@ func (pu *PlatformUpdate) ClearConfigForm() *PlatformUpdate {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (pu *PlatformUpdate) SetConfigValues(hv *holos.ConfigValues) *PlatformUpdate {
-	pu.mutation.SetConfigValues(hv)
+func (pu *PlatformUpdate) SetConfigValues(hdc *holos.UserDefinedConfig) *PlatformUpdate {
+	pu.mutation.SetConfigValues(hdc)
 	return pu
 }
 
@@ -433,8 +433,8 @@ func (puo *PlatformUpdateOne) ClearConfigForm() *PlatformUpdateOne {
 }
 
 // SetConfigValues sets the "config_values" field.
-func (puo *PlatformUpdateOne) SetConfigValues(hv *holos.ConfigValues) *PlatformUpdateOne {
-	puo.mutation.SetConfigValues(hv)
+func (puo *PlatformUpdateOne) SetConfigValues(hdc *holos.UserDefinedConfig) *PlatformUpdateOne {
+	puo.mutation.SetConfigValues(hdc)
 	return puo
 }
 

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"connectrpc.com/connect"
+	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
@@ -73,6 +74,7 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 
 	if err := WithTx(ctx, h.db, func(tx *ent.Tx) (err error) {
 		jeff, err := tx.User.Create().
+			SetID(uuid.FromStringOrNil("018f36fb-e3f2-7f7f-a72f-ce48eb16c82d")).
 			SetEmail("jeff@openinfrastructure.co").
 			SetIss("https://login.ois.run").
 			SetSub("261773693724656988").
@@ -102,6 +104,7 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 
 		// Create the org
 		org, err := tx.Organization.Create().
+			SetID(uuid.FromStringOrNil("018f36fb-e3f7-7f7f-a1c5-c85fb735d215")).
 			SetName("ois").
 			SetDisplayName("Open Infrastructure Services").
 			SetCreator(jeff).
@@ -121,11 +124,18 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 			return errors.Wrap(err)
 		}
 
+		var udc holos.UserDefinedConfig
+		if err := json.Unmarshal([]byte(UserDefinedConfig), &udc); err != nil {
+			return errors.Wrap(err)
+		}
+
 		// Add a platform
 		err = tx.Platform.Create().
+			SetID(uuid.FromStringOrNil("018f36fb-e3ff-7f7f-a5d1-7ca2bf499e94")).
 			SetName("bare").
 			SetDisplayName("Bare Platform").
 			SetConfigForm(&hf).
+			SetConfigValues(&udc).
 			SetCreator(jeff).
 			SetOrgID(org.ID).
 			Exec(ctx)
@@ -212,4 +222,17 @@ const BareForm = `{
     "name": "bare"
   },
   "apiVersion": "forms.holos.run/v1alpha1"
+}`
+
+const UserDefinedConfig = `{
+  "sections": {
+    "org": {
+      "fields": {
+        "contactEmail": "jeff@openinfrastructure.co",
+        "displayName": "Open Infrastructure Services LLC",
+        "domain": "ois.run",
+        "name": "ois"
+      }
+    }
+  }
 }`

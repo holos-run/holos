@@ -22,4 +22,18 @@ package holos
 // #PlatformSpec represents configuration values defined by the platform
 // designer.  Config values are organized by section, then simple strings for
 // each section.
-#PlatformSpec: {[string]: {[string]: string | bool | [...string]}}
+#PlatformSpec: {
+	config: [string]: _
+	config: user:     #UserDefinedConfig
+}
+
+// #PlatformUserConfig represents configuration fields and values defined by the
+// user.
+#UserDefinedConfig: {
+	sections: [string]: fields: [string]: _
+}
+
+// #PlatformConfig represents the platform config data returned from the Holos API.  Useful for cue vet.
+#PlatformConfig: {
+	platform: spec: #PlatformSpec
+}

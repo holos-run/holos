@@ -25,16 +25,35 @@ message RawConfig {
 message Config {
   PlatformForm form = 1;
   // Values are the user supplied config values organized by section.
-  ConfigValues values = 2;
+  UserDefinedConfig values = 2;
 }
 
-message ConfigSection {
+message PlatformConfig {
+  PlatformStruct platform = 1;
+}
+
+// PlatformConfig represents the platform config struct.  The JSON encoding of this message is directly usable in CUE.
+// TODO: consolidate PlatformStruct and Platform into one message type representing a Platform resource.
+message PlatformStruct {
+  PlatformSpec spec = 1;
+}
+
+message PlatformSpec {
+  PlatformSpecConfig config = 1;
+}
+
+message PlatformSpecConfig {
+  UserDefinedConfig user = 1;
+}
+
+// UserDefinedConfig represents user defined configuration values.
+message UserDefinedConfig {
+  map<string, UserDefinedSection> sections = 1;
+}
+
+// UserDefinedSection represents a user defined config section.
+message UserDefinedSection {
   map<string, google.protobuf.Value> fields = 1;
-}
-
-// ConfigValues represents user defined configuration values.
-message ConfigValues {
-  map<string, ConfigSection> sections = 1;
 }
 
 message Platform {
@@ -48,6 +67,7 @@ message Platform {
   string name = 4 [(buf.validate.field).string.max_len = 100];
   string display_name = 5 [(buf.validate.field).string.max_len = 100];
   Creator creator = 6;
+
   // config represents the platform config form and values.  Read only.
   Config config = 7;
   // raw_config represents the platform config form and values.  Write only.
@@ -111,7 +131,7 @@ message PlatformForm {
 
 message PutPlatformConfigRequest {
   string platform_id = 1 [(buf.validate.field).string.uuid = true];
-  ConfigValues values = 2;
+  UserDefinedConfig values = 2;
 }
 
 message GetPlatformConfigRequest {
@@ -124,5 +144,5 @@ service PlatformService {
   rpc GetPlatform(GetPlatformRequest) returns (GetPlatformResponse) {}
   rpc PutPlatformConfig(PutPlatformConfigRequest) returns (GetPlatformResponse) {}
   // GetConfig provides the unmarshalled config values for use with CUE
-  rpc GetConfig(GetPlatformConfigRequest) returns (ConfigValues) {}
+  rpc GetConfig(GetPlatformConfigRequest) returns (PlatformConfig) {}
 }

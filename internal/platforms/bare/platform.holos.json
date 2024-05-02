@@ -1,1 +1,20 @@
-{"platform":{"spec":{"org":{"name":"ois"}}}}
+{
+  "platform": {
+    "spec": {
+      "config": {
+        "user": {
+          "sections": {
+            "org": {
+              "fields": {
+                "contactEmail": "jeff@openinfrastructure.co",
+                "displayName": "Open Infrastructure Services LLC",
+                "domain": "ois.run",
+                "name": "ois"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
