@@ -12,7 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
-	"github.com/holos-run/holos/internal/ent/platform"
+	entplatform "github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
 )
@@ -21,7 +21,7 @@ import (
 type PlatformQuery struct {
 	config
 	ctx              *QueryContext
-	order            []platform.OrderOption
+	order            []entplatform.OrderOption
 	inters           []Interceptor
 	predicates       []predicate.Platform
 	withCreator      *UserQuery
@@ -57,7 +57,7 @@ func (pq *PlatformQuery) Unique(unique bool) *PlatformQuery {
 }
 
 // Order specifies how the records should be ordered.
-func (pq *PlatformQuery) Order(o ...platform.OrderOption) *PlatformQuery {
+func (pq *PlatformQuery) Order(o ...entplatform.OrderOption) *PlatformQuery {
 	pq.order = append(pq.order, o...)
 	return pq
 }
@@ -74,9 +74,9 @@ func (pq *PlatformQuery) QueryCreator() *UserQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(platform.Table, platform.FieldID, selector),
+			sqlgraph.From(entplatform.Table, entplatform.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, platform.CreatorTable, platform.CreatorColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, entplatform.CreatorTable, entplatform.CreatorColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -96,9 +96,9 @@ func (pq *PlatformQuery) QueryOrganization() *OrganizationQuery {
 			return nil, err
 		}
 		step := sqlgraph.NewStep(
-			sqlgraph.From(platform.Table, platform.FieldID, selector),
+			sqlgraph.From(entplatform.Table, entplatform.FieldID, selector),
 			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, platform.OrganizationTable, platform.OrganizationColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, entplatform.OrganizationTable, entplatform.OrganizationColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -114,7 +114,7 @@ func (pq *PlatformQuery) First(ctx context.Context) (*Platform, error) {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{platform.Label}
+		return nil, &NotFoundError{entplatform.Label}
 	}
 	return nodes[0], nil
 }
@@ -136,7 +136,7 @@ func (pq *PlatformQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) 
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{platform.Label}
+		err = &NotFoundError{entplatform.Label}
 		return
 	}
 	return ids[0], nil
@@ -163,9 +163,9 @@ func (pq *PlatformQuery) Only(ctx context.Context) (*Platform, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{platform.Label}
+		return nil, &NotFoundError{entplatform.Label}
 	default:
-		return nil, &NotSingularError{platform.Label}
+		return nil, &NotSingularError{entplatform.Label}
 	}
 }
 
@@ -190,9 +190,9 @@ func (pq *PlatformQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{platform.Label}
+		err = &NotFoundError{entplatform.Label}
 	default:
-		err = &NotSingularError{platform.Label}
+		err = &NotSingularError{entplatform.Label}
 	}
 	return
 }
@@ -231,7 +231,7 @@ func (pq *PlatformQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 		pq.Unique(true)
 	}
 	ctx = setContextOp(ctx, pq.ctx, "IDs")
-	if err = pq.Select(platform.FieldID).Scan(ctx, &ids); err != nil {
+	if err = pq.Select(entplatform.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
@@ -295,7 +295,7 @@ func (pq *PlatformQuery) Clone() *PlatformQuery {
 	return &PlatformQuery{
 		config:           pq.config,
 		ctx:              pq.ctx.Clone(),
-		order:            append([]platform.OrderOption{}, pq.order...),
+		order:            append([]entplatform.OrderOption{}, pq.order...),
 		inters:           append([]Interceptor{}, pq.inters...),
 		predicates:       append([]predicate.Platform{}, pq.predicates...),
 		withCreator:      pq.withCreator.Clone(),
@@ -339,14 +339,14 @@ func (pq *PlatformQuery) WithOrganization(opts ...func(*OrganizationQuery)) *Pla
 //	}
 //
 //	client.Platform.Query().
-//		GroupBy(platform.FieldCreatedAt).
+//		GroupBy(entplatform.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (pq *PlatformQuery) GroupBy(field string, fields ...string) *PlatformGroupBy {
 	pq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &PlatformGroupBy{build: pq}
 	grbuild.flds = &pq.ctx.Fields
-	grbuild.label = platform.Label
+	grbuild.label = entplatform.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -361,12 +361,12 @@ func (pq *PlatformQuery) GroupBy(field string, fields ...string) *PlatformGroupB
 //	}
 //
 //	client.Platform.Query().
-//		Select(platform.FieldCreatedAt).
+//		Select(entplatform.FieldCreatedAt).
 //		Scan(ctx, &v)
 func (pq *PlatformQuery) Select(fields ...string) *PlatformSelect {
 	pq.ctx.Fields = append(pq.ctx.Fields, fields...)
 	sbuild := &PlatformSelect{PlatformQuery: pq}
-	sbuild.label = platform.Label
+	sbuild.label = entplatform.Label
 	sbuild.flds, sbuild.scan = &pq.ctx.Fields, sbuild.Scan
 	return sbuild
 }
@@ -388,7 +388,7 @@ func (pq *PlatformQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range pq.ctx.Fields {
-		if !platform.ValidColumn(f) {
+		if !entplatform.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -513,7 +513,7 @@ func (pq *PlatformQuery) sqlCount(ctx context.Context) (int, error) {
 }
 
 func (pq *PlatformQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(platform.Table, platform.Columns, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewQuerySpec(entplatform.Table, entplatform.Columns, sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID))
 	_spec.From = pq.sql
 	if unique := pq.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -522,17 +522,17 @@ func (pq *PlatformQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := pq.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, platform.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, entplatform.FieldID)
 		for i := range fields {
-			if fields[i] != platform.FieldID {
+			if fields[i] != entplatform.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
 		if pq.withCreator != nil {
-			_spec.Node.AddColumnOnce(platform.FieldCreatorID)
+			_spec.Node.AddColumnOnce(entplatform.FieldCreatorID)
 		}
 		if pq.withOrganization != nil {
-			_spec.Node.AddColumnOnce(platform.FieldOrgID)
+			_spec.Node.AddColumnOnce(entplatform.FieldOrgID)
 		}
 	}
 	if ps := pq.predicates; len(ps) > 0 {
@@ -560,10 +560,10 @@ func (pq *PlatformQuery) querySpec() *sqlgraph.QuerySpec {
 
 func (pq *PlatformQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(pq.driver.Dialect())
-	t1 := builder.Table(platform.Table)
+	t1 := builder.Table(entplatform.Table)
 	columns := pq.ctx.Fields
 	if len(columns) == 0 {
-		columns = platform.Columns
+		columns = entplatform.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if pq.sql != nil {

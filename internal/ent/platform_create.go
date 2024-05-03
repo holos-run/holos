@@ -14,9 +14,9 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
-	"github.com/holos-run/holos/internal/ent/platform"
+	entplatform "github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
 )
 
 // PlatformCreate is the builder for creating a Platform entity.
@@ -79,34 +79,34 @@ func (pc *PlatformCreate) SetCreatorID(u uuid.UUID) *PlatformCreate {
 	return pc
 }
 
-// SetConfigForm sets the "config_form" field.
-func (pc *PlatformCreate) SetConfigForm(hf *holos.PlatformForm) *PlatformCreate {
-	pc.mutation.SetConfigForm(hf)
+// SetForm sets the "form" field.
+func (pc *PlatformCreate) SetForm(pl *platform.Form) *PlatformCreate {
+	pc.mutation.SetForm(pl)
 	return pc
 }
 
-// SetConfigValues sets the "config_values" field.
-func (pc *PlatformCreate) SetConfigValues(hdc *holos.UserDefinedConfig) *PlatformCreate {
-	pc.mutation.SetConfigValues(hdc)
+// SetModel sets the "model" field.
+func (pc *PlatformCreate) SetModel(pl *platform.Model) *PlatformCreate {
+	pc.mutation.SetModel(pl)
 	return pc
 }
 
-// SetConfigCue sets the "config_cue" field.
-func (pc *PlatformCreate) SetConfigCue(b []byte) *PlatformCreate {
-	pc.mutation.SetConfigCue(b)
+// SetCue sets the "cue" field.
+func (pc *PlatformCreate) SetCue(b []byte) *PlatformCreate {
+	pc.mutation.SetCue(b)
 	return pc
 }
 
-// SetConfigDefinition sets the "config_definition" field.
-func (pc *PlatformCreate) SetConfigDefinition(s string) *PlatformCreate {
-	pc.mutation.SetConfigDefinition(s)
+// SetCueDefinition sets the "cue_definition" field.
+func (pc *PlatformCreate) SetCueDefinition(s string) *PlatformCreate {
+	pc.mutation.SetCueDefinition(s)
 	return pc
 }
 
-// SetNillableConfigDefinition sets the "config_definition" field if the given value is not nil.
-func (pc *PlatformCreate) SetNillableConfigDefinition(s *string) *PlatformCreate {
+// SetNillableCueDefinition sets the "cue_definition" field if the given value is not nil.
+func (pc *PlatformCreate) SetNillableCueDefinition(s *string) *PlatformCreate {
 	if s != nil {
-		pc.SetConfigDefinition(*s)
+		pc.SetCueDefinition(*s)
 	}
 	return pc
 }
@@ -177,15 +177,15 @@ func (pc *PlatformCreate) ExecX(ctx context.Context) {
 // defaults sets the default values of the builder before save.
 func (pc *PlatformCreate) defaults() {
 	if _, ok := pc.mutation.CreatedAt(); !ok {
-		v := platform.DefaultCreatedAt()
+		v := entplatform.DefaultCreatedAt()
 		pc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := pc.mutation.UpdatedAt(); !ok {
-		v := platform.DefaultUpdatedAt()
+		v := entplatform.DefaultUpdatedAt()
 		pc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := pc.mutation.ID(); !ok {
-		v := platform.DefaultID()
+		v := entplatform.DefaultID()
 		pc.mutation.SetID(v)
 	}
 }
@@ -205,7 +205,7 @@ func (pc *PlatformCreate) check() error {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Platform.name"`)}
 	}
 	if v, ok := pc.mutation.Name(); ok {
-		if err := platform.NameValidator(v); err != nil {
+		if err := entplatform.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
@@ -250,7 +250,7 @@ func (pc *PlatformCreate) sqlSave(ctx context.Context) (*Platform, error) {
 func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Platform{config: pc.config}
-		_spec = sqlgraph.NewCreateSpec(platform.Table, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(entplatform.Table, sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID))
 	)
 	_spec.OnConflict = pc.conflict
 	if id, ok := pc.mutation.ID(); ok {
@@ -258,43 +258,43 @@ func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 		_spec.ID.Value = &id
 	}
 	if value, ok := pc.mutation.CreatedAt(); ok {
-		_spec.SetField(platform.FieldCreatedAt, field.TypeTime, value)
+		_spec.SetField(entplatform.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if value, ok := pc.mutation.UpdatedAt(); ok {
-		_spec.SetField(platform.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(entplatform.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := pc.mutation.Name(); ok {
-		_spec.SetField(platform.FieldName, field.TypeString, value)
+		_spec.SetField(entplatform.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if value, ok := pc.mutation.DisplayName(); ok {
-		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
+		_spec.SetField(entplatform.FieldDisplayName, field.TypeString, value)
 		_node.DisplayName = value
 	}
-	if value, ok := pc.mutation.ConfigForm(); ok {
-		_spec.SetField(platform.FieldConfigForm, field.TypeJSON, value)
-		_node.ConfigForm = value
+	if value, ok := pc.mutation.Form(); ok {
+		_spec.SetField(entplatform.FieldForm, field.TypeJSON, value)
+		_node.Form = value
 	}
-	if value, ok := pc.mutation.ConfigValues(); ok {
-		_spec.SetField(platform.FieldConfigValues, field.TypeJSON, value)
-		_node.ConfigValues = value
+	if value, ok := pc.mutation.Model(); ok {
+		_spec.SetField(entplatform.FieldModel, field.TypeJSON, value)
+		_node.Model = value
 	}
-	if value, ok := pc.mutation.ConfigCue(); ok {
-		_spec.SetField(platform.FieldConfigCue, field.TypeBytes, value)
-		_node.ConfigCue = value
+	if value, ok := pc.mutation.Cue(); ok {
+		_spec.SetField(entplatform.FieldCue, field.TypeBytes, value)
+		_node.Cue = value
 	}
-	if value, ok := pc.mutation.ConfigDefinition(); ok {
-		_spec.SetField(platform.FieldConfigDefinition, field.TypeString, value)
-		_node.ConfigDefinition = value
+	if value, ok := pc.mutation.CueDefinition(); ok {
+		_spec.SetField(entplatform.FieldCueDefinition, field.TypeString, value)
+		_node.CueDefinition = value
 	}
 	if nodes := pc.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.CreatorTable,
-			Columns: []string{platform.CreatorColumn},
+			Table:   entplatform.CreatorTable,
+			Columns: []string{entplatform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -310,8 +310,8 @@ func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.OrganizationTable,
-			Columns: []string{platform.OrganizationColumn},
+			Table:   entplatform.OrganizationTable,
+			Columns: []string{entplatform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -377,133 +377,133 @@ type (
 
 // SetUpdatedAt sets the "updated_at" field.
 func (u *PlatformUpsert) SetUpdatedAt(v time.Time) *PlatformUpsert {
-	u.Set(platform.FieldUpdatedAt, v)
+	u.Set(entplatform.FieldUpdatedAt, v)
 	return u
 }
 
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateUpdatedAt() *PlatformUpsert {
-	u.SetExcluded(platform.FieldUpdatedAt)
+	u.SetExcluded(entplatform.FieldUpdatedAt)
 	return u
 }
 
 // SetOrgID sets the "org_id" field.
 func (u *PlatformUpsert) SetOrgID(v uuid.UUID) *PlatformUpsert {
-	u.Set(platform.FieldOrgID, v)
+	u.Set(entplatform.FieldOrgID, v)
 	return u
 }
 
 // UpdateOrgID sets the "org_id" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateOrgID() *PlatformUpsert {
-	u.SetExcluded(platform.FieldOrgID)
+	u.SetExcluded(entplatform.FieldOrgID)
 	return u
 }
 
 // SetName sets the "name" field.
 func (u *PlatformUpsert) SetName(v string) *PlatformUpsert {
-	u.Set(platform.FieldName, v)
+	u.Set(entplatform.FieldName, v)
 	return u
 }
 
 // UpdateName sets the "name" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateName() *PlatformUpsert {
-	u.SetExcluded(platform.FieldName)
+	u.SetExcluded(entplatform.FieldName)
 	return u
 }
 
 // SetDisplayName sets the "display_name" field.
 func (u *PlatformUpsert) SetDisplayName(v string) *PlatformUpsert {
-	u.Set(platform.FieldDisplayName, v)
+	u.Set(entplatform.FieldDisplayName, v)
 	return u
 }
 
 // UpdateDisplayName sets the "display_name" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateDisplayName() *PlatformUpsert {
-	u.SetExcluded(platform.FieldDisplayName)
+	u.SetExcluded(entplatform.FieldDisplayName)
 	return u
 }
 
 // SetCreatorID sets the "creator_id" field.
 func (u *PlatformUpsert) SetCreatorID(v uuid.UUID) *PlatformUpsert {
-	u.Set(platform.FieldCreatorID, v)
+	u.Set(entplatform.FieldCreatorID, v)
 	return u
 }
 
 // UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateCreatorID() *PlatformUpsert {
-	u.SetExcluded(platform.FieldCreatorID)
+	u.SetExcluded(entplatform.FieldCreatorID)
 	return u
 }
 
-// SetConfigForm sets the "config_form" field.
-func (u *PlatformUpsert) SetConfigForm(v *holos.PlatformForm) *PlatformUpsert {
-	u.Set(platform.FieldConfigForm, v)
+// SetForm sets the "form" field.
+func (u *PlatformUpsert) SetForm(v *platform.Form) *PlatformUpsert {
+	u.Set(entplatform.FieldForm, v)
 	return u
 }
 
-// UpdateConfigForm sets the "config_form" field to the value that was provided on create.
-func (u *PlatformUpsert) UpdateConfigForm() *PlatformUpsert {
-	u.SetExcluded(platform.FieldConfigForm)
+// UpdateForm sets the "form" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateForm() *PlatformUpsert {
+	u.SetExcluded(entplatform.FieldForm)
 	return u
 }
 
-// ClearConfigForm clears the value of the "config_form" field.
-func (u *PlatformUpsert) ClearConfigForm() *PlatformUpsert {
-	u.SetNull(platform.FieldConfigForm)
+// ClearForm clears the value of the "form" field.
+func (u *PlatformUpsert) ClearForm() *PlatformUpsert {
+	u.SetNull(entplatform.FieldForm)
 	return u
 }
 
-// SetConfigValues sets the "config_values" field.
-func (u *PlatformUpsert) SetConfigValues(v *holos.UserDefinedConfig) *PlatformUpsert {
-	u.Set(platform.FieldConfigValues, v)
+// SetModel sets the "model" field.
+func (u *PlatformUpsert) SetModel(v *platform.Model) *PlatformUpsert {
+	u.Set(entplatform.FieldModel, v)
 	return u
 }
 
-// UpdateConfigValues sets the "config_values" field to the value that was provided on create.
-func (u *PlatformUpsert) UpdateConfigValues() *PlatformUpsert {
-	u.SetExcluded(platform.FieldConfigValues)
+// UpdateModel sets the "model" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateModel() *PlatformUpsert {
+	u.SetExcluded(entplatform.FieldModel)
 	return u
 }
 
-// ClearConfigValues clears the value of the "config_values" field.
-func (u *PlatformUpsert) ClearConfigValues() *PlatformUpsert {
-	u.SetNull(platform.FieldConfigValues)
+// ClearModel clears the value of the "model" field.
+func (u *PlatformUpsert) ClearModel() *PlatformUpsert {
+	u.SetNull(entplatform.FieldModel)
 	return u
 }
 
-// SetConfigCue sets the "config_cue" field.
-func (u *PlatformUpsert) SetConfigCue(v []byte) *PlatformUpsert {
-	u.Set(platform.FieldConfigCue, v)
+// SetCue sets the "cue" field.
+func (u *PlatformUpsert) SetCue(v []byte) *PlatformUpsert {
+	u.Set(entplatform.FieldCue, v)
 	return u
 }
 
-// UpdateConfigCue sets the "config_cue" field to the value that was provided on create.
-func (u *PlatformUpsert) UpdateConfigCue() *PlatformUpsert {
-	u.SetExcluded(platform.FieldConfigCue)
+// UpdateCue sets the "cue" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateCue() *PlatformUpsert {
+	u.SetExcluded(entplatform.FieldCue)
 	return u
 }
 
-// ClearConfigCue clears the value of the "config_cue" field.
-func (u *PlatformUpsert) ClearConfigCue() *PlatformUpsert {
-	u.SetNull(platform.FieldConfigCue)
+// ClearCue clears the value of the "cue" field.
+func (u *PlatformUpsert) ClearCue() *PlatformUpsert {
+	u.SetNull(entplatform.FieldCue)
 	return u
 }
 
-// SetConfigDefinition sets the "config_definition" field.
-func (u *PlatformUpsert) SetConfigDefinition(v string) *PlatformUpsert {
-	u.Set(platform.FieldConfigDefinition, v)
+// SetCueDefinition sets the "cue_definition" field.
+func (u *PlatformUpsert) SetCueDefinition(v string) *PlatformUpsert {
+	u.Set(entplatform.FieldCueDefinition, v)
 	return u
 }
 
-// UpdateConfigDefinition sets the "config_definition" field to the value that was provided on create.
-func (u *PlatformUpsert) UpdateConfigDefinition() *PlatformUpsert {
-	u.SetExcluded(platform.FieldConfigDefinition)
+// UpdateCueDefinition sets the "cue_definition" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateCueDefinition() *PlatformUpsert {
+	u.SetExcluded(entplatform.FieldCueDefinition)
 	return u
 }
 
-// ClearConfigDefinition clears the value of the "config_definition" field.
-func (u *PlatformUpsert) ClearConfigDefinition() *PlatformUpsert {
-	u.SetNull(platform.FieldConfigDefinition)
+// ClearCueDefinition clears the value of the "cue_definition" field.
+func (u *PlatformUpsert) ClearCueDefinition() *PlatformUpsert {
+	u.SetNull(entplatform.FieldCueDefinition)
 	return u
 }
 
@@ -514,7 +514,7 @@ func (u *PlatformUpsert) ClearConfigDefinition() *PlatformUpsert {
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
 //			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(platform.FieldID)
+//				u.SetIgnore(entplatform.FieldID)
 //			}),
 //		).
 //		Exec(ctx)
@@ -522,10 +522,10 @@ func (u *PlatformUpsertOne) UpdateNewValues() *PlatformUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(platform.FieldID)
+			s.SetIgnore(entplatform.FieldID)
 		}
 		if _, exists := u.create.mutation.CreatedAt(); exists {
-			s.SetIgnore(platform.FieldCreatedAt)
+			s.SetIgnore(entplatform.FieldCreatedAt)
 		}
 	}))
 	return u
@@ -628,87 +628,87 @@ func (u *PlatformUpsertOne) UpdateCreatorID() *PlatformUpsertOne {
 	})
 }
 
-// SetConfigForm sets the "config_form" field.
-func (u *PlatformUpsertOne) SetConfigForm(v *holos.PlatformForm) *PlatformUpsertOne {
+// SetForm sets the "form" field.
+func (u *PlatformUpsertOne) SetForm(v *platform.Form) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.SetConfigForm(v)
+		s.SetForm(v)
 	})
 }
 
-// UpdateConfigForm sets the "config_form" field to the value that was provided on create.
-func (u *PlatformUpsertOne) UpdateConfigForm() *PlatformUpsertOne {
+// UpdateForm sets the "form" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateForm() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateConfigForm()
+		s.UpdateForm()
 	})
 }
 
-// ClearConfigForm clears the value of the "config_form" field.
-func (u *PlatformUpsertOne) ClearConfigForm() *PlatformUpsertOne {
+// ClearForm clears the value of the "form" field.
+func (u *PlatformUpsertOne) ClearForm() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.ClearConfigForm()
+		s.ClearForm()
 	})
 }
 
-// SetConfigValues sets the "config_values" field.
-func (u *PlatformUpsertOne) SetConfigValues(v *holos.UserDefinedConfig) *PlatformUpsertOne {
+// SetModel sets the "model" field.
+func (u *PlatformUpsertOne) SetModel(v *platform.Model) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.SetConfigValues(v)
+		s.SetModel(v)
 	})
 }
 
-// UpdateConfigValues sets the "config_values" field to the value that was provided on create.
-func (u *PlatformUpsertOne) UpdateConfigValues() *PlatformUpsertOne {
+// UpdateModel sets the "model" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateModel() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateConfigValues()
+		s.UpdateModel()
 	})
 }
 
-// ClearConfigValues clears the value of the "config_values" field.
-func (u *PlatformUpsertOne) ClearConfigValues() *PlatformUpsertOne {
+// ClearModel clears the value of the "model" field.
+func (u *PlatformUpsertOne) ClearModel() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.ClearConfigValues()
+		s.ClearModel()
 	})
 }
 
-// SetConfigCue sets the "config_cue" field.
-func (u *PlatformUpsertOne) SetConfigCue(v []byte) *PlatformUpsertOne {
+// SetCue sets the "cue" field.
+func (u *PlatformUpsertOne) SetCue(v []byte) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.SetConfigCue(v)
+		s.SetCue(v)
 	})
 }
 
-// UpdateConfigCue sets the "config_cue" field to the value that was provided on create.
-func (u *PlatformUpsertOne) UpdateConfigCue() *PlatformUpsertOne {
+// UpdateCue sets the "cue" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateCue() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateConfigCue()
+		s.UpdateCue()
 	})
 }
 
-// ClearConfigCue clears the value of the "config_cue" field.
-func (u *PlatformUpsertOne) ClearConfigCue() *PlatformUpsertOne {
+// ClearCue clears the value of the "cue" field.
+func (u *PlatformUpsertOne) ClearCue() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.ClearConfigCue()
+		s.ClearCue()
 	})
 }
 
-// SetConfigDefinition sets the "config_definition" field.
-func (u *PlatformUpsertOne) SetConfigDefinition(v string) *PlatformUpsertOne {
+// SetCueDefinition sets the "cue_definition" field.
+func (u *PlatformUpsertOne) SetCueDefinition(v string) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.SetConfigDefinition(v)
+		s.SetCueDefinition(v)
 	})
 }
 
-// UpdateConfigDefinition sets the "config_definition" field to the value that was provided on create.
-func (u *PlatformUpsertOne) UpdateConfigDefinition() *PlatformUpsertOne {
+// UpdateCueDefinition sets the "cue_definition" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateCueDefinition() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateConfigDefinition()
+		s.UpdateCueDefinition()
 	})
 }
 
-// ClearConfigDefinition clears the value of the "config_definition" field.
-func (u *PlatformUpsertOne) ClearConfigDefinition() *PlatformUpsertOne {
+// ClearCueDefinition clears the value of the "cue_definition" field.
+func (u *PlatformUpsertOne) ClearCueDefinition() *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
-		s.ClearConfigDefinition()
+		s.ClearCueDefinition()
 	})
 }
 
@@ -884,7 +884,7 @@ type PlatformUpsertBulk struct {
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
 //			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(platform.FieldID)
+//				u.SetIgnore(entplatform.FieldID)
 //			}),
 //		).
 //		Exec(ctx)
@@ -893,10 +893,10 @@ func (u *PlatformUpsertBulk) UpdateNewValues() *PlatformUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		for _, b := range u.create.builders {
 			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(platform.FieldID)
+				s.SetIgnore(entplatform.FieldID)
 			}
 			if _, exists := b.mutation.CreatedAt(); exists {
-				s.SetIgnore(platform.FieldCreatedAt)
+				s.SetIgnore(entplatform.FieldCreatedAt)
 			}
 		}
 	}))
@@ -1000,87 +1000,87 @@ func (u *PlatformUpsertBulk) UpdateCreatorID() *PlatformUpsertBulk {
 	})
 }
 
-// SetConfigForm sets the "config_form" field.
-func (u *PlatformUpsertBulk) SetConfigForm(v *holos.PlatformForm) *PlatformUpsertBulk {
+// SetForm sets the "form" field.
+func (u *PlatformUpsertBulk) SetForm(v *platform.Form) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.SetConfigForm(v)
+		s.SetForm(v)
 	})
 }
 
-// UpdateConfigForm sets the "config_form" field to the value that was provided on create.
-func (u *PlatformUpsertBulk) UpdateConfigForm() *PlatformUpsertBulk {
+// UpdateForm sets the "form" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateForm() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateConfigForm()
+		s.UpdateForm()
 	})
 }
 
-// ClearConfigForm clears the value of the "config_form" field.
-func (u *PlatformUpsertBulk) ClearConfigForm() *PlatformUpsertBulk {
+// ClearForm clears the value of the "form" field.
+func (u *PlatformUpsertBulk) ClearForm() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.ClearConfigForm()
+		s.ClearForm()
 	})
 }
 
-// SetConfigValues sets the "config_values" field.
-func (u *PlatformUpsertBulk) SetConfigValues(v *holos.UserDefinedConfig) *PlatformUpsertBulk {
+// SetModel sets the "model" field.
+func (u *PlatformUpsertBulk) SetModel(v *platform.Model) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.SetConfigValues(v)
+		s.SetModel(v)
 	})
 }
 
-// UpdateConfigValues sets the "config_values" field to the value that was provided on create.
-func (u *PlatformUpsertBulk) UpdateConfigValues() *PlatformUpsertBulk {
+// UpdateModel sets the "model" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateModel() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateConfigValues()
+		s.UpdateModel()
 	})
 }
 
-// ClearConfigValues clears the value of the "config_values" field.
-func (u *PlatformUpsertBulk) ClearConfigValues() *PlatformUpsertBulk {
+// ClearModel clears the value of the "model" field.
+func (u *PlatformUpsertBulk) ClearModel() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.ClearConfigValues()
+		s.ClearModel()
 	})
 }
 
-// SetConfigCue sets the "config_cue" field.
-func (u *PlatformUpsertBulk) SetConfigCue(v []byte) *PlatformUpsertBulk {
+// SetCue sets the "cue" field.
+func (u *PlatformUpsertBulk) SetCue(v []byte) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.SetConfigCue(v)
+		s.SetCue(v)
 	})
 }
 
-// UpdateConfigCue sets the "config_cue" field to the value that was provided on create.
-func (u *PlatformUpsertBulk) UpdateConfigCue() *PlatformUpsertBulk {
+// UpdateCue sets the "cue" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateCue() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateConfigCue()
+		s.UpdateCue()
 	})
 }
 
-// ClearConfigCue clears the value of the "config_cue" field.
-func (u *PlatformUpsertBulk) ClearConfigCue() *PlatformUpsertBulk {
+// ClearCue clears the value of the "cue" field.
+func (u *PlatformUpsertBulk) ClearCue() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.ClearConfigCue()
+		s.ClearCue()
 	})
 }
 
-// SetConfigDefinition sets the "config_definition" field.
-func (u *PlatformUpsertBulk) SetConfigDefinition(v string) *PlatformUpsertBulk {
+// SetCueDefinition sets the "cue_definition" field.
+func (u *PlatformUpsertBulk) SetCueDefinition(v string) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.SetConfigDefinition(v)
+		s.SetCueDefinition(v)
 	})
 }
 
-// UpdateConfigDefinition sets the "config_definition" field to the value that was provided on create.
-func (u *PlatformUpsertBulk) UpdateConfigDefinition() *PlatformUpsertBulk {
+// UpdateCueDefinition sets the "cue_definition" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateCueDefinition() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateConfigDefinition()
+		s.UpdateCueDefinition()
 	})
 }
 
-// ClearConfigDefinition clears the value of the "config_definition" field.
-func (u *PlatformUpsertBulk) ClearConfigDefinition() *PlatformUpsertBulk {
+// ClearCueDefinition clears the value of the "cue_definition" field.
+func (u *PlatformUpsertBulk) ClearCueDefinition() *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
-		s.ClearConfigDefinition()
+		s.ClearCueDefinition()
 	})
 }
 

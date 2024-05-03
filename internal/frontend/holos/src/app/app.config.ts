@@ -9,6 +9,7 @@ import { provideClient } from "../connect/client.provider";
 import { UserService } from './gen/holos/v1alpha1/user_connect';
 import { OrganizationService } from './gen/holos/v1alpha1/organization_connect';
 import { PlatformService } from './gen/holos/v1alpha1/platform_connect';
+import { HolosPanelWrapperComponent } from '../wrappers/holos-panel-wrapper/holos-panel-wrapper.component';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,7 +23,9 @@ export const appConfig: ApplicationConfig = {
       ConnectModule.forRoot({
         baseUrl: window.location.origin
       }),
-      FormlyModule.forRoot(),
+      FormlyModule.forRoot({
+        wrappers: [{ name: 'holos-panel', component: HolosPanelWrapperComponent }],
+      }),
     ),
   ]
 };

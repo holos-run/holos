@@ -12,29 +12,53 @@ let Platform = formsv1.#Platform & {
 
 		fieldConfigs: {
 			// platform.spec.config.user.sections.org.fields.name
-			name: props: {
-				label:       "Name"
-				placeholder: "example"
-				description: "DNS label, e.g. 'example'"
+			name: {
+				type: "input"
+				props: {
+					label: "Name"
+					// placeholder: "example" placeholder cannot be used with validation?
+					description: "DNS label, e.g. 'example'"
+					pattern:     "^[a-z]([0-9a-z]|-){1,28}[0-9a-z]$"
+					minLength:   3
+					maxLength:   30
+					required:    true
+				}
+				validation: messages: {
+					pattern: "It must be 3 to 30 lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
+				}
 			}
+
 			// platform.spec.config.user.sections.org.fields.domain
-			domain: props: {
-				label:       "Domain"
-				placeholder: "example.com"
-				description: "DNS domain, e.g. 'example.com'"
+			domain: {
+				type: "input"
+				props: {
+					label:       "Domain"
+					placeholder: "example.com"
+					minLength:   3
+					maxLength:   100
+					description: "DNS domain, e.g. 'example.com'"
+					required:    true
+				}
 			}
 			// platform.spec.config.user.sections.org.fields.displayName
-			displayName: props: {
-				label:       "Display Name"
-				placeholder: "Example Organization"
-				description: "Display name, e.g. 'Example Organization'"
+			displayName: {
+				type: "input"
+				props: {
+					label:       "Display Name"
+					placeholder: "Example Organization"
+					description: "Display name, e.g. 'Example Organization'"
+					maxLength:   100
+					required:    true
+				}
 			}
 			// platform.spec.config.user.sections.org.fields.contactEmail
 			contactEmail: {
+				type: "input"
 				props: {
 					label:       "Contact Email"
 					placeholder: "platform-team@example.com"
 					description: "Technical contact email address"
+					required:    true
 				}
 			}
 		}

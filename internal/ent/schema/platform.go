@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/gofrs/uuid"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
 )
 
 type Platform struct {
@@ -26,16 +26,16 @@ func (Platform) Fields() []ent.Field {
 		field.String("name").NotEmpty(),
 		field.String("display_name"),
 		field.UUID("creator_id", uuid.UUID{}),
-		field.JSON("config_form", &holos.PlatformForm{}).
+		field.JSON("form", &platform.Form{}).
 			Optional().
-			Comment("JSON holos.PlatformForm representing the platform data entry form."),
-		field.JSON("config_values", &holos.UserDefinedConfig{}).
+			Comment("JSON representation of FormlyFormConfig[] refer to https://github.com/holos-run/holos/issues/161"),
+		field.JSON("model", &platform.Model{}).
 			Optional().
-			Comment("JSON holos.ConfigValues representing the platform config values."),
-		field.Bytes("config_cue").
+			Comment("JSON representation of the form model which holds user input values refer to https://github.com/holos-run/holos/issues/161"),
+		field.Bytes("cue").
 			Optional().
-			Comment("Opaque bytes representing the CUE definition of the config struct."),
-		field.String("config_definition").
+			Comment("CUE definition to vet the model against e.g. #PlatformConfig"),
+		field.String("cue_definition").
 			Optional().
 			Comment("The definition name to vet config_values against config_cue e.g. '#PlatformSpec'"),
 	}

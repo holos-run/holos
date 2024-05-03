@@ -13,7 +13,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/holos-run/holos/internal/ent/organization"
-	"github.com/holos-run/holos/internal/ent/platform"
+
+	entplatform "github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
 )
 
@@ -76,7 +77,7 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			organization.Table: organization.ValidColumn,
-			platform.Table:     platform.ValidColumn,
+			entplatform.Table:  entplatform.ValidColumn,
 			user.Table:         user.ValidColumn,
 		})
 	})

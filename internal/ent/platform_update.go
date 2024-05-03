@@ -13,10 +13,10 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
-	"github.com/holos-run/holos/internal/ent/platform"
+	entplatform "github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
 )
 
 // PlatformUpdate is the builder for updating Platform entities.
@@ -94,59 +94,59 @@ func (pu *PlatformUpdate) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdate {
 	return pu
 }
 
-// SetConfigForm sets the "config_form" field.
-func (pu *PlatformUpdate) SetConfigForm(hf *holos.PlatformForm) *PlatformUpdate {
-	pu.mutation.SetConfigForm(hf)
+// SetForm sets the "form" field.
+func (pu *PlatformUpdate) SetForm(pl *platform.Form) *PlatformUpdate {
+	pu.mutation.SetForm(pl)
 	return pu
 }
 
-// ClearConfigForm clears the value of the "config_form" field.
-func (pu *PlatformUpdate) ClearConfigForm() *PlatformUpdate {
-	pu.mutation.ClearConfigForm()
+// ClearForm clears the value of the "form" field.
+func (pu *PlatformUpdate) ClearForm() *PlatformUpdate {
+	pu.mutation.ClearForm()
 	return pu
 }
 
-// SetConfigValues sets the "config_values" field.
-func (pu *PlatformUpdate) SetConfigValues(hdc *holos.UserDefinedConfig) *PlatformUpdate {
-	pu.mutation.SetConfigValues(hdc)
+// SetModel sets the "model" field.
+func (pu *PlatformUpdate) SetModel(pl *platform.Model) *PlatformUpdate {
+	pu.mutation.SetModel(pl)
 	return pu
 }
 
-// ClearConfigValues clears the value of the "config_values" field.
-func (pu *PlatformUpdate) ClearConfigValues() *PlatformUpdate {
-	pu.mutation.ClearConfigValues()
+// ClearModel clears the value of the "model" field.
+func (pu *PlatformUpdate) ClearModel() *PlatformUpdate {
+	pu.mutation.ClearModel()
 	return pu
 }
 
-// SetConfigCue sets the "config_cue" field.
-func (pu *PlatformUpdate) SetConfigCue(b []byte) *PlatformUpdate {
-	pu.mutation.SetConfigCue(b)
+// SetCue sets the "cue" field.
+func (pu *PlatformUpdate) SetCue(b []byte) *PlatformUpdate {
+	pu.mutation.SetCue(b)
 	return pu
 }
 
-// ClearConfigCue clears the value of the "config_cue" field.
-func (pu *PlatformUpdate) ClearConfigCue() *PlatformUpdate {
-	pu.mutation.ClearConfigCue()
+// ClearCue clears the value of the "cue" field.
+func (pu *PlatformUpdate) ClearCue() *PlatformUpdate {
+	pu.mutation.ClearCue()
 	return pu
 }
 
-// SetConfigDefinition sets the "config_definition" field.
-func (pu *PlatformUpdate) SetConfigDefinition(s string) *PlatformUpdate {
-	pu.mutation.SetConfigDefinition(s)
+// SetCueDefinition sets the "cue_definition" field.
+func (pu *PlatformUpdate) SetCueDefinition(s string) *PlatformUpdate {
+	pu.mutation.SetCueDefinition(s)
 	return pu
 }
 
-// SetNillableConfigDefinition sets the "config_definition" field if the given value is not nil.
-func (pu *PlatformUpdate) SetNillableConfigDefinition(s *string) *PlatformUpdate {
+// SetNillableCueDefinition sets the "cue_definition" field if the given value is not nil.
+func (pu *PlatformUpdate) SetNillableCueDefinition(s *string) *PlatformUpdate {
 	if s != nil {
-		pu.SetConfigDefinition(*s)
+		pu.SetCueDefinition(*s)
 	}
 	return pu
 }
 
-// ClearConfigDefinition clears the value of the "config_definition" field.
-func (pu *PlatformUpdate) ClearConfigDefinition() *PlatformUpdate {
-	pu.mutation.ClearConfigDefinition()
+// ClearCueDefinition clears the value of the "cue_definition" field.
+func (pu *PlatformUpdate) ClearCueDefinition() *PlatformUpdate {
+	pu.mutation.ClearCueDefinition()
 	return pu
 }
 
@@ -214,7 +214,7 @@ func (pu *PlatformUpdate) ExecX(ctx context.Context) {
 // defaults sets the default values of the builder before save.
 func (pu *PlatformUpdate) defaults() {
 	if _, ok := pu.mutation.UpdatedAt(); !ok {
-		v := platform.UpdateDefaultUpdatedAt()
+		v := entplatform.UpdateDefaultUpdatedAt()
 		pu.mutation.SetUpdatedAt(v)
 	}
 }
@@ -222,7 +222,7 @@ func (pu *PlatformUpdate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (pu *PlatformUpdate) check() error {
 	if v, ok := pu.mutation.Name(); ok {
-		if err := platform.NameValidator(v); err != nil {
+		if err := entplatform.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
@@ -239,7 +239,7 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := pu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(platform.Table, platform.Columns, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(entplatform.Table, entplatform.Columns, sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID))
 	if ps := pu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -248,44 +248,44 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := pu.mutation.UpdatedAt(); ok {
-		_spec.SetField(platform.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(entplatform.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := pu.mutation.Name(); ok {
-		_spec.SetField(platform.FieldName, field.TypeString, value)
+		_spec.SetField(entplatform.FieldName, field.TypeString, value)
 	}
 	if value, ok := pu.mutation.DisplayName(); ok {
-		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
+		_spec.SetField(entplatform.FieldDisplayName, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.ConfigForm(); ok {
-		_spec.SetField(platform.FieldConfigForm, field.TypeJSON, value)
+	if value, ok := pu.mutation.Form(); ok {
+		_spec.SetField(entplatform.FieldForm, field.TypeJSON, value)
 	}
-	if pu.mutation.ConfigFormCleared() {
-		_spec.ClearField(platform.FieldConfigForm, field.TypeJSON)
+	if pu.mutation.FormCleared() {
+		_spec.ClearField(entplatform.FieldForm, field.TypeJSON)
 	}
-	if value, ok := pu.mutation.ConfigValues(); ok {
-		_spec.SetField(platform.FieldConfigValues, field.TypeJSON, value)
+	if value, ok := pu.mutation.Model(); ok {
+		_spec.SetField(entplatform.FieldModel, field.TypeJSON, value)
 	}
-	if pu.mutation.ConfigValuesCleared() {
-		_spec.ClearField(platform.FieldConfigValues, field.TypeJSON)
+	if pu.mutation.ModelCleared() {
+		_spec.ClearField(entplatform.FieldModel, field.TypeJSON)
 	}
-	if value, ok := pu.mutation.ConfigCue(); ok {
-		_spec.SetField(platform.FieldConfigCue, field.TypeBytes, value)
+	if value, ok := pu.mutation.Cue(); ok {
+		_spec.SetField(entplatform.FieldCue, field.TypeBytes, value)
 	}
-	if pu.mutation.ConfigCueCleared() {
-		_spec.ClearField(platform.FieldConfigCue, field.TypeBytes)
+	if pu.mutation.CueCleared() {
+		_spec.ClearField(entplatform.FieldCue, field.TypeBytes)
 	}
-	if value, ok := pu.mutation.ConfigDefinition(); ok {
-		_spec.SetField(platform.FieldConfigDefinition, field.TypeString, value)
+	if value, ok := pu.mutation.CueDefinition(); ok {
+		_spec.SetField(entplatform.FieldCueDefinition, field.TypeString, value)
 	}
-	if pu.mutation.ConfigDefinitionCleared() {
-		_spec.ClearField(platform.FieldConfigDefinition, field.TypeString)
+	if pu.mutation.CueDefinitionCleared() {
+		_spec.ClearField(entplatform.FieldCueDefinition, field.TypeString)
 	}
 	if pu.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.CreatorTable,
-			Columns: []string{platform.CreatorColumn},
+			Table:   entplatform.CreatorTable,
+			Columns: []string{entplatform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -297,8 +297,8 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.CreatorTable,
-			Columns: []string{platform.CreatorColumn},
+			Table:   entplatform.CreatorTable,
+			Columns: []string{entplatform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -313,8 +313,8 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.OrganizationTable,
-			Columns: []string{platform.OrganizationColumn},
+			Table:   entplatform.OrganizationTable,
+			Columns: []string{entplatform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -326,8 +326,8 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.OrganizationTable,
-			Columns: []string{platform.OrganizationColumn},
+			Table:   entplatform.OrganizationTable,
+			Columns: []string{entplatform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -340,7 +340,7 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{platform.Label}
+			err = &NotFoundError{entplatform.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -420,59 +420,59 @@ func (puo *PlatformUpdateOne) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdate
 	return puo
 }
 
-// SetConfigForm sets the "config_form" field.
-func (puo *PlatformUpdateOne) SetConfigForm(hf *holos.PlatformForm) *PlatformUpdateOne {
-	puo.mutation.SetConfigForm(hf)
+// SetForm sets the "form" field.
+func (puo *PlatformUpdateOne) SetForm(pl *platform.Form) *PlatformUpdateOne {
+	puo.mutation.SetForm(pl)
 	return puo
 }
 
-// ClearConfigForm clears the value of the "config_form" field.
-func (puo *PlatformUpdateOne) ClearConfigForm() *PlatformUpdateOne {
-	puo.mutation.ClearConfigForm()
+// ClearForm clears the value of the "form" field.
+func (puo *PlatformUpdateOne) ClearForm() *PlatformUpdateOne {
+	puo.mutation.ClearForm()
 	return puo
 }
 
-// SetConfigValues sets the "config_values" field.
-func (puo *PlatformUpdateOne) SetConfigValues(hdc *holos.UserDefinedConfig) *PlatformUpdateOne {
-	puo.mutation.SetConfigValues(hdc)
+// SetModel sets the "model" field.
+func (puo *PlatformUpdateOne) SetModel(pl *platform.Model) *PlatformUpdateOne {
+	puo.mutation.SetModel(pl)
 	return puo
 }
 
-// ClearConfigValues clears the value of the "config_values" field.
-func (puo *PlatformUpdateOne) ClearConfigValues() *PlatformUpdateOne {
-	puo.mutation.ClearConfigValues()
+// ClearModel clears the value of the "model" field.
+func (puo *PlatformUpdateOne) ClearModel() *PlatformUpdateOne {
+	puo.mutation.ClearModel()
 	return puo
 }
 
-// SetConfigCue sets the "config_cue" field.
-func (puo *PlatformUpdateOne) SetConfigCue(b []byte) *PlatformUpdateOne {
-	puo.mutation.SetConfigCue(b)
+// SetCue sets the "cue" field.
+func (puo *PlatformUpdateOne) SetCue(b []byte) *PlatformUpdateOne {
+	puo.mutation.SetCue(b)
 	return puo
 }
 
-// ClearConfigCue clears the value of the "config_cue" field.
-func (puo *PlatformUpdateOne) ClearConfigCue() *PlatformUpdateOne {
-	puo.mutation.ClearConfigCue()
+// ClearCue clears the value of the "cue" field.
+func (puo *PlatformUpdateOne) ClearCue() *PlatformUpdateOne {
+	puo.mutation.ClearCue()
 	return puo
 }
 
-// SetConfigDefinition sets the "config_definition" field.
-func (puo *PlatformUpdateOne) SetConfigDefinition(s string) *PlatformUpdateOne {
-	puo.mutation.SetConfigDefinition(s)
+// SetCueDefinition sets the "cue_definition" field.
+func (puo *PlatformUpdateOne) SetCueDefinition(s string) *PlatformUpdateOne {
+	puo.mutation.SetCueDefinition(s)
 	return puo
 }
 
-// SetNillableConfigDefinition sets the "config_definition" field if the given value is not nil.
-func (puo *PlatformUpdateOne) SetNillableConfigDefinition(s *string) *PlatformUpdateOne {
+// SetNillableCueDefinition sets the "cue_definition" field if the given value is not nil.
+func (puo *PlatformUpdateOne) SetNillableCueDefinition(s *string) *PlatformUpdateOne {
 	if s != nil {
-		puo.SetConfigDefinition(*s)
+		puo.SetCueDefinition(*s)
 	}
 	return puo
 }
 
-// ClearConfigDefinition clears the value of the "config_definition" field.
-func (puo *PlatformUpdateOne) ClearConfigDefinition() *PlatformUpdateOne {
-	puo.mutation.ClearConfigDefinition()
+// ClearCueDefinition clears the value of the "cue_definition" field.
+func (puo *PlatformUpdateOne) ClearCueDefinition() *PlatformUpdateOne {
+	puo.mutation.ClearCueDefinition()
 	return puo
 }
 
@@ -553,7 +553,7 @@ func (puo *PlatformUpdateOne) ExecX(ctx context.Context) {
 // defaults sets the default values of the builder before save.
 func (puo *PlatformUpdateOne) defaults() {
 	if _, ok := puo.mutation.UpdatedAt(); !ok {
-		v := platform.UpdateDefaultUpdatedAt()
+		v := entplatform.UpdateDefaultUpdatedAt()
 		puo.mutation.SetUpdatedAt(v)
 	}
 }
@@ -561,7 +561,7 @@ func (puo *PlatformUpdateOne) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (puo *PlatformUpdateOne) check() error {
 	if v, ok := puo.mutation.Name(); ok {
-		if err := platform.NameValidator(v); err != nil {
+		if err := entplatform.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
@@ -578,7 +578,7 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	if err := puo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(platform.Table, platform.Columns, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(entplatform.Table, entplatform.Columns, sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID))
 	id, ok := puo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Platform.id" for update`)}
@@ -586,12 +586,12 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	_spec.Node.ID.Value = id
 	if fields := puo.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, platform.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, entplatform.FieldID)
 		for _, f := range fields {
-			if !platform.ValidColumn(f) {
+			if !entplatform.ValidColumn(f) {
 				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 			}
-			if f != platform.FieldID {
+			if f != entplatform.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, f)
 			}
 		}
@@ -604,44 +604,44 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		}
 	}
 	if value, ok := puo.mutation.UpdatedAt(); ok {
-		_spec.SetField(platform.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(entplatform.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := puo.mutation.Name(); ok {
-		_spec.SetField(platform.FieldName, field.TypeString, value)
+		_spec.SetField(entplatform.FieldName, field.TypeString, value)
 	}
 	if value, ok := puo.mutation.DisplayName(); ok {
-		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
+		_spec.SetField(entplatform.FieldDisplayName, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.ConfigForm(); ok {
-		_spec.SetField(platform.FieldConfigForm, field.TypeJSON, value)
+	if value, ok := puo.mutation.Form(); ok {
+		_spec.SetField(entplatform.FieldForm, field.TypeJSON, value)
 	}
-	if puo.mutation.ConfigFormCleared() {
-		_spec.ClearField(platform.FieldConfigForm, field.TypeJSON)
+	if puo.mutation.FormCleared() {
+		_spec.ClearField(entplatform.FieldForm, field.TypeJSON)
 	}
-	if value, ok := puo.mutation.ConfigValues(); ok {
-		_spec.SetField(platform.FieldConfigValues, field.TypeJSON, value)
+	if value, ok := puo.mutation.Model(); ok {
+		_spec.SetField(entplatform.FieldModel, field.TypeJSON, value)
 	}
-	if puo.mutation.ConfigValuesCleared() {
-		_spec.ClearField(platform.FieldConfigValues, field.TypeJSON)
+	if puo.mutation.ModelCleared() {
+		_spec.ClearField(entplatform.FieldModel, field.TypeJSON)
 	}
-	if value, ok := puo.mutation.ConfigCue(); ok {
-		_spec.SetField(platform.FieldConfigCue, field.TypeBytes, value)
+	if value, ok := puo.mutation.Cue(); ok {
+		_spec.SetField(entplatform.FieldCue, field.TypeBytes, value)
 	}
-	if puo.mutation.ConfigCueCleared() {
-		_spec.ClearField(platform.FieldConfigCue, field.TypeBytes)
+	if puo.mutation.CueCleared() {
+		_spec.ClearField(entplatform.FieldCue, field.TypeBytes)
 	}
-	if value, ok := puo.mutation.ConfigDefinition(); ok {
-		_spec.SetField(platform.FieldConfigDefinition, field.TypeString, value)
+	if value, ok := puo.mutation.CueDefinition(); ok {
+		_spec.SetField(entplatform.FieldCueDefinition, field.TypeString, value)
 	}
-	if puo.mutation.ConfigDefinitionCleared() {
-		_spec.ClearField(platform.FieldConfigDefinition, field.TypeString)
+	if puo.mutation.CueDefinitionCleared() {
+		_spec.ClearField(entplatform.FieldCueDefinition, field.TypeString)
 	}
 	if puo.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.CreatorTable,
-			Columns: []string{platform.CreatorColumn},
+			Table:   entplatform.CreatorTable,
+			Columns: []string{entplatform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -653,8 +653,8 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.CreatorTable,
-			Columns: []string{platform.CreatorColumn},
+			Table:   entplatform.CreatorTable,
+			Columns: []string{entplatform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -669,8 +669,8 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.OrganizationTable,
-			Columns: []string{platform.OrganizationColumn},
+			Table:   entplatform.OrganizationTable,
+			Columns: []string{entplatform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -682,8 +682,8 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.OrganizationTable,
-			Columns: []string{platform.OrganizationColumn},
+			Table:   entplatform.OrganizationTable,
+			Columns: []string{entplatform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -699,7 +699,7 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	_spec.ScanValues = _node.scanValues
 	if err = sqlgraph.UpdateNode(ctx, puo.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{platform.Label}
+			err = &NotFoundError{entplatform.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}

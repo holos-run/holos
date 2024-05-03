@@ -1,0 +1,111 @@
+syntax = "proto3";
+
+package holos.platform.v1alpha1;
+option go_package = "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1;platform";
+
+// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+import "buf/validate/validate.proto";
+import "google/protobuf/struct.proto";
+
+// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+
+message Platform {
+  // Unique id assigned by the server.
+  string id = 1;
+  // Organization ID resource owner.
+  string org_id = 2 [(buf.validate.field).string.uuid = true];
+  // name is the platform short name as a dns label.
+  string name = 3 [(buf.validate.field).string.max_len = 100];
+  string display_name = 4 [(buf.validate.field).string.max_len = 100];
+  PlatformSpec spec = 5;
+}
+
+message PlatformSpec {
+  // model represents the user-defined and user-supplied form field values.
+  google.protobuf.Struct model = 1;
+}
+
+// Form represents the Formly input form.
+message Form {
+  // fields represents FormlyFieldConfig[] encoded as a JSON array.
+  repeated google.protobuf.Struct fields = 1;
+}
+
+// Model represents the values entered into the form, stored in the form's model
+// in the web app, and persisted into the backend database.  The model is
+// ultimately intended as the input to platform rendering.
+message Model {
+  google.protobuf.Struct model = 1;
+}
+
+
+message ListPlatformsRequest {
+  string org_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message ListPlatformsResponse {
+  repeated Platform platforms = 1;
+}
+
+message AddPlatformRequest {
+  Platform platform = 1;
+}
+
+message AddPlatformResponse {
+  repeated Platform platforms = 1;
+}
+
+message GetPlatformRequest {
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message GetPlatformResponse {
+  Platform platform = 1;
+}
+
+message GetFormRequest {
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message GetFormResponse {
+  repeated google.protobuf.Struct fields = 1;
+  google.protobuf.Struct model = 2;
+}
+
+message GetModelRequest {
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message GetModelResponse {
+  google.protobuf.Struct model = 1;
+}
+
+message PutModelRequest {
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+  google.protobuf.Struct model = 2;
+}
+
+message PutModelResponse {
+  google.protobuf.Struct model = 1;
+}
+
+message PutFormRequest {
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+  repeated google.protobuf.Struct fields = 2;
+}
+
+message PutFormResponse {
+  repeated google.protobuf.Struct fields = 1;
+}
+
+service PlatformService {
+  rpc AddPlatform(AddPlatformRequest) returns (AddPlatformResponse) {}
+  rpc GetPlatform(GetPlatformRequest) returns (GetPlatformResponse) {}
+  rpc ListPlatforms(ListPlatformsRequest) returns (ListPlatformsResponse) {}
+
+  rpc GetForm(GetFormRequest) returns (GetFormResponse) {}
+  rpc PutForm(PutFormRequest) returns (PutFormResponse) {}
+
+  rpc GetModel(GetModelRequest) returns (GetModelResponse) {}
+  rpc PutModel(PutModelRequest) returns (PutModelResponse) {}
+}

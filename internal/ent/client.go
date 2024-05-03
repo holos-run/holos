@@ -17,7 +17,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/holos-run/holos/internal/ent/organization"
-	"github.com/holos-run/holos/internal/ent/platform"
+	entplatform "github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
 )
 
@@ -365,7 +365,7 @@ func (c *OrganizationClient) QueryPlatforms(o *Organization) *PlatformQuery {
 		id := o.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(organization.Table, organization.FieldID, id),
-			sqlgraph.To(platform.Table, platform.FieldID),
+			sqlgraph.To(entplatform.Table, entplatform.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, organization.PlatformsTable, organization.PlatformsColumn),
 		)
 		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
@@ -410,13 +410,13 @@ func NewPlatformClient(c config) *PlatformClient {
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `platform.Hooks(f(g(h())))`.
+// A call to `Use(f, g, h)` equals to `entplatform.Hooks(f(g(h())))`.
 func (c *PlatformClient) Use(hooks ...Hook) {
 	c.hooks.Platform = append(c.hooks.Platform, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `platform.Intercept(f(g(h())))`.
+// A call to `Intercept(f, g, h)` equals to `entplatform.Intercept(f(g(h())))`.
 func (c *PlatformClient) Intercept(interceptors ...Interceptor) {
 	c.inters.Platform = append(c.inters.Platform, interceptors...)
 }
@@ -478,7 +478,7 @@ func (c *PlatformClient) DeleteOne(pl *Platform) *PlatformDeleteOne {
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
 func (c *PlatformClient) DeleteOneID(id uuid.UUID) *PlatformDeleteOne {
-	builder := c.Delete().Where(platform.ID(id))
+	builder := c.Delete().Where(entplatform.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
 	return &PlatformDeleteOne{builder}
@@ -495,7 +495,7 @@ func (c *PlatformClient) Query() *PlatformQuery {
 
 // Get returns a Platform entity by its id.
 func (c *PlatformClient) Get(ctx context.Context, id uuid.UUID) (*Platform, error) {
-	return c.Query().Where(platform.ID(id)).Only(ctx)
+	return c.Query().Where(entplatform.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
@@ -513,9 +513,9 @@ func (c *PlatformClient) QueryCreator(pl *Platform) *UserQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := pl.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(platform.Table, platform.FieldID, id),
+			sqlgraph.From(entplatform.Table, entplatform.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, platform.CreatorTable, platform.CreatorColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, entplatform.CreatorTable, entplatform.CreatorColumn),
 		)
 		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
 		return fromV, nil
@@ -529,9 +529,9 @@ func (c *PlatformClient) QueryOrganization(pl *Platform) *OrganizationQuery {
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := pl.ID
 		step := sqlgraph.NewStep(
-			sqlgraph.From(platform.Table, platform.FieldID, id),
+			sqlgraph.From(entplatform.Table, entplatform.FieldID, id),
 			sqlgraph.To(organization.Table, organization.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, platform.OrganizationTable, platform.OrganizationColumn),
+			sqlgraph.Edge(sqlgraph.M2O, false, entplatform.OrganizationTable, entplatform.OrganizationColumn),
 		)
 		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
 		return fromV, nil

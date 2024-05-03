@@ -8,8 +8,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
+
+	entplatform "github.com/holos-run/holos/internal/ent/platform"
 )
 
 // PlatformDelete is the builder for deleting a Platform entity.
@@ -40,7 +41,7 @@ func (pd *PlatformDelete) ExecX(ctx context.Context) int {
 }
 
 func (pd *PlatformDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(platform.Table, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewDeleteSpec(entplatform.Table, sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID))
 	if ps := pd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -74,7 +75,7 @@ func (pdo *PlatformDeleteOne) Exec(ctx context.Context) error {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{platform.Label}
+		return &NotFoundError{entplatform.Label}
 	default:
 		return nil
 	}

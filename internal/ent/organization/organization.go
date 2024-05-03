@@ -48,7 +48,7 @@ const (
 	// PlatformsTable is the table that holds the platforms relation/edge.
 	PlatformsTable = "platforms"
 	// PlatformsInverseTable is the table name for the Platform entity.
-	// It exists in this package in order to avoid circular dependency with the "platform" package.
+	// It exists in this package in order to avoid circular dependency with the "entplatform" package.
 	PlatformsInverseTable = "platforms"
 	// PlatformsColumn is the table column denoting the platforms relation/edge.
 	PlatformsColumn = "org_id"

@@ -12,6 +12,7 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
+	psvc "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
 	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
@@ -119,13 +120,13 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 			return errors.Wrap(err)
 		}
 
-		var hf holos.PlatformForm
-		if err := json.Unmarshal([]byte(BareForm), &hf); err != nil {
+		var form psvc.Form
+		if err := json.Unmarshal([]byte(BareForm), &form); err != nil {
 			return errors.Wrap(err)
 		}
 
-		var udc holos.UserDefinedConfig
-		if err := json.Unmarshal([]byte(UserDefinedConfig), &udc); err != nil {
+		var model psvc.Model
+		if err := json.Unmarshal([]byte(Model), &model); err != nil {
 			return errors.Wrap(err)
 		}
 
@@ -134,8 +135,8 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 			SetID(uuid.FromStringOrNil("018f36fb-e3ff-7f7f-a5d1-7ca2bf499e94")).
 			SetName("bare").
 			SetDisplayName("Bare Platform").
-			SetConfigForm(&hf).
-			SetConfigValues(&udc).
+			SetForm(&form).
+			SetModel(&model).
 			SetCreator(jeff).
 			SetOrgID(org.ID).
 			Exec(ctx)
@@ -148,7 +149,8 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 			err := tx.Platform.Create().
 				SetName(strings.ToLower(name)).
 				SetDisplayName(name + "'s Platform").
-				SetConfigForm(&hf).
+				SetForm(&form).
+				SetModel(&model).
 				SetCreator(jeff).
 				SetOrgID(org.ID).
 				Exec(ctx)
@@ -165,74 +167,185 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 	return connect.NewResponse(&holos.EmptyResponse{}), nil
 }
 
-const BareForm = `{
-  "kind": "PlatformForm",
-  "spec": {
-    "sections": [
-      {
-        "name": "org",
-        "description": "Organization config values are used to derive more specific configuration values throughout the platform.",
-        "displayName": "Organization",
-        "fieldConfigs": [
-          {
-            "key": "name",
-            "type": "input",
-            "props": {
-              "label": "Name",
-              "required": true,
-              "description": "DNS label, e.g. 'example'",
-              "placeholder": "example"
-            }
-          },
-          {
-            "key": "domain",
-            "type": "input",
-            "props": {
-              "label": "Domain",
-              "required": true,
-              "description": "DNS domain, e.g. 'example.com'",
-              "placeholder": "example.com"
-            }
-          },
-          {
-            "key": "displayName",
-            "type": "input",
-            "props": {
-              "label": "Display Name",
-              "required": true,
-              "description": "Display name, e.g. 'Example Organization'",
-              "placeholder": "Example Organization"
-            }
-          },
-          {
-            "key": "contactEmail",
-            "type": "input",
-            "props": {
-              "label": "Contact Email",
-              "required": true,
-              "description": "Technical contact email address",
-              "placeholder": "platform-team@example.com"
-            }
-          }
-        ]
-      }
-    ]
-  },
-  "metadata": {
-    "name": "bare"
-  },
-  "apiVersion": "forms.holos.run/v1alpha1"
-}`
+const Model = `{"model":{}}`
 
-const UserDefinedConfig = `{
-  "sections": {
-    "org": {
-      "fields": {
-        "contactEmail": "jeff@openinfrastructure.co",
-        "displayName": "Open Infrastructure Services LLC",
-        "domain": "ois.run",
-        "name": "ois"
-      }
+const BareForm = `
+{
+  "fields": [
+    {
+      "key": "org",
+      "wrappers": [
+        "holos-panel"
+      ],
+      "props": {
+        "label": "Organization",
+        "description": "Organization config values are used to derive more specific configuration values throughout the platform."
+      },
+      "resetOnHide": true,
+      "fieldGroup": [
+        {
+          "key": "name",
+          "type": "input",
+          "props": {
+            "label": "Name",
+            "description": "DNS label, e.g. 'example'",
+            "pattern": "[a-z][0-9a-z]{4,29}",
+            "required": true
+          },
+          "validation": {
+            "messages": {
+              "pattern": "It must be 6 to 30 lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
+            }
+          },
+          "resetOnHide": true
+        },
+        {
+          "key": "domain",
+          "type": "input",
+          "props": {
+            "label": "Domain",
+            "placeholder": "example.com",
+            "description": "DNS domain, e.g. 'example.com'"
+          },
+          "resetOnHide": true
+        },
+        {
+          "key": "displayName",
+          "type": "input",
+          "props": {
+            "label": "Display Name",
+            "placeholder": "Example Organization",
+            "description": "Display name, e.g. 'Example Organization'"
+          },
+          "resetOnHide": true
+        },
+        {
+          "key": "contactEmail",
+          "type": "input",
+          "props": {
+            "label": "Contact Email",
+            "placeholder": "platform-team@example.com",
+            "description": "Technical contact email address"
+          },
+          "resetOnHide": true
+        }
+      ]
+    },
+    {
+      "key": "privacy",
+      "wrappers": [
+        "holos-panel"
+      ],
+      "props": {
+        "label": "Data Privacy",
+        "description": "Configure data privacy aspects of the platform."
+      },
+      "resetOnHide": true,
+      "fieldGroup": [
+        {
+          "key": "country",
+          "type": "select",
+          "props": {
+            "label": "Select Planet",
+            "description": "Juridiction of applicable data privacy laws.",
+            "options": [
+              {
+                "value": "mercury",
+                "label": "Mercury"
+              },
+              {
+                "value": "venus",
+                "label": "Venus"
+              },
+              {
+                "value": "earth",
+                "label": "Earth"
+              },
+              {
+                "value": "mars",
+                "label": "Mars"
+              },
+              {
+                "value": "jupiter",
+                "label": "Jupiter"
+              },
+              {
+                "value": "saturn",
+                "label": "Saturn"
+              },
+              {
+                "value": "uranus",
+                "label": "Uranus"
+              },
+              {
+                "value": "neptune",
+                "label": "Neptune"
+              }
+            ]
+          },
+          "resetOnHide": true
+        },
+        {
+          "key": "regions",
+          "type": "select",
+          "props": {
+            "label": "Select Regions",
+            "description": "Select the regions this platform operates in.",
+            "multiple": true,
+            "selectAllOption": "Select All",
+            "options": [
+              {
+                "value": "us-east-2",
+                "label": "Ohio"
+              },
+              {
+                "value": "us-west-2",
+                "label": "Oregon"
+              },
+              {
+                "value": "eu-west-1",
+                "label": "Ireland"
+              },
+              {
+                "value": "eu-west-2",
+                "label": "London",
+                "disabled": true
+              }
+            ]
+          },
+          "resetOnHide": true
+        }
+      ]
+    },
+    {
+      "key": "terms",
+      "wrappers": [
+        "holos-panel"
+      ],
+      "props": {
+        "label": "Terms and Conditions",
+        "description": "Example of a boolean checkbox."
+      },
+      "resetOnHide": true,
+      "fieldGroup": [
+        {
+          "key": "didAgree",
+          "type": "checkbox",
+          "props": {
+            "label": "Accept terms",
+            "description": "In order to proceed, please accept terms",
+            "pattern": "true",
+            "required": true
+          },
+          "validation": {
+            "messages": {
+              "pattern": "Please accept the terms"
+            }
+          },
+          "resetOnHide": true
+        }
+      ]
     }
-  }
-}`
+  ]
+}
+`

@@ -16,11 +16,14 @@ package v1alpha1
 	}
 
 	let Sections = sections
-	Form: spec: sections: [for s in Sections {s.output}]
+
+	// Collapse all sections into one fields list.
+	// Refer to https://formly.dev/docs/examples/other/nested-formly-forms
+	Form: spec: fields: [for s in Sections {s.wrapper}]
 }
 
 #PlatformFormSpec: {
-	sections: [...#ConfigSectionOutput]
+	fields: [...#FieldConfig]
 }
 
 //  #ConfigSection represents a configuration section of the front end UI.  For
@@ -32,19 +35,20 @@ package v1alpha1
 	description: string
 	fieldConfigs: {[NAME=string]: #FieldConfig & {key: NAME}}
 
-	let Name = name
-	let DisplayName = displayName
 	let Description = description
-	let FieldConfigs = fieldConfigs
 
-	output: #ConfigSectionOutput & {
-		name:        Name
-		displayName: DisplayName
-		description: Description
-		fieldConfigs: [for fc in FieldConfigs {fc}]
+	// Wrap the fields of the section into one FormlyFieldConfig
+	wrapper: #FieldConfig & {
+		key: name
+		// See our custom wrappers registered in app.config.ts
+		wrappers: ["holos-panel"]
+		props: label:       displayName
+		props: description: Description
+		fieldGroup: [for fc in fieldConfigs {fc}]
 	}
 }
 
+// REMOVE
 #ConfigSectionOutput: {
 	name:        string
 	displayName: string
@@ -55,8 +59,11 @@ package v1alpha1
 // Refer to https://formly.dev/docs/api/core#formlyfieldconfig
 // Refer to https://formly.dev/docs/api/ui/material/select
 #FieldConfig: {
-	key:  string
-	type: string | *"input" | "select" | "checkbox"
+	key: string
+	// type is optional, may be a nested form which has no type field
+	type?: string | "input" | "select" | "checkbox"
+	// For nested forms, refer: to https://formly.dev/docs/examples/other/nested-formly-forms
+	wrappers?: [...string]
 	// Refer to: https://formly.dev/docs/api/ui/material/select#formlyselectprops
 	// and other input field select props.
 	props: {

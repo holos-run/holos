@@ -30,7 +30,7 @@ export class PlatformsComponent {
 
   ngOnInit(): void {
     this.org$ = this.orgSvc.activeOrg();
-    this.platforms$ = this.platformSvc.getPlatforms(this.org$.pipe(
+    this.platforms$ = this.platformSvc.listPlatforms(this.org$.pipe(
       filter((org): org is Organization => org !== undefined)
     ))
   }

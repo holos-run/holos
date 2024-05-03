@@ -13,7 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
-	"github.com/holos-run/holos/internal/ent/platform"
+	entplatform "github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
 )
@@ -121,7 +121,7 @@ func (oq *OrganizationQuery) QueryPlatforms() *PlatformQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(organization.Table, organization.FieldID, selector),
-			sqlgraph.To(platform.Table, platform.FieldID),
+			sqlgraph.To(entplatform.Table, entplatform.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, organization.PlatformsTable, organization.PlatformsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(oq.driver.Dialect(), step)
@@ -590,7 +590,7 @@ func (oq *OrganizationQuery) loadPlatforms(ctx context.Context, query *PlatformQ
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(platform.FieldOrgID)
+		query.ctx.AppendFieldOnce(entplatform.FieldOrgID)
 	}
 	query.Where(predicate.Platform(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(organization.PlatformsColumn), fks...))
