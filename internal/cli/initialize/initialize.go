@@ -1,11 +1,8 @@
 package initialize
 
 import (
-	"embed"
 	"flag"
 	"fmt"
-	"io"
-	"io/fs"
 	"os"
 
 	"github.com/holos-run/holos/internal/cli/command"
@@ -40,15 +37,15 @@ func makeInitializeFunc(_ *holos.Config, cfg *config) command.RunFunc {
 		if err != nil {
 			fmt.Println("Error:", err)
 		}
+		fmt.Printf("Current dir: %s\n", currentDir)
 
 		log.Info("Starting Holos platform initialization...")
-		embeddedContent, schematicFiles, err := schematics.GetSchematic(*cfg.schematic)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return nil
-		}
+		schematics.GetSchematic(*cfg.schematic)
+		// if err != nil {
+		// 	fmt.Println("Error:", err)
+		// 	return nil
+		// }
 		fmt.Printf("Writing schematic: %s\n", *cfg.schematic)
-		writeFiles(currentDir, embeddedContent, schematicFiles)
 		log.Info("Holos platform initialization complete.")
 		return nil
 	}
@@ -67,11 +64,11 @@ func New(hc *holos.Config) *cobra.Command {
 	return cmd
 }
 
-func writeFiles(outputPath string, content embed.FS, files []fs.DirEntry) {
-	for _, file := range files {
-		fmt.Println("File name: ", file.Name())
-		fileContent, _ := content.Open(file.Name())
-		content, _ := io.ReadAll(fileContent)
-		fmt.Println("File content:\n", string(content))
-	}
-}
+// func writeFiles(outputPath string, content *embed.FS, files []fs.DirEntry) {
+// 	for _, file := range files {
+// 		fmt.Println("File name: ", file.Name())
+// 		fileContent, _ := content.Open(file.Name())
+// 		content, _ := io.ReadAll(fileContent)
+// 		fmt.Println("File content:\n", string(content))
+// 	}
+// }
