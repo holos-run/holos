@@ -74,24 +74,30 @@ message Platform {
   RawConfig raw_config = 8;
 }
 
-message FieldConfigProps {
-  string label = 1;
-  string placeholder = 2;
-  string description = 3;
-  bool required = 4;
-}
-
-message FieldConfig {
-  string key = 1;
-  string type = 2;
-  FieldConfigProps props = 3;
-}
-
+// TODO: add a metadata message to make it easier for the client to adapt the
+// FieldConfigs into an es FormlyFieldConfig[].
+// TODO: rename fieldConfigs to fields to align with how it's used everywhere
+// else and with the formly documentation.
 message ConfigFormSection {
   string name = 1;
   string displayName = 2;
   string description = 3;
-  repeated FieldConfig fieldConfigs = 4;
+
+  // NOTE: On the wire, carry any JSON as field configs for expedience.  I
+  // attempted to reflect FormlyFieldConfig in protobuf, but it was too time
+  // consuming.  The loosely defined Formly json data API creates significant
+  // friction when joined with a well defined protobuf API.  Therefore, we do
+  // not specify anything about the Forms API, convey any valid JSON, and leave
+  // it up to CUE and Formly on the sending and receiving side of the API.
+  //
+  // We use CUE to define our own holos form elements as a subset of the loose
+  // Formly definitions.  We further hope Formly will move toward a better JSON
+  // data API, but it's unlikely.  Consider replacing Formly entirely and
+  // building on top of the strongly typed Angular Dyanmic Forms API.
+  //
+  // Refer to: https://github.com/ngx-formly/ngx-formly/blob/v6.3.0/src/core/src/lib/models/fieldconfig.ts#L15
+  // Consider: https://angular.io/guide/dynamic-form
+  repeated google.protobuf.Value fieldConfigs = 4;
 }
 
 message PlatformFormSpec {

@@ -4,7 +4,7 @@ import { Observable, filter, of, switchMap } from 'rxjs';
 import { ObservableClient } from '../../connect/observable-client';
 import { UserDefinedSection, UserDefinedConfig, GetPlatformsRequest, Platform, PutPlatformConfigRequest } from '../gen/holos/v1alpha1/platform_pb';
 import { Organization } from '../gen/holos/v1alpha1/organization_pb';
-import { Struct, Value } from '@bufbuild/protobuf';
+import { Value } from '@bufbuild/protobuf';
 
 export interface Section {
   [field: string]: any;
@@ -39,13 +39,22 @@ export class PlatformService {
   }
 
   putConfig(id: string, model: Model): Observable<Platform> {
+    // Round trip the model through JSON to strip multi select field
+    // discriminators.  Otherwise, a select field looks like:
+    //
+    //     {"regions":[{"kind": {"case": "stringValue", "value": "us-east2"}}]}
+    //
+    // Afterwards, we end up with a plain json representation:
+    //
+    //     {"regions":["us-east2","us-west2"]}
+    const jsonModel: Model = JSON.parse(JSON.stringify(model))
     const values = new UserDefinedConfig
     // Set string values from the model
-    Object.keys(model).forEach(sectionName => {
+    Object.keys(jsonModel).forEach(sectionName => {
       values.sections[sectionName] = new UserDefinedSection
-      Object.keys(model[sectionName]).forEach(fieldName => {
+      Object.keys(jsonModel[sectionName]).forEach(fieldName => {
         const val = new Value
-        val.fromJson(model[sectionName][fieldName])
+        val.fromJson(jsonModel[sectionName][fieldName])
         values.sections[sectionName].fields[fieldName] = val
       })
     })

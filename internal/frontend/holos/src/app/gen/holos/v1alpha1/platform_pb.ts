@@ -429,110 +429,11 @@ export class Platform extends Message<Platform> {
 }
 
 /**
- * @generated from message holos.v1alpha1.FieldConfigProps
- */
-export class FieldConfigProps extends Message<FieldConfigProps> {
-  /**
-   * @generated from field: string label = 1;
-   */
-  label = "";
-
-  /**
-   * @generated from field: string placeholder = 2;
-   */
-  placeholder = "";
-
-  /**
-   * @generated from field: string description = 3;
-   */
-  description = "";
-
-  /**
-   * @generated from field: bool required = 4;
-   */
-  required = false;
-
-  constructor(data?: PartialMessage<FieldConfigProps>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.FieldConfigProps";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "label", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "placeholder", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "description", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "required", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FieldConfigProps {
-    return new FieldConfigProps().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): FieldConfigProps {
-    return new FieldConfigProps().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): FieldConfigProps {
-    return new FieldConfigProps().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: FieldConfigProps | PlainMessage<FieldConfigProps> | undefined, b: FieldConfigProps | PlainMessage<FieldConfigProps> | undefined): boolean {
-    return proto3.util.equals(FieldConfigProps, a, b);
-  }
-}
-
-/**
- * @generated from message holos.v1alpha1.FieldConfig
- */
-export class FieldConfig extends Message<FieldConfig> {
-  /**
-   * @generated from field: string key = 1;
-   */
-  key = "";
-
-  /**
-   * @generated from field: string type = 2;
-   */
-  type = "";
-
-  /**
-   * @generated from field: holos.v1alpha1.FieldConfigProps props = 3;
-   */
-  props?: FieldConfigProps;
-
-  constructor(data?: PartialMessage<FieldConfig>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.FieldConfig";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "key", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "type", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 3, name: "props", kind: "message", T: FieldConfigProps },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FieldConfig {
-    return new FieldConfig().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): FieldConfig {
-    return new FieldConfig().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): FieldConfig {
-    return new FieldConfig().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: FieldConfig | PlainMessage<FieldConfig> | undefined, b: FieldConfig | PlainMessage<FieldConfig> | undefined): boolean {
-    return proto3.util.equals(FieldConfig, a, b);
-  }
-}
-
-/**
+ * TODO: add a metadata message to make it easier for the client to adapt the
+ * FieldConfigs into an es FormlyFieldConfig[].
+ * TODO: rename fieldConfigs to fields to align with how it's used everywhere
+ * else and with the formly documentation.
+ *
  * @generated from message holos.v1alpha1.ConfigFormSection
  */
 export class ConfigFormSection extends Message<ConfigFormSection> {
@@ -552,9 +453,24 @@ export class ConfigFormSection extends Message<ConfigFormSection> {
   description = "";
 
   /**
-   * @generated from field: repeated holos.v1alpha1.FieldConfig fieldConfigs = 4;
+   * NOTE: On the wire, carry any JSON as field configs for expedience.  I
+   * attempted to reflect FormlyFieldConfig in protobuf, but it was too time
+   * consuming.  The loosely defined Formly json data API creates significant
+   * friction when joined with a well defined protobuf API.  Therefore, we do
+   * not specify anything about the Forms API, convey any valid JSON, and leave
+   * it up to CUE and Formly on the sending and receiving side of the API.
+   *
+   * We use CUE to define our own holos form elements as a subset of the loose
+   * Formly definitions.  We further hope Formly will move toward a better JSON
+   * data API, but it's unlikely.  Consider replacing Formly entirely and
+   * building on top of the strongly typed Angular Dyanmic Forms API.
+   *
+   * Refer to: https://github.com/ngx-formly/ngx-formly/blob/v6.3.0/src/core/src/lib/models/fieldconfig.ts#L15
+   * Consider: https://angular.io/guide/dynamic-form
+   *
+   * @generated from field: repeated google.protobuf.Value fieldConfigs = 4;
    */
-  fieldConfigs: FieldConfig[] = [];
+  fieldConfigs: Value[] = [];
 
   constructor(data?: PartialMessage<ConfigFormSection>) {
     super();
@@ -567,7 +483,7 @@ export class ConfigFormSection extends Message<ConfigFormSection> {
     { no: 1, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "displayName", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 3, name: "description", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 4, name: "fieldConfigs", kind: "message", T: FieldConfig, repeated: true },
+    { no: 4, name: "fieldConfigs", kind: "message", T: Value, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ConfigFormSection {

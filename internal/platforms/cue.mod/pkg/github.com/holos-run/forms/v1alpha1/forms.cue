@@ -53,13 +53,60 @@ package v1alpha1
 }
 
 // Refer to https://formly.dev/docs/api/core#formlyfieldconfig
+// Refer to https://formly.dev/docs/api/ui/material/select
 #FieldConfig: {
 	key:  string
-	type: "input"
+	type: string | *"input" | "select" | "checkbox"
+	// Refer to: https://formly.dev/docs/api/ui/material/select#formlyselectprops
+	// and other input field select props.
 	props: {
-		label:       string
-		placeholder: string
-		description: string
-		required:    *true | false
+		#FormlySelectProps
+
+		label:        string
+		placeholder?: string
+		description:  string
+		required?:    *true | false
+		pattern?:     string
+		minLength?:   number
+		maxLength?:   number
 	}
+	// Refer to: https://github.com/ngx-formly/ngx-formly/blob/v6.3.0/src/core/src/lib/models/fieldconfig.ts#L49-L64
+	// We support only the string form.
+	validation?: {
+		// Note, you can set messages for pattern, minLength, maxLength here.
+		messages?: [string]: string
+	}
+
+	// Refer to: https://github.com/ngx-formly/ngx-formly/blob/v6.3.0/src/core/src/lib/models/fieldconfig.ts#L115-L120
+	expressions?: [string]: string
+	hide?: true | false
+	// Required to populate protobuf value.
+	resetOnHide:   *true | false
+	defaultValue?: _
+	className?:    string
+	fieldGroup?: [...#FieldConfig]
+	focus?: true | *false
+	modelOptions?: {
+		debounce?: {
+			default: number
+		}
+		updateOn?: "change" | "blur" | "submit"
+	}
+}
+
+// Refer to https://formly.dev/docs/api/ui/material/select#formlyselectprops
+#FormlySelectProps: {
+	disableOptionCentering?:    true | false
+	multiple?:                  true | false
+	panelClass?:                string
+	selectAllOption?:           string
+	typeaheadDebounceInterval?: number
+
+	options?: [...{value: string | number | bool, label: string, disabled?: true | *false}]
+
+	// These could be used to set different keys for value and label in the
+	// options list, but we don't support that level of customization.
+	// They're here for documentation purposes only.
+	labelProp?: "label"
+	valueProp?: "value"
 }
