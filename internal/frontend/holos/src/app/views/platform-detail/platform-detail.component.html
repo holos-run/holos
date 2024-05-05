@@ -3,8 +3,8 @@
     <mat-tab label="Detail">
       <div class="grid-container">
         <form [formGroup]="form" (ngSubmit)="onSubmit(model)">
-          <formly-form [model]="model" [form]="form" [fields]="fields"></formly-form>
-          <button type="submit" mat-flat-button color="primary">Submit</button>
+          <formly-form [model]="model" [fields]="fields" [options]="options" [form]="form"></formly-form>
+          <button type="submit" mat-flat-button color="primary" [disabled]="!form.valid">Submit</button>
         </form>
       </div>
     </mat-tab>
@@ -12,6 +12,11 @@
     <mat-tab label="Model">
       <div class="grid-container">
         <pre>{{ model | json }}</pre>
+      </div>
+    </mat-tab>
+    <mat-tab label="Form State">
+      <div class="grid-container">
+        <pre>{{ options.formState | json }}</pre>
       </div>
     </mat-tab>
     <mat-tab label="Fields">

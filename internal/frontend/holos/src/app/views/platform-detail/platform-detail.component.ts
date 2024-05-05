@@ -34,23 +34,35 @@ export class PlatformDetailComponent implements OnDestroy {
 
   private destroy$: Subject<any> = new Subject<any>();
   form = new FormGroup({});
-  model: JsonValue = {};
-  options: FormlyFormOptions = {};
   fields: FormlyFieldConfig[] = [];
+  model: JsonValue = {};
+  // Use form state to store the model for nested forms
+  // Refer to https://formly.dev/docs/examples/form-options/form-state/
+  options: FormlyFormOptions = {
+    formState: {
+      model: this.model,
+    },
+  };
+
+  private setModel(model: JsonValue) {
+    if (model) {
+      this.model = model
+      this.options.formState.model = model
+    }
+  }
 
   onSubmit(model: JsonValue) {
-    // if (this.form.valid) {
-    console.log(model)
-    this.platformService
-      .putModel(this.platformId, model)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(resp => {
-        const model = JSON.parse(JSON.stringify(resp.model))
-        if (model) {
-          this.model = model
-        }
-      })
-    // }
+    if (this.form.valid) {
+      console.log(model)
+      this.platformService
+        .putModel(this.platformId, model)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(resp => {
+          if (resp.model !== undefined) {
+            this.setModel(resp.model.toJson())
+          }
+        })
+    }
   }
 
   @Input()
@@ -60,13 +72,14 @@ export class PlatformDetailComponent implements OnDestroy {
       .getForm(platformId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(resp => {
+        if (resp.model !== undefined) {
+          this.setModel(resp.model.toJson())
+        }
         if (resp.fields !== undefined) {
-          // NOTE: We could map fields to mix in javascript functions.  Refer to
+          // NOTE: We could mix functions into the json data via mapped fields,
+          // but consider carefully before doing so.  Refer to
           // https://formly.dev/docs/examples/other/json-powered
           this.fields = resp.fields.map(field => field.toJson() as FormlyFieldConfig)
-        }
-        if (resp.model !== undefined) {
-          this.model = resp.model.toJson()
         }
       })
   }

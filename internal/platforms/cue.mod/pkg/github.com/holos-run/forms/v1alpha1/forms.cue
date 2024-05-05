@@ -26,16 +26,20 @@ package v1alpha1
 	fields: [...#FieldConfig]
 }
 
-//  #ConfigSection represents a configuration section of the front end UI.  For
+// #ConfigSection represents a configuration section of the front end UI.  For
 // example, Organization config values.  The fields of the section map to form
 // input fields.
 #ConfigSection: {
 	name:        string // e.g. "org"
 	displayName: string // e.g. "Organization"
 	description: string
+
+	expressions: {[string]: string}
+
 	fieldConfigs: {[NAME=string]: #FieldConfig & {key: NAME}}
 
 	let Description = description
+	let Expressions = expressions
 
 	// Wrap the fields of the section into one FormlyFieldConfig
 	wrapper: #FieldConfig & {
@@ -44,6 +48,12 @@ package v1alpha1
 		wrappers: ["holos-panel"]
 		props: label:       displayName
 		props: description: Description
+		for k, v in Expressions {
+			expressions: "\(k)": v
+		}
+
+		// Might need to initialize the default value for a fieldGroup
+		// https://github.com/ngx-formly/ngx-formly/issues/3667
 		fieldGroup: [for fc in fieldConfigs {fc}]
 	}
 }
@@ -70,6 +80,7 @@ package v1alpha1
 		#FormlySelectProps
 
 		label:        string
+		type?:        string
 		placeholder?: string
 		description:  string
 		required?:    *true | false
@@ -83,6 +94,10 @@ package v1alpha1
 		// Note, you can set messages for pattern, minLength, maxLength here.
 		messages?: [string]: string
 	}
+
+	// Refer to: https://github.com/ngx-formly/ngx-formly/blob/v6.3.0/src/core/src/lib/models/fieldconfig.ts#L66-L71
+	// We do not support validators because they must be javascript functions, not data.
+	validators?: "not supported"
 
 	// Refer to: https://github.com/ngx-formly/ngx-formly/blob/v6.3.0/src/core/src/lib/models/fieldconfig.ts#L115-L120
 	expressions?: [string]: string
