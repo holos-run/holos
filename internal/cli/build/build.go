@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/holos-run/holos/internal/builder"
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
-	"github.com/holos-run/holos/internal/internal/builder"
 	"github.com/spf13/cobra"
 )
 

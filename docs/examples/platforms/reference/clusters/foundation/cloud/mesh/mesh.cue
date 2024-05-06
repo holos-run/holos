@@ -89,7 +89,8 @@ _IngressAuthProxy: {
 						spec: {
 							securityContext: seccompProfile: type: "RuntimeDefault"
 							containers: [{
-								image:           "quay.io/oauth2-proxy/oauth2-proxy:v7.6.0"
+								// image: "quay.io/oauth3-proxy/oauth2-proxy:v7.6.0"
+								image:           "quay.io/holos/oauth2-proxy:v7.6.0-1-g77a03ae2"
 								imagePullPolicy: "IfNotPresent"
 								name:            "oauth2-proxy"
 								volumeMounts: [{
