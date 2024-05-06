@@ -34,7 +34,7 @@ let OBJECTS = #APIObjects & {
 					containers: [
 						{
 							name:            Holos
-							image:           "271053619184.dkr.ecr.us-east-2.amazonaws.com/holos-run/holos-server/holos:0.73.0"
+							image:           "271053619184.dkr.ecr.us-east-2.amazonaws.com/holos-run/holos-server/holos:0.73.1"
 							imagePullPolicy: "Always"
 							env: [
 								{
