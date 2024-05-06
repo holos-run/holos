@@ -13,7 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
-	entplatform "github.com/holos-run/holos/internal/ent/platform"
+	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
 )
@@ -319,7 +319,7 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{organization.PlatformsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -332,7 +332,7 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{organization.PlatformsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -348,7 +348,7 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Columns: []string{organization.PlatformsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -694,7 +694,7 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 			Columns: []string{organization.PlatformsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID),
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
@@ -707,7 +707,7 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 			Columns: []string{organization.PlatformsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -723,7 +723,7 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 			Columns: []string{organization.PlatformsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

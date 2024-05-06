@@ -14,9 +14,9 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
-	entplatform "github.com/holos-run/holos/internal/ent/platform"
+	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
-	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 // PlatformCreate is the builder for creating a Platform entity.
@@ -80,14 +80,14 @@ func (pc *PlatformCreate) SetCreatorID(u uuid.UUID) *PlatformCreate {
 }
 
 // SetForm sets the "form" field.
-func (pc *PlatformCreate) SetForm(pl *platform.Form) *PlatformCreate {
-	pc.mutation.SetForm(pl)
+func (pc *PlatformCreate) SetForm(h *holos.Form) *PlatformCreate {
+	pc.mutation.SetForm(h)
 	return pc
 }
 
 // SetModel sets the "model" field.
-func (pc *PlatformCreate) SetModel(pl *platform.Model) *PlatformCreate {
-	pc.mutation.SetModel(pl)
+func (pc *PlatformCreate) SetModel(h *holos.Model) *PlatformCreate {
+	pc.mutation.SetModel(h)
 	return pc
 }
 
@@ -177,15 +177,15 @@ func (pc *PlatformCreate) ExecX(ctx context.Context) {
 // defaults sets the default values of the builder before save.
 func (pc *PlatformCreate) defaults() {
 	if _, ok := pc.mutation.CreatedAt(); !ok {
-		v := entplatform.DefaultCreatedAt()
+		v := platform.DefaultCreatedAt()
 		pc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := pc.mutation.UpdatedAt(); !ok {
-		v := entplatform.DefaultUpdatedAt()
+		v := platform.DefaultUpdatedAt()
 		pc.mutation.SetUpdatedAt(v)
 	}
 	if _, ok := pc.mutation.ID(); !ok {
-		v := entplatform.DefaultID()
+		v := platform.DefaultID()
 		pc.mutation.SetID(v)
 	}
 }
@@ -205,7 +205,7 @@ func (pc *PlatformCreate) check() error {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Platform.name"`)}
 	}
 	if v, ok := pc.mutation.Name(); ok {
-		if err := entplatform.NameValidator(v); err != nil {
+		if err := platform.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
@@ -250,7 +250,7 @@ func (pc *PlatformCreate) sqlSave(ctx context.Context) (*Platform, error) {
 func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 	var (
 		_node = &Platform{config: pc.config}
-		_spec = sqlgraph.NewCreateSpec(entplatform.Table, sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID))
+		_spec = sqlgraph.NewCreateSpec(platform.Table, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
 	)
 	_spec.OnConflict = pc.conflict
 	if id, ok := pc.mutation.ID(); ok {
@@ -258,43 +258,43 @@ func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 		_spec.ID.Value = &id
 	}
 	if value, ok := pc.mutation.CreatedAt(); ok {
-		_spec.SetField(entplatform.FieldCreatedAt, field.TypeTime, value)
+		_spec.SetField(platform.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
 	if value, ok := pc.mutation.UpdatedAt(); ok {
-		_spec.SetField(entplatform.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(platform.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
 	if value, ok := pc.mutation.Name(); ok {
-		_spec.SetField(entplatform.FieldName, field.TypeString, value)
+		_spec.SetField(platform.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if value, ok := pc.mutation.DisplayName(); ok {
-		_spec.SetField(entplatform.FieldDisplayName, field.TypeString, value)
+		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
 		_node.DisplayName = value
 	}
 	if value, ok := pc.mutation.Form(); ok {
-		_spec.SetField(entplatform.FieldForm, field.TypeJSON, value)
+		_spec.SetField(platform.FieldForm, field.TypeJSON, value)
 		_node.Form = value
 	}
 	if value, ok := pc.mutation.Model(); ok {
-		_spec.SetField(entplatform.FieldModel, field.TypeJSON, value)
+		_spec.SetField(platform.FieldModel, field.TypeJSON, value)
 		_node.Model = value
 	}
 	if value, ok := pc.mutation.Cue(); ok {
-		_spec.SetField(entplatform.FieldCue, field.TypeBytes, value)
+		_spec.SetField(platform.FieldCue, field.TypeBytes, value)
 		_node.Cue = value
 	}
 	if value, ok := pc.mutation.CueDefinition(); ok {
-		_spec.SetField(entplatform.FieldCueDefinition, field.TypeString, value)
+		_spec.SetField(platform.FieldCueDefinition, field.TypeString, value)
 		_node.CueDefinition = value
 	}
 	if nodes := pc.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.CreatorTable,
-			Columns: []string{entplatform.CreatorColumn},
+			Table:   platform.CreatorTable,
+			Columns: []string{platform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -310,8 +310,8 @@ func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.OrganizationTable,
-			Columns: []string{entplatform.OrganizationColumn},
+			Table:   platform.OrganizationTable,
+			Columns: []string{platform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -377,133 +377,133 @@ type (
 
 // SetUpdatedAt sets the "updated_at" field.
 func (u *PlatformUpsert) SetUpdatedAt(v time.Time) *PlatformUpsert {
-	u.Set(entplatform.FieldUpdatedAt, v)
+	u.Set(platform.FieldUpdatedAt, v)
 	return u
 }
 
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateUpdatedAt() *PlatformUpsert {
-	u.SetExcluded(entplatform.FieldUpdatedAt)
+	u.SetExcluded(platform.FieldUpdatedAt)
 	return u
 }
 
 // SetOrgID sets the "org_id" field.
 func (u *PlatformUpsert) SetOrgID(v uuid.UUID) *PlatformUpsert {
-	u.Set(entplatform.FieldOrgID, v)
+	u.Set(platform.FieldOrgID, v)
 	return u
 }
 
 // UpdateOrgID sets the "org_id" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateOrgID() *PlatformUpsert {
-	u.SetExcluded(entplatform.FieldOrgID)
+	u.SetExcluded(platform.FieldOrgID)
 	return u
 }
 
 // SetName sets the "name" field.
 func (u *PlatformUpsert) SetName(v string) *PlatformUpsert {
-	u.Set(entplatform.FieldName, v)
+	u.Set(platform.FieldName, v)
 	return u
 }
 
 // UpdateName sets the "name" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateName() *PlatformUpsert {
-	u.SetExcluded(entplatform.FieldName)
+	u.SetExcluded(platform.FieldName)
 	return u
 }
 
 // SetDisplayName sets the "display_name" field.
 func (u *PlatformUpsert) SetDisplayName(v string) *PlatformUpsert {
-	u.Set(entplatform.FieldDisplayName, v)
+	u.Set(platform.FieldDisplayName, v)
 	return u
 }
 
 // UpdateDisplayName sets the "display_name" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateDisplayName() *PlatformUpsert {
-	u.SetExcluded(entplatform.FieldDisplayName)
+	u.SetExcluded(platform.FieldDisplayName)
 	return u
 }
 
 // SetCreatorID sets the "creator_id" field.
 func (u *PlatformUpsert) SetCreatorID(v uuid.UUID) *PlatformUpsert {
-	u.Set(entplatform.FieldCreatorID, v)
+	u.Set(platform.FieldCreatorID, v)
 	return u
 }
 
 // UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateCreatorID() *PlatformUpsert {
-	u.SetExcluded(entplatform.FieldCreatorID)
+	u.SetExcluded(platform.FieldCreatorID)
 	return u
 }
 
 // SetForm sets the "form" field.
-func (u *PlatformUpsert) SetForm(v *platform.Form) *PlatformUpsert {
-	u.Set(entplatform.FieldForm, v)
+func (u *PlatformUpsert) SetForm(v *holos.Form) *PlatformUpsert {
+	u.Set(platform.FieldForm, v)
 	return u
 }
 
 // UpdateForm sets the "form" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateForm() *PlatformUpsert {
-	u.SetExcluded(entplatform.FieldForm)
+	u.SetExcluded(platform.FieldForm)
 	return u
 }
 
 // ClearForm clears the value of the "form" field.
 func (u *PlatformUpsert) ClearForm() *PlatformUpsert {
-	u.SetNull(entplatform.FieldForm)
+	u.SetNull(platform.FieldForm)
 	return u
 }
 
 // SetModel sets the "model" field.
-func (u *PlatformUpsert) SetModel(v *platform.Model) *PlatformUpsert {
-	u.Set(entplatform.FieldModel, v)
+func (u *PlatformUpsert) SetModel(v *holos.Model) *PlatformUpsert {
+	u.Set(platform.FieldModel, v)
 	return u
 }
 
 // UpdateModel sets the "model" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateModel() *PlatformUpsert {
-	u.SetExcluded(entplatform.FieldModel)
+	u.SetExcluded(platform.FieldModel)
 	return u
 }
 
 // ClearModel clears the value of the "model" field.
 func (u *PlatformUpsert) ClearModel() *PlatformUpsert {
-	u.SetNull(entplatform.FieldModel)
+	u.SetNull(platform.FieldModel)
 	return u
 }
 
 // SetCue sets the "cue" field.
 func (u *PlatformUpsert) SetCue(v []byte) *PlatformUpsert {
-	u.Set(entplatform.FieldCue, v)
+	u.Set(platform.FieldCue, v)
 	return u
 }
 
 // UpdateCue sets the "cue" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateCue() *PlatformUpsert {
-	u.SetExcluded(entplatform.FieldCue)
+	u.SetExcluded(platform.FieldCue)
 	return u
 }
 
 // ClearCue clears the value of the "cue" field.
 func (u *PlatformUpsert) ClearCue() *PlatformUpsert {
-	u.SetNull(entplatform.FieldCue)
+	u.SetNull(platform.FieldCue)
 	return u
 }
 
 // SetCueDefinition sets the "cue_definition" field.
 func (u *PlatformUpsert) SetCueDefinition(v string) *PlatformUpsert {
-	u.Set(entplatform.FieldCueDefinition, v)
+	u.Set(platform.FieldCueDefinition, v)
 	return u
 }
 
 // UpdateCueDefinition sets the "cue_definition" field to the value that was provided on create.
 func (u *PlatformUpsert) UpdateCueDefinition() *PlatformUpsert {
-	u.SetExcluded(entplatform.FieldCueDefinition)
+	u.SetExcluded(platform.FieldCueDefinition)
 	return u
 }
 
 // ClearCueDefinition clears the value of the "cue_definition" field.
 func (u *PlatformUpsert) ClearCueDefinition() *PlatformUpsert {
-	u.SetNull(entplatform.FieldCueDefinition)
+	u.SetNull(platform.FieldCueDefinition)
 	return u
 }
 
@@ -514,7 +514,7 @@ func (u *PlatformUpsert) ClearCueDefinition() *PlatformUpsert {
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
 //			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(entplatform.FieldID)
+//				u.SetIgnore(platform.FieldID)
 //			}),
 //		).
 //		Exec(ctx)
@@ -522,10 +522,10 @@ func (u *PlatformUpsertOne) UpdateNewValues() *PlatformUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		if _, exists := u.create.mutation.ID(); exists {
-			s.SetIgnore(entplatform.FieldID)
+			s.SetIgnore(platform.FieldID)
 		}
 		if _, exists := u.create.mutation.CreatedAt(); exists {
-			s.SetIgnore(entplatform.FieldCreatedAt)
+			s.SetIgnore(platform.FieldCreatedAt)
 		}
 	}))
 	return u
@@ -629,7 +629,7 @@ func (u *PlatformUpsertOne) UpdateCreatorID() *PlatformUpsertOne {
 }
 
 // SetForm sets the "form" field.
-func (u *PlatformUpsertOne) SetForm(v *platform.Form) *PlatformUpsertOne {
+func (u *PlatformUpsertOne) SetForm(v *holos.Form) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetForm(v)
 	})
@@ -650,7 +650,7 @@ func (u *PlatformUpsertOne) ClearForm() *PlatformUpsertOne {
 }
 
 // SetModel sets the "model" field.
-func (u *PlatformUpsertOne) SetModel(v *platform.Model) *PlatformUpsertOne {
+func (u *PlatformUpsertOne) SetModel(v *holos.Model) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetModel(v)
 	})
@@ -884,7 +884,7 @@ type PlatformUpsertBulk struct {
 //		OnConflict(
 //			sql.ResolveWithNewValues(),
 //			sql.ResolveWith(func(u *sql.UpdateSet) {
-//				u.SetIgnore(entplatform.FieldID)
+//				u.SetIgnore(platform.FieldID)
 //			}),
 //		).
 //		Exec(ctx)
@@ -893,10 +893,10 @@ func (u *PlatformUpsertBulk) UpdateNewValues() *PlatformUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
 		for _, b := range u.create.builders {
 			if _, exists := b.mutation.ID(); exists {
-				s.SetIgnore(entplatform.FieldID)
+				s.SetIgnore(platform.FieldID)
 			}
 			if _, exists := b.mutation.CreatedAt(); exists {
-				s.SetIgnore(entplatform.FieldCreatedAt)
+				s.SetIgnore(platform.FieldCreatedAt)
 			}
 		}
 	}))
@@ -1001,7 +1001,7 @@ func (u *PlatformUpsertBulk) UpdateCreatorID() *PlatformUpsertBulk {
 }
 
 // SetForm sets the "form" field.
-func (u *PlatformUpsertBulk) SetForm(v *platform.Form) *PlatformUpsertBulk {
+func (u *PlatformUpsertBulk) SetForm(v *holos.Form) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetForm(v)
 	})
@@ -1022,7 +1022,7 @@ func (u *PlatformUpsertBulk) ClearForm() *PlatformUpsertBulk {
 }
 
 // SetModel sets the "model" field.
-func (u *PlatformUpsertBulk) SetModel(v *platform.Model) *PlatformUpsertBulk {
+func (u *PlatformUpsertBulk) SetModel(v *holos.Model) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetModel(v)
 	})

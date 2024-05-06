@@ -18,7 +18,3 @@ plugins:
     out: internal/frontend/holos/src/app/gen
     opt:
       - target=ts
-  - plugin: connect-query
-    out: internal/frontend/holos/src/app/gen
-    opt:
-      - target=ts

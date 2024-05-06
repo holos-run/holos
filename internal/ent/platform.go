@@ -12,9 +12,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
-	entplatform "github.com/holos-run/holos/internal/ent/platform"
+	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
-	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 // Platform is the model entity for the Platform schema.
@@ -35,9 +35,9 @@ type Platform struct {
 	// CreatorID holds the value of the "creator_id" field.
 	CreatorID uuid.UUID `json:"creator_id,omitempty"`
 	// JSON representation of FormlyFormConfig[] refer to https://github.com/holos-run/holos/issues/161
-	Form *platform.Form `json:"form,omitempty"`
+	Form *holos.Form `json:"form,omitempty"`
 	// JSON representation of the form model which holds user input values refer to https://github.com/holos-run/holos/issues/161
-	Model *platform.Model `json:"model,omitempty"`
+	Model *holos.Model `json:"model,omitempty"`
 	// CUE definition to vet the model against e.g. #PlatformConfig
 	Cue []byte `json:"cue,omitempty"`
 	// The definition name to vet config_values against config_cue e.g. '#PlatformSpec'
@@ -86,13 +86,13 @@ func (*Platform) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case entplatform.FieldForm, entplatform.FieldModel, entplatform.FieldCue:
+		case platform.FieldForm, platform.FieldModel, platform.FieldCue:
 			values[i] = new([]byte)
-		case entplatform.FieldName, entplatform.FieldDisplayName, entplatform.FieldCueDefinition:
+		case platform.FieldName, platform.FieldDisplayName, platform.FieldCueDefinition:
 			values[i] = new(sql.NullString)
-		case entplatform.FieldCreatedAt, entplatform.FieldUpdatedAt:
+		case platform.FieldCreatedAt, platform.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case entplatform.FieldID, entplatform.FieldOrgID, entplatform.FieldCreatorID:
+		case platform.FieldID, platform.FieldOrgID, platform.FieldCreatorID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -109,49 +109,49 @@ func (pl *Platform) assignValues(columns []string, values []any) error {
 	}
 	for i := range columns {
 		switch columns[i] {
-		case entplatform.FieldID:
+		case platform.FieldID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value != nil {
 				pl.ID = *value
 			}
-		case entplatform.FieldCreatedAt:
+		case platform.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				pl.CreatedAt = value.Time
 			}
-		case entplatform.FieldUpdatedAt:
+		case platform.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				pl.UpdatedAt = value.Time
 			}
-		case entplatform.FieldOrgID:
+		case platform.FieldOrgID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field org_id", values[i])
 			} else if value != nil {
 				pl.OrgID = *value
 			}
-		case entplatform.FieldName:
+		case platform.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				pl.Name = value.String
 			}
-		case entplatform.FieldDisplayName:
+		case platform.FieldDisplayName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field display_name", values[i])
 			} else if value.Valid {
 				pl.DisplayName = value.String
 			}
-		case entplatform.FieldCreatorID:
+		case platform.FieldCreatorID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field creator_id", values[i])
 			} else if value != nil {
 				pl.CreatorID = *value
 			}
-		case entplatform.FieldForm:
+		case platform.FieldForm:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field form", values[i])
 			} else if value != nil && len(*value) > 0 {
@@ -159,7 +159,7 @@ func (pl *Platform) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field form: %w", err)
 				}
 			}
-		case entplatform.FieldModel:
+		case platform.FieldModel:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field model", values[i])
 			} else if value != nil && len(*value) > 0 {
@@ -167,13 +167,13 @@ func (pl *Platform) assignValues(columns []string, values []any) error {
 					return fmt.Errorf("unmarshal field model: %w", err)
 				}
 			}
-		case entplatform.FieldCue:
+		case platform.FieldCue:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field cue", values[i])
 			} else if value != nil {
 				pl.Cue = *value
 			}
-		case entplatform.FieldCueDefinition:
+		case platform.FieldCueDefinition:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field cue_definition", values[i])
 			} else if value.Valid {

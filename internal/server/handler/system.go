@@ -12,7 +12,6 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
-	psvc "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
 	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
@@ -120,12 +119,12 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 			return errors.Wrap(err)
 		}
 
-		var form psvc.Form
+		var form holos.Form
 		if err := json.Unmarshal([]byte(BareForm), &form); err != nil {
 			return errors.Wrap(err)
 		}
 
-		var model psvc.Model
+		var model holos.Model
 		if err := json.Unmarshal([]byte(Model), &model); err != nil {
 			return errors.Wrap(err)
 		}

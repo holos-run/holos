@@ -1,15 +1,14 @@
-import { Component, Input, OnDestroy, inject } from '@angular/core';
-import { Observable, Subject, shareReplay, takeUntil } from 'rxjs';
-import { PlatformService } from '../../services/platform.service';
-import { GetFormResponse } from '../../gen/holos/v1alpha1/platform_pb';
-import { MatTab, MatTabGroup } from '@angular/material/tabs';
 import { AsyncPipe, CommonModule } from '@angular/common';
+import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { FormlyMaterialModule } from '@ngx-formly/material';
-import { FormlyFieldConfig, FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
 import { MatButton } from '@angular/material/button';
 import { MatDivider } from '@angular/material/divider';
-import { JsonObject, JsonValue } from '@bufbuild/protobuf';
+import { MatTab, MatTabGroup } from '@angular/material/tabs';
+import { JsonValue } from '@bufbuild/protobuf';
+import { FormlyFieldConfig, FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
+import { FormlyMaterialModule } from '@ngx-formly/material';
+import { Subject, takeUntil } from 'rxjs';
+import { PlatformService } from '../../services/platform.service';
 
 @Component({
   selector: 'app-platform-detail',

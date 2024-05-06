@@ -14,7 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
-	entplatform "github.com/holos-run/holos/internal/ent/platform"
+	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
 )
 
@@ -288,7 +288,7 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 			Columns: []string{organization.PlatformsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID),
+				IDSpec: sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

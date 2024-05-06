@@ -1,10 +1,10 @@
 import { Inject, Injectable } from '@angular/core';
-import { PlatformService as ConnectPlatformService } from '../gen/holos/v1alpha1/platform_connect';
-import { Observable, filter, of, switchMap } from 'rxjs';
-import { ObservableClient } from '../../connect/observable-client';
-import { Platform, GetFormResponse, ListPlatformsRequest, PutModelRequest, PutModelResponse } from '../gen/holos/v1alpha1/platform_pb';
-import { Organization } from '../gen/holos/v1alpha1/organization_pb';
 import { JsonValue, Struct, } from '@bufbuild/protobuf';
+import { Observable, of, switchMap } from 'rxjs';
+import { ObservableClient } from '../../connect/observable-client';
+import { Organization } from '../gen/holos/v1alpha1/organization_pb';
+import { PlatformService as ConnectPlatformService } from '../gen/holos/v1alpha1/platform_connect';
+import { GetFormResponse, ListPlatformsRequest, Platform, PutModelRequest, PutModelResponse } from '../gen/holos/v1alpha1/platform_pb';
 
 @Injectable({
   providedIn: 'root'

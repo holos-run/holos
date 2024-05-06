@@ -1,7 +1,7 @@
 syntax = "proto3";
 
-package holos.platform.v1alpha1;
-option go_package = "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1;platform";
+package holos.v1alpha1;
+option go_package = "github.com/holos-run/holos/service/gen/holos/v1alpha1;holos";
 
 // git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
 import "buf/validate/validate.proto";

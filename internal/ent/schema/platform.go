@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/gofrs/uuid"
-	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 type Platform struct {
@@ -26,10 +26,10 @@ func (Platform) Fields() []ent.Field {
 		field.String("name").NotEmpty(),
 		field.String("display_name"),
 		field.UUID("creator_id", uuid.UUID{}),
-		field.JSON("form", &platform.Form{}).
+		field.JSON("form", &holos.Form{}).
 			Optional().
 			Comment("JSON representation of FormlyFormConfig[] refer to https://github.com/holos-run/holos/issues/161"),
-		field.JSON("model", &platform.Model{}).
+		field.JSON("model", &holos.Model{}).
 			Optional().
 			Comment("JSON representation of the form model which holds user input values refer to https://github.com/holos-run/holos/issues/161"),
 		field.Bytes("cue").

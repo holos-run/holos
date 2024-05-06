@@ -9,7 +9,7 @@ import (
 // Organization is the predicate function for organization builders.
 type Organization func(*sql.Selector)
 
-// Platform is the predicate function for entplatform builders.
+// Platform is the predicate function for platform builders.
 type Platform func(*sql.Selector)
 
 // User is the predicate function for user builders.

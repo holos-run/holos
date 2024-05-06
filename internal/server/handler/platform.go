@@ -13,7 +13,7 @@ import (
 	"github.com/holos-run/holos/internal/ent/user"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
-	psvc "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 // NewPlatformHandler returns a new PlatformService implementation.
@@ -28,21 +28,21 @@ type PlatformHandler struct {
 
 func (h *PlatformHandler) ListPlatforms(
 	ctx context.Context,
-	req *connect.Request[psvc.ListPlatformsRequest],
-) (*connect.Response[psvc.ListPlatformsResponse], error) {
+	req *connect.Request[holos.ListPlatformsRequest],
+) (*connect.Response[holos.ListPlatformsResponse], error) {
 	_, reqDBOrg, err := getAuthnUsersOrg(ctx, req.Msg.OrgId, h.db)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	resp := &psvc.ListPlatformsResponse{Platforms: rpcPlatforms(reqDBOrg)}
+	resp := &holos.ListPlatformsResponse{Platforms: rpcPlatforms(reqDBOrg)}
 	return connect.NewResponse(resp), nil
 }
 
 func (h *PlatformHandler) AddPlatform(
 	ctx context.Context,
-	req *connect.Request[psvc.AddPlatformRequest],
-) (*connect.Response[psvc.AddPlatformResponse], error) {
+	req *connect.Request[holos.AddPlatformRequest],
+) (*connect.Response[holos.AddPlatformResponse], error) {
 	dbUser, dbOrg, err := getAuthnUsersOrg(ctx, req.Msg.Platform.OrgId, h.db)
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -58,7 +58,7 @@ func (h *PlatformHandler) AddPlatform(
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	resp := &psvc.AddPlatformResponse{Platforms: rpcPlatforms(dbOrg)}
+	resp := &holos.AddPlatformResponse{Platforms: rpcPlatforms(dbOrg)}
 	resp.Platforms = append(resp.Platforms, PlatformToRPC(platform))
 
 	return connect.NewResponse(resp), nil
@@ -89,7 +89,7 @@ func (h *PlatformHandler) getPlatform(ctx context.Context, id string, uid authn.
 	return p, nil
 }
 
-func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[psvc.GetPlatformRequest]) (*connect.Response[psvc.GetPlatformResponse], error) {
+func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[holos.GetPlatformRequest]) (*connect.Response[holos.GetPlatformResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -100,10 +100,10 @@ func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[
 		return nil, errors.Wrap(err)
 	}
 
-	return connect.NewResponse(&psvc.GetPlatformResponse{Platform: PlatformToRPC(p)}), nil
+	return connect.NewResponse(&holos.GetPlatformResponse{Platform: PlatformToRPC(p)}), nil
 }
 
-func (h *PlatformHandler) PutModel(ctx context.Context, req *connect.Request[psvc.PutModelRequest]) (*connect.Response[psvc.PutModelResponse], error) {
+func (h *PlatformHandler) PutModel(ctx context.Context, req *connect.Request[holos.PutModelRequest]) (*connect.Response[holos.PutModelResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -117,16 +117,16 @@ func (h *PlatformHandler) PutModel(ctx context.Context, req *connect.Request[psv
 	slog.WarnContext(ctx, "todo: validate the platform config against cue definitions", "action", "todo", "cue", len(p.Cue))
 
 	_, err = p.Update().
-		SetModel(&psvc.Model{Model: req.Msg.GetModel()}).
+		SetModel(&holos.Model{Model: req.Msg.GetModel()}).
 		Save(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	return connect.NewResponse(&psvc.PutModelResponse{Model: req.Msg.Model}), nil
+	return connect.NewResponse(&holos.PutModelResponse{Model: req.Msg.Model}), nil
 }
 
-func (h *PlatformHandler) GetModel(ctx context.Context, req *connect.Request[psvc.GetModelRequest]) (*connect.Response[psvc.GetModelResponse], error) {
+func (h *PlatformHandler) GetModel(ctx context.Context, req *connect.Request[holos.GetModelRequest]) (*connect.Response[holos.GetModelResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -137,10 +137,10 @@ func (h *PlatformHandler) GetModel(ctx context.Context, req *connect.Request[psv
 		return nil, errors.Wrap(err)
 	}
 
-	return connect.NewResponse(&psvc.GetModelResponse{Model: p.Model.Model}), nil
+	return connect.NewResponse(&holos.GetModelResponse{Model: p.Model.Model}), nil
 }
 
-func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[psvc.GetFormRequest]) (*connect.Response[psvc.GetFormResponse], error) {
+func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[holos.GetFormRequest]) (*connect.Response[holos.GetFormResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -151,10 +151,10 @@ func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[psvc
 		return nil, errors.Wrap(err)
 	}
 
-	return connect.NewResponse(&psvc.GetFormResponse{Fields: p.Form.GetFields(), Model: p.Model.GetModel()}), nil
+	return connect.NewResponse(&holos.GetFormResponse{Fields: p.Form.GetFields(), Model: p.Model.GetModel()}), nil
 }
 
-func (h *PlatformHandler) PutForm(ctx context.Context, req *connect.Request[psvc.PutFormRequest]) (*connect.Response[psvc.PutFormResponse], error) {
+func (h *PlatformHandler) PutForm(ctx context.Context, req *connect.Request[holos.PutFormRequest]) (*connect.Response[holos.PutFormResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -166,23 +166,23 @@ func (h *PlatformHandler) PutForm(ctx context.Context, req *connect.Request[psvc
 	}
 
 	_, err = p.Update().
-		SetForm(&psvc.Form{Fields: req.Msg.GetFields()}).
+		SetForm(&holos.Form{Fields: req.Msg.GetFields()}).
 		Save(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	resp := &psvc.PutFormResponse{Fields: req.Msg.GetFields()}
+	resp := &holos.PutFormResponse{Fields: req.Msg.GetFields()}
 	return connect.NewResponse(resp), nil
 }
 
-func PlatformToRPC(platform *ent.Platform) *psvc.Platform {
-	return &psvc.Platform{
+func PlatformToRPC(platform *ent.Platform) *holos.Platform {
+	return &holos.Platform{
 		Id:          platform.ID.String(),
 		Name:        platform.Name,
 		DisplayName: platform.DisplayName,
 		OrgId:       platform.OrgID.String(),
-		Spec:        &psvc.PlatformSpec{Model: platform.Model.GetModel()},
+		Spec:        &holos.PlatformSpec{Model: platform.Model.GetModel()},
 	}
 }
 
@@ -234,12 +234,12 @@ func getAuthnUsersOrg(ctx context.Context, orgID string, db *ent.Client) (*ent.U
 	return dbUser, reqDBOrg, nil
 }
 
-func rpcPlatforms(reqDBOrg *ent.Organization) []*psvc.Platform {
+func rpcPlatforms(reqDBOrg *ent.Organization) []*holos.Platform {
 	if reqDBOrg == nil {
 		return nil
 	}
 	// one extra in case a new platform is appended.
-	platforms := make([]*psvc.Platform, 0, 1+len(reqDBOrg.Edges.Platforms))
+	platforms := make([]*holos.Platform, 0, 1+len(reqDBOrg.Edges.Platforms))
 	for _, platform := range reqDBOrg.Edges.Platforms {
 		platforms = append(platforms, PlatformToRPC(platform))
 	}

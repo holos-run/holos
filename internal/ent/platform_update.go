@@ -13,10 +13,10 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
-	entplatform "github.com/holos-run/holos/internal/ent/platform"
+	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
-	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
+	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
 )
 
 // PlatformUpdate is the builder for updating Platform entities.
@@ -95,8 +95,8 @@ func (pu *PlatformUpdate) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdate {
 }
 
 // SetForm sets the "form" field.
-func (pu *PlatformUpdate) SetForm(pl *platform.Form) *PlatformUpdate {
-	pu.mutation.SetForm(pl)
+func (pu *PlatformUpdate) SetForm(h *holos.Form) *PlatformUpdate {
+	pu.mutation.SetForm(h)
 	return pu
 }
 
@@ -107,8 +107,8 @@ func (pu *PlatformUpdate) ClearForm() *PlatformUpdate {
 }
 
 // SetModel sets the "model" field.
-func (pu *PlatformUpdate) SetModel(pl *platform.Model) *PlatformUpdate {
-	pu.mutation.SetModel(pl)
+func (pu *PlatformUpdate) SetModel(h *holos.Model) *PlatformUpdate {
+	pu.mutation.SetModel(h)
 	return pu
 }
 
@@ -214,7 +214,7 @@ func (pu *PlatformUpdate) ExecX(ctx context.Context) {
 // defaults sets the default values of the builder before save.
 func (pu *PlatformUpdate) defaults() {
 	if _, ok := pu.mutation.UpdatedAt(); !ok {
-		v := entplatform.UpdateDefaultUpdatedAt()
+		v := platform.UpdateDefaultUpdatedAt()
 		pu.mutation.SetUpdatedAt(v)
 	}
 }
@@ -222,7 +222,7 @@ func (pu *PlatformUpdate) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (pu *PlatformUpdate) check() error {
 	if v, ok := pu.mutation.Name(); ok {
-		if err := entplatform.NameValidator(v); err != nil {
+		if err := platform.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
@@ -239,7 +239,7 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := pu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(entplatform.Table, entplatform.Columns, sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(platform.Table, platform.Columns, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
 	if ps := pu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -248,44 +248,44 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := pu.mutation.UpdatedAt(); ok {
-		_spec.SetField(entplatform.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(platform.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := pu.mutation.Name(); ok {
-		_spec.SetField(entplatform.FieldName, field.TypeString, value)
+		_spec.SetField(platform.FieldName, field.TypeString, value)
 	}
 	if value, ok := pu.mutation.DisplayName(); ok {
-		_spec.SetField(entplatform.FieldDisplayName, field.TypeString, value)
+		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
 	}
 	if value, ok := pu.mutation.Form(); ok {
-		_spec.SetField(entplatform.FieldForm, field.TypeJSON, value)
+		_spec.SetField(platform.FieldForm, field.TypeJSON, value)
 	}
 	if pu.mutation.FormCleared() {
-		_spec.ClearField(entplatform.FieldForm, field.TypeJSON)
+		_spec.ClearField(platform.FieldForm, field.TypeJSON)
 	}
 	if value, ok := pu.mutation.Model(); ok {
-		_spec.SetField(entplatform.FieldModel, field.TypeJSON, value)
+		_spec.SetField(platform.FieldModel, field.TypeJSON, value)
 	}
 	if pu.mutation.ModelCleared() {
-		_spec.ClearField(entplatform.FieldModel, field.TypeJSON)
+		_spec.ClearField(platform.FieldModel, field.TypeJSON)
 	}
 	if value, ok := pu.mutation.Cue(); ok {
-		_spec.SetField(entplatform.FieldCue, field.TypeBytes, value)
+		_spec.SetField(platform.FieldCue, field.TypeBytes, value)
 	}
 	if pu.mutation.CueCleared() {
-		_spec.ClearField(entplatform.FieldCue, field.TypeBytes)
+		_spec.ClearField(platform.FieldCue, field.TypeBytes)
 	}
 	if value, ok := pu.mutation.CueDefinition(); ok {
-		_spec.SetField(entplatform.FieldCueDefinition, field.TypeString, value)
+		_spec.SetField(platform.FieldCueDefinition, field.TypeString, value)
 	}
 	if pu.mutation.CueDefinitionCleared() {
-		_spec.ClearField(entplatform.FieldCueDefinition, field.TypeString)
+		_spec.ClearField(platform.FieldCueDefinition, field.TypeString)
 	}
 	if pu.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.CreatorTable,
-			Columns: []string{entplatform.CreatorColumn},
+			Table:   platform.CreatorTable,
+			Columns: []string{platform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -297,8 +297,8 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.CreatorTable,
-			Columns: []string{entplatform.CreatorColumn},
+			Table:   platform.CreatorTable,
+			Columns: []string{platform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -313,8 +313,8 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.OrganizationTable,
-			Columns: []string{entplatform.OrganizationColumn},
+			Table:   platform.OrganizationTable,
+			Columns: []string{platform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -326,8 +326,8 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.OrganizationTable,
-			Columns: []string{entplatform.OrganizationColumn},
+			Table:   platform.OrganizationTable,
+			Columns: []string{platform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -340,7 +340,7 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{entplatform.Label}
+			err = &NotFoundError{platform.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -421,8 +421,8 @@ func (puo *PlatformUpdateOne) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdate
 }
 
 // SetForm sets the "form" field.
-func (puo *PlatformUpdateOne) SetForm(pl *platform.Form) *PlatformUpdateOne {
-	puo.mutation.SetForm(pl)
+func (puo *PlatformUpdateOne) SetForm(h *holos.Form) *PlatformUpdateOne {
+	puo.mutation.SetForm(h)
 	return puo
 }
 
@@ -433,8 +433,8 @@ func (puo *PlatformUpdateOne) ClearForm() *PlatformUpdateOne {
 }
 
 // SetModel sets the "model" field.
-func (puo *PlatformUpdateOne) SetModel(pl *platform.Model) *PlatformUpdateOne {
-	puo.mutation.SetModel(pl)
+func (puo *PlatformUpdateOne) SetModel(h *holos.Model) *PlatformUpdateOne {
+	puo.mutation.SetModel(h)
 	return puo
 }
 
@@ -553,7 +553,7 @@ func (puo *PlatformUpdateOne) ExecX(ctx context.Context) {
 // defaults sets the default values of the builder before save.
 func (puo *PlatformUpdateOne) defaults() {
 	if _, ok := puo.mutation.UpdatedAt(); !ok {
-		v := entplatform.UpdateDefaultUpdatedAt()
+		v := platform.UpdateDefaultUpdatedAt()
 		puo.mutation.SetUpdatedAt(v)
 	}
 }
@@ -561,7 +561,7 @@ func (puo *PlatformUpdateOne) defaults() {
 // check runs all checks and user-defined validators on the builder.
 func (puo *PlatformUpdateOne) check() error {
 	if v, ok := puo.mutation.Name(); ok {
-		if err := entplatform.NameValidator(v); err != nil {
+		if err := platform.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
@@ -578,7 +578,7 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	if err := puo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(entplatform.Table, entplatform.Columns, sqlgraph.NewFieldSpec(entplatform.FieldID, field.TypeUUID))
+	_spec := sqlgraph.NewUpdateSpec(platform.Table, platform.Columns, sqlgraph.NewFieldSpec(platform.FieldID, field.TypeUUID))
 	id, ok := puo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Platform.id" for update`)}
@@ -586,12 +586,12 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	_spec.Node.ID.Value = id
 	if fields := puo.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, entplatform.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, platform.FieldID)
 		for _, f := range fields {
-			if !entplatform.ValidColumn(f) {
+			if !platform.ValidColumn(f) {
 				return nil, &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 			}
-			if f != entplatform.FieldID {
+			if f != platform.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, f)
 			}
 		}
@@ -604,44 +604,44 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		}
 	}
 	if value, ok := puo.mutation.UpdatedAt(); ok {
-		_spec.SetField(entplatform.FieldUpdatedAt, field.TypeTime, value)
+		_spec.SetField(platform.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := puo.mutation.Name(); ok {
-		_spec.SetField(entplatform.FieldName, field.TypeString, value)
+		_spec.SetField(platform.FieldName, field.TypeString, value)
 	}
 	if value, ok := puo.mutation.DisplayName(); ok {
-		_spec.SetField(entplatform.FieldDisplayName, field.TypeString, value)
+		_spec.SetField(platform.FieldDisplayName, field.TypeString, value)
 	}
 	if value, ok := puo.mutation.Form(); ok {
-		_spec.SetField(entplatform.FieldForm, field.TypeJSON, value)
+		_spec.SetField(platform.FieldForm, field.TypeJSON, value)
 	}
 	if puo.mutation.FormCleared() {
-		_spec.ClearField(entplatform.FieldForm, field.TypeJSON)
+		_spec.ClearField(platform.FieldForm, field.TypeJSON)
 	}
 	if value, ok := puo.mutation.Model(); ok {
-		_spec.SetField(entplatform.FieldModel, field.TypeJSON, value)
+		_spec.SetField(platform.FieldModel, field.TypeJSON, value)
 	}
 	if puo.mutation.ModelCleared() {
-		_spec.ClearField(entplatform.FieldModel, field.TypeJSON)
+		_spec.ClearField(platform.FieldModel, field.TypeJSON)
 	}
 	if value, ok := puo.mutation.Cue(); ok {
-		_spec.SetField(entplatform.FieldCue, field.TypeBytes, value)
+		_spec.SetField(platform.FieldCue, field.TypeBytes, value)
 	}
 	if puo.mutation.CueCleared() {
-		_spec.ClearField(entplatform.FieldCue, field.TypeBytes)
+		_spec.ClearField(platform.FieldCue, field.TypeBytes)
 	}
 	if value, ok := puo.mutation.CueDefinition(); ok {
-		_spec.SetField(entplatform.FieldCueDefinition, field.TypeString, value)
+		_spec.SetField(platform.FieldCueDefinition, field.TypeString, value)
 	}
 	if puo.mutation.CueDefinitionCleared() {
-		_spec.ClearField(entplatform.FieldCueDefinition, field.TypeString)
+		_spec.ClearField(platform.FieldCueDefinition, field.TypeString)
 	}
 	if puo.mutation.CreatorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.CreatorTable,
-			Columns: []string{entplatform.CreatorColumn},
+			Table:   platform.CreatorTable,
+			Columns: []string{platform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -653,8 +653,8 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.CreatorTable,
-			Columns: []string{entplatform.CreatorColumn},
+			Table:   platform.CreatorTable,
+			Columns: []string{platform.CreatorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -669,8 +669,8 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.OrganizationTable,
-			Columns: []string{entplatform.OrganizationColumn},
+			Table:   platform.OrganizationTable,
+			Columns: []string{platform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -682,8 +682,8 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   entplatform.OrganizationTable,
-			Columns: []string{entplatform.OrganizationColumn},
+			Table:   platform.OrganizationTable,
+			Columns: []string{platform.OrganizationColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(organization.FieldID, field.TypeUUID),
@@ -699,7 +699,7 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	_spec.ScanValues = _node.scanValues
 	if err = sqlgraph.UpdateNode(ctx, puo.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
-			err = &NotFoundError{entplatform.Label}
+			err = &NotFoundError{platform.Label}
 		} else if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
