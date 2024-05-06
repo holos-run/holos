@@ -18,6 +18,7 @@ import "encoding/yaml"
 		Issuer?: [Name=_]: #Issuer & {metadata: name: Name}
 		Gateway?: [Name=_]: #Gateway & {metadata: name: Name}
 		ConfigMap?: [Name=_]: #ConfigMap & {metadata: name: Name}
+		ServiceAccount?: [Name=_]: #ServiceAccount & {metadata: name: Name}
 
 		Deployment?: [_]:            #Deployment
 		StatefulSet?: [_]:           #StatefulSet

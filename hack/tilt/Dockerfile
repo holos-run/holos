@@ -3,5 +3,6 @@ USER root
 WORKDIR /app
 ADD bin bin
 RUN chown -R app: /app
-USER app
+# Kubernetes requires the user to be numeric
+USER 8192
 ENTRYPOINT bin/holos server
