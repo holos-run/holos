@@ -1,5 +1,5 @@
 import { Platform } from '../../gen/holos/v1alpha1/platform_pb';
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { MatListItem, MatNavList } from '@angular/material/list';
 import { Observable, filter } from 'rxjs';
 import { Organization } from '../../gen/holos/v1alpha1/organization_pb';
@@ -21,14 +21,14 @@ import { RouterLink } from '@angular/router';
   templateUrl: './platforms.component.html',
   styleUrl: './platforms.component.scss'
 })
-export class PlatformsComponent {
+export class PlatformsComponent implements OnInit {
   private orgSvc = inject(OrganizationService);
   private platformSvc = inject(PlatformService);
 
   org$!: Observable<Organization | undefined>;
   platforms$!: Observable<Platform[]>;
 
-  ngOnInit(): void {
+  ngOnInit() {
     this.org$ = this.orgSvc.activeOrg();
     this.platforms$ = this.platformSvc.listPlatforms(this.org$.pipe(
       filter((org): org is Organization => org !== undefined)

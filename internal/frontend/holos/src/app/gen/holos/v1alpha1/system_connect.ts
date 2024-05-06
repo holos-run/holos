@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { EmptyRequest, EmptyResponse } from "./system_pb.js";
+import { DropTablesRequest, DropTablesResponse, SeedDatabaseRequest, SeedDatabaseResponse } from "./system_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -17,8 +17,8 @@ export const SystemService = {
      */
     seedDatabase: {
       name: "SeedDatabase",
-      I: EmptyRequest,
-      O: EmptyResponse,
+      I: SeedDatabaseRequest,
+      O: SeedDatabaseResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -26,8 +26,8 @@ export const SystemService = {
      */
     dropTables: {
       name: "DropTables",
-      I: EmptyRequest,
-      O: EmptyResponse,
+      I: DropTablesRequest,
+      O: DropTablesResponse,
       kind: MethodKind.Unary,
     },
   }

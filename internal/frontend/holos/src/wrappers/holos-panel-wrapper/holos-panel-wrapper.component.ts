@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FieldWrapper } from '@ngx-formly/core';
 
 @Component({
-  selector: 'formly-wrapper-holos-panel',
+  selector: 'app-holos-panel-wrapper',
   standalone: true,
   imports: [],
   templateUrl: './holos-panel-wrapper.component.html',

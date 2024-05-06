@@ -4,7 +4,6 @@ package holos.v1alpha1;
 
 option go_package = "github.com/holos-run/holos/service/gen/holos/v1alpha1;holos";
 
-import "google/protobuf/timestamp.proto";
 // git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
 import "buf/validate/validate.proto";
 import "holos/v1alpha1/timestamps.proto";

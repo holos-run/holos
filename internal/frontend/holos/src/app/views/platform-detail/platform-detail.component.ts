@@ -31,7 +31,7 @@ export class PlatformDetailComponent implements OnDestroy {
   private platformService = inject(PlatformService);
   private platformId: string = "";
 
-  private destroy$: Subject<any> = new Subject<any>();
+  private destroy$: Subject<boolean> = new Subject<boolean>();
   form = new FormGroup({});
   fields: FormlyFieldConfig[] = [];
   model: JsonValue = {};

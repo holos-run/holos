@@ -39,7 +39,7 @@ func (h *SystemHandler) checkAdmin(ctx context.Context) error {
 	return nil
 }
 
-func (h *SystemHandler) DropTables(ctx context.Context, req *connect.Request[holos.EmptyRequest]) (*connect.Response[holos.EmptyResponse], error) {
+func (h *SystemHandler) DropTables(ctx context.Context, req *connect.Request[holos.DropTablesRequest]) (*connect.Response[holos.DropTablesResponse], error) {
 	if err := h.checkAdmin(ctx); err != nil {
 		return nil, err
 	}
@@ -64,10 +64,10 @@ func (h *SystemHandler) DropTables(ctx context.Context, req *connect.Request[hol
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	return connect.NewResponse(&holos.EmptyResponse{}), nil
+	return connect.NewResponse(&holos.DropTablesResponse{}), nil
 }
 
-func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[holos.EmptyRequest]) (*connect.Response[holos.EmptyResponse], error) {
+func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[holos.SeedDatabaseRequest]) (*connect.Response[holos.SeedDatabaseResponse], error) {
 	if err := h.checkAdmin(ctx); err != nil {
 		return nil, err
 	}
@@ -163,7 +163,7 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	return connect.NewResponse(&holos.EmptyResponse{}), nil
+	return connect.NewResponse(&holos.SeedDatabaseResponse{}), nil
 }
 
 const Model = `{"model":{}}`

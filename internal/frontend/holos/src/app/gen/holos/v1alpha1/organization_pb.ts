@@ -72,40 +72,40 @@ export class Organization extends Message<Organization> {
 }
 
 /**
- * @generated from message holos.v1alpha1.GetCallerOrganizationsRequest
+ * @generated from message holos.v1alpha1.ListCallerOrganizationsRequest
  */
-export class GetCallerOrganizationsRequest extends Message<GetCallerOrganizationsRequest> {
-  constructor(data?: PartialMessage<GetCallerOrganizationsRequest>) {
+export class ListCallerOrganizationsRequest extends Message<ListCallerOrganizationsRequest> {
+  constructor(data?: PartialMessage<ListCallerOrganizationsRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetCallerOrganizationsRequest";
+  static readonly typeName = "holos.v1alpha1.ListCallerOrganizationsRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCallerOrganizationsRequest {
-    return new GetCallerOrganizationsRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListCallerOrganizationsRequest {
+    return new ListCallerOrganizationsRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetCallerOrganizationsRequest {
-    return new GetCallerOrganizationsRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListCallerOrganizationsRequest {
+    return new ListCallerOrganizationsRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetCallerOrganizationsRequest {
-    return new GetCallerOrganizationsRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListCallerOrganizationsRequest {
+    return new ListCallerOrganizationsRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetCallerOrganizationsRequest | PlainMessage<GetCallerOrganizationsRequest> | undefined, b: GetCallerOrganizationsRequest | PlainMessage<GetCallerOrganizationsRequest> | undefined): boolean {
-    return proto3.util.equals(GetCallerOrganizationsRequest, a, b);
+  static equals(a: ListCallerOrganizationsRequest | PlainMessage<ListCallerOrganizationsRequest> | undefined, b: ListCallerOrganizationsRequest | PlainMessage<ListCallerOrganizationsRequest> | undefined): boolean {
+    return proto3.util.equals(ListCallerOrganizationsRequest, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.GetCallerOrganizationsResponse
+ * @generated from message holos.v1alpha1.ListCallerOrganizationsResponse
  */
-export class GetCallerOrganizationsResponse extends Message<GetCallerOrganizationsResponse> {
+export class ListCallerOrganizationsResponse extends Message<ListCallerOrganizationsResponse> {
   /**
    * @generated from field: holos.v1alpha1.User user = 1;
    */
@@ -116,32 +116,32 @@ export class GetCallerOrganizationsResponse extends Message<GetCallerOrganizatio
    */
   organizations: Organization[] = [];
 
-  constructor(data?: PartialMessage<GetCallerOrganizationsResponse>) {
+  constructor(data?: PartialMessage<ListCallerOrganizationsResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetCallerOrganizationsResponse";
+  static readonly typeName = "holos.v1alpha1.ListCallerOrganizationsResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "user", kind: "message", T: User },
     { no: 2, name: "organizations", kind: "message", T: Organization, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetCallerOrganizationsResponse {
-    return new GetCallerOrganizationsResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): ListCallerOrganizationsResponse {
+    return new ListCallerOrganizationsResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetCallerOrganizationsResponse {
-    return new GetCallerOrganizationsResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): ListCallerOrganizationsResponse {
+    return new ListCallerOrganizationsResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetCallerOrganizationsResponse {
-    return new GetCallerOrganizationsResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): ListCallerOrganizationsResponse {
+    return new ListCallerOrganizationsResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetCallerOrganizationsResponse | PlainMessage<GetCallerOrganizationsResponse> | undefined, b: GetCallerOrganizationsResponse | PlainMessage<GetCallerOrganizationsResponse> | undefined): boolean {
-    return proto3.util.equals(GetCallerOrganizationsResponse, a, b);
+  static equals(a: ListCallerOrganizationsResponse | PlainMessage<ListCallerOrganizationsResponse> | undefined, b: ListCallerOrganizationsResponse | PlainMessage<ListCallerOrganizationsResponse> | undefined): boolean {
+    return proto3.util.equals(ListCallerOrganizationsResponse, a, b);
   }
 }
 
@@ -173,6 +173,49 @@ export class CreateCallerOrganizationRequest extends Message<CreateCallerOrganiz
 
   static equals(a: CreateCallerOrganizationRequest | PlainMessage<CreateCallerOrganizationRequest> | undefined, b: CreateCallerOrganizationRequest | PlainMessage<CreateCallerOrganizationRequest> | undefined): boolean {
     return proto3.util.equals(CreateCallerOrganizationRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message holos.v1alpha1.CreateCallerOrganizationResponse
+ */
+export class CreateCallerOrganizationResponse extends Message<CreateCallerOrganizationResponse> {
+  /**
+   * @generated from field: holos.v1alpha1.User user = 1;
+   */
+  user?: User;
+
+  /**
+   * @generated from field: repeated holos.v1alpha1.Organization organizations = 2;
+   */
+  organizations: Organization[] = [];
+
+  constructor(data?: PartialMessage<CreateCallerOrganizationResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.v1alpha1.CreateCallerOrganizationResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "user", kind: "message", T: User },
+    { no: 2, name: "organizations", kind: "message", T: Organization, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateCallerOrganizationResponse {
+    return new CreateCallerOrganizationResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): CreateCallerOrganizationResponse {
+    return new CreateCallerOrganizationResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): CreateCallerOrganizationResponse {
+    return new CreateCallerOrganizationResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: CreateCallerOrganizationResponse | PlainMessage<CreateCallerOrganizationResponse> | undefined, b: CreateCallerOrganizationResponse | PlainMessage<CreateCallerOrganizationResponse> | undefined): boolean {
+    return proto3.util.equals(CreateCallerOrganizationResponse, a, b);
   }
 }
 

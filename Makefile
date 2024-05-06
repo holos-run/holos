@@ -87,6 +87,8 @@ test: ## Run tests.
 
 .PHONY: lint
 lint: ## Run linters.
+	buf lint
+	cd internal/frontend/holos && ng lint
 	golangci-lint run
 
 .PHONY: coverage

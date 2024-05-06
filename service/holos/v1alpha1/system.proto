@@ -5,16 +5,16 @@ package holos.v1alpha1;
 option go_package = "github.com/holos-run/holos/service/gen/holos/v1alpha1;holos";
 
 // git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
-import "buf/validate/validate.proto";
-import "holos/v1alpha1/timestamps.proto";
-import "holos/v1alpha1/user.proto";
 
 // For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
 
-message EmptyRequest {}
-message EmptyResponse {}
+message SeedDatabaseRequest {}
+message SeedDatabaseResponse {}
+
+message DropTablesRequest {}
+message DropTablesResponse {}
 
 service SystemService {
-  rpc SeedDatabase(EmptyRequest) returns (EmptyResponse) {}
-  rpc DropTables(EmptyRequest) returns (EmptyResponse) {}
+  rpc SeedDatabase(SeedDatabaseRequest) returns (SeedDatabaseResponse) {}
+  rpc DropTables(DropTablesRequest) returns (DropTablesResponse) {}
 }

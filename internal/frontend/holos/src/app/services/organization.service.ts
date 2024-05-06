@@ -1,20 +1,20 @@
 import { Inject, Injectable } from '@angular/core';
-import { OrganizationService as ConnectOrganizationService } from '../gen/holos/v1alpha1/organization_connect';
-import { ObservableClient } from '../../connect/observable-client';
-import { Observable, switchMap, of, shareReplay, catchError, BehaviorSubject } from 'rxjs';
-import { GetCallerOrganizationsResponse, Organization } from '../gen/holos/v1alpha1/organization_pb';
-import { UserService } from './user.service';
 import { Code, ConnectError } from '@connectrpc/connect';
+import { BehaviorSubject, Observable, catchError, of, shareReplay, switchMap } from 'rxjs';
+import { ObservableClient } from '../../connect/observable-client';
+import { OrganizationService as ConnectOrganizationService } from '../gen/holos/v1alpha1/organization_connect';
+import { ListCallerOrganizationsResponse, Organization } from '../gen/holos/v1alpha1/organization_pb';
+import { UserService } from './user.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrganizationService {
   private callerOrganizationsTrigger$ = new BehaviorSubject<void>(undefined);
-  private callerOrganizations$: Observable<GetCallerOrganizationsResponse>;
+  private callerOrganizations$: Observable<ListCallerOrganizationsResponse>;
 
-  private fetchCallerOrganizations(): Observable<GetCallerOrganizationsResponse> {
-    return this.client.getCallerOrganizations({ request: {} }).pipe(
+  private fetchCallerOrganizations(): Observable<ListCallerOrganizationsResponse> {
+    return this.client.listCallerOrganizations({ request: {} }).pipe(
       switchMap(resp => {
         if (resp && resp.organizations.length > 0) {
           return of(resp)
@@ -25,7 +25,7 @@ export class OrganizationService {
         if (err instanceof ConnectError) {
           if (err.code == Code.NotFound) {
             return this.userService.createUser().pipe(
-              switchMap(user => this.client.createCallerOrganization({ request: {} }))
+              switchMap(() => this.client.createCallerOrganization({ request: {} }))
             )
           }
         }

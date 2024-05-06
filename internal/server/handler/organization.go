@@ -27,10 +27,10 @@ type OrganizationHandler struct {
 	db *ent.Client
 }
 
-func (h *OrganizationHandler) GetCallerOrganizations(
+func (h *OrganizationHandler) ListCallerOrganizations(
 	ctx context.Context,
-	req *connect.Request[holos.GetCallerOrganizationsRequest],
-) (*connect.Response[holos.GetCallerOrganizationsResponse], error) {
+	req *connect.Request[holos.ListCallerOrganizationsRequest],
+) (*connect.Response[holos.ListCallerOrganizationsResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -56,7 +56,7 @@ func (h *OrganizationHandler) GetCallerOrganizations(
 		rpcOrgs = append(rpcOrgs, OrganizationToRPC(dbOrg))
 	}
 
-	res := connect.NewResponse(&holos.GetCallerOrganizationsResponse{
+	res := connect.NewResponse(&holos.ListCallerOrganizationsResponse{
 		User:          UserToRPC(dbUser),
 		Organizations: rpcOrgs,
 	})
@@ -66,7 +66,7 @@ func (h *OrganizationHandler) GetCallerOrganizations(
 func (h *OrganizationHandler) CreateCallerOrganization(
 	ctx context.Context,
 	req *connect.Request[holos.CreateCallerOrganizationRequest],
-) (*connect.Response[holos.GetCallerOrganizationsResponse], error) {
+) (*connect.Response[holos.CreateCallerOrganizationResponse], error) {
 	log := logger.FromContext(ctx)
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
@@ -110,7 +110,7 @@ func (h *OrganizationHandler) CreateCallerOrganization(
 		rpcOrgs = append(rpcOrgs, OrganizationToRPC(dbOrg))
 	}
 
-	res := connect.NewResponse(&holos.GetCallerOrganizationsResponse{
+	res := connect.NewResponse(&holos.CreateCallerOrganizationResponse{
 		User:          UserToRPC(dbUser),
 		Organizations: rpcOrgs,
 	})

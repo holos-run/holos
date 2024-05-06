@@ -20,16 +20,21 @@ message Organization {
   Creator creator = 5;
 }
 
-message GetCallerOrganizationsRequest {}
+message ListCallerOrganizationsRequest {}
 
-message GetCallerOrganizationsResponse {
+message ListCallerOrganizationsResponse {
   User user = 1;
   repeated Organization organizations = 2;
 }
 
 message CreateCallerOrganizationRequest {}
 
+message CreateCallerOrganizationResponse {
+  User user = 1;
+  repeated Organization organizations = 2;
+}
+
 service OrganizationService {
-  rpc GetCallerOrganizations(GetCallerOrganizationsRequest) returns (GetCallerOrganizationsResponse) {}
-  rpc CreateCallerOrganization(CreateCallerOrganizationRequest) returns (GetCallerOrganizationsResponse) {}
+  rpc ListCallerOrganizations(ListCallerOrganizationsRequest) returns (ListCallerOrganizationsResponse) {}
+  rpc CreateCallerOrganization(CreateCallerOrganizationRequest) returns (CreateCallerOrganizationResponse) {}
 }
