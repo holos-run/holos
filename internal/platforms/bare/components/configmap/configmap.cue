@@ -1,26 +1,20 @@
 package holos
 
-import ( "encoding/yaml"
+import "encoding/yaml"
+import v1 "github.com/holos-run/holos/api/v1alpha1"
 
-)
+let PLATFORM = {message: "TODO: Load the platform from the API."}
 
-// The platform configmap is a simple component that manages a configmap named
-// platform in the default namespace.  The purpose is to exercise end to end
-// validation of platform configuration values provided by the holos web ui to
-// each cluster in the platform.
-platform: #Platform & {metadata: name: "bare"}
-let PLATFORM = platform
-
-// spec represents the output provided to holos
-spec: components: KubernetesObjectsList: [
-	#KubernetesObjects & {
+// Provide a BuildPlan to the holos cli to render k8s api objects.
+v1.#BuildPlan & {
+	spec: components: resources: platformConfigmap: {
 		metadata: name: "platform-configmap"
 		apiObjectMap: OBJECTS.apiObjectMap
-	},
-]
+	}
+}
 
 // OBJECTS represents the kubernetes api objects to manage.
-let OBJECTS = #APIObjects & {
+let OBJECTS = v1.#APIObjects & {
 	apiObjects: ConfigMap: platform: {
 		metadata: {
 			name:      "platform"

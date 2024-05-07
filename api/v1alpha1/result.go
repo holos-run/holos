@@ -19,6 +19,14 @@ type Result struct {
 	accumulatedOutput string
 }
 
+// Continue returns true if Skip is true indicating the result is to be skipped over.
+func (r *Result) Continue() bool {
+	if r == nil {
+		return false
+	}
+	return r.Skip
+}
+
 func (r *Result) Name() string {
 	return r.Metadata.Name
 }
@@ -30,6 +38,11 @@ func (r *Result) Filename(writeTo string, cluster string) string {
 
 func (r *Result) KustomizationFilename(writeTo string, cluster string) string {
 	return filepath.Join(writeTo, "clusters", cluster, "holos", "components", r.Metadata.Name+"-kustomization.gen.yaml")
+}
+
+// KustomizationContent returns the kustomization file contents to write.
+func (r *Result) KustomizationContent() string {
+	return r.KsContent
 }
 
 // AccumulatedOutput returns the accumulated rendered output.

@@ -2,6 +2,7 @@ package build
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/holos-run/holos/internal/builder"
@@ -20,10 +21,12 @@ func makeBuildRunFunc(cfg *holos.Config) command.RunFunc {
 			return err
 		}
 		outs := make([]string, 0, len(results))
-		for _, result := range results {
-			if result.Skip {
+		for idx, result := range results {
+			if result == nil || result.Skip {
+				slog.Debug("skip result", "idx", idx, "result", result)
 				continue
 			}
+			slog.Debug("append result", "idx", idx, "result.kind", result.Kind)
 			outs = append(outs, result.AccumulatedOutput())
 		}
 		out := strings.Join(outs, "---\n")

@@ -106,84 +106,138 @@ func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
 }
 
 func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err error) {
-	results = make([]*v1alpha1.Result, 0, len(b.cfg.args))
-	cueCtx := cuecontext.New()
-	logger.FromContext(ctx).DebugContext(ctx, "cue: building instances")
+	log := logger.FromContext(ctx)
+	log.DebugContext(ctx, "cue: building instances")
 	instances, err := b.Instances(ctx)
 	if err != nil {
-		return results, err
+		return nil, err
 	}
+	results = make([]*v1alpha1.Result, 0, len(instances)*8)
 
 	// Each CUE instance provides a BuildPlan
-	for _, instance := range instances {
-		var buildPlan v1alpha1.BuildPlan
-
-		log := logger.FromContext(ctx).With("dir", instance.Dir)
-		if err := instance.Err; err != nil {
-			return nil, errors.Wrap(fmt.Errorf("could not load: %w", err))
-		}
-		log.DebugContext(ctx, "cue: building instance")
-		value := cueCtx.BuildInstance(instance)
-		if err := value.Err(); err != nil {
-			return nil, errors.Wrap(fmt.Errorf("could not build %s: %w", instance.Dir, err))
-		}
-		log.DebugContext(ctx, "cue: validating instance")
-		if err := value.Validate(); err != nil {
-			return nil, errors.Wrap(fmt.Errorf("could not validate: %w", err))
-		}
-
-		log.DebugContext(ctx, "cue: decoding holos build plan")
-		// Hack to catch unknown fields https://github.com/holos-run/holos/issues/72
-		jsonBytes, err := value.MarshalJSON()
+	for idx, instance := range instances {
+		log.DebugContext(ctx, "cue: building instance", "idx", idx, "dir", instance.Dir)
+		r, err := b.runInstance(ctx, instance)
 		if err != nil {
-			return nil, errors.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", instance.Dir, err))
+			return nil, errors.Wrap(fmt.Errorf("could not run: %w", err))
 		}
-		decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
-		decoder.DisallowUnknownFields()
-		err = decoder.Decode(&buildPlan)
-		if err != nil {
-			return nil, errors.Wrap(fmt.Errorf("invalid BuildPlan: %s: %w", instance.Dir, err))
-		}
+		results = append(results, r...)
+	}
 
-		if err := buildPlan.Validate(); err != nil {
-			return nil, errors.Wrap(fmt.Errorf("could not validate %s: %w", instance.Dir, err))
-		}
+	return results, nil
+}
 
-		if buildPlan.Spec.Disabled {
-			log.DebugContext(ctx, "skipped: spec.disabled is true", "skipped", true)
-			continue
-		}
+func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (results []*v1alpha1.Result, err error) {
+	path := holos.InstancePath(instance.Dir)
+	log := logger.FromContext(ctx).With("dir", path)
 
-		// TODO: concurrent renders
-		for _, component := range buildPlan.Spec.Components.Resources {
-			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
-				return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
-			} else {
-				results = append(results, result)
-			}
+	if err := instance.Err; err != nil {
+		return nil, errors.Wrap(fmt.Errorf("could not load: %w", err))
+	}
+	cueCtx := cuecontext.New()
+	value := cueCtx.BuildInstance(instance)
+	if err := value.Err(); err != nil {
+		return nil, errors.Wrap(fmt.Errorf("could not build %s: %w", instance.Dir, err))
+	}
+	log.DebugContext(ctx, "cue: validating instance")
+	if err := value.Validate(); err != nil {
+		return nil, errors.Wrap(fmt.Errorf("could not validate: %w", err))
+	}
+
+	log.DebugContext(ctx, "cue: decoding holos build plan")
+	jsonBytes, err := value.MarshalJSON()
+	if err != nil {
+		return nil, errors.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", instance.Dir, err))
+	}
+	decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
+	// Discriminate the type of build plan.
+	tm := &v1alpha1.TypeMeta{}
+	err = decoder.Decode(tm)
+	if err != nil {
+		return nil, errors.Wrap(fmt.Errorf("invalid BuildPlan: %s: %w", instance.Dir, err))
+	}
+
+	log.DebugContext(ctx, "cue: discriminated build kind: "+tm.Kind, "kind", tm.Kind, "apiVersion", tm.APIVersion)
+
+	// New decoder for the full object
+	decoder = json.NewDecoder(bytes.NewReader(jsonBytes))
+	decoder.DisallowUnknownFields()
+
+	switch tm.Kind {
+	case "BuildPlan":
+		var bp v1alpha1.BuildPlan
+		if err = decoder.Decode(&bp); err != nil {
+			err = errors.Wrap(fmt.Errorf("could not decode BuildPlan %s: %w", instance.Dir, err))
+			return
 		}
-		for _, component := range buildPlan.Spec.Components.KubernetesObjectsList {
-			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
-				return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
-			} else {
-				results = append(results, result)
-			}
+		results, err = b.buildPlan(ctx, &bp, path)
+	case "Platform":
+		var pf v1alpha1.Platform
+		if err = decoder.Decode(&pf); err != nil {
+			err = errors.Wrap(fmt.Errorf("could not decode Platform %s: %w", instance.Dir, err))
+			return
 		}
-		for _, component := range buildPlan.Spec.Components.HelmChartList {
-			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
-				return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
-			} else {
-				results = append(results, result)
-			}
-		}
-		for _, component := range buildPlan.Spec.Components.KustomizeBuildList {
-			if result, err := component.Render(ctx, holos.InstancePath(instance.Dir)); err != nil {
-				return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
-			} else {
-				results = append(results, result)
-			}
+		results, err = b.buildPlatform(ctx, &pf)
+	default:
+		err = errors.Wrap(fmt.Errorf("unknown kind: %v", tm.Kind))
+	}
+
+	return
+}
+
+func (b *Builder) buildPlatform(ctx context.Context, pf *v1alpha1.Platform) (results []*v1alpha1.Result, err error) {
+	log := logger.FromContext(ctx)
+	log.ErrorContext(ctx, "not implemented", "platform", pf)
+	return nil, errors.Wrap(fmt.Errorf("not implemeneted"))
+}
+
+func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha1.BuildPlan, path holos.InstancePath) (results []*v1alpha1.Result, err error) {
+	log := logger.FromContext(ctx)
+
+	if err := buildPlan.Validate(); err != nil {
+		log.WarnContext(ctx, "could not validate", "skipped", true, "err", err)
+		return nil, errors.Wrap(fmt.Errorf("could not validate %w", err))
+	}
+
+	if buildPlan.Spec.Disabled {
+		log.DebugContext(ctx, "skipped: spec.disabled is true", "skipped", true)
+		return
+	}
+
+	// TODO: concurrent renders
+	results = make([]*v1alpha1.Result, 0, buildPlan.ResultCapacity())
+	log.DebugContext(ctx, "allocated results slice", "cap", buildPlan.ResultCapacity())
+	for _, component := range buildPlan.Spec.Components.Resources {
+		if result, err := component.Render(ctx, path); err != nil {
+			return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
+		} else {
+			results = append(results, result)
 		}
 	}
+
+	for _, component := range buildPlan.Spec.Components.KubernetesObjectsList {
+		if result, err := component.Render(ctx, path); err != nil {
+			return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
+		} else {
+			results = append(results, result)
+		}
+	}
+	for _, component := range buildPlan.Spec.Components.HelmChartList {
+		if result, err := component.Render(ctx, path); err != nil {
+			return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
+		} else {
+			results = append(results, result)
+		}
+	}
+	for _, component := range buildPlan.Spec.Components.KustomizeBuildList {
+		if result, err := component.Render(ctx, path); err != nil {
+			return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
+		} else {
+			results = append(results, result)
+		}
+	}
+
+	log.DebugContext(ctx, "returning results", "len", len(results))
 
 	return results, nil
 }

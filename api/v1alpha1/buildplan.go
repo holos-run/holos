@@ -39,3 +39,14 @@ func (bp *BuildPlan) Validate() error {
 	}
 	return nil
 }
+
+func (bp *BuildPlan) ResultCapacity() (count int) {
+	if bp == nil {
+		return 0
+	}
+	count = len(bp.Spec.Components.HelmChartList) +
+		len(bp.Spec.Components.KubernetesObjectsList) +
+		len(bp.Spec.Components.KustomizeBuildList) +
+		len(bp.Spec.Components.Resources)
+	return count
+}

@@ -8,3 +8,13 @@ type TypeMeta struct {
 func (tm *TypeMeta) GetKind() string {
 	return tm.Kind
 }
+
+func (tm *TypeMeta) GetAPIVersion() string {
+	return tm.Kind
+}
+
+// Discriminator is an interface to discriminate the kind api object.
+type Discriminator interface {
+	GetKind() string
+	GetAPIVersion() string
+}

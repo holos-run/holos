@@ -1,12 +1,12 @@
 package forms
 
-import formsv1 "github.com/holos-run/forms/v1alpha1"
+import v1 "github.com/holos-run/holos/v1alpha1"
 
-let Platform = formsv1.#Platform & {
-	name:        "bare"
-	displayName: "Bare Platform"
+// Provides a concrete v1.#Form
+FormBuilder.Output
 
-	sections: org: {
+let FormBuilder = v1.#FormBuilder & {
+	Sections: org: {
 		displayName: "Organization"
 		description: "Organization config values are used to derive more specific configuration values throughout the platform."
 
@@ -64,7 +64,7 @@ let Platform = formsv1.#Platform & {
 		}
 	}
 
-	sections: cloud: {
+	Sections: cloud: {
 		displayName: "Cloud Providers"
 		description: "Select the services that provide resources for the platform."
 
@@ -91,7 +91,7 @@ let Platform = formsv1.#Platform & {
 		}
 	}
 
-	sections: aws: {
+	Sections: aws: {
 		displayName: "Amazon Web Services"
 		description: "Provide the information necessary for Holos to manage AWS resources to provide the platform."
 
@@ -128,7 +128,7 @@ let Platform = formsv1.#Platform & {
 		}
 	}
 
-	sections: gcp: {
+	Sections: gcp: {
 		displayName: "Google Cloud Platform"
 		description: "Use this form to configure platform level GCP settings."
 
@@ -208,7 +208,7 @@ let Platform = formsv1.#Platform & {
 		}
 	}
 
-	sections: cloudflare: {
+	Sections: cloudflare: {
 		displayName: "Cloudflare"
 		description: "Cloudflare is primarily used for DNS automation."
 
@@ -228,7 +228,7 @@ let Platform = formsv1.#Platform & {
 		}
 	}
 
-	sections: github: {
+	Sections: github: {
 		displayName: "GitHub"
 		description: "GitHub is primarily used to host Git repositories and execute Actions workflows."
 
@@ -253,7 +253,7 @@ let Platform = formsv1.#Platform & {
 		}
 	}
 
-	sections: backups: {
+	Sections: backups: {
 		displayName: "Backups"
 		description: "Configure platform level data backup settings.  Requires AWS."
 
@@ -278,75 +278,7 @@ let Platform = formsv1.#Platform & {
 			}
 		}
 	}
-
-	_sections: privacy: {
-		displayName: "Data Privacy"
-		description: "Configure data privacy aspects of the platform."
-
-		fieldConfigs: {
-			country: {
-				// https://formly.dev/docs/api/ui/material/select/
-				type: "select"
-				props: {
-					label:       "Select Planet"
-					description: "Juridiction of applicable data privacy laws."
-					options: [
-						{value: "mercury", label: "Mercury"},
-						{value: "venus", label:   "Venus"},
-						{value: "earth", label:   "Earth"},
-						{value: "mars", label:    "Mars"},
-						{value: "jupiter", label: "Jupiter"},
-						{value: "saturn", label:  "Saturn"},
-						{value: "uranus", label:  "Uranus"},
-						{value: "neptune", label: "Neptune"},
-					]
-				}
-			}
-			regions: {
-				// https://formly.dev/docs/api/ui/material/select/
-				type: "select"
-				props: {
-					label:           "Select Regions"
-					description:     "Select the regions this platform operates in."
-					multiple:        true
-					selectAllOption: "Select All"
-					options: [
-						{value: "us-east-2", label: "Ohio"},
-						{value: "us-west-2", label: "Oregon"},
-						{value: "eu-west-1", label: "Ireland"},
-						{value: "eu-west-2", label: "London", disabled: true},
-					]
-				}
-			}
-		}
-	}
-
-	_sections: terms: {
-		displayName: "Terms and Conditions"
-		description: "Example of a boolean checkbox."
-
-		fieldConfigs: {
-			// platform.spec.config.user.sections.terms.fields.didAgree
-			didAgree: {
-				type: "checkbox"
-				props: {
-					label:       "Accept terms"
-					description: "In order to proceed, please accept terms"
-					pattern:     "true"
-					required:    true
-				}
-				validation: {
-					messages: {
-						pattern: "Please accept the terms"
-					}
-				}
-			}
-		}
-	}
 }
-
-// Provide the output form fields
-Platform.Form
 
 let GCPRegions = [
 	{value: "africa-south1", label:           "africa-south1"},

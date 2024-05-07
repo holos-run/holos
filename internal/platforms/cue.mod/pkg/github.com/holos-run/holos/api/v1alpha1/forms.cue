@@ -1,35 +1,31 @@
 package v1alpha1
 
-#Platform: {
-	name:        string // short dns label name
-	displayName: string // Display name
-	description: string // Plaform description
+// #Form represents a web app form to provide to the Holos API for display in
+// the web app.  A form is implemented as an Formly FieldConfig array using
+// Angular Material form field components.
+#Form: {
+	#TypeMeta
+	apiVersion: #APIVersion
+	kind:       "Form"
 
-	sections: {[NAME=string]: #ConfigSection & {name: NAME}}
+	spec: fields: [...#FieldConfig]
+}
 
-	Form: {
-		let Name = name
-		apiVersion: "forms.holos.run/v1alpha1"
-		kind:       "PlatformForm"
-		metadata: name: Name
-		spec: #PlatformFormSpec
+// #FormBuilder provides a concrete #Form via the Output field.
+#FormBuilder: {
+	Name: string
+	Sections: {[NAME=string]: #FormSection & {name: NAME}}
+
+	Output: #Form & {
+		spec: fields: [for s in Sections {s.wrapper}]
 	}
-
-	let Sections = sections
-
-	// Collapse all sections into one fields list.
-	// Refer to https://formly.dev/docs/examples/other/nested-formly-forms
-	Form: spec: fields: [for s in Sections {s.wrapper}]
 }
 
-#PlatformFormSpec: {
-	fields: [...#FieldConfig]
-}
-
-// #ConfigSection represents a configuration section of the front end UI.  For
-// example, Organization config values.  The fields of the section map to form
-// input fields.
-#ConfigSection: {
+// #FormSection represents a configuration section of the front end UI.  The
+// wrapper field provides a concrete #FieldConfig for the form section.  The
+// fields of the section map to form input fields.
+// Refer to: to https://formly.dev/docs/examples/other/nested-formly-forms
+#FormSection: {
 	name:        string // e.g. "org"
 	displayName: string // e.g. "Organization"
 	description: string
@@ -58,14 +54,7 @@ package v1alpha1
 	}
 }
 
-// REMOVE
-#ConfigSectionOutput: {
-	name:        string
-	displayName: string
-	description: string
-	fieldConfigs: [...#FieldConfig]
-}
-
+// #FieldConfig represents a Formly Field Config.
 // Refer to https://formly.dev/docs/api/core#formlyfieldconfig
 // Refer to https://formly.dev/docs/api/ui/material/select
 #FieldConfig: {

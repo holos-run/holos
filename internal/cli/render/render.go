@@ -1,6 +1,7 @@
 package render
 
 import (
+	"context"
 	"flag"
 	"fmt"
 
@@ -53,8 +54,9 @@ func New(cfg *holos.Config) *cobra.Command {
 		// TODO: Avoid accidental over-writes if to holos component instances result in
 		// the same file path. Write files into a blank temporary directory, error if a
 		// file exists, then move the directory into place.
-		for _, result := range results {
-			if result.Skip {
+		var result Result
+		for _, result = range results {
+			if result.Continue() {
 				continue
 			}
 			// API Objects
@@ -64,7 +66,7 @@ func New(cfg *holos.Config) *cobra.Command {
 			}
 			// Kustomization
 			path = result.KustomizationFilename(cfg.WriteTo(), cfg.ClusterName())
-			if err := result.Save(ctx, path, result.KsContent); err != nil {
+			if err := result.Save(ctx, path, result.KustomizationContent()); err != nil {
 				return errors.Wrap(err)
 			}
 			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered", "name", result.Name())
@@ -72,4 +74,14 @@ func New(cfg *holos.Config) *cobra.Command {
 		return nil
 	}
 	return cmd
+}
+
+type Result interface {
+	Continue() bool
+	Name() string
+	Filename(writeTo string, cluster string) string
+	KustomizationFilename(writeTo string, cluster string) string
+	Save(ctx context.Context, path string, content string) error
+	AccumulatedOutput() string
+	KustomizationContent() string
 }
