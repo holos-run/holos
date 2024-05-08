@@ -103,7 +103,7 @@ func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[
 	return connect.NewResponse(&holos.GetPlatformResponse{Platform: PlatformToRPC(p)}), nil
 }
 
-func (h *PlatformHandler) PutModel(ctx context.Context, req *connect.Request[holos.PutModelRequest]) (*connect.Response[holos.PutModelResponse], error) {
+func (h *PlatformHandler) PutModel(ctx context.Context, req *connect.Request[holos.PlatformServicePutModelRequest]) (*connect.Response[holos.PlatformServicePutModelResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -123,10 +123,10 @@ func (h *PlatformHandler) PutModel(ctx context.Context, req *connect.Request[hol
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	return connect.NewResponse(&holos.PutModelResponse{Model: req.Msg.Model}), nil
+	return connect.NewResponse(&holos.PlatformServicePutModelResponse{Model: req.Msg.Model}), nil
 }
 
-func (h *PlatformHandler) GetModel(ctx context.Context, req *connect.Request[holos.GetModelRequest]) (*connect.Response[holos.GetModelResponse], error) {
+func (h *PlatformHandler) GetModel(ctx context.Context, req *connect.Request[holos.PlatformServiceGetModelRequest]) (*connect.Response[holos.PlatformServiceGetModelResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -137,10 +137,10 @@ func (h *PlatformHandler) GetModel(ctx context.Context, req *connect.Request[hol
 		return nil, errors.Wrap(err)
 	}
 
-	return connect.NewResponse(&holos.GetModelResponse{Model: p.Model.Model}), nil
+	return connect.NewResponse(&holos.PlatformServiceGetModelResponse{Model: p.Model.Model}), nil
 }
 
-func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[holos.GetFormRequest]) (*connect.Response[holos.GetFormResponse], error) {
+func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[holos.PlatformServiceGetFormRequest]) (*connect.Response[holos.PlatformServiceGetFormResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -151,10 +151,10 @@ func (h *PlatformHandler) GetForm(ctx context.Context, req *connect.Request[holo
 		return nil, errors.Wrap(err)
 	}
 
-	return connect.NewResponse(&holos.GetFormResponse{Fields: p.Form.GetFields(), Model: p.Model.GetModel()}), nil
+	return connect.NewResponse(&holos.PlatformServiceGetFormResponse{Fields: p.Form.GetFields(), Model: p.Model.GetModel()}), nil
 }
 
-func (h *PlatformHandler) PutForm(ctx context.Context, req *connect.Request[holos.PutFormRequest]) (*connect.Response[holos.PutFormResponse], error) {
+func (h *PlatformHandler) PutForm(ctx context.Context, req *connect.Request[holos.PlatformServicePutFormRequest]) (*connect.Response[holos.PlatformServicePutFormResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -172,7 +172,7 @@ func (h *PlatformHandler) PutForm(ctx context.Context, req *connect.Request[holo
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	resp := &holos.PutFormResponse{Fields: req.Msg.GetFields()}
+	resp := &holos.PlatformServicePutFormResponse{Fields: req.Msg.GetFields()}
 	return connect.NewResponse(resp), nil
 }
 

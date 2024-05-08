@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { AddPlatformRequest, AddPlatformResponse, GetFormRequest, GetFormResponse, GetModelRequest, GetModelResponse, GetPlatformRequest, GetPlatformResponse, ListPlatformsRequest, ListPlatformsResponse, PutFormRequest, PutFormResponse, PutModelRequest, PutModelResponse } from "./platform_pb.js";
+import { AddPlatformRequest, AddPlatformResponse, GetPlatformRequest, GetPlatformResponse, ListPlatformsRequest, ListPlatformsResponse, PlatformServiceGetFormRequest, PlatformServiceGetFormResponse, PlatformServiceGetModelRequest, PlatformServiceGetModelResponse, PlatformServicePutFormRequest, PlatformServicePutFormResponse, PlatformServicePutModelRequest, PlatformServicePutModelResponse } from "./platform_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -44,8 +44,8 @@ export const PlatformService = {
      */
     getForm: {
       name: "GetForm",
-      I: GetFormRequest,
-      O: GetFormResponse,
+      I: PlatformServiceGetFormRequest,
+      O: PlatformServiceGetFormResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -53,8 +53,8 @@ export const PlatformService = {
      */
     putForm: {
       name: "PutForm",
-      I: PutFormRequest,
-      O: PutFormResponse,
+      I: PlatformServicePutFormRequest,
+      O: PlatformServicePutFormResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -62,8 +62,8 @@ export const PlatformService = {
      */
     getModel: {
       name: "GetModel",
-      I: GetModelRequest,
-      O: GetModelResponse,
+      I: PlatformServiceGetModelRequest,
+      O: PlatformServiceGetModelResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -71,8 +71,8 @@ export const PlatformService = {
      */
     putModel: {
       name: "PutModel",
-      I: PutModelRequest,
-      O: PutModelResponse,
+      I: PlatformServicePutModelRequest,
+      O: PlatformServicePutModelResponse,
       kind: MethodKind.Unary,
     },
   }

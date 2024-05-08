@@ -63,38 +63,38 @@ message GetPlatformResponse {
   Platform platform = 1;
 }
 
-message GetFormRequest {
+message PlatformServiceGetFormRequest {
   string platform_id = 1 [(buf.validate.field).string.uuid = true];
 }
 
-message GetFormResponse {
+message PlatformServiceGetFormResponse {
   repeated google.protobuf.Struct fields = 1;
   google.protobuf.Struct model = 2;
 }
 
-message GetModelRequest {
+message PlatformServiceGetModelRequest {
   string platform_id = 1 [(buf.validate.field).string.uuid = true];
 }
 
-message GetModelResponse {
+message PlatformServiceGetModelResponse {
   google.protobuf.Struct model = 1;
 }
 
-message PutModelRequest {
+message PlatformServicePutModelRequest {
   string platform_id = 1 [(buf.validate.field).string.uuid = true];
   google.protobuf.Struct model = 2;
 }
 
-message PutModelResponse {
+message PlatformServicePutModelResponse {
   google.protobuf.Struct model = 1;
 }
 
-message PutFormRequest {
+message PlatformServicePutFormRequest {
   string platform_id = 1 [(buf.validate.field).string.uuid = true];
   repeated google.protobuf.Struct fields = 2;
 }
 
-message PutFormResponse {
+message PlatformServicePutFormResponse {
   repeated google.protobuf.Struct fields = 1;
 }
 
@@ -103,9 +103,9 @@ service PlatformService {
   rpc GetPlatform(GetPlatformRequest) returns (GetPlatformResponse) {}
   rpc ListPlatforms(ListPlatformsRequest) returns (ListPlatformsResponse) {}
 
-  rpc GetForm(GetFormRequest) returns (GetFormResponse) {}
-  rpc PutForm(PutFormRequest) returns (PutFormResponse) {}
+  rpc GetForm(PlatformServiceGetFormRequest) returns (PlatformServiceGetFormResponse) {}
+  rpc PutForm(PlatformServicePutFormRequest) returns (PlatformServicePutFormResponse) {}
 
-  rpc GetModel(GetModelRequest) returns (GetModelResponse) {}
-  rpc PutModel(PutModelRequest) returns (PutModelResponse) {}
+  rpc GetModel(PlatformServiceGetModelRequest) returns (PlatformServiceGetModelResponse) {}
+  rpc PutModel(PlatformServicePutModelRequest) returns (PlatformServicePutModelResponse) {}
 }

@@ -120,6 +120,7 @@ type Config struct {
 	txtarIndex           *int
 	txtarFlagSet         *flag.FlagSet
 	provisionerClientset kubernetes.Interface
+	ClientConfig         *ClientConfig
 	ServerConfig         *ServerConfig
 }
 
@@ -278,6 +279,33 @@ func getenv(key, defaultValue string) string {
 		return value
 	}
 	return defaultValue
+}
+
+func NewClientConfig() *ClientConfig {
+	f := flag.NewFlagSet("", flag.ContinueOnError)
+	c := &ClientConfig{flagSet: f}
+	f.StringVar(&c.server, "server", getenv("HOLOS_SERVER", "https://app.holos.run:443"), "server to connect to")
+	return c
+}
+
+// ClientConfig configures the holos rpc client.
+type ClientConfig struct {
+	flagSet *flag.FlagSet
+	server  string
+}
+
+func (c *ClientConfig) Server() string {
+	if c == nil {
+		return ""
+	}
+	return c.server
+}
+
+func (c *ClientConfig) FlagSet() *flag.FlagSet {
+	if c == nil {
+		return nil
+	}
+	return c.flagSet
 }
 
 type ServerConfig struct {

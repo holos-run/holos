@@ -7,11 +7,14 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/holos-run/holos/internal/errors"
+	hlogger "github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
@@ -60,8 +63,8 @@ type Claims struct {
 }
 
 // NewConfig returns a Config with default values.
-func NewConfig() Config {
-	return Config{
+func NewConfig() *Config {
+	return &Config{
 		Issuer:      "https://login.ois.run",
 		ClientID:    "262479925313799528@holos_platform",
 		Scopes:      []string{"openid", "email", "profile", "groups", "offline_access"},
@@ -92,8 +95,35 @@ func (c *Config) FlagSet() *flag.FlagSet {
 	return flags
 }
 
+// Client returns a http.Client which adds the authorization bearer token to
+// each request.
+func NewClient(cfg *Config) *http.Client {
+	return &http.Client{
+		Transport: &customTransport{
+			Transport: http.DefaultTransport,
+			config:    cfg,
+		},
+	}
+}
+
+type customTransport struct {
+	Transport http.RoundTripper
+	config    *Config
+}
+
+func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	ctx := req.Context()
+	log := hlogger.FromContext(ctx)
+	token, err := Get(ctx, log, t.config)
+	if err != nil {
+		return nil, errors.Wrap(fmt.Errorf("could not get token: %w", err))
+	}
+	req.Header.Set(authn.Header, token.Bearer)
+	return t.Transport.RoundTrip(req)
+}
+
 // Get returns an oidc token for use as an authorization bearer http header.
-func Get(ctx context.Context, log *slog.Logger, cfg Config) (*Token, error) {
+func Get(ctx context.Context, log *slog.Logger, cfg *Config) (*Token, error) {
 	var scopes []string
 	scopes = append(scopes, cfg.Scopes...)
 	scopes = append(scopes, cfg.ExtraScopes...)

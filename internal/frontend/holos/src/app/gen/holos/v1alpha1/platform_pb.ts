@@ -417,46 +417,46 @@ export class GetPlatformResponse extends Message<GetPlatformResponse> {
 }
 
 /**
- * @generated from message holos.v1alpha1.GetFormRequest
+ * @generated from message holos.v1alpha1.PlatformServiceGetFormRequest
  */
-export class GetFormRequest extends Message<GetFormRequest> {
+export class PlatformServiceGetFormRequest extends Message<PlatformServiceGetFormRequest> {
   /**
    * @generated from field: string platform_id = 1;
    */
   platformId = "";
 
-  constructor(data?: PartialMessage<GetFormRequest>) {
+  constructor(data?: PartialMessage<PlatformServiceGetFormRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetFormRequest";
+  static readonly typeName = "holos.v1alpha1.PlatformServiceGetFormRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFormRequest {
-    return new GetFormRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformServiceGetFormRequest {
+    return new PlatformServiceGetFormRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFormRequest {
-    return new GetFormRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformServiceGetFormRequest {
+    return new PlatformServiceGetFormRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFormRequest {
-    return new GetFormRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformServiceGetFormRequest {
+    return new PlatformServiceGetFormRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetFormRequest | PlainMessage<GetFormRequest> | undefined, b: GetFormRequest | PlainMessage<GetFormRequest> | undefined): boolean {
-    return proto3.util.equals(GetFormRequest, a, b);
+  static equals(a: PlatformServiceGetFormRequest | PlainMessage<PlatformServiceGetFormRequest> | undefined, b: PlatformServiceGetFormRequest | PlainMessage<PlatformServiceGetFormRequest> | undefined): boolean {
+    return proto3.util.equals(PlatformServiceGetFormRequest, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.GetFormResponse
+ * @generated from message holos.v1alpha1.PlatformServiceGetFormResponse
  */
-export class GetFormResponse extends Message<GetFormResponse> {
+export class PlatformServiceGetFormResponse extends Message<PlatformServiceGetFormResponse> {
   /**
    * @generated from field: repeated google.protobuf.Struct fields = 1;
    */
@@ -467,113 +467,113 @@ export class GetFormResponse extends Message<GetFormResponse> {
    */
   model?: Struct;
 
-  constructor(data?: PartialMessage<GetFormResponse>) {
+  constructor(data?: PartialMessage<PlatformServiceGetFormResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetFormResponse";
+  static readonly typeName = "holos.v1alpha1.PlatformServiceGetFormResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "fields", kind: "message", T: Struct, repeated: true },
     { no: 2, name: "model", kind: "message", T: Struct },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetFormResponse {
-    return new GetFormResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformServiceGetFormResponse {
+    return new PlatformServiceGetFormResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetFormResponse {
-    return new GetFormResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformServiceGetFormResponse {
+    return new PlatformServiceGetFormResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetFormResponse {
-    return new GetFormResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformServiceGetFormResponse {
+    return new PlatformServiceGetFormResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetFormResponse | PlainMessage<GetFormResponse> | undefined, b: GetFormResponse | PlainMessage<GetFormResponse> | undefined): boolean {
-    return proto3.util.equals(GetFormResponse, a, b);
+  static equals(a: PlatformServiceGetFormResponse | PlainMessage<PlatformServiceGetFormResponse> | undefined, b: PlatformServiceGetFormResponse | PlainMessage<PlatformServiceGetFormResponse> | undefined): boolean {
+    return proto3.util.equals(PlatformServiceGetFormResponse, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.GetModelRequest
+ * @generated from message holos.v1alpha1.PlatformServiceGetModelRequest
  */
-export class GetModelRequest extends Message<GetModelRequest> {
+export class PlatformServiceGetModelRequest extends Message<PlatformServiceGetModelRequest> {
   /**
    * @generated from field: string platform_id = 1;
    */
   platformId = "";
 
-  constructor(data?: PartialMessage<GetModelRequest>) {
+  constructor(data?: PartialMessage<PlatformServiceGetModelRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetModelRequest";
+  static readonly typeName = "holos.v1alpha1.PlatformServiceGetModelRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetModelRequest {
-    return new GetModelRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformServiceGetModelRequest {
+    return new PlatformServiceGetModelRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetModelRequest {
-    return new GetModelRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformServiceGetModelRequest {
+    return new PlatformServiceGetModelRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetModelRequest {
-    return new GetModelRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformServiceGetModelRequest {
+    return new PlatformServiceGetModelRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetModelRequest | PlainMessage<GetModelRequest> | undefined, b: GetModelRequest | PlainMessage<GetModelRequest> | undefined): boolean {
-    return proto3.util.equals(GetModelRequest, a, b);
+  static equals(a: PlatformServiceGetModelRequest | PlainMessage<PlatformServiceGetModelRequest> | undefined, b: PlatformServiceGetModelRequest | PlainMessage<PlatformServiceGetModelRequest> | undefined): boolean {
+    return proto3.util.equals(PlatformServiceGetModelRequest, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.GetModelResponse
+ * @generated from message holos.v1alpha1.PlatformServiceGetModelResponse
  */
-export class GetModelResponse extends Message<GetModelResponse> {
+export class PlatformServiceGetModelResponse extends Message<PlatformServiceGetModelResponse> {
   /**
    * @generated from field: google.protobuf.Struct model = 1;
    */
   model?: Struct;
 
-  constructor(data?: PartialMessage<GetModelResponse>) {
+  constructor(data?: PartialMessage<PlatformServiceGetModelResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.GetModelResponse";
+  static readonly typeName = "holos.v1alpha1.PlatformServiceGetModelResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "model", kind: "message", T: Struct },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetModelResponse {
-    return new GetModelResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformServiceGetModelResponse {
+    return new PlatformServiceGetModelResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetModelResponse {
-    return new GetModelResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformServiceGetModelResponse {
+    return new PlatformServiceGetModelResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetModelResponse {
-    return new GetModelResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformServiceGetModelResponse {
+    return new PlatformServiceGetModelResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: GetModelResponse | PlainMessage<GetModelResponse> | undefined, b: GetModelResponse | PlainMessage<GetModelResponse> | undefined): boolean {
-    return proto3.util.equals(GetModelResponse, a, b);
+  static equals(a: PlatformServiceGetModelResponse | PlainMessage<PlatformServiceGetModelResponse> | undefined, b: PlatformServiceGetModelResponse | PlainMessage<PlatformServiceGetModelResponse> | undefined): boolean {
+    return proto3.util.equals(PlatformServiceGetModelResponse, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.PutModelRequest
+ * @generated from message holos.v1alpha1.PlatformServicePutModelRequest
  */
-export class PutModelRequest extends Message<PutModelRequest> {
+export class PlatformServicePutModelRequest extends Message<PlatformServicePutModelRequest> {
   /**
    * @generated from field: string platform_id = 1;
    */
@@ -584,76 +584,76 @@ export class PutModelRequest extends Message<PutModelRequest> {
    */
   model?: Struct;
 
-  constructor(data?: PartialMessage<PutModelRequest>) {
+  constructor(data?: PartialMessage<PlatformServicePutModelRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.PutModelRequest";
+  static readonly typeName = "holos.v1alpha1.PlatformServicePutModelRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "model", kind: "message", T: Struct },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PutModelRequest {
-    return new PutModelRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformServicePutModelRequest {
+    return new PlatformServicePutModelRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PutModelRequest {
-    return new PutModelRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformServicePutModelRequest {
+    return new PlatformServicePutModelRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PutModelRequest {
-    return new PutModelRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformServicePutModelRequest {
+    return new PlatformServicePutModelRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: PutModelRequest | PlainMessage<PutModelRequest> | undefined, b: PutModelRequest | PlainMessage<PutModelRequest> | undefined): boolean {
-    return proto3.util.equals(PutModelRequest, a, b);
+  static equals(a: PlatformServicePutModelRequest | PlainMessage<PlatformServicePutModelRequest> | undefined, b: PlatformServicePutModelRequest | PlainMessage<PlatformServicePutModelRequest> | undefined): boolean {
+    return proto3.util.equals(PlatformServicePutModelRequest, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.PutModelResponse
+ * @generated from message holos.v1alpha1.PlatformServicePutModelResponse
  */
-export class PutModelResponse extends Message<PutModelResponse> {
+export class PlatformServicePutModelResponse extends Message<PlatformServicePutModelResponse> {
   /**
    * @generated from field: google.protobuf.Struct model = 1;
    */
   model?: Struct;
 
-  constructor(data?: PartialMessage<PutModelResponse>) {
+  constructor(data?: PartialMessage<PlatformServicePutModelResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.PutModelResponse";
+  static readonly typeName = "holos.v1alpha1.PlatformServicePutModelResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "model", kind: "message", T: Struct },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PutModelResponse {
-    return new PutModelResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformServicePutModelResponse {
+    return new PlatformServicePutModelResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PutModelResponse {
-    return new PutModelResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformServicePutModelResponse {
+    return new PlatformServicePutModelResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PutModelResponse {
-    return new PutModelResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformServicePutModelResponse {
+    return new PlatformServicePutModelResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: PutModelResponse | PlainMessage<PutModelResponse> | undefined, b: PutModelResponse | PlainMessage<PutModelResponse> | undefined): boolean {
-    return proto3.util.equals(PutModelResponse, a, b);
+  static equals(a: PlatformServicePutModelResponse | PlainMessage<PlatformServicePutModelResponse> | undefined, b: PlatformServicePutModelResponse | PlainMessage<PlatformServicePutModelResponse> | undefined): boolean {
+    return proto3.util.equals(PlatformServicePutModelResponse, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.PutFormRequest
+ * @generated from message holos.v1alpha1.PlatformServicePutFormRequest
  */
-export class PutFormRequest extends Message<PutFormRequest> {
+export class PlatformServicePutFormRequest extends Message<PlatformServicePutFormRequest> {
   /**
    * @generated from field: string platform_id = 1;
    */
@@ -664,69 +664,69 @@ export class PutFormRequest extends Message<PutFormRequest> {
    */
   fields: Struct[] = [];
 
-  constructor(data?: PartialMessage<PutFormRequest>) {
+  constructor(data?: PartialMessage<PlatformServicePutFormRequest>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.PutFormRequest";
+  static readonly typeName = "holos.v1alpha1.PlatformServicePutFormRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "fields", kind: "message", T: Struct, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PutFormRequest {
-    return new PutFormRequest().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformServicePutFormRequest {
+    return new PlatformServicePutFormRequest().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PutFormRequest {
-    return new PutFormRequest().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformServicePutFormRequest {
+    return new PlatformServicePutFormRequest().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PutFormRequest {
-    return new PutFormRequest().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformServicePutFormRequest {
+    return new PlatformServicePutFormRequest().fromJsonString(jsonString, options);
   }
 
-  static equals(a: PutFormRequest | PlainMessage<PutFormRequest> | undefined, b: PutFormRequest | PlainMessage<PutFormRequest> | undefined): boolean {
-    return proto3.util.equals(PutFormRequest, a, b);
+  static equals(a: PlatformServicePutFormRequest | PlainMessage<PlatformServicePutFormRequest> | undefined, b: PlatformServicePutFormRequest | PlainMessage<PlatformServicePutFormRequest> | undefined): boolean {
+    return proto3.util.equals(PlatformServicePutFormRequest, a, b);
   }
 }
 
 /**
- * @generated from message holos.v1alpha1.PutFormResponse
+ * @generated from message holos.v1alpha1.PlatformServicePutFormResponse
  */
-export class PutFormResponse extends Message<PutFormResponse> {
+export class PlatformServicePutFormResponse extends Message<PlatformServicePutFormResponse> {
   /**
    * @generated from field: repeated google.protobuf.Struct fields = 1;
    */
   fields: Struct[] = [];
 
-  constructor(data?: PartialMessage<PutFormResponse>) {
+  constructor(data?: PartialMessage<PlatformServicePutFormResponse>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.v1alpha1.PutFormResponse";
+  static readonly typeName = "holos.v1alpha1.PlatformServicePutFormResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "fields", kind: "message", T: Struct, repeated: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PutFormResponse {
-    return new PutFormResponse().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformServicePutFormResponse {
+    return new PlatformServicePutFormResponse().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PutFormResponse {
-    return new PutFormResponse().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformServicePutFormResponse {
+    return new PlatformServicePutFormResponse().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PutFormResponse {
-    return new PutFormResponse().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformServicePutFormResponse {
+    return new PlatformServicePutFormResponse().fromJsonString(jsonString, options);
   }
 
-  static equals(a: PutFormResponse | PlainMessage<PutFormResponse> | undefined, b: PutFormResponse | PlainMessage<PutFormResponse> | undefined): boolean {
-    return proto3.util.equals(PutFormResponse, a, b);
+  static equals(a: PlatformServicePutFormResponse | PlainMessage<PlatformServicePutFormResponse> | undefined, b: PlatformServicePutFormResponse | PlainMessage<PlatformServicePutFormResponse> | undefined): boolean {
+    return proto3.util.equals(PlatformServicePutFormResponse, a, b);
   }
 }
 
