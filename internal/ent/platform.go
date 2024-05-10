@@ -14,7 +14,7 @@ import (
 	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	storage "github.com/holos-run/holos/service/gen/holos/storage/v1alpha1"
 )
 
 // Platform is the model entity for the Platform schema.
@@ -26,18 +26,20 @@ type Platform struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// CreatedByID holds the value of the "created_by_id" field.
+	CreatedByID uuid.UUID `json:"created_by_id,omitempty"`
+	// UpdatedByID holds the value of the "updated_by_id" field.
+	UpdatedByID uuid.UUID `json:"updated_by_id,omitempty"`
 	// OrgID holds the value of the "org_id" field.
 	OrgID uuid.UUID `json:"org_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// DisplayName holds the value of the "display_name" field.
 	DisplayName string `json:"display_name,omitempty"`
-	// CreatorID holds the value of the "creator_id" field.
-	CreatorID uuid.UUID `json:"creator_id,omitempty"`
 	// JSON representation of FormlyFormConfig[] refer to https://github.com/holos-run/holos/issues/161
-	Form *holos.Form `json:"form,omitempty"`
+	Form *storage.Form `json:"form,omitempty"`
 	// JSON representation of the form model which holds user input values refer to https://github.com/holos-run/holos/issues/161
-	Model *holos.Model `json:"model,omitempty"`
+	Model *storage.Model `json:"model,omitempty"`
 	// CUE definition to vet the model against e.g. #PlatformConfig
 	Cue []byte `json:"cue,omitempty"`
 	// The definition name to vet config_values against config_cue e.g. '#PlatformSpec'
@@ -52,11 +54,13 @@ type Platform struct {
 type PlatformEdges struct {
 	// Creator holds the value of the creator edge.
 	Creator *User `json:"creator,omitempty"`
+	// Editor holds the value of the editor edge.
+	Editor *User `json:"editor,omitempty"`
 	// Organization holds the value of the organization edge.
 	Organization *Organization `json:"organization,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // CreatorOrErr returns the Creator value or an error if the edge
@@ -70,12 +74,23 @@ func (e PlatformEdges) CreatorOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "creator"}
 }
 
+// EditorOrErr returns the Editor value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e PlatformEdges) EditorOrErr() (*User, error) {
+	if e.Editor != nil {
+		return e.Editor, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "editor"}
+}
+
 // OrganizationOrErr returns the Organization value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e PlatformEdges) OrganizationOrErr() (*Organization, error) {
 	if e.Organization != nil {
 		return e.Organization, nil
-	} else if e.loadedTypes[1] {
+	} else if e.loadedTypes[2] {
 		return nil, &NotFoundError{label: organization.Label}
 	}
 	return nil, &NotLoadedError{edge: "organization"}
@@ -92,7 +107,7 @@ func (*Platform) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case platform.FieldCreatedAt, platform.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case platform.FieldID, platform.FieldOrgID, platform.FieldCreatorID:
+		case platform.FieldID, platform.FieldCreatedByID, platform.FieldUpdatedByID, platform.FieldOrgID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -127,6 +142,18 @@ func (pl *Platform) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pl.UpdatedAt = value.Time
 			}
+		case platform.FieldCreatedByID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field created_by_id", values[i])
+			} else if value != nil {
+				pl.CreatedByID = *value
+			}
+		case platform.FieldUpdatedByID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_by_id", values[i])
+			} else if value != nil {
+				pl.UpdatedByID = *value
+			}
 		case platform.FieldOrgID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
 				return fmt.Errorf("unexpected type %T for field org_id", values[i])
@@ -144,12 +171,6 @@ func (pl *Platform) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field display_name", values[i])
 			} else if value.Valid {
 				pl.DisplayName = value.String
-			}
-		case platform.FieldCreatorID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field creator_id", values[i])
-			} else if value != nil {
-				pl.CreatorID = *value
 			}
 		case platform.FieldForm:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -197,6 +218,11 @@ func (pl *Platform) QueryCreator() *UserQuery {
 	return NewPlatformClient(pl.config).QueryCreator(pl)
 }
 
+// QueryEditor queries the "editor" edge of the Platform entity.
+func (pl *Platform) QueryEditor() *UserQuery {
+	return NewPlatformClient(pl.config).QueryEditor(pl)
+}
+
 // QueryOrganization queries the "organization" edge of the Platform entity.
 func (pl *Platform) QueryOrganization() *OrganizationQuery {
 	return NewPlatformClient(pl.config).QueryOrganization(pl)
@@ -231,6 +257,12 @@ func (pl *Platform) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(pl.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("created_by_id=")
+	builder.WriteString(fmt.Sprintf("%v", pl.CreatedByID))
+	builder.WriteString(", ")
+	builder.WriteString("updated_by_id=")
+	builder.WriteString(fmt.Sprintf("%v", pl.UpdatedByID))
+	builder.WriteString(", ")
 	builder.WriteString("org_id=")
 	builder.WriteString(fmt.Sprintf("%v", pl.OrgID))
 	builder.WriteString(", ")
@@ -239,9 +271,6 @@ func (pl *Platform) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("display_name=")
 	builder.WriteString(pl.DisplayName)
-	builder.WriteString(", ")
-	builder.WriteString("creator_id=")
-	builder.WriteString(fmt.Sprintf("%v", pl.CreatorID))
 	builder.WriteString(", ")
 	builder.WriteString("form=")
 	builder.WriteString(fmt.Sprintf("%v", pl.Form))

@@ -25,6 +25,7 @@ type PlatformQuery struct {
 	inters           []Interceptor
 	predicates       []predicate.Platform
 	withCreator      *UserQuery
+	withEditor       *UserQuery
 	withOrganization *OrganizationQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -77,6 +78,28 @@ func (pq *PlatformQuery) QueryCreator() *UserQuery {
 			sqlgraph.From(platform.Table, platform.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, platform.CreatorTable, platform.CreatorColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryEditor chains the current query on the "editor" edge.
+func (pq *PlatformQuery) QueryEditor() *UserQuery {
+	query := (&UserClient{config: pq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(platform.Table, platform.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, platform.EditorTable, platform.EditorColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pq.driver.Dialect(), step)
 		return fromU, nil
@@ -299,6 +322,7 @@ func (pq *PlatformQuery) Clone() *PlatformQuery {
 		inters:           append([]Interceptor{}, pq.inters...),
 		predicates:       append([]predicate.Platform{}, pq.predicates...),
 		withCreator:      pq.withCreator.Clone(),
+		withEditor:       pq.withEditor.Clone(),
 		withOrganization: pq.withOrganization.Clone(),
 		// clone intermediate query.
 		sql:  pq.sql.Clone(),
@@ -314,6 +338,17 @@ func (pq *PlatformQuery) WithCreator(opts ...func(*UserQuery)) *PlatformQuery {
 		opt(query)
 	}
 	pq.withCreator = query
+	return pq
+}
+
+// WithEditor tells the query-builder to eager-load the nodes that are connected to
+// the "editor" edge. The optional arguments are used to configure the query builder of the edge.
+func (pq *PlatformQuery) WithEditor(opts ...func(*UserQuery)) *PlatformQuery {
+	query := (&UserClient{config: pq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pq.withEditor = query
 	return pq
 }
 
@@ -406,8 +441,9 @@ func (pq *PlatformQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pla
 	var (
 		nodes       = []*Platform{}
 		_spec       = pq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			pq.withCreator != nil,
+			pq.withEditor != nil,
 			pq.withOrganization != nil,
 		}
 	)
@@ -435,6 +471,12 @@ func (pq *PlatformQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pla
 			return nil, err
 		}
 	}
+	if query := pq.withEditor; query != nil {
+		if err := pq.loadEditor(ctx, query, nodes, nil,
+			func(n *Platform, e *User) { n.Edges.Editor = e }); err != nil {
+			return nil, err
+		}
+	}
 	if query := pq.withOrganization; query != nil {
 		if err := pq.loadOrganization(ctx, query, nodes, nil,
 			func(n *Platform, e *Organization) { n.Edges.Organization = e }); err != nil {
@@ -448,7 +490,7 @@ func (pq *PlatformQuery) loadCreator(ctx context.Context, query *UserQuery, node
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Platform)
 	for i := range nodes {
-		fk := nodes[i].CreatorID
+		fk := nodes[i].CreatedByID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -465,7 +507,36 @@ func (pq *PlatformQuery) loadCreator(ctx context.Context, query *UserQuery, node
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "creator_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "created_by_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (pq *PlatformQuery) loadEditor(ctx context.Context, query *UserQuery, nodes []*Platform, init func(*Platform), assign func(*Platform, *User)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Platform)
+	for i := range nodes {
+		fk := nodes[i].UpdatedByID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "updated_by_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -529,7 +600,10 @@ func (pq *PlatformQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 		if pq.withCreator != nil {
-			_spec.Node.AddColumnOnce(platform.FieldCreatorID)
+			_spec.Node.AddColumnOnce(platform.FieldCreatedByID)
+		}
+		if pq.withEditor != nil {
+			_spec.Node.AddColumnOnce(platform.FieldUpdatedByID)
 		}
 		if pq.withOrganization != nil {
 			_spec.Node.AddColumnOnce(platform.FieldOrgID)

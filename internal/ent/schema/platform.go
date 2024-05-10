@@ -6,7 +6,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
 	"github.com/gofrs/uuid"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	storage "github.com/holos-run/holos/service/gen/holos/storage/v1alpha1"
 )
 
 type Platform struct {
@@ -15,8 +15,9 @@ type Platform struct {
 
 func (Platform) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		BaseMixin{},
-		TimeMixin{},
+		IDMixin{},
+		TimestampMixin{},
+		EditorMixin{},
 	}
 }
 
@@ -25,11 +26,10 @@ func (Platform) Fields() []ent.Field {
 		field.UUID("org_id", uuid.UUID{}),
 		field.String("name").NotEmpty(),
 		field.String("display_name"),
-		field.UUID("creator_id", uuid.UUID{}),
-		field.JSON("form", &holos.Form{}).
+		field.JSON("form", &storage.Form{}).
 			Optional().
 			Comment("JSON representation of FormlyFormConfig[] refer to https://github.com/holos-run/holos/issues/161"),
-		field.JSON("model", &holos.Model{}).
+		field.JSON("model", &storage.Model{}).
 			Optional().
 			Comment("JSON representation of the form model which holds user input values refer to https://github.com/holos-run/holos/issues/161"),
 		field.Bytes("cue").
@@ -43,10 +43,6 @@ func (Platform) Fields() []ent.Field {
 
 func (Platform) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("creator", User.Type).
-			Field("creator_id").
-			Unique().
-			Required(),
 		edge.To("organization", Organization.Type).
 			Field("org_id").
 			Unique().

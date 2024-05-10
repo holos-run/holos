@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+package holos.user.v1alpha1;
+
+option go_package = "github.com/holos-run/holos/service/gen/holos/user/v1alpha1;user";
+
+// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+import "buf/validate/validate.proto";
+import "holos/object/v1alpha1/object.proto";
+
+// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+
+// User represents a human user of the system.
+message User {
+  // Unique uuid assigned by the server.
+  optional string id = 1 [(buf.validate.field).string.uuid = true];
+  // Subject represents the oidc iss and sub claims of the user.
+  optional holos.object.v1alpha1.Subject subject = 2;
+  // Email address of the user.
+  string email = 3 [(buf.validate.field).string.email = true];
+  // True if the user email has been verified.
+  optional bool email_verified = 4;
+  // Full name provided by the user.
+  optional string name = 5 [
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 255,
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_leading_whitespace"
+      message: "Cannot start with whitespace."
+      expression: "!this.matches('^[[:space:]]')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_trailing_whitespace"
+      message: "Cannot end with whitespace."
+      expression: "!this.matches('[[:space:]]$')"
+    }];
+  // Given or first name of the user.
+  optional string given_name = 6 [
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 255,
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_leading_whitespace"
+      message: "Cannot start with whitespace."
+      expression: "!this.matches('^[[:space:]]')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_trailing_whitespace"
+      message: "Cannot end with whitespace."
+      expression: "!this.matches('[[:space:]]$')"
+    }];
+  
+  // Family or last name of the user.
+  optional string family_name = 7 [
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 255,
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_leading_whitespace"
+      message: "Cannot start with whitespace."
+      expression: "!this.matches('^[[:space:]]')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_trailing_whitespace"
+      message: "Cannot end with whitespace."
+      expression: "!this.matches('[[:space:]]$')"
+    }];
+  // Groups the user is a member of.  This field represents the oidc groups
+  // claim.
+  repeated string groups = 8;
+  // https url to an user avatar profile picture.  Should be at least a 200x200 px square image.
+  optional string picture = 9 [
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 2047,
+      uri: true,
+      prefix: "https://",
+    }];
+
+  // Detail applicable to all resource objects in the system such as created and
+  // updated metadata.
+  optional holos.object.v1alpha1.Detail detail = 10;
+}

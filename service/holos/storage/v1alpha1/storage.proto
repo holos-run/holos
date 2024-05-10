@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package holos.storage.v1alpha1;
+option go_package = "github.com/holos-run/holos/service/gen/storage/v1alpha1;storage";
+
+// Managed by buf, refer to buf.yaml
+import "google/protobuf/struct.proto";
+
+// Model represents user-defined and user-supplied form field values stored as a
+// marshaled JSON object.  The model is a Struct to ensure any valid JSON object
+// defined by the user via the form can be represented and stored.
+message Model {
+  google.protobuf.Struct model = 1;
+}
+
+// Form represents the Formly input form stored as a marshaled JSON object.
+message Form {
+  // fields represents FormlyFieldConfig[] encoded as an array of JSON objects
+  // organized by section.
+  repeated google.protobuf.Struct fields = 1;
+}

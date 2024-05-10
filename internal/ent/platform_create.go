@@ -16,7 +16,7 @@ import (
 	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/user"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	storage "github.com/holos-run/holos/service/gen/holos/storage/v1alpha1"
 )
 
 // PlatformCreate is the builder for creating a Platform entity.
@@ -55,6 +55,18 @@ func (pc *PlatformCreate) SetNillableUpdatedAt(t *time.Time) *PlatformCreate {
 	return pc
 }
 
+// SetCreatedByID sets the "created_by_id" field.
+func (pc *PlatformCreate) SetCreatedByID(u uuid.UUID) *PlatformCreate {
+	pc.mutation.SetCreatedByID(u)
+	return pc
+}
+
+// SetUpdatedByID sets the "updated_by_id" field.
+func (pc *PlatformCreate) SetUpdatedByID(u uuid.UUID) *PlatformCreate {
+	pc.mutation.SetUpdatedByID(u)
+	return pc
+}
+
 // SetOrgID sets the "org_id" field.
 func (pc *PlatformCreate) SetOrgID(u uuid.UUID) *PlatformCreate {
 	pc.mutation.SetOrgID(u)
@@ -73,21 +85,15 @@ func (pc *PlatformCreate) SetDisplayName(s string) *PlatformCreate {
 	return pc
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (pc *PlatformCreate) SetCreatorID(u uuid.UUID) *PlatformCreate {
-	pc.mutation.SetCreatorID(u)
-	return pc
-}
-
 // SetForm sets the "form" field.
-func (pc *PlatformCreate) SetForm(h *holos.Form) *PlatformCreate {
-	pc.mutation.SetForm(h)
+func (pc *PlatformCreate) SetForm(s *storage.Form) *PlatformCreate {
+	pc.mutation.SetForm(s)
 	return pc
 }
 
 // SetModel sets the "model" field.
-func (pc *PlatformCreate) SetModel(h *holos.Model) *PlatformCreate {
-	pc.mutation.SetModel(h)
+func (pc *PlatformCreate) SetModel(s *storage.Model) *PlatformCreate {
+	pc.mutation.SetModel(s)
 	return pc
 }
 
@@ -125,9 +131,26 @@ func (pc *PlatformCreate) SetNillableID(u *uuid.UUID) *PlatformCreate {
 	return pc
 }
 
+// SetCreatorID sets the "creator" edge to the User entity by ID.
+func (pc *PlatformCreate) SetCreatorID(id uuid.UUID) *PlatformCreate {
+	pc.mutation.SetCreatorID(id)
+	return pc
+}
+
 // SetCreator sets the "creator" edge to the User entity.
 func (pc *PlatformCreate) SetCreator(u *User) *PlatformCreate {
 	return pc.SetCreatorID(u.ID)
+}
+
+// SetEditorID sets the "editor" edge to the User entity by ID.
+func (pc *PlatformCreate) SetEditorID(id uuid.UUID) *PlatformCreate {
+	pc.mutation.SetEditorID(id)
+	return pc
+}
+
+// SetEditor sets the "editor" edge to the User entity.
+func (pc *PlatformCreate) SetEditor(u *User) *PlatformCreate {
+	return pc.SetEditorID(u.ID)
 }
 
 // SetOrganizationID sets the "organization" edge to the Organization entity by ID.
@@ -198,6 +221,12 @@ func (pc *PlatformCreate) check() error {
 	if _, ok := pc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Platform.updated_at"`)}
 	}
+	if _, ok := pc.mutation.CreatedByID(); !ok {
+		return &ValidationError{Name: "created_by_id", err: errors.New(`ent: missing required field "Platform.created_by_id"`)}
+	}
+	if _, ok := pc.mutation.UpdatedByID(); !ok {
+		return &ValidationError{Name: "updated_by_id", err: errors.New(`ent: missing required field "Platform.updated_by_id"`)}
+	}
 	if _, ok := pc.mutation.OrgID(); !ok {
 		return &ValidationError{Name: "org_id", err: errors.New(`ent: missing required field "Platform.org_id"`)}
 	}
@@ -213,10 +242,10 @@ func (pc *PlatformCreate) check() error {
 		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "Platform.display_name"`)}
 	}
 	if _, ok := pc.mutation.CreatorID(); !ok {
-		return &ValidationError{Name: "creator_id", err: errors.New(`ent: missing required field "Platform.creator_id"`)}
-	}
-	if _, ok := pc.mutation.CreatorID(); !ok {
 		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required edge "Platform.creator"`)}
+	}
+	if _, ok := pc.mutation.EditorID(); !ok {
+		return &ValidationError{Name: "editor", err: errors.New(`ent: missing required edge "Platform.editor"`)}
 	}
 	if _, ok := pc.mutation.OrganizationID(); !ok {
 		return &ValidationError{Name: "organization", err: errors.New(`ent: missing required edge "Platform.organization"`)}
@@ -303,7 +332,24 @@ func (pc *PlatformCreate) createSpec() (*Platform, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.CreatorID = nodes[0]
+		_node.CreatedByID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pc.mutation.EditorIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   platform.EditorTable,
+			Columns: []string{platform.EditorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.UpdatedByID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := pc.mutation.OrganizationIDs(); len(nodes) > 0 {
@@ -387,6 +433,18 @@ func (u *PlatformUpsert) UpdateUpdatedAt() *PlatformUpsert {
 	return u
 }
 
+// SetUpdatedByID sets the "updated_by_id" field.
+func (u *PlatformUpsert) SetUpdatedByID(v uuid.UUID) *PlatformUpsert {
+	u.Set(platform.FieldUpdatedByID, v)
+	return u
+}
+
+// UpdateUpdatedByID sets the "updated_by_id" field to the value that was provided on create.
+func (u *PlatformUpsert) UpdateUpdatedByID() *PlatformUpsert {
+	u.SetExcluded(platform.FieldUpdatedByID)
+	return u
+}
+
 // SetOrgID sets the "org_id" field.
 func (u *PlatformUpsert) SetOrgID(v uuid.UUID) *PlatformUpsert {
 	u.Set(platform.FieldOrgID, v)
@@ -423,20 +481,8 @@ func (u *PlatformUpsert) UpdateDisplayName() *PlatformUpsert {
 	return u
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (u *PlatformUpsert) SetCreatorID(v uuid.UUID) *PlatformUpsert {
-	u.Set(platform.FieldCreatorID, v)
-	return u
-}
-
-// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
-func (u *PlatformUpsert) UpdateCreatorID() *PlatformUpsert {
-	u.SetExcluded(platform.FieldCreatorID)
-	return u
-}
-
 // SetForm sets the "form" field.
-func (u *PlatformUpsert) SetForm(v *holos.Form) *PlatformUpsert {
+func (u *PlatformUpsert) SetForm(v *storage.Form) *PlatformUpsert {
 	u.Set(platform.FieldForm, v)
 	return u
 }
@@ -454,7 +500,7 @@ func (u *PlatformUpsert) ClearForm() *PlatformUpsert {
 }
 
 // SetModel sets the "model" field.
-func (u *PlatformUpsert) SetModel(v *holos.Model) *PlatformUpsert {
+func (u *PlatformUpsert) SetModel(v *storage.Model) *PlatformUpsert {
 	u.Set(platform.FieldModel, v)
 	return u
 }
@@ -527,6 +573,9 @@ func (u *PlatformUpsertOne) UpdateNewValues() *PlatformUpsertOne {
 		if _, exists := u.create.mutation.CreatedAt(); exists {
 			s.SetIgnore(platform.FieldCreatedAt)
 		}
+		if _, exists := u.create.mutation.CreatedByID(); exists {
+			s.SetIgnore(platform.FieldCreatedByID)
+		}
 	}))
 	return u
 }
@@ -572,6 +621,20 @@ func (u *PlatformUpsertOne) UpdateUpdatedAt() *PlatformUpsertOne {
 	})
 }
 
+// SetUpdatedByID sets the "updated_by_id" field.
+func (u *PlatformUpsertOne) SetUpdatedByID(v uuid.UUID) *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetUpdatedByID(v)
+	})
+}
+
+// UpdateUpdatedByID sets the "updated_by_id" field to the value that was provided on create.
+func (u *PlatformUpsertOne) UpdateUpdatedByID() *PlatformUpsertOne {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateUpdatedByID()
+	})
+}
+
 // SetOrgID sets the "org_id" field.
 func (u *PlatformUpsertOne) SetOrgID(v uuid.UUID) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
@@ -614,22 +677,8 @@ func (u *PlatformUpsertOne) UpdateDisplayName() *PlatformUpsertOne {
 	})
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (u *PlatformUpsertOne) SetCreatorID(v uuid.UUID) *PlatformUpsertOne {
-	return u.Update(func(s *PlatformUpsert) {
-		s.SetCreatorID(v)
-	})
-}
-
-// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
-func (u *PlatformUpsertOne) UpdateCreatorID() *PlatformUpsertOne {
-	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateCreatorID()
-	})
-}
-
 // SetForm sets the "form" field.
-func (u *PlatformUpsertOne) SetForm(v *holos.Form) *PlatformUpsertOne {
+func (u *PlatformUpsertOne) SetForm(v *storage.Form) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetForm(v)
 	})
@@ -650,7 +699,7 @@ func (u *PlatformUpsertOne) ClearForm() *PlatformUpsertOne {
 }
 
 // SetModel sets the "model" field.
-func (u *PlatformUpsertOne) SetModel(v *holos.Model) *PlatformUpsertOne {
+func (u *PlatformUpsertOne) SetModel(v *storage.Model) *PlatformUpsertOne {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetModel(v)
 	})
@@ -898,6 +947,9 @@ func (u *PlatformUpsertBulk) UpdateNewValues() *PlatformUpsertBulk {
 			if _, exists := b.mutation.CreatedAt(); exists {
 				s.SetIgnore(platform.FieldCreatedAt)
 			}
+			if _, exists := b.mutation.CreatedByID(); exists {
+				s.SetIgnore(platform.FieldCreatedByID)
+			}
 		}
 	}))
 	return u
@@ -944,6 +996,20 @@ func (u *PlatformUpsertBulk) UpdateUpdatedAt() *PlatformUpsertBulk {
 	})
 }
 
+// SetUpdatedByID sets the "updated_by_id" field.
+func (u *PlatformUpsertBulk) SetUpdatedByID(v uuid.UUID) *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.SetUpdatedByID(v)
+	})
+}
+
+// UpdateUpdatedByID sets the "updated_by_id" field to the value that was provided on create.
+func (u *PlatformUpsertBulk) UpdateUpdatedByID() *PlatformUpsertBulk {
+	return u.Update(func(s *PlatformUpsert) {
+		s.UpdateUpdatedByID()
+	})
+}
+
 // SetOrgID sets the "org_id" field.
 func (u *PlatformUpsertBulk) SetOrgID(v uuid.UUID) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
@@ -986,22 +1052,8 @@ func (u *PlatformUpsertBulk) UpdateDisplayName() *PlatformUpsertBulk {
 	})
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (u *PlatformUpsertBulk) SetCreatorID(v uuid.UUID) *PlatformUpsertBulk {
-	return u.Update(func(s *PlatformUpsert) {
-		s.SetCreatorID(v)
-	})
-}
-
-// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
-func (u *PlatformUpsertBulk) UpdateCreatorID() *PlatformUpsertBulk {
-	return u.Update(func(s *PlatformUpsert) {
-		s.UpdateCreatorID()
-	})
-}
-
 // SetForm sets the "form" field.
-func (u *PlatformUpsertBulk) SetForm(v *holos.Form) *PlatformUpsertBulk {
+func (u *PlatformUpsertBulk) SetForm(v *storage.Form) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetForm(v)
 	})
@@ -1022,7 +1074,7 @@ func (u *PlatformUpsertBulk) ClearForm() *PlatformUpsertBulk {
 }
 
 // SetModel sets the "model" field.
-func (u *PlatformUpsertBulk) SetModel(v *holos.Model) *PlatformUpsertBulk {
+func (u *PlatformUpsertBulk) SetModel(v *storage.Model) *PlatformUpsertBulk {
 	return u.Update(func(s *PlatformUpsert) {
 		s.SetModel(v)
 	})

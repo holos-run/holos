@@ -66,6 +66,16 @@ func UpdatedAt(v time.Time) predicate.Organization {
 	return predicate.Organization(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// CreatedByID applies equality check predicate on the "created_by_id" field. It's identical to CreatedByIDEQ.
+func CreatedByID(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldCreatedByID, v))
+}
+
+// UpdatedByID applies equality check predicate on the "updated_by_id" field. It's identical to UpdatedByIDEQ.
+func UpdatedByID(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldUpdatedByID, v))
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Organization {
 	return predicate.Organization(sql.FieldEQ(FieldName, v))
@@ -74,11 +84,6 @@ func Name(v string) predicate.Organization {
 // DisplayName applies equality check predicate on the "display_name" field. It's identical to DisplayNameEQ.
 func DisplayName(v string) predicate.Organization {
 	return predicate.Organization(sql.FieldEQ(FieldDisplayName, v))
-}
-
-// CreatorID applies equality check predicate on the "creator_id" field. It's identical to CreatorIDEQ.
-func CreatorID(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldEQ(FieldCreatorID, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
@@ -159,6 +164,46 @@ func UpdatedAtLT(v time.Time) predicate.Organization {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Organization {
 	return predicate.Organization(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// CreatedByIDEQ applies the EQ predicate on the "created_by_id" field.
+func CreatedByIDEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldCreatedByID, v))
+}
+
+// CreatedByIDNEQ applies the NEQ predicate on the "created_by_id" field.
+func CreatedByIDNEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNEQ(FieldCreatedByID, v))
+}
+
+// CreatedByIDIn applies the In predicate on the "created_by_id" field.
+func CreatedByIDIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldIn(FieldCreatedByID, vs...))
+}
+
+// CreatedByIDNotIn applies the NotIn predicate on the "created_by_id" field.
+func CreatedByIDNotIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNotIn(FieldCreatedByID, vs...))
+}
+
+// UpdatedByIDEQ applies the EQ predicate on the "updated_by_id" field.
+func UpdatedByIDEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldEQ(FieldUpdatedByID, v))
+}
+
+// UpdatedByIDNEQ applies the NEQ predicate on the "updated_by_id" field.
+func UpdatedByIDNEQ(v uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNEQ(FieldUpdatedByID, v))
+}
+
+// UpdatedByIDIn applies the In predicate on the "updated_by_id" field.
+func UpdatedByIDIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldIn(FieldUpdatedByID, vs...))
+}
+
+// UpdatedByIDNotIn applies the NotIn predicate on the "updated_by_id" field.
+func UpdatedByIDNotIn(vs ...uuid.UUID) predicate.Organization {
+	return predicate.Organization(sql.FieldNotIn(FieldUpdatedByID, vs...))
 }
 
 // NameEQ applies the EQ predicate on the "name" field.
@@ -291,26 +336,6 @@ func DisplayNameContainsFold(v string) predicate.Organization {
 	return predicate.Organization(sql.FieldContainsFold(FieldDisplayName, v))
 }
 
-// CreatorIDEQ applies the EQ predicate on the "creator_id" field.
-func CreatorIDEQ(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldEQ(FieldCreatorID, v))
-}
-
-// CreatorIDNEQ applies the NEQ predicate on the "creator_id" field.
-func CreatorIDNEQ(v uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldNEQ(FieldCreatorID, v))
-}
-
-// CreatorIDIn applies the In predicate on the "creator_id" field.
-func CreatorIDIn(vs ...uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldIn(FieldCreatorID, vs...))
-}
-
-// CreatorIDNotIn applies the NotIn predicate on the "creator_id" field.
-func CreatorIDNotIn(vs ...uuid.UUID) predicate.Organization {
-	return predicate.Organization(sql.FieldNotIn(FieldCreatorID, vs...))
-}
-
 // HasCreator applies the HasEdge predicate on the "creator" edge.
 func HasCreator() predicate.Organization {
 	return predicate.Organization(func(s *sql.Selector) {
@@ -326,6 +351,29 @@ func HasCreator() predicate.Organization {
 func HasCreatorWith(preds ...predicate.User) predicate.Organization {
 	return predicate.Organization(func(s *sql.Selector) {
 		step := newCreatorStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasEditor applies the HasEdge predicate on the "editor" edge.
+func HasEditor() predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, EditorTable, EditorColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasEditorWith applies the HasEdge predicate on the "editor" edge with a given conditions (other predicates).
+func HasEditorWith(preds ...predicate.User) predicate.Organization {
+	return predicate.Organization(func(s *sql.Selector) {
+		step := newEditorStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

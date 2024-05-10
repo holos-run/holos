@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { Claims } from '../gen/holos/v1alpha1/user_pb';
+import { User } from '../gen/holos/user/v1alpha1/user_pb';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { Observable } from 'rxjs';
@@ -23,5 +23,5 @@ import { MatCardModule } from '@angular/material/card';
   styleUrl: './profile-button.component.scss'
 })
 export class ProfileButtonComponent {
-  @Input({ required: true }) claims$!: Observable<Claims | null>;
+  @Input({ required: true }) user$!: Observable<User | null>;
 }

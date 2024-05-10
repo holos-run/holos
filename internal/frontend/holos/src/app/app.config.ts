@@ -6,9 +6,9 @@ import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { ConnectModule } from '../connect/connect.module';
 import { provideClient } from "../connect/client.provider";
-import { UserService } from './gen/holos/v1alpha1/user_connect';
-import { OrganizationService } from './gen/holos/v1alpha1/organization_connect';
-import { PlatformService } from './gen/holos/v1alpha1/platform_connect';
+import { UserService } from './gen/holos/user/v1alpha1/user_service_connect';
+import { OrganizationService } from './gen/holos/organization/v1alpha1/organization_service_connect';
+import { PlatformService } from './gen/holos/platform/v1alpha1/platform_service_connect';
 import { HolosPanelWrapperComponent } from '../wrappers/holos-panel-wrapper/holos-panel-wrapper.component';
 
 export const appConfig: ApplicationConfig = {

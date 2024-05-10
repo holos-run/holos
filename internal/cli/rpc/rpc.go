@@ -8,9 +8,10 @@ import (
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
+	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/token"
-	h "github.com/holos-run/holos/service/gen/holos/v1alpha1"
-	"github.com/holos-run/holos/service/gen/holos/v1alpha1/holosconnect"
+	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
+	"github.com/holos-run/holos/service/gen/holos/platform/v1alpha1/platformconnect"
 	"github.com/spf13/cobra"
 )
 
@@ -45,15 +46,22 @@ func NewPlatformModel(cfg *Config) *cobra.Command {
 	cmd.Short = "get the platform model"
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Context()
-		client := holosconnect.NewPlatformServiceClient(token.NewClient(cfg.token), cfg.client.Server())
-		req := connect.NewRequest(&h.PlatformServiceGetModelRequest{PlatformId: BarePlatformID})
-		res, err := client.GetModel(ctx, req)
+		log := logger.FromContext(ctx)
+		// client := platformconnect.NewPlatformServiceClient(token.NewClient(cfg.token), cfg.client.Server())
+		client := platformconnect.NewPlatformServiceClient(token.NewClient(cfg.token), cfg.client.Server())
+		// JEFFTODO - FieldMask
+		log.WarnContext(ctx, "JEFFTODO use the fieldmask to get only the model")
+		req := connect.NewRequest(&platform.GetPlatformRequest{PlatformId: BarePlatformID})
+		res, err := client.GetPlatform(ctx, req)
 		if err != nil {
-			return errors.Wrap(fmt.Errorf("could not get model: %w", err))
+			return errors.Wrap(fmt.Errorf("could not get platform: %w", err))
+		}
+		if res == nil || res.Msg == nil || res.Msg.Platform == nil || res.Msg.Platform.Spec == nil {
+			return errors.Wrap(fmt.Errorf("response missing platform spec:\n\thave: (%+v)\n\twant: (response message platform.spec)", res))
 		}
 		encoder := json.NewEncoder(cmd.OutOrStdout())
 		encoder.SetIndent("", "  ")
-		if err := encoder.Encode(res.Msg.Model); err != nil {
+		if err := encoder.Encode(res.Msg.Platform.Spec.Model); err != nil {
 			return errors.Wrap(fmt.Errorf("could not encode json: %w", err))
 		}
 		return err

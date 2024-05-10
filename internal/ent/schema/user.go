@@ -16,8 +16,8 @@ type User struct {
 
 func (User) Mixin() []ent.Mixin {
 	return []ent.Mixin{
-		BaseMixin{},
-		TimeMixin{},
+		IDMixin{},
+		TimestampMixin{},
 	}
 }
 

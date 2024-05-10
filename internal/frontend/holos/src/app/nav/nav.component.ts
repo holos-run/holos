@@ -10,10 +10,10 @@ import { Observable } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
-import { Claims } from '../gen/holos/v1alpha1/user_pb';
 import { ProfileButtonComponent } from '../profile-button/profile-button.component';
+import { User } from '../gen/holos/user/v1alpha1/user_pb';
 import { UserService } from '../services/user.service';
-import { Organization } from '../gen/holos/v1alpha1/organization_pb';
+import { Organization } from '../gen/holos/organization/v1alpha1/organization_pb';
 import { OrganizationService } from '../services/organization.service';
 
 @Component({
@@ -41,7 +41,7 @@ export class NavComponent implements OnInit {
   private userService = inject(UserService);
   private orgService = inject(OrganizationService);
 
-  claims$!: Observable<Claims | null>;
+  user$!: Observable<User | null>;
   org$!: Observable<Organization | undefined>;
 
   refreshOrg(): void {
@@ -55,7 +55,7 @@ export class NavComponent implements OnInit {
     );
 
   ngOnInit(): void {
-    this.claims$ = this.userService.getClaims();
+    this.user$ = this.userService.getUser();
     this.org$ = this.orgService.activeOrg();
   }
 }

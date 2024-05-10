@@ -63,8 +63,20 @@ vet: ## Vet Go code.
 gencue: ## Generate CUE definitions
 	cd docs/examples && cue get go github.com/holos-run/holos/api/...
 
+.PHONY: rmgen
+rmgen: ## Remove generated code
+	git rm -rf service/gen/ internal/frontend/holos/src/app/gen/ || true
+	rm -rf service/gen/ internal/frontend/holos/src/app/gen/
+	git rm -rf internal/ent/
+	rm -rf internal/ent/
+	git restore --staged internal/ent/generate.go internal/ent/schema/
+	git restore internal/ent/generate.go internal/ent/schema/
+
+.PHONY: regenerate
+regenerate: generate ## Re-generate code (delete and re-create)
+
 .PHONY: generate
-generate: ## Generate code.
+generate: buf ## Generate code.
 	go generate ./...
 
 .PHONY: build

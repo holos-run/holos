@@ -17,7 +17,10 @@ import (
 	"github.com/holos-run/holos/internal/server/handler"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
-	"github.com/holos-run/holos/service/gen/holos/v1alpha1/holosconnect"
+	"github.com/holos-run/holos/service/gen/holos/organization/v1alpha1/organizationconnect"
+	"github.com/holos-run/holos/service/gen/holos/platform/v1alpha1/platformconnect"
+	"github.com/holos-run/holos/service/gen/holos/system/v1alpha1/systemconnect"
+	"github.com/holos-run/holos/service/gen/holos/user/v1alpha1/userconnect"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -112,16 +115,16 @@ func (s *Server) registerConnectRpc() error {
 
 	opts := connect.WithInterceptors(validator)
 
-	s.handle(holosconnect.NewUserServiceHandler(handler.NewUserHandler(s.db), opts))
-	s.handle(holosconnect.NewOrganizationServiceHandler(handler.NewOrganizationHandler(s.db), opts))
-	s.handle(holosconnect.NewPlatformServiceHandler(handler.NewPlatformHandler(s.db), opts))
-	s.handle(holosconnect.NewSystemServiceHandler(handler.NewSystemHandler(s.db), opts))
+	s.handle(userconnect.NewUserServiceHandler(handler.NewUserHandler(s.db), opts))
+	s.handle(organizationconnect.NewOrganizationServiceHandler(handler.NewOrganizationHandler(s.db), opts))
+	s.handle(platformconnect.NewPlatformServiceHandler(handler.NewPlatformHandler(s.db), opts))
+	s.handle(systemconnect.NewSystemServiceHandler(handler.NewSystemHandler(s.db), opts))
 
 	reflector := grpcreflect.NewStaticReflector(
-		holosconnect.UserServiceName,
-		holosconnect.OrganizationServiceName,
-		holosconnect.PlatformServiceName,
-		holosconnect.SystemServiceName,
+		userconnect.UserServiceName,
+		organizationconnect.OrganizationServiceName,
+		platformconnect.PlatformServiceName,
+		systemconnect.SystemServiceName,
 	)
 
 	s.mux.Handle(grpcreflect.NewHandlerV1(reflector))

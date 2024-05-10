@@ -16,7 +16,7 @@ import (
 	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	storage "github.com/holos-run/holos/service/gen/holos/storage/v1alpha1"
 )
 
 const (
@@ -46,6 +46,8 @@ type OrganizationMutation struct {
 	clearedFields    map[string]struct{}
 	creator          *uuid.UUID
 	clearedcreator   bool
+	editor           *uuid.UUID
+	clearededitor    bool
 	users            map[uuid.UUID]struct{}
 	removedusers     map[uuid.UUID]struct{}
 	clearedusers     bool
@@ -233,6 +235,78 @@ func (m *OrganizationMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetCreatedByID sets the "created_by_id" field.
+func (m *OrganizationMutation) SetCreatedByID(u uuid.UUID) {
+	m.creator = &u
+}
+
+// CreatedByID returns the value of the "created_by_id" field in the mutation.
+func (m *OrganizationMutation) CreatedByID() (r uuid.UUID, exists bool) {
+	v := m.creator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedByID returns the old "created_by_id" field's value of the Organization entity.
+// If the Organization object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrganizationMutation) OldCreatedByID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedByID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedByID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedByID: %w", err)
+	}
+	return oldValue.CreatedByID, nil
+}
+
+// ResetCreatedByID resets all changes to the "created_by_id" field.
+func (m *OrganizationMutation) ResetCreatedByID() {
+	m.creator = nil
+}
+
+// SetUpdatedByID sets the "updated_by_id" field.
+func (m *OrganizationMutation) SetUpdatedByID(u uuid.UUID) {
+	m.editor = &u
+}
+
+// UpdatedByID returns the value of the "updated_by_id" field in the mutation.
+func (m *OrganizationMutation) UpdatedByID() (r uuid.UUID, exists bool) {
+	v := m.editor
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedByID returns the old "updated_by_id" field's value of the Organization entity.
+// If the Organization object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OrganizationMutation) OldUpdatedByID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedByID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedByID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedByID: %w", err)
+	}
+	return oldValue.UpdatedByID, nil
+}
+
+// ResetUpdatedByID resets all changes to the "updated_by_id" field.
+func (m *OrganizationMutation) ResetUpdatedByID() {
+	m.editor = nil
+}
+
 // SetName sets the "name" field.
 func (m *OrganizationMutation) SetName(s string) {
 	m.name = &s
@@ -305,51 +379,28 @@ func (m *OrganizationMutation) ResetDisplayName() {
 	m.display_name = nil
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (m *OrganizationMutation) SetCreatorID(u uuid.UUID) {
-	m.creator = &u
-}
-
-// CreatorID returns the value of the "creator_id" field in the mutation.
-func (m *OrganizationMutation) CreatorID() (r uuid.UUID, exists bool) {
-	v := m.creator
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCreatorID returns the old "creator_id" field's value of the Organization entity.
-// If the Organization object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *OrganizationMutation) OldCreatorID(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatorID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatorID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatorID: %w", err)
-	}
-	return oldValue.CreatorID, nil
-}
-
-// ResetCreatorID resets all changes to the "creator_id" field.
-func (m *OrganizationMutation) ResetCreatorID() {
-	m.creator = nil
+// SetCreatorID sets the "creator" edge to the User entity by id.
+func (m *OrganizationMutation) SetCreatorID(id uuid.UUID) {
+	m.creator = &id
 }
 
 // ClearCreator clears the "creator" edge to the User entity.
 func (m *OrganizationMutation) ClearCreator() {
 	m.clearedcreator = true
-	m.clearedFields[organization.FieldCreatorID] = struct{}{}
+	m.clearedFields[organization.FieldCreatedByID] = struct{}{}
 }
 
 // CreatorCleared reports if the "creator" edge to the User entity was cleared.
 func (m *OrganizationMutation) CreatorCleared() bool {
 	return m.clearedcreator
+}
+
+// CreatorID returns the "creator" edge ID in the mutation.
+func (m *OrganizationMutation) CreatorID() (id uuid.UUID, exists bool) {
+	if m.creator != nil {
+		return *m.creator, true
+	}
+	return
 }
 
 // CreatorIDs returns the "creator" edge IDs in the mutation.
@@ -366,6 +417,46 @@ func (m *OrganizationMutation) CreatorIDs() (ids []uuid.UUID) {
 func (m *OrganizationMutation) ResetCreator() {
 	m.creator = nil
 	m.clearedcreator = false
+}
+
+// SetEditorID sets the "editor" edge to the User entity by id.
+func (m *OrganizationMutation) SetEditorID(id uuid.UUID) {
+	m.editor = &id
+}
+
+// ClearEditor clears the "editor" edge to the User entity.
+func (m *OrganizationMutation) ClearEditor() {
+	m.clearededitor = true
+	m.clearedFields[organization.FieldUpdatedByID] = struct{}{}
+}
+
+// EditorCleared reports if the "editor" edge to the User entity was cleared.
+func (m *OrganizationMutation) EditorCleared() bool {
+	return m.clearededitor
+}
+
+// EditorID returns the "editor" edge ID in the mutation.
+func (m *OrganizationMutation) EditorID() (id uuid.UUID, exists bool) {
+	if m.editor != nil {
+		return *m.editor, true
+	}
+	return
+}
+
+// EditorIDs returns the "editor" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EditorID instead. It exists only for internal usage by the builders.
+func (m *OrganizationMutation) EditorIDs() (ids []uuid.UUID) {
+	if id := m.editor; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetEditor resets all changes to the "editor" edge.
+func (m *OrganizationMutation) ResetEditor() {
+	m.editor = nil
+	m.clearededitor = false
 }
 
 // AddUserIDs adds the "users" edge to the User entity by ids.
@@ -510,21 +601,24 @@ func (m *OrganizationMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OrganizationMutation) Fields() []string {
-	fields := make([]string, 0, 5)
+	fields := make([]string, 0, 6)
 	if m.created_at != nil {
 		fields = append(fields, organization.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, organization.FieldUpdatedAt)
 	}
+	if m.creator != nil {
+		fields = append(fields, organization.FieldCreatedByID)
+	}
+	if m.editor != nil {
+		fields = append(fields, organization.FieldUpdatedByID)
+	}
 	if m.name != nil {
 		fields = append(fields, organization.FieldName)
 	}
 	if m.display_name != nil {
 		fields = append(fields, organization.FieldDisplayName)
-	}
-	if m.creator != nil {
-		fields = append(fields, organization.FieldCreatorID)
 	}
 	return fields
 }
@@ -538,12 +632,14 @@ func (m *OrganizationMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case organization.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case organization.FieldCreatedByID:
+		return m.CreatedByID()
+	case organization.FieldUpdatedByID:
+		return m.UpdatedByID()
 	case organization.FieldName:
 		return m.Name()
 	case organization.FieldDisplayName:
 		return m.DisplayName()
-	case organization.FieldCreatorID:
-		return m.CreatorID()
 	}
 	return nil, false
 }
@@ -557,12 +653,14 @@ func (m *OrganizationMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldCreatedAt(ctx)
 	case organization.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case organization.FieldCreatedByID:
+		return m.OldCreatedByID(ctx)
+	case organization.FieldUpdatedByID:
+		return m.OldUpdatedByID(ctx)
 	case organization.FieldName:
 		return m.OldName(ctx)
 	case organization.FieldDisplayName:
 		return m.OldDisplayName(ctx)
-	case organization.FieldCreatorID:
-		return m.OldCreatorID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Organization field %s", name)
 }
@@ -586,6 +684,20 @@ func (m *OrganizationMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case organization.FieldCreatedByID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedByID(v)
+		return nil
+	case organization.FieldUpdatedByID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedByID(v)
+		return nil
 	case organization.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -599,13 +711,6 @@ func (m *OrganizationMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDisplayName(v)
-		return nil
-	case organization.FieldCreatorID:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatorID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Organization field %s", name)
@@ -662,14 +767,17 @@ func (m *OrganizationMutation) ResetField(name string) error {
 	case organization.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case organization.FieldCreatedByID:
+		m.ResetCreatedByID()
+		return nil
+	case organization.FieldUpdatedByID:
+		m.ResetUpdatedByID()
+		return nil
 	case organization.FieldName:
 		m.ResetName()
 		return nil
 	case organization.FieldDisplayName:
 		m.ResetDisplayName()
-		return nil
-	case organization.FieldCreatorID:
-		m.ResetCreatorID()
 		return nil
 	}
 	return fmt.Errorf("unknown Organization field %s", name)
@@ -677,9 +785,12 @@ func (m *OrganizationMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *OrganizationMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.creator != nil {
 		edges = append(edges, organization.EdgeCreator)
+	}
+	if m.editor != nil {
+		edges = append(edges, organization.EdgeEditor)
 	}
 	if m.users != nil {
 		edges = append(edges, organization.EdgeUsers)
@@ -696,6 +807,10 @@ func (m *OrganizationMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case organization.EdgeCreator:
 		if id := m.creator; id != nil {
+			return []ent.Value{*id}
+		}
+	case organization.EdgeEditor:
+		if id := m.editor; id != nil {
 			return []ent.Value{*id}
 		}
 	case organization.EdgeUsers:
@@ -716,7 +831,7 @@ func (m *OrganizationMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *OrganizationMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedusers != nil {
 		edges = append(edges, organization.EdgeUsers)
 	}
@@ -748,9 +863,12 @@ func (m *OrganizationMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *OrganizationMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedcreator {
 		edges = append(edges, organization.EdgeCreator)
+	}
+	if m.clearededitor {
+		edges = append(edges, organization.EdgeEditor)
 	}
 	if m.clearedusers {
 		edges = append(edges, organization.EdgeUsers)
@@ -767,6 +885,8 @@ func (m *OrganizationMutation) EdgeCleared(name string) bool {
 	switch name {
 	case organization.EdgeCreator:
 		return m.clearedcreator
+	case organization.EdgeEditor:
+		return m.clearededitor
 	case organization.EdgeUsers:
 		return m.clearedusers
 	case organization.EdgePlatforms:
@@ -782,6 +902,9 @@ func (m *OrganizationMutation) ClearEdge(name string) error {
 	case organization.EdgeCreator:
 		m.ClearCreator()
 		return nil
+	case organization.EdgeEditor:
+		m.ClearEditor()
+		return nil
 	}
 	return fmt.Errorf("unknown Organization unique edge %s", name)
 }
@@ -792,6 +915,9 @@ func (m *OrganizationMutation) ResetEdge(name string) error {
 	switch name {
 	case organization.EdgeCreator:
 		m.ResetCreator()
+		return nil
+	case organization.EdgeEditor:
+		m.ResetEditor()
 		return nil
 	case organization.EdgeUsers:
 		m.ResetUsers()
@@ -813,13 +939,15 @@ type PlatformMutation struct {
 	updated_at          *time.Time
 	name                *string
 	display_name        *string
-	form                **holos.Form
-	model               **holos.Model
+	form                **storage.Form
+	model               **storage.Model
 	cue                 *[]byte
 	cue_definition      *string
 	clearedFields       map[string]struct{}
 	creator             *uuid.UUID
 	clearedcreator      bool
+	editor              *uuid.UUID
+	clearededitor       bool
 	organization        *uuid.UUID
 	clearedorganization bool
 	done                bool
@@ -1003,6 +1131,78 @@ func (m *PlatformMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetCreatedByID sets the "created_by_id" field.
+func (m *PlatformMutation) SetCreatedByID(u uuid.UUID) {
+	m.creator = &u
+}
+
+// CreatedByID returns the value of the "created_by_id" field in the mutation.
+func (m *PlatformMutation) CreatedByID() (r uuid.UUID, exists bool) {
+	v := m.creator
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedByID returns the old "created_by_id" field's value of the Platform entity.
+// If the Platform object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlatformMutation) OldCreatedByID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedByID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedByID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedByID: %w", err)
+	}
+	return oldValue.CreatedByID, nil
+}
+
+// ResetCreatedByID resets all changes to the "created_by_id" field.
+func (m *PlatformMutation) ResetCreatedByID() {
+	m.creator = nil
+}
+
+// SetUpdatedByID sets the "updated_by_id" field.
+func (m *PlatformMutation) SetUpdatedByID(u uuid.UUID) {
+	m.editor = &u
+}
+
+// UpdatedByID returns the value of the "updated_by_id" field in the mutation.
+func (m *PlatformMutation) UpdatedByID() (r uuid.UUID, exists bool) {
+	v := m.editor
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedByID returns the old "updated_by_id" field's value of the Platform entity.
+// If the Platform object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PlatformMutation) OldUpdatedByID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedByID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedByID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedByID: %w", err)
+	}
+	return oldValue.UpdatedByID, nil
+}
+
+// ResetUpdatedByID resets all changes to the "updated_by_id" field.
+func (m *PlatformMutation) ResetUpdatedByID() {
+	m.editor = nil
+}
+
 // SetOrgID sets the "org_id" field.
 func (m *PlatformMutation) SetOrgID(u uuid.UUID) {
 	m.organization = &u
@@ -1111,49 +1311,13 @@ func (m *PlatformMutation) ResetDisplayName() {
 	m.display_name = nil
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (m *PlatformMutation) SetCreatorID(u uuid.UUID) {
-	m.creator = &u
-}
-
-// CreatorID returns the value of the "creator_id" field in the mutation.
-func (m *PlatformMutation) CreatorID() (r uuid.UUID, exists bool) {
-	v := m.creator
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCreatorID returns the old "creator_id" field's value of the Platform entity.
-// If the Platform object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PlatformMutation) OldCreatorID(ctx context.Context) (v uuid.UUID, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatorID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatorID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatorID: %w", err)
-	}
-	return oldValue.CreatorID, nil
-}
-
-// ResetCreatorID resets all changes to the "creator_id" field.
-func (m *PlatformMutation) ResetCreatorID() {
-	m.creator = nil
-}
-
 // SetForm sets the "form" field.
-func (m *PlatformMutation) SetForm(h *holos.Form) {
-	m.form = &h
+func (m *PlatformMutation) SetForm(s *storage.Form) {
+	m.form = &s
 }
 
 // Form returns the value of the "form" field in the mutation.
-func (m *PlatformMutation) Form() (r *holos.Form, exists bool) {
+func (m *PlatformMutation) Form() (r *storage.Form, exists bool) {
 	v := m.form
 	if v == nil {
 		return
@@ -1164,7 +1328,7 @@ func (m *PlatformMutation) Form() (r *holos.Form, exists bool) {
 // OldForm returns the old "form" field's value of the Platform entity.
 // If the Platform object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PlatformMutation) OldForm(ctx context.Context) (v *holos.Form, err error) {
+func (m *PlatformMutation) OldForm(ctx context.Context) (v *storage.Form, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldForm is only allowed on UpdateOne operations")
 	}
@@ -1197,12 +1361,12 @@ func (m *PlatformMutation) ResetForm() {
 }
 
 // SetModel sets the "model" field.
-func (m *PlatformMutation) SetModel(h *holos.Model) {
-	m.model = &h
+func (m *PlatformMutation) SetModel(s *storage.Model) {
+	m.model = &s
 }
 
 // Model returns the value of the "model" field in the mutation.
-func (m *PlatformMutation) Model() (r *holos.Model, exists bool) {
+func (m *PlatformMutation) Model() (r *storage.Model, exists bool) {
 	v := m.model
 	if v == nil {
 		return
@@ -1213,7 +1377,7 @@ func (m *PlatformMutation) Model() (r *holos.Model, exists bool) {
 // OldModel returns the old "model" field's value of the Platform entity.
 // If the Platform object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PlatformMutation) OldModel(ctx context.Context) (v *holos.Model, err error) {
+func (m *PlatformMutation) OldModel(ctx context.Context) (v *storage.Model, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldModel is only allowed on UpdateOne operations")
 	}
@@ -1343,15 +1507,28 @@ func (m *PlatformMutation) ResetCueDefinition() {
 	delete(m.clearedFields, platform.FieldCueDefinition)
 }
 
+// SetCreatorID sets the "creator" edge to the User entity by id.
+func (m *PlatformMutation) SetCreatorID(id uuid.UUID) {
+	m.creator = &id
+}
+
 // ClearCreator clears the "creator" edge to the User entity.
 func (m *PlatformMutation) ClearCreator() {
 	m.clearedcreator = true
-	m.clearedFields[platform.FieldCreatorID] = struct{}{}
+	m.clearedFields[platform.FieldCreatedByID] = struct{}{}
 }
 
 // CreatorCleared reports if the "creator" edge to the User entity was cleared.
 func (m *PlatformMutation) CreatorCleared() bool {
 	return m.clearedcreator
+}
+
+// CreatorID returns the "creator" edge ID in the mutation.
+func (m *PlatformMutation) CreatorID() (id uuid.UUID, exists bool) {
+	if m.creator != nil {
+		return *m.creator, true
+	}
+	return
 }
 
 // CreatorIDs returns the "creator" edge IDs in the mutation.
@@ -1368,6 +1545,46 @@ func (m *PlatformMutation) CreatorIDs() (ids []uuid.UUID) {
 func (m *PlatformMutation) ResetCreator() {
 	m.creator = nil
 	m.clearedcreator = false
+}
+
+// SetEditorID sets the "editor" edge to the User entity by id.
+func (m *PlatformMutation) SetEditorID(id uuid.UUID) {
+	m.editor = &id
+}
+
+// ClearEditor clears the "editor" edge to the User entity.
+func (m *PlatformMutation) ClearEditor() {
+	m.clearededitor = true
+	m.clearedFields[platform.FieldUpdatedByID] = struct{}{}
+}
+
+// EditorCleared reports if the "editor" edge to the User entity was cleared.
+func (m *PlatformMutation) EditorCleared() bool {
+	return m.clearededitor
+}
+
+// EditorID returns the "editor" edge ID in the mutation.
+func (m *PlatformMutation) EditorID() (id uuid.UUID, exists bool) {
+	if m.editor != nil {
+		return *m.editor, true
+	}
+	return
+}
+
+// EditorIDs returns the "editor" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// EditorID instead. It exists only for internal usage by the builders.
+func (m *PlatformMutation) EditorIDs() (ids []uuid.UUID) {
+	if id := m.editor; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetEditor resets all changes to the "editor" edge.
+func (m *PlatformMutation) ResetEditor() {
+	m.editor = nil
+	m.clearededitor = false
 }
 
 // SetOrganizationID sets the "organization" edge to the Organization entity by id.
@@ -1444,12 +1661,18 @@ func (m *PlatformMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PlatformMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.created_at != nil {
 		fields = append(fields, platform.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, platform.FieldUpdatedAt)
+	}
+	if m.creator != nil {
+		fields = append(fields, platform.FieldCreatedByID)
+	}
+	if m.editor != nil {
+		fields = append(fields, platform.FieldUpdatedByID)
 	}
 	if m.organization != nil {
 		fields = append(fields, platform.FieldOrgID)
@@ -1459,9 +1682,6 @@ func (m *PlatformMutation) Fields() []string {
 	}
 	if m.display_name != nil {
 		fields = append(fields, platform.FieldDisplayName)
-	}
-	if m.creator != nil {
-		fields = append(fields, platform.FieldCreatorID)
 	}
 	if m.form != nil {
 		fields = append(fields, platform.FieldForm)
@@ -1487,14 +1707,16 @@ func (m *PlatformMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case platform.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case platform.FieldCreatedByID:
+		return m.CreatedByID()
+	case platform.FieldUpdatedByID:
+		return m.UpdatedByID()
 	case platform.FieldOrgID:
 		return m.OrgID()
 	case platform.FieldName:
 		return m.Name()
 	case platform.FieldDisplayName:
 		return m.DisplayName()
-	case platform.FieldCreatorID:
-		return m.CreatorID()
 	case platform.FieldForm:
 		return m.Form()
 	case platform.FieldModel:
@@ -1516,14 +1738,16 @@ func (m *PlatformMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldCreatedAt(ctx)
 	case platform.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case platform.FieldCreatedByID:
+		return m.OldCreatedByID(ctx)
+	case platform.FieldUpdatedByID:
+		return m.OldUpdatedByID(ctx)
 	case platform.FieldOrgID:
 		return m.OldOrgID(ctx)
 	case platform.FieldName:
 		return m.OldName(ctx)
 	case platform.FieldDisplayName:
 		return m.OldDisplayName(ctx)
-	case platform.FieldCreatorID:
-		return m.OldCreatorID(ctx)
 	case platform.FieldForm:
 		return m.OldForm(ctx)
 	case platform.FieldModel:
@@ -1555,6 +1779,20 @@ func (m *PlatformMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case platform.FieldCreatedByID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedByID(v)
+		return nil
+	case platform.FieldUpdatedByID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedByID(v)
+		return nil
 	case platform.FieldOrgID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
@@ -1576,22 +1814,15 @@ func (m *PlatformMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDisplayName(v)
 		return nil
-	case platform.FieldCreatorID:
-		v, ok := value.(uuid.UUID)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatorID(v)
-		return nil
 	case platform.FieldForm:
-		v, ok := value.(*holos.Form)
+		v, ok := value.(*storage.Form)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetForm(v)
 		return nil
 	case platform.FieldModel:
-		v, ok := value.(*holos.Model)
+		v, ok := value.(*storage.Model)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -1693,6 +1924,12 @@ func (m *PlatformMutation) ResetField(name string) error {
 	case platform.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case platform.FieldCreatedByID:
+		m.ResetCreatedByID()
+		return nil
+	case platform.FieldUpdatedByID:
+		m.ResetUpdatedByID()
+		return nil
 	case platform.FieldOrgID:
 		m.ResetOrgID()
 		return nil
@@ -1701,9 +1938,6 @@ func (m *PlatformMutation) ResetField(name string) error {
 		return nil
 	case platform.FieldDisplayName:
 		m.ResetDisplayName()
-		return nil
-	case platform.FieldCreatorID:
-		m.ResetCreatorID()
 		return nil
 	case platform.FieldForm:
 		m.ResetForm()
@@ -1723,9 +1957,12 @@ func (m *PlatformMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *PlatformMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.creator != nil {
 		edges = append(edges, platform.EdgeCreator)
+	}
+	if m.editor != nil {
+		edges = append(edges, platform.EdgeEditor)
 	}
 	if m.organization != nil {
 		edges = append(edges, platform.EdgeOrganization)
@@ -1741,6 +1978,10 @@ func (m *PlatformMutation) AddedIDs(name string) []ent.Value {
 		if id := m.creator; id != nil {
 			return []ent.Value{*id}
 		}
+	case platform.EdgeEditor:
+		if id := m.editor; id != nil {
+			return []ent.Value{*id}
+		}
 	case platform.EdgeOrganization:
 		if id := m.organization; id != nil {
 			return []ent.Value{*id}
@@ -1751,7 +1992,7 @@ func (m *PlatformMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *PlatformMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	return edges
 }
 
@@ -1763,9 +2004,12 @@ func (m *PlatformMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *PlatformMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedcreator {
 		edges = append(edges, platform.EdgeCreator)
+	}
+	if m.clearededitor {
+		edges = append(edges, platform.EdgeEditor)
 	}
 	if m.clearedorganization {
 		edges = append(edges, platform.EdgeOrganization)
@@ -1779,6 +2023,8 @@ func (m *PlatformMutation) EdgeCleared(name string) bool {
 	switch name {
 	case platform.EdgeCreator:
 		return m.clearedcreator
+	case platform.EdgeEditor:
+		return m.clearededitor
 	case platform.EdgeOrganization:
 		return m.clearedorganization
 	}
@@ -1791,6 +2037,9 @@ func (m *PlatformMutation) ClearEdge(name string) error {
 	switch name {
 	case platform.EdgeCreator:
 		m.ClearCreator()
+		return nil
+	case platform.EdgeEditor:
+		m.ClearEditor()
 		return nil
 	case platform.EdgeOrganization:
 		m.ClearOrganization()
@@ -1805,6 +2054,9 @@ func (m *PlatformMutation) ResetEdge(name string) error {
 	switch name {
 	case platform.EdgeCreator:
 		m.ResetCreator()
+		return nil
+	case platform.EdgeEditor:
+		m.ResetEditor()
 		return nil
 	case platform.EdgeOrganization:
 		m.ResetOrganization()

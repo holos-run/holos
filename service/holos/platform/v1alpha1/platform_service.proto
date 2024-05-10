@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package holos.platform.v1alpha1;
+option go_package = "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1;platform";
+
+import "buf/validate/validate.proto";
+import "google/protobuf/field_mask.proto";
+import "holos/platform/v1alpha1/platform.proto";
+
+message CreatePlatformRequest {
+  Platform platform = 1;
+}
+
+message CreatePlatformResponse {
+  Platform platform = 1;
+}
+
+message GetPlatformRequest {
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+  // FieldMask represents the response Platform fields to include.
+  google.protobuf.FieldMask field_mask = 2;
+}
+
+message GetPlatformResponse {
+  Platform platform = 1;
+}
+
+message UpdatePlatformResponse {
+  Platform platform = 1;
+}
+
+message UpdatePlatformRequest {
+  Platform platform = 1;
+  // FieldMask represents the request Platform fields to update.
+  google.protobuf.FieldMask field_mask = 2;
+}
+
+message ListPlatformsRequest {
+  string org_id = 1 [(buf.validate.field).string.uuid = true];
+  // FieldMask represents the response Platform fields to include.
+  google.protobuf.FieldMask field_mask = 2;
+}
+
+message ListPlatformsResponse {
+  repeated Platform platforms = 1;
+}
+
+service PlatformService {
+  rpc CreatePlatform(CreatePlatformRequest) returns (CreatePlatformResponse) {}
+  rpc GetPlatform(GetPlatformRequest) returns (GetPlatformResponse) {}
+  rpc UpdatePlatform(UpdatePlatformRequest) returns (UpdatePlatformResponse) {}
+  rpc ListPlatforms(ListPlatformsRequest) returns (ListPlatformsResponse) {}
+}

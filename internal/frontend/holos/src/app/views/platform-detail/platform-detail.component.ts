@@ -53,14 +53,7 @@ export class PlatformDetailComponent implements OnDestroy {
   onSubmit(model: JsonValue) {
     if (this.form.valid) {
       console.log(model)
-      this.platformService
-        .putModel(this.platformId, model)
-        .pipe(takeUntil(this.destroy$))
-        .subscribe(resp => {
-          if (resp.model !== undefined) {
-            this.setModel(resp.model.toJson())
-          }
-        })
+      window.alert("call UpdatePlatform")
     }
   }
 
@@ -68,17 +61,17 @@ export class PlatformDetailComponent implements OnDestroy {
   set id(platformId: string) {
     this.platformId = platformId;
     this.platformService
-      .getForm(platformId)
+      .getPlatform(platformId)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(resp => {
-        if (resp.model !== undefined) {
-          this.setModel(resp.model.toJson())
+      .subscribe(platform => {
+        if (platform?.spec?.model !== undefined) {
+          this.setModel(platform.spec.model.toJson())
         }
-        if (resp.fields !== undefined) {
+        if (platform?.spec?.form !== undefined) {
           // NOTE: We could mix functions into the json data via mapped fields,
           // but consider carefully before doing so.  Refer to
           // https://formly.dev/docs/examples/other/json-powered
-          this.fields = resp.fields.map(field => field.toJson() as FormlyFieldConfig)
+          this.fields = platform.spec.form.fields.map(field => field.toJson() as FormlyFieldConfig)
         }
       })
   }

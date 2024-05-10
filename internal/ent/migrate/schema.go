@@ -15,7 +15,8 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "display_name", Type: field.TypeString},
-		{Name: "creator_id", Type: field.TypeUUID},
+		{Name: "created_by_id", Type: field.TypeUUID},
+		{Name: "updated_by_id", Type: field.TypeUUID},
 	}
 	// OrganizationsTable holds the schema information for the "organizations" table.
 	OrganizationsTable = &schema.Table{
@@ -26,6 +27,12 @@ var (
 			{
 				Symbol:     "organizations_users_creator",
 				Columns:    []*schema.Column{OrganizationsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "organizations_users_editor",
+				Columns:    []*schema.Column{OrganizationsColumns[6]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -42,7 +49,8 @@ var (
 		{Name: "model", Type: field.TypeJSON, Nullable: true},
 		{Name: "cue", Type: field.TypeBytes, Nullable: true},
 		{Name: "cue_definition", Type: field.TypeString, Nullable: true},
-		{Name: "creator_id", Type: field.TypeUUID},
+		{Name: "created_by_id", Type: field.TypeUUID},
+		{Name: "updated_by_id", Type: field.TypeUUID},
 		{Name: "org_id", Type: field.TypeUUID},
 	}
 	// PlatformsTable holds the schema information for the "platforms" table.
@@ -58,8 +66,14 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 			{
-				Symbol:     "platforms_organizations_organization",
+				Symbol:     "platforms_users_editor",
 				Columns:    []*schema.Column{PlatformsColumns[10]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "platforms_organizations_organization",
+				Columns:    []*schema.Column{PlatformsColumns[11]},
 				RefColumns: []*schema.Column{OrganizationsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -68,7 +82,7 @@ var (
 			{
 				Name:    "platform_org_id_name",
 				Unique:  true,
-				Columns: []*schema.Column{PlatformsColumns[10], PlatformsColumns[3]},
+				Columns: []*schema.Column{PlatformsColumns[11], PlatformsColumns[3]},
 			},
 		},
 	}
@@ -131,8 +145,10 @@ var (
 
 func init() {
 	OrganizationsTable.ForeignKeys[0].RefTable = UsersTable
+	OrganizationsTable.ForeignKeys[1].RefTable = UsersTable
 	PlatformsTable.ForeignKeys[0].RefTable = UsersTable
-	PlatformsTable.ForeignKeys[1].RefTable = OrganizationsTable
+	PlatformsTable.ForeignKeys[1].RefTable = UsersTable
+	PlatformsTable.ForeignKeys[2].RefTable = OrganizationsTable
 	OrganizationUsersTable.ForeignKeys[0].RefTable = OrganizationsTable
 	OrganizationUsersTable.ForeignKeys[1].RefTable = UsersTable
 }

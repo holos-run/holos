@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package holos.organization.v1alpha1;
+
+option go_package = "github.com/holos-run/holos/service/gen/holos/organization/v1alpha1;organization";
+
+// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+import "buf/validate/validate.proto";
+import "holos/object/v1alpha1/object.proto";
+
+// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+
+message Organization {
+  // Unique id assigned by the server.
+  optional string org_id = 1 [(buf.validate.field).string.uuid = true];
+  // Name is the organization name as a dns label.
+  string name = 2 [
+    (buf.validate.field).string = {
+      min_len: 3,
+      max_len: 39,
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_start_hyphen"
+      message: "Cannot start with a hyphen."
+      expression: "!this.startsWith('-')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_end_hyphen"
+      message: "Cannot end with a hyphen."
+      expression: "!this.endsWith('-')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_consecutive_hyphens"
+      message: "Cannot include consecutive hyphens."
+      expression: "!this.contains('--')"
+    },
+    (buf.validate.field).cel = {
+      id: "name"
+      message: "All characters must be either a hyphen or alphanumeric."
+      // https://github.com/google/cel-spec/blob/master/doc/langdef.md#regular-expressions
+      expression: "this.matches('^[A-Za-z0-9-]$')"
+    }
+   ];
+  optional string display_name = 3 [
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 100,
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_start_space"
+      message: "Cannot start with a space."
+      expression: "!this.startsWith(' ')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_end_space"
+      message: "Cannot end with a space."
+      expression: "!this.endsWith(' ')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_consecutive_spaces"
+      message: "Cannot include consecutive spaces."
+      expression: "!this.contains('  ')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.characters"
+      message: "All characters must be either a space or alphanumeric."
+      // https://github.com/google/cel-spec/blob/master/doc/langdef.md#regular-expressions
+      expression: "this.matches('^[A-Za-z0-9 ]$')"
+    }];
+  optional holos.object.v1alpha1.Detail detail = 4;
+}

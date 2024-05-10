@@ -342,6 +342,22 @@ func (c *OrganizationClient) QueryCreator(o *Organization) *UserQuery {
 	return query
 }
 
+// QueryEditor queries the editor edge of a Organization.
+func (c *OrganizationClient) QueryEditor(o *Organization) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := o.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(organization.Table, organization.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, organization.EditorTable, organization.EditorColumn),
+		)
+		fromV = sqlgraph.Neighbors(o.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryUsers queries the users edge of a Organization.
 func (c *OrganizationClient) QueryUsers(o *Organization) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
@@ -516,6 +532,22 @@ func (c *PlatformClient) QueryCreator(pl *Platform) *UserQuery {
 			sqlgraph.From(platform.Table, platform.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, platform.CreatorTable, platform.CreatorColumn),
+		)
+		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryEditor queries the editor edge of a Platform.
+func (c *PlatformClient) QueryEditor(pl *Platform) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(platform.Table, platform.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, platform.EditorTable, platform.EditorColumn),
 		)
 		fromV = sqlgraph.Neighbors(pl.driver.Dialect(), step)
 		return fromV, nil

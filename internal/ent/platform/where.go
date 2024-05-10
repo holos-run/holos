@@ -66,6 +66,16 @@ func UpdatedAt(v time.Time) predicate.Platform {
 	return predicate.Platform(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// CreatedByID applies equality check predicate on the "created_by_id" field. It's identical to CreatedByIDEQ.
+func CreatedByID(v uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldCreatedByID, v))
+}
+
+// UpdatedByID applies equality check predicate on the "updated_by_id" field. It's identical to UpdatedByIDEQ.
+func UpdatedByID(v uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldUpdatedByID, v))
+}
+
 // OrgID applies equality check predicate on the "org_id" field. It's identical to OrgIDEQ.
 func OrgID(v uuid.UUID) predicate.Platform {
 	return predicate.Platform(sql.FieldEQ(FieldOrgID, v))
@@ -79,11 +89,6 @@ func Name(v string) predicate.Platform {
 // DisplayName applies equality check predicate on the "display_name" field. It's identical to DisplayNameEQ.
 func DisplayName(v string) predicate.Platform {
 	return predicate.Platform(sql.FieldEQ(FieldDisplayName, v))
-}
-
-// CreatorID applies equality check predicate on the "creator_id" field. It's identical to CreatorIDEQ.
-func CreatorID(v uuid.UUID) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldCreatorID, v))
 }
 
 // Cue applies equality check predicate on the "cue" field. It's identical to CueEQ.
@@ -174,6 +179,46 @@ func UpdatedAtLT(v time.Time) predicate.Platform {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Platform {
 	return predicate.Platform(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// CreatedByIDEQ applies the EQ predicate on the "created_by_id" field.
+func CreatedByIDEQ(v uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldCreatedByID, v))
+}
+
+// CreatedByIDNEQ applies the NEQ predicate on the "created_by_id" field.
+func CreatedByIDNEQ(v uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldNEQ(FieldCreatedByID, v))
+}
+
+// CreatedByIDIn applies the In predicate on the "created_by_id" field.
+func CreatedByIDIn(vs ...uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldIn(FieldCreatedByID, vs...))
+}
+
+// CreatedByIDNotIn applies the NotIn predicate on the "created_by_id" field.
+func CreatedByIDNotIn(vs ...uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldNotIn(FieldCreatedByID, vs...))
+}
+
+// UpdatedByIDEQ applies the EQ predicate on the "updated_by_id" field.
+func UpdatedByIDEQ(v uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldEQ(FieldUpdatedByID, v))
+}
+
+// UpdatedByIDNEQ applies the NEQ predicate on the "updated_by_id" field.
+func UpdatedByIDNEQ(v uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldNEQ(FieldUpdatedByID, v))
+}
+
+// UpdatedByIDIn applies the In predicate on the "updated_by_id" field.
+func UpdatedByIDIn(vs ...uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldIn(FieldUpdatedByID, vs...))
+}
+
+// UpdatedByIDNotIn applies the NotIn predicate on the "updated_by_id" field.
+func UpdatedByIDNotIn(vs ...uuid.UUID) predicate.Platform {
+	return predicate.Platform(sql.FieldNotIn(FieldUpdatedByID, vs...))
 }
 
 // OrgIDEQ applies the EQ predicate on the "org_id" field.
@@ -324,26 +369,6 @@ func DisplayNameEqualFold(v string) predicate.Platform {
 // DisplayNameContainsFold applies the ContainsFold predicate on the "display_name" field.
 func DisplayNameContainsFold(v string) predicate.Platform {
 	return predicate.Platform(sql.FieldContainsFold(FieldDisplayName, v))
-}
-
-// CreatorIDEQ applies the EQ predicate on the "creator_id" field.
-func CreatorIDEQ(v uuid.UUID) predicate.Platform {
-	return predicate.Platform(sql.FieldEQ(FieldCreatorID, v))
-}
-
-// CreatorIDNEQ applies the NEQ predicate on the "creator_id" field.
-func CreatorIDNEQ(v uuid.UUID) predicate.Platform {
-	return predicate.Platform(sql.FieldNEQ(FieldCreatorID, v))
-}
-
-// CreatorIDIn applies the In predicate on the "creator_id" field.
-func CreatorIDIn(vs ...uuid.UUID) predicate.Platform {
-	return predicate.Platform(sql.FieldIn(FieldCreatorID, vs...))
-}
-
-// CreatorIDNotIn applies the NotIn predicate on the "creator_id" field.
-func CreatorIDNotIn(vs ...uuid.UUID) predicate.Platform {
-	return predicate.Platform(sql.FieldNotIn(FieldCreatorID, vs...))
 }
 
 // FormIsNil applies the IsNil predicate on the "form" field.
@@ -506,6 +531,29 @@ func HasCreator() predicate.Platform {
 func HasCreatorWith(preds ...predicate.User) predicate.Platform {
 	return predicate.Platform(func(s *sql.Selector) {
 		step := newCreatorStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasEditor applies the HasEdge predicate on the "editor" edge.
+func HasEditor() predicate.Platform {
+	return predicate.Platform(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, EditorTable, EditorColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasEditorWith applies the HasEdge predicate on the "editor" edge with a given conditions (other predicates).
+func HasEditorWith(preds ...predicate.User) predicate.Platform {
+	return predicate.Platform(func(s *sql.Selector) {
+		step := newEditorStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -19,14 +19,16 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldCreatedByID holds the string denoting the created_by_id field in the database.
+	FieldCreatedByID = "created_by_id"
+	// FieldUpdatedByID holds the string denoting the updated_by_id field in the database.
+	FieldUpdatedByID = "updated_by_id"
 	// FieldOrgID holds the string denoting the org_id field in the database.
 	FieldOrgID = "org_id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldDisplayName holds the string denoting the display_name field in the database.
 	FieldDisplayName = "display_name"
-	// FieldCreatorID holds the string denoting the creator_id field in the database.
-	FieldCreatorID = "creator_id"
 	// FieldForm holds the string denoting the form field in the database.
 	FieldForm = "form"
 	// FieldModel holds the string denoting the model field in the database.
@@ -37,6 +39,8 @@ const (
 	FieldCueDefinition = "cue_definition"
 	// EdgeCreator holds the string denoting the creator edge name in mutations.
 	EdgeCreator = "creator"
+	// EdgeEditor holds the string denoting the editor edge name in mutations.
+	EdgeEditor = "editor"
 	// EdgeOrganization holds the string denoting the organization edge name in mutations.
 	EdgeOrganization = "organization"
 	// Table holds the table name of the platform in the database.
@@ -47,7 +51,14 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	CreatorInverseTable = "users"
 	// CreatorColumn is the table column denoting the creator relation/edge.
-	CreatorColumn = "creator_id"
+	CreatorColumn = "created_by_id"
+	// EditorTable is the table that holds the editor relation/edge.
+	EditorTable = "platforms"
+	// EditorInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	EditorInverseTable = "users"
+	// EditorColumn is the table column denoting the editor relation/edge.
+	EditorColumn = "updated_by_id"
 	// OrganizationTable is the table that holds the organization relation/edge.
 	OrganizationTable = "platforms"
 	// OrganizationInverseTable is the table name for the Organization entity.
@@ -62,10 +73,11 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldCreatedByID,
+	FieldUpdatedByID,
 	FieldOrgID,
 	FieldName,
 	FieldDisplayName,
-	FieldCreatorID,
 	FieldForm,
 	FieldModel,
 	FieldCue,
@@ -113,6 +125,16 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
+// ByCreatedByID orders the results by the created_by_id field.
+func ByCreatedByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCreatedByID, opts...).ToFunc()
+}
+
+// ByUpdatedByID orders the results by the updated_by_id field.
+func ByUpdatedByID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUpdatedByID, opts...).ToFunc()
+}
+
 // ByOrgID orders the results by the org_id field.
 func ByOrgID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldOrgID, opts...).ToFunc()
@@ -128,11 +150,6 @@ func ByDisplayName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDisplayName, opts...).ToFunc()
 }
 
-// ByCreatorID orders the results by the creator_id field.
-func ByCreatorID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCreatorID, opts...).ToFunc()
-}
-
 // ByCueDefinition orders the results by the cue_definition field.
 func ByCueDefinition(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCueDefinition, opts...).ToFunc()
@@ -142,6 +159,13 @@ func ByCueDefinition(opts ...sql.OrderTermOption) OrderOption {
 func ByCreatorField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newCreatorStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByEditorField orders the results by editor field.
+func ByEditorField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newEditorStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -156,6 +180,13 @@ func newCreatorStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CreatorInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, false, CreatorTable, CreatorColumn),
+	)
+}
+func newEditorStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(EditorInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, EditorTable, EditorColumn),
 	)
 }
 func newOrganizationStep() *sqlgraph.Step {

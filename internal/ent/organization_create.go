@@ -54,6 +54,18 @@ func (oc *OrganizationCreate) SetNillableUpdatedAt(t *time.Time) *OrganizationCr
 	return oc
 }
 
+// SetCreatedByID sets the "created_by_id" field.
+func (oc *OrganizationCreate) SetCreatedByID(u uuid.UUID) *OrganizationCreate {
+	oc.mutation.SetCreatedByID(u)
+	return oc
+}
+
+// SetUpdatedByID sets the "updated_by_id" field.
+func (oc *OrganizationCreate) SetUpdatedByID(u uuid.UUID) *OrganizationCreate {
+	oc.mutation.SetUpdatedByID(u)
+	return oc
+}
+
 // SetName sets the "name" field.
 func (oc *OrganizationCreate) SetName(s string) *OrganizationCreate {
 	oc.mutation.SetName(s)
@@ -63,12 +75,6 @@ func (oc *OrganizationCreate) SetName(s string) *OrganizationCreate {
 // SetDisplayName sets the "display_name" field.
 func (oc *OrganizationCreate) SetDisplayName(s string) *OrganizationCreate {
 	oc.mutation.SetDisplayName(s)
-	return oc
-}
-
-// SetCreatorID sets the "creator_id" field.
-func (oc *OrganizationCreate) SetCreatorID(u uuid.UUID) *OrganizationCreate {
-	oc.mutation.SetCreatorID(u)
 	return oc
 }
 
@@ -86,9 +92,26 @@ func (oc *OrganizationCreate) SetNillableID(u *uuid.UUID) *OrganizationCreate {
 	return oc
 }
 
+// SetCreatorID sets the "creator" edge to the User entity by ID.
+func (oc *OrganizationCreate) SetCreatorID(id uuid.UUID) *OrganizationCreate {
+	oc.mutation.SetCreatorID(id)
+	return oc
+}
+
 // SetCreator sets the "creator" edge to the User entity.
 func (oc *OrganizationCreate) SetCreator(u *User) *OrganizationCreate {
 	return oc.SetCreatorID(u.ID)
+}
+
+// SetEditorID sets the "editor" edge to the User entity by ID.
+func (oc *OrganizationCreate) SetEditorID(id uuid.UUID) *OrganizationCreate {
+	oc.mutation.SetEditorID(id)
+	return oc
+}
+
+// SetEditor sets the "editor" edge to the User entity.
+func (oc *OrganizationCreate) SetEditor(u *User) *OrganizationCreate {
+	return oc.SetEditorID(u.ID)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -178,6 +201,12 @@ func (oc *OrganizationCreate) check() error {
 	if _, ok := oc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Organization.updated_at"`)}
 	}
+	if _, ok := oc.mutation.CreatedByID(); !ok {
+		return &ValidationError{Name: "created_by_id", err: errors.New(`ent: missing required field "Organization.created_by_id"`)}
+	}
+	if _, ok := oc.mutation.UpdatedByID(); !ok {
+		return &ValidationError{Name: "updated_by_id", err: errors.New(`ent: missing required field "Organization.updated_by_id"`)}
+	}
 	if _, ok := oc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Organization.name"`)}
 	}
@@ -190,10 +219,10 @@ func (oc *OrganizationCreate) check() error {
 		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "Organization.display_name"`)}
 	}
 	if _, ok := oc.mutation.CreatorID(); !ok {
-		return &ValidationError{Name: "creator_id", err: errors.New(`ent: missing required field "Organization.creator_id"`)}
-	}
-	if _, ok := oc.mutation.CreatorID(); !ok {
 		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required edge "Organization.creator"`)}
+	}
+	if _, ok := oc.mutation.EditorID(); !ok {
+		return &ValidationError{Name: "editor", err: errors.New(`ent: missing required edge "Organization.editor"`)}
 	}
 	return nil
 }
@@ -261,7 +290,24 @@ func (oc *OrganizationCreate) createSpec() (*Organization, *sqlgraph.CreateSpec)
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.CreatorID = nodes[0]
+		_node.CreatedByID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := oc.mutation.EditorIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   organization.EditorTable,
+			Columns: []string{organization.EditorColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.UpdatedByID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	if nodes := oc.mutation.UsersIDs(); len(nodes) > 0 {
@@ -360,6 +406,18 @@ func (u *OrganizationUpsert) UpdateUpdatedAt() *OrganizationUpsert {
 	return u
 }
 
+// SetUpdatedByID sets the "updated_by_id" field.
+func (u *OrganizationUpsert) SetUpdatedByID(v uuid.UUID) *OrganizationUpsert {
+	u.Set(organization.FieldUpdatedByID, v)
+	return u
+}
+
+// UpdateUpdatedByID sets the "updated_by_id" field to the value that was provided on create.
+func (u *OrganizationUpsert) UpdateUpdatedByID() *OrganizationUpsert {
+	u.SetExcluded(organization.FieldUpdatedByID)
+	return u
+}
+
 // SetName sets the "name" field.
 func (u *OrganizationUpsert) SetName(v string) *OrganizationUpsert {
 	u.Set(organization.FieldName, v)
@@ -384,18 +442,6 @@ func (u *OrganizationUpsert) UpdateDisplayName() *OrganizationUpsert {
 	return u
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (u *OrganizationUpsert) SetCreatorID(v uuid.UUID) *OrganizationUpsert {
-	u.Set(organization.FieldCreatorID, v)
-	return u
-}
-
-// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
-func (u *OrganizationUpsert) UpdateCreatorID() *OrganizationUpsert {
-	u.SetExcluded(organization.FieldCreatorID)
-	return u
-}
-
 // UpdateNewValues updates the mutable fields using the new values that were set on create except the ID field.
 // Using this option is equivalent to using:
 //
@@ -415,6 +461,9 @@ func (u *OrganizationUpsertOne) UpdateNewValues() *OrganizationUpsertOne {
 		}
 		if _, exists := u.create.mutation.CreatedAt(); exists {
 			s.SetIgnore(organization.FieldCreatedAt)
+		}
+		if _, exists := u.create.mutation.CreatedByID(); exists {
+			s.SetIgnore(organization.FieldCreatedByID)
 		}
 	}))
 	return u
@@ -461,6 +510,20 @@ func (u *OrganizationUpsertOne) UpdateUpdatedAt() *OrganizationUpsertOne {
 	})
 }
 
+// SetUpdatedByID sets the "updated_by_id" field.
+func (u *OrganizationUpsertOne) SetUpdatedByID(v uuid.UUID) *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetUpdatedByID(v)
+	})
+}
+
+// UpdateUpdatedByID sets the "updated_by_id" field to the value that was provided on create.
+func (u *OrganizationUpsertOne) UpdateUpdatedByID() *OrganizationUpsertOne {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateUpdatedByID()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *OrganizationUpsertOne) SetName(v string) *OrganizationUpsertOne {
 	return u.Update(func(s *OrganizationUpsert) {
@@ -486,20 +549,6 @@ func (u *OrganizationUpsertOne) SetDisplayName(v string) *OrganizationUpsertOne 
 func (u *OrganizationUpsertOne) UpdateDisplayName() *OrganizationUpsertOne {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.UpdateDisplayName()
-	})
-}
-
-// SetCreatorID sets the "creator_id" field.
-func (u *OrganizationUpsertOne) SetCreatorID(v uuid.UUID) *OrganizationUpsertOne {
-	return u.Update(func(s *OrganizationUpsert) {
-		s.SetCreatorID(v)
-	})
-}
-
-// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
-func (u *OrganizationUpsertOne) UpdateCreatorID() *OrganizationUpsertOne {
-	return u.Update(func(s *OrganizationUpsert) {
-		s.UpdateCreatorID()
 	})
 }
 
@@ -689,6 +738,9 @@ func (u *OrganizationUpsertBulk) UpdateNewValues() *OrganizationUpsertBulk {
 			if _, exists := b.mutation.CreatedAt(); exists {
 				s.SetIgnore(organization.FieldCreatedAt)
 			}
+			if _, exists := b.mutation.CreatedByID(); exists {
+				s.SetIgnore(organization.FieldCreatedByID)
+			}
 		}
 	}))
 	return u
@@ -735,6 +787,20 @@ func (u *OrganizationUpsertBulk) UpdateUpdatedAt() *OrganizationUpsertBulk {
 	})
 }
 
+// SetUpdatedByID sets the "updated_by_id" field.
+func (u *OrganizationUpsertBulk) SetUpdatedByID(v uuid.UUID) *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.SetUpdatedByID(v)
+	})
+}
+
+// UpdateUpdatedByID sets the "updated_by_id" field to the value that was provided on create.
+func (u *OrganizationUpsertBulk) UpdateUpdatedByID() *OrganizationUpsertBulk {
+	return u.Update(func(s *OrganizationUpsert) {
+		s.UpdateUpdatedByID()
+	})
+}
+
 // SetName sets the "name" field.
 func (u *OrganizationUpsertBulk) SetName(v string) *OrganizationUpsertBulk {
 	return u.Update(func(s *OrganizationUpsert) {
@@ -760,20 +826,6 @@ func (u *OrganizationUpsertBulk) SetDisplayName(v string) *OrganizationUpsertBul
 func (u *OrganizationUpsertBulk) UpdateDisplayName() *OrganizationUpsertBulk {
 	return u.Update(func(s *OrganizationUpsert) {
 		s.UpdateDisplayName()
-	})
-}
-
-// SetCreatorID sets the "creator_id" field.
-func (u *OrganizationUpsertBulk) SetCreatorID(v uuid.UUID) *OrganizationUpsertBulk {
-	return u.Update(func(s *OrganizationUpsert) {
-		s.SetCreatorID(v)
-	})
-}
-
-// UpdateCreatorID sets the "creator_id" field to the value that was provided on create.
-func (u *OrganizationUpsertBulk) UpdateCreatorID() *OrganizationUpsertBulk {
-	return u.Update(func(s *OrganizationUpsert) {
-		s.UpdateCreatorID()
 	})
 }
 

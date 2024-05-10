@@ -2,8 +2,8 @@ import { Inject, Injectable } from '@angular/core';
 import { Code, ConnectError } from '@connectrpc/connect';
 import { BehaviorSubject, Observable, catchError, of, shareReplay, switchMap } from 'rxjs';
 import { ObservableClient } from '../../connect/observable-client';
-import { OrganizationService as ConnectOrganizationService } from '../gen/holos/v1alpha1/organization_connect';
-import { ListCallerOrganizationsResponse, Organization } from '../gen/holos/v1alpha1/organization_pb';
+import { OrganizationService as ConnectOrganizationService } from '../gen/holos/organization/v1alpha1/organization_service_connect';
+import { Organization } from '../gen/holos/organization/v1alpha1/organization_pb';
 import { UserService } from './user.service';
 
 @Injectable({
@@ -11,21 +11,37 @@ import { UserService } from './user.service';
 })
 export class OrganizationService {
   private callerOrganizationsTrigger$ = new BehaviorSubject<void>(undefined);
-  private callerOrganizations$: Observable<ListCallerOrganizationsResponse>;
+  private callerOrganizations$: Observable<Organization[]>;
 
-  private fetchCallerOrganizations(): Observable<ListCallerOrganizationsResponse> {
-    return this.client.listCallerOrganizations({ request: {} }).pipe(
+  private fetchCallerOrganizations(): Observable<Organization[]> {
+    return this.client.listOrganizations({}).pipe(
       switchMap(resp => {
         if (resp && resp.organizations.length > 0) {
-          return of(resp)
+          return of(resp.organizations)
         }
-        return this.client.createCallerOrganization({ request: {} })
+        return this.client.createOrganization({}).pipe(
+          switchMap(resp => {
+            if (resp.organization !== undefined) {
+              return of([resp.organization])
+            } else {
+              return of([])
+            }
+          })
+        )
       }),
       catchError(err => {
         if (err instanceof ConnectError) {
           if (err.code == Code.NotFound) {
             return this.userService.createUser().pipe(
-              switchMap(() => this.client.createCallerOrganization({ request: {} }))
+              switchMap(() => this.client.createOrganization({}).pipe(
+                switchMap(resp => {
+                  if (resp.organization !== undefined) {
+                    return of([resp.organization])
+                  } else {
+                    return of([])
+                  }
+                })
+              ))
             )
           }
         }
@@ -35,15 +51,9 @@ export class OrganizationService {
     )
   }
 
-  getOrganizations(): Observable<Organization[]> {
-    return this.callerOrganizations$.pipe(
-      switchMap(resp => of(resp.organizations))
-    )
-  }
-
   activeOrg(): Observable<Organization | undefined> {
     return this.callerOrganizations$.pipe(
-      switchMap(resp => of(resp.organizations.at(-1)))
+      switchMap(orgs => of(orgs.at(0)))
     )
   }
 

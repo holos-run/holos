@@ -13,7 +13,8 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	object "github.com/holos-run/holos/service/gen/holos/object/v1alpha1"
+	holos "github.com/holos-run/holos/service/gen/holos/organization/v1alpha1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -27,10 +28,7 @@ type OrganizationHandler struct {
 	db *ent.Client
 }
 
-func (h *OrganizationHandler) ListCallerOrganizations(
-	ctx context.Context,
-	req *connect.Request[holos.ListCallerOrganizationsRequest],
-) (*connect.Response[holos.ListCallerOrganizationsResponse], error) {
+func (h *OrganizationHandler) ListOrganizations(ctx context.Context, req *connect.Request[holos.ListOrganizationsRequest]) (*connect.Response[holos.ListOrganizationsResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
@@ -56,23 +54,28 @@ func (h *OrganizationHandler) ListCallerOrganizations(
 		rpcOrgs = append(rpcOrgs, OrganizationToRPC(dbOrg))
 	}
 
-	res := connect.NewResponse(&holos.ListCallerOrganizationsResponse{
-		User:          UserToRPC(dbUser),
+	// JEFFTODO: FieldMask
+	res := connect.NewResponse(&holos.ListOrganizationsResponse{
+		User: &object.UserRef{
+			User: &object.UserRef_UserId{
+				UserId: dbUser.ID.String(),
+			},
+		},
 		Organizations: rpcOrgs,
 	})
 	return res, nil
 }
 
-func (h *OrganizationHandler) CreateCallerOrganization(
+func (h *OrganizationHandler) CreateOrganization(
 	ctx context.Context,
-	req *connect.Request[holos.CreateCallerOrganizationRequest],
-) (*connect.Response[holos.CreateCallerOrganizationResponse], error) {
+	req *connect.Request[holos.CreateOrganizationRequest],
+) (*connect.Response[holos.CreateOrganizationResponse], error) {
 	log := logger.FromContext(ctx)
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
-	dbUser, err := getUser(ctx, h.db, authnID.Issuer(), authnID.Subject())
+	dbUser, err := getUser(ctx, h.db, authnID)
 	if err != nil {
 		if ent.MaskNotFound(err) == nil {
 			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
@@ -81,38 +84,28 @@ func (h *OrganizationHandler) CreateCallerOrganization(
 		}
 	}
 
-	var org *ent.Organization
+	var dbOrg *ent.Organization
 	err = WithTx(ctx, h.db, func(tx *ent.Tx) (err error) {
-		org, err = tx.Organization.Create().
+		dbOrg, err = tx.Organization.Create().
 			SetName(cleanAndAppendRandom(authnID.Name())).
 			SetDisplayName(authnID.GivenName() + "'s Org").
 			SetCreatorID(dbUser.ID).
+			SetEditorID(dbUser.ID).
 			Save(ctx)
 		if err != nil {
 			return err
 		}
-		return tx.Organization.UpdateOne(org).AddUsers(dbUser).Exec(ctx)
+		return tx.Organization.UpdateOne(dbOrg).AddUsers(dbUser).Exec(ctx)
 	})
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, errors.Wrap(err))
 	}
-	log = log.With("organization", org)
+	log = log.With("organization", dbOrg)
 
 	log.InfoContext(ctx, "created organization")
 
-	// TODO: prefetch organizations
-	dbOrgs, err := dbUser.QueryOrganizations().All(ctx)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, errors.Wrap(err))
-	}
-	rpcOrgs := make([]*holos.Organization, 0, len(dbOrgs))
-	for _, dbOrg := range dbOrgs {
-		rpcOrgs = append(rpcOrgs, OrganizationToRPC(dbOrg))
-	}
-
-	res := connect.NewResponse(&holos.CreateCallerOrganizationResponse{
-		User:          UserToRPC(dbUser),
-		Organizations: rpcOrgs,
+	res := connect.NewResponse(&holos.CreateOrganizationResponse{
+		Organization: OrganizationToRPC(dbOrg),
 	})
 	return res, nil
 }
@@ -131,16 +124,24 @@ func cleanAndAppendRandom(s string) string {
 
 // OrganizationToRPC returns an *holos.Organization adapted from *ent.Organization u.
 func OrganizationToRPC(org *ent.Organization) *holos.Organization {
+	orgID := org.ID.String()
 	rpcEntity := holos.Organization{
-		Id:          org.ID.String(),
+		OrgId:       &orgID,
 		Name:        org.Name,
-		DisplayName: org.DisplayName,
-		Timestamps: &holos.Timestamps{
+		DisplayName: &org.DisplayName,
+		Detail: &object.Detail{
+			CreatedBy: &object.ResourceEditor{
+				Editor: &object.ResourceEditor_UserId{
+					UserId: org.CreatedByID.String(),
+				},
+			},
 			CreatedAt: timestamppb.New(org.CreatedAt),
+			UpdatedBy: &object.ResourceEditor{
+				Editor: &object.ResourceEditor_UserId{
+					UserId: org.UpdatedByID.String(),
+				},
+			},
 			UpdatedAt: timestamppb.New(org.UpdatedAt),
-		},
-		Creator: &holos.Creator{
-			Id: org.CreatorID.String(),
 		},
 	}
 	return &rpcEntity

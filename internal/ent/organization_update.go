@@ -37,6 +37,20 @@ func (ou *OrganizationUpdate) SetUpdatedAt(t time.Time) *OrganizationUpdate {
 	return ou
 }
 
+// SetUpdatedByID sets the "updated_by_id" field.
+func (ou *OrganizationUpdate) SetUpdatedByID(u uuid.UUID) *OrganizationUpdate {
+	ou.mutation.SetUpdatedByID(u)
+	return ou
+}
+
+// SetNillableUpdatedByID sets the "updated_by_id" field if the given value is not nil.
+func (ou *OrganizationUpdate) SetNillableUpdatedByID(u *uuid.UUID) *OrganizationUpdate {
+	if u != nil {
+		ou.SetUpdatedByID(*u)
+	}
+	return ou
+}
+
 // SetName sets the "name" field.
 func (ou *OrganizationUpdate) SetName(s string) *OrganizationUpdate {
 	ou.mutation.SetName(s)
@@ -65,23 +79,15 @@ func (ou *OrganizationUpdate) SetNillableDisplayName(s *string) *OrganizationUpd
 	return ou
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (ou *OrganizationUpdate) SetCreatorID(u uuid.UUID) *OrganizationUpdate {
-	ou.mutation.SetCreatorID(u)
+// SetEditorID sets the "editor" edge to the User entity by ID.
+func (ou *OrganizationUpdate) SetEditorID(id uuid.UUID) *OrganizationUpdate {
+	ou.mutation.SetEditorID(id)
 	return ou
 }
 
-// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
-func (ou *OrganizationUpdate) SetNillableCreatorID(u *uuid.UUID) *OrganizationUpdate {
-	if u != nil {
-		ou.SetCreatorID(*u)
-	}
-	return ou
-}
-
-// SetCreator sets the "creator" edge to the User entity.
-func (ou *OrganizationUpdate) SetCreator(u *User) *OrganizationUpdate {
-	return ou.SetCreatorID(u.ID)
+// SetEditor sets the "editor" edge to the User entity.
+func (ou *OrganizationUpdate) SetEditor(u *User) *OrganizationUpdate {
+	return ou.SetEditorID(u.ID)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -119,9 +125,9 @@ func (ou *OrganizationUpdate) Mutation() *OrganizationMutation {
 	return ou.mutation
 }
 
-// ClearCreator clears the "creator" edge to the User entity.
-func (ou *OrganizationUpdate) ClearCreator() *OrganizationUpdate {
-	ou.mutation.ClearCreator()
+// ClearEditor clears the "editor" edge to the User entity.
+func (ou *OrganizationUpdate) ClearEditor() *OrganizationUpdate {
+	ou.mutation.ClearEditor()
 	return ou
 }
 
@@ -213,6 +219,9 @@ func (ou *OrganizationUpdate) check() error {
 	if _, ok := ou.mutation.CreatorID(); ou.mutation.CreatorCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Organization.creator"`)
 	}
+	if _, ok := ou.mutation.EditorID(); ou.mutation.EditorCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Organization.editor"`)
+	}
 	return nil
 }
 
@@ -237,12 +246,12 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ou.mutation.DisplayName(); ok {
 		_spec.SetField(organization.FieldDisplayName, field.TypeString, value)
 	}
-	if ou.mutation.CreatorCleared() {
+	if ou.mutation.EditorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   organization.CreatorTable,
-			Columns: []string{organization.CreatorColumn},
+			Table:   organization.EditorTable,
+			Columns: []string{organization.EditorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -250,12 +259,12 @@ func (ou *OrganizationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ou.mutation.CreatorIDs(); len(nodes) > 0 {
+	if nodes := ou.mutation.EditorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   organization.CreatorTable,
-			Columns: []string{organization.CreatorColumn},
+			Table:   organization.EditorTable,
+			Columns: []string{organization.EditorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -382,6 +391,20 @@ func (ouo *OrganizationUpdateOne) SetUpdatedAt(t time.Time) *OrganizationUpdateO
 	return ouo
 }
 
+// SetUpdatedByID sets the "updated_by_id" field.
+func (ouo *OrganizationUpdateOne) SetUpdatedByID(u uuid.UUID) *OrganizationUpdateOne {
+	ouo.mutation.SetUpdatedByID(u)
+	return ouo
+}
+
+// SetNillableUpdatedByID sets the "updated_by_id" field if the given value is not nil.
+func (ouo *OrganizationUpdateOne) SetNillableUpdatedByID(u *uuid.UUID) *OrganizationUpdateOne {
+	if u != nil {
+		ouo.SetUpdatedByID(*u)
+	}
+	return ouo
+}
+
 // SetName sets the "name" field.
 func (ouo *OrganizationUpdateOne) SetName(s string) *OrganizationUpdateOne {
 	ouo.mutation.SetName(s)
@@ -410,23 +433,15 @@ func (ouo *OrganizationUpdateOne) SetNillableDisplayName(s *string) *Organizatio
 	return ouo
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (ouo *OrganizationUpdateOne) SetCreatorID(u uuid.UUID) *OrganizationUpdateOne {
-	ouo.mutation.SetCreatorID(u)
+// SetEditorID sets the "editor" edge to the User entity by ID.
+func (ouo *OrganizationUpdateOne) SetEditorID(id uuid.UUID) *OrganizationUpdateOne {
+	ouo.mutation.SetEditorID(id)
 	return ouo
 }
 
-// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
-func (ouo *OrganizationUpdateOne) SetNillableCreatorID(u *uuid.UUID) *OrganizationUpdateOne {
-	if u != nil {
-		ouo.SetCreatorID(*u)
-	}
-	return ouo
-}
-
-// SetCreator sets the "creator" edge to the User entity.
-func (ouo *OrganizationUpdateOne) SetCreator(u *User) *OrganizationUpdateOne {
-	return ouo.SetCreatorID(u.ID)
+// SetEditor sets the "editor" edge to the User entity.
+func (ouo *OrganizationUpdateOne) SetEditor(u *User) *OrganizationUpdateOne {
+	return ouo.SetEditorID(u.ID)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
@@ -464,9 +479,9 @@ func (ouo *OrganizationUpdateOne) Mutation() *OrganizationMutation {
 	return ouo.mutation
 }
 
-// ClearCreator clears the "creator" edge to the User entity.
-func (ouo *OrganizationUpdateOne) ClearCreator() *OrganizationUpdateOne {
-	ouo.mutation.ClearCreator()
+// ClearEditor clears the "editor" edge to the User entity.
+func (ouo *OrganizationUpdateOne) ClearEditor() *OrganizationUpdateOne {
+	ouo.mutation.ClearEditor()
 	return ouo
 }
 
@@ -571,6 +586,9 @@ func (ouo *OrganizationUpdateOne) check() error {
 	if _, ok := ouo.mutation.CreatorID(); ouo.mutation.CreatorCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Organization.creator"`)
 	}
+	if _, ok := ouo.mutation.EditorID(); ouo.mutation.EditorCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Organization.editor"`)
+	}
 	return nil
 }
 
@@ -612,12 +630,12 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 	if value, ok := ouo.mutation.DisplayName(); ok {
 		_spec.SetField(organization.FieldDisplayName, field.TypeString, value)
 	}
-	if ouo.mutation.CreatorCleared() {
+	if ouo.mutation.EditorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   organization.CreatorTable,
-			Columns: []string{organization.CreatorColumn},
+			Table:   organization.EditorTable,
+			Columns: []string{organization.EditorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -625,12 +643,12 @@ func (ouo *OrganizationUpdateOne) sqlSave(ctx context.Context) (_node *Organizat
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ouo.mutation.CreatorIDs(); len(nodes) > 0 {
+	if nodes := ouo.mutation.EditorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   organization.CreatorTable,
-			Columns: []string{organization.CreatorColumn},
+			Table:   organization.EditorTable,
+			Columns: []string{organization.EditorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),

@@ -12,7 +12,8 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	storage "github.com/holos-run/holos/service/gen/holos/storage/v1alpha1"
+	system "github.com/holos-run/holos/service/gen/holos/system/v1alpha1"
 )
 
 const AdminEmail = "jeff@openinfrastructure.co"
@@ -39,7 +40,7 @@ func (h *SystemHandler) checkAdmin(ctx context.Context) error {
 	return nil
 }
 
-func (h *SystemHandler) DropTables(ctx context.Context, req *connect.Request[holos.DropTablesRequest]) (*connect.Response[holos.DropTablesResponse], error) {
+func (h *SystemHandler) DropTables(ctx context.Context, req *connect.Request[system.DropTablesRequest]) (*connect.Response[system.DropTablesResponse], error) {
 	if err := h.checkAdmin(ctx); err != nil {
 		return nil, err
 	}
@@ -64,10 +65,10 @@ func (h *SystemHandler) DropTables(ctx context.Context, req *connect.Request[hol
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	return connect.NewResponse(&holos.DropTablesResponse{}), nil
+	return connect.NewResponse(&system.DropTablesResponse{}), nil
 }
 
-func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[holos.SeedDatabaseRequest]) (*connect.Response[holos.SeedDatabaseResponse], error) {
+func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[system.SeedDatabaseRequest]) (*connect.Response[system.SeedDatabaseResponse], error) {
 	if err := h.checkAdmin(ctx); err != nil {
 		return nil, err
 	}
@@ -108,6 +109,7 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 			SetName("ois").
 			SetDisplayName("Open Infrastructure Services").
 			SetCreator(jeff).
+			SetEditor(jeff).
 			Save(ctx)
 		if err != nil {
 			return errors.Wrap(err)
@@ -119,12 +121,12 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 			return errors.Wrap(err)
 		}
 
-		var form holos.Form
+		var form storage.Form
 		if err := json.Unmarshal([]byte(BareForm), &form); err != nil {
 			return errors.Wrap(err)
 		}
 
-		var model holos.Model
+		var model storage.Model
 		if err := json.Unmarshal([]byte(Model), &model); err != nil {
 			return errors.Wrap(err)
 		}
@@ -137,6 +139,7 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 			SetForm(&form).
 			SetModel(&model).
 			SetCreator(jeff).
+			SetEditor(jeff).
 			SetOrgID(org.ID).
 			Exec(ctx)
 		if err != nil {
@@ -151,6 +154,7 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 				SetForm(&form).
 				SetModel(&model).
 				SetCreator(jeff).
+				SetEditor(jeff).
 				SetOrgID(org.ID).
 				Exec(ctx)
 			if err != nil {
@@ -163,7 +167,7 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[h
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	return connect.NewResponse(&holos.SeedDatabaseResponse{}), nil
+	return connect.NewResponse(&system.SeedDatabaseResponse{}), nil
 }
 
 const Model = `{"model":{}}`

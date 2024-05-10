@@ -1,8 +1,8 @@
-import { Platform } from '../../gen/holos/v1alpha1/platform_pb';
+import { Platform } from '../../gen/holos/platform/v1alpha1/platform_pb';
 import { Component, OnInit, inject } from '@angular/core';
 import { MatListItem, MatNavList } from '@angular/material/list';
 import { Observable, filter } from 'rxjs';
-import { Organization } from '../../gen/holos/v1alpha1/organization_pb';
+import { Organization } from '../../gen/holos/organization/v1alpha1/organization_pb';
 import { OrganizationService } from '../../services/organization.service';
 import { PlatformService } from '../../services/platform.service';
 import { AsyncPipe, CommonModule } from '@angular/common';

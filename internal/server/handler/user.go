@@ -2,15 +2,17 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	"connectrpc.com/connect"
 	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/internal/ent/user"
 	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
-	"github.com/holos-run/holos/internal/server/middleware/logger"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	object "github.com/holos-run/holos/service/gen/holos/object/v1alpha1"
+	holos "github.com/holos-run/holos/service/gen/holos/user/v1alpha1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -24,48 +26,108 @@ type UserHandler struct {
 	db *ent.Client
 }
 
-func (h *UserHandler) GetCallerClaims(
-	ctx context.Context,
-	req *connect.Request[holos.GetCallerClaimsRequest],
-) (*connect.Response[holos.GetCallerClaimsResponse], error) {
+func (h *UserHandler) GetUser(ctx context.Context, req *connect.Request[holos.GetUserRequest]) (*connect.Response[holos.GetUserResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
-	res := connect.NewResponse(&holos.GetCallerClaimsResponse{
-		Claims: &holos.Claims{
-			Iss:           authnID.Issuer(),
-			Sub:           authnID.Subject(),
-			Email:         authnID.Email(),
-			EmailVerified: authnID.Verified(),
-			Name:          authnID.Name(),
-			Groups:        authnID.Groups(),
-			GivenName:     authnID.GivenName(),
-			FamilyName:    authnID.FamilyName(),
-			Picture:       authnID.Picture(),
-		},
+
+	if req.Msg.GetUser() != nil || req.Msg.GetFieldMask() != nil {
+		return nil, connect.NewError(connect.CodeUnimplemented, errors.Wrap(fmt.Errorf("not implemented: make an empty request instead")))
+	}
+
+	dbUser, err := getUser(ctx, h.db, authnID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	rpcUser := UserToRPC(dbUser)
+	if pic := authnID.Picture(); pic != "" {
+		rpcUser.Picture = &pic
+	}
+
+	return connect.NewResponse(&holos.GetUserResponse{User: rpcUser}), nil
+}
+
+func (h *UserHandler) CreateUser(ctx context.Context, req *connect.Request[holos.CreateUserRequest]) (*connect.Response[holos.CreateUserResponse], error) {
+	var createdUser *ent.User
+	var err error
+	if rpcUser := req.Msg.GetUser(); rpcUser != nil {
+		createdUser, err = h.createUser(ctx, h.db, rpcUser)
+	} else {
+		createdUser, err = h.createCallerUser(ctx)
+	}
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	res := connect.NewResponse(&holos.CreateUserResponse{
+		User: UserToRPC(createdUser),
 	})
 	return res, nil
 }
 
-func (h *UserHandler) GetCallerUser(
-	ctx context.Context,
-	req *connect.Request[holos.GetCallerUserRequest],
-) (*connect.Response[holos.GetCallerUserResponse], error) {
-	authnID, err := authn.FromContext(ctx)
-	if err != nil {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+// UserToRPC returns an *holos.User adapted from *ent.User u.
+func UserToRPC(entity *ent.User) *holos.User {
+	uid := entity.ID.String()
+	iamUser := holos.User{
+		Id:    &uid,
+		Email: entity.Email,
+		Name:  &entity.Name,
+		Subject: &object.Subject{
+			Iss: entity.Iss,
+			Sub: entity.Sub,
+		},
+		Detail: &object.Detail{
+			CreatedBy: &object.ResourceEditor{
+				Editor: &object.ResourceEditor_UserId{
+					UserId: uid,
+				},
+			},
+			CreatedAt: timestamppb.New(entity.CreatedAt),
+			UpdatedBy: &object.ResourceEditor{
+				Editor: &object.ResourceEditor_UserId{
+					UserId: uid,
+				},
+			},
+			UpdatedAt: timestamppb.New(entity.UpdatedAt),
+		},
 	}
-	dbUser, err := getUser(ctx, h.db, authnID.Issuer(), authnID.Subject())
+	return &iamUser
+}
+
+func getUser(ctx context.Context, client *ent.Client, authnID authn.Identity) (*ent.User, error) {
+	user, err := client.User.Query().
+		Where(
+			user.Iss(authnID.Issuer()),
+			user.Sub(authnID.Subject()),
+		).
+		Only(ctx)
 	if err != nil {
 		if ent.MaskNotFound(err) == nil {
 			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
-		} else {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 		}
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
-	res := connect.NewResponse(&holos.GetCallerUserResponse{User: UserToRPC(dbUser)})
-	return res, nil
+
+	return user, nil
+}
+
+func (h *UserHandler) createUser(ctx context.Context, client *ent.Client, rpcUser *holos.User) (*ent.User, error) {
+	log := logger.FromContext(ctx)
+	var dbUser *ent.User
+	dbUser, err := client.User.Create().
+		SetName(rpcUser.GetName()).
+		SetIss(rpcUser.GetSubject().GetIss()).
+		SetSub(rpcUser.GetSubject().GetSub()).
+		SetEmail(rpcUser.GetEmail()).
+		Save(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.Wrap(err))
+	}
+	log = log.With("user", dbUser)
+	log.InfoContext(ctx, "created user")
+	return dbUser, nil
 }
 
 func (h *UserHandler) createCallerUser(ctx context.Context) (*ent.User, error) {
@@ -74,9 +136,29 @@ func (h *UserHandler) createCallerUser(ctx context.Context) (*ent.User, error) {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 
+	emailVerified := authnID.Verified()
+	name := authnID.Name()
+	givenName := authnID.GivenName()
+	familyName := authnID.FamilyName()
+	picture := authnID.Picture()
+
+	rpcUser := holos.User{
+		Subject: &object.Subject{
+			Iss: authnID.Issuer(),
+			Sub: authnID.Subject(),
+		},
+		Email:         authnID.Email(),
+		EmailVerified: &emailVerified,
+		Name:          &name,
+		GivenName:     &givenName,
+		FamilyName:    &familyName,
+		Groups:        authnID.Groups(),
+		Picture:       &picture,
+	}
+
 	var createdUser *ent.User
 	err = WithTx(ctx, h.db, func(tx *ent.Tx) error {
-		createdUser, err = createUser(ctx, tx.Client(), authnID.Name(), authnID)
+		createdUser, err = h.createUser(ctx, tx.Client(), &rpcUser)
 		return err
 	})
 	if err != nil {
@@ -84,71 +166,5 @@ func (h *UserHandler) createCallerUser(ctx context.Context) (*ent.User, error) {
 		return nil, err
 	}
 
-	return createdUser, nil
-}
-
-func (h *UserHandler) CreateCallerUser(
-	ctx context.Context,
-	req *connect.Request[holos.CreateCallerUserRequest],
-) (*connect.Response[holos.CreateCallerUserResponse], error) {
-	createdUser, err := h.createCallerUser(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	res := connect.NewResponse(&holos.CreateCallerUserResponse{
-		User: UserToRPC(createdUser),
-	})
-	return res, nil
-}
-
-// UserToRPC returns an *holos.User adapted from *ent.User u.
-func UserToRPC(u *ent.User) *holos.User {
-	iamUser := holos.User{
-		Id:    u.ID.String(),
-		Email: u.Email,
-		Name:  u.Name,
-		Timestamps: &holos.Timestamps{
-			CreatedAt: timestamppb.New(u.CreatedAt),
-			UpdatedAt: timestamppb.New(u.UpdatedAt),
-		},
-	}
-	return &iamUser
-}
-
-func getUser(ctx context.Context, client *ent.Client, iss string, sub string) (*ent.User, error) {
-	log := logger.FromContext(ctx)
-	user, err := client.User.Query().
-		Where(
-			user.Iss(iss),
-			user.Sub(sub),
-		).
-		Only(ctx)
-	if err != nil {
-		log.DebugContext(ctx, "could not get user", "err", err, "iss", iss, "sub", sub)
-		return nil, errors.Wrap(err)
-	}
-	return user, nil
-}
-
-func createUser(ctx context.Context, client *ent.Client, name string, claims authn.Identity) (*ent.User, error) {
-	log := logger.FromContext(ctx)
-	// Create the user, error if it already exists
-	user, err := client.User.
-		Create().
-		SetEmail(claims.Email()).
-		SetIss(claims.Issuer()).
-		SetSub(claims.Subject()).
-		SetName(name).
-		Save(ctx)
-	if err != nil {
-		err = connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
-		log.ErrorContext(ctx, "could not create user", "err", err)
-		return user, err
-	}
-
-	log = log.With("user", user)
-	log.InfoContext(ctx, "created user")
-
-	return user, nil
+	return createdUser.Unwrap(), nil
 }

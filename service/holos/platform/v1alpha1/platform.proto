@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package holos.platform.v1alpha1;
+option go_package = "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1;platform";
+
+// Managed by buf, refer to buf.yaml
+import "buf/validate/validate.proto";
+import "google/protobuf/struct.proto";
+import "holos/object/v1alpha1/object.proto";
+
+// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+
+message Platform {
+  // Unique id assigned by the server.
+  string id = 1;
+  // Owner of the platform.
+  Owner owner = 2;
+  // name is the platform short name as a dns label.
+  string name = 3 [
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 39,
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_start_hyphen"
+      message: "Cannot start with a hyphen."
+      expression: "!this.startsWith('-')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_end_hyphen"
+      message: "Cannot end with a hyphen."
+      expression: "!this.endsWith('-')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_consecutive_hyphens"
+      message: "Cannot include consecutive hyphens."
+      expression: "!this.contains('--')"
+    },
+    (buf.validate.field).cel = {
+      id: "name"
+      message: "All characters must be either a hyphen or alphanumeric."
+      // https://github.com/google/cel-spec/blob/master/doc/langdef.md#regular-expressions
+      expression: "this.matches('^[A-Za-z0-9-]$')"
+    }
+   ];
+  optional string display_name = 4 [
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 100,
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_start_space"
+      message: "Cannot start with a space."
+      expression: "!this.startsWith(' ')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_end_space"
+      message: "Cannot end with a space."
+      expression: "!this.endsWith(' ')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_consecutive_spaces"
+      message: "Cannot include consecutive spaces."
+      expression: "!this.contains('  ')"
+    }];
+  optional string description = 5 [(buf.validate.field).string.max_len = 2047];
+  optional Spec spec = 6;
+  optional holos.object.v1alpha1.Detail detail = 8;
+}
+
+// Owner of a platform.
+message Owner {
+  oneof owner {
+    option (buf.validate.oneof).required = true;
+    string org_id = 1 [(buf.validate.field).string.uuid = true];
+  }
+}
+
+// Spec represents the top level specification of a Platform.
+message Spec {
+  // model represents the user-defined and user-supplied form field values.
+  // The model is a Struct to ensure any valid JSON object defined by the user
+  // via the form can be represented and stored.
+  google.protobuf.Struct model = 1;
+  optional Form form = 2;
+}
+
+// Form represents the Formly input form.
+message Form {
+  // fields represents FormlyFieldConfig[] encoded as an array of JSON objects
+  // organized by section.
+  repeated google.protobuf.Struct fields = 1;
+}

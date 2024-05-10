@@ -16,7 +16,7 @@ import (
 	"github.com/holos-run/holos/internal/ent/platform"
 	"github.com/holos-run/holos/internal/ent/predicate"
 	"github.com/holos-run/holos/internal/ent/user"
-	holos "github.com/holos-run/holos/service/gen/holos/v1alpha1"
+	storage "github.com/holos-run/holos/service/gen/holos/storage/v1alpha1"
 )
 
 // PlatformUpdate is the builder for updating Platform entities.
@@ -35,6 +35,20 @@ func (pu *PlatformUpdate) Where(ps ...predicate.Platform) *PlatformUpdate {
 // SetUpdatedAt sets the "updated_at" field.
 func (pu *PlatformUpdate) SetUpdatedAt(t time.Time) *PlatformUpdate {
 	pu.mutation.SetUpdatedAt(t)
+	return pu
+}
+
+// SetUpdatedByID sets the "updated_by_id" field.
+func (pu *PlatformUpdate) SetUpdatedByID(u uuid.UUID) *PlatformUpdate {
+	pu.mutation.SetUpdatedByID(u)
+	return pu
+}
+
+// SetNillableUpdatedByID sets the "updated_by_id" field if the given value is not nil.
+func (pu *PlatformUpdate) SetNillableUpdatedByID(u *uuid.UUID) *PlatformUpdate {
+	if u != nil {
+		pu.SetUpdatedByID(*u)
+	}
 	return pu
 }
 
@@ -80,23 +94,9 @@ func (pu *PlatformUpdate) SetNillableDisplayName(s *string) *PlatformUpdate {
 	return pu
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (pu *PlatformUpdate) SetCreatorID(u uuid.UUID) *PlatformUpdate {
-	pu.mutation.SetCreatorID(u)
-	return pu
-}
-
-// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
-func (pu *PlatformUpdate) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdate {
-	if u != nil {
-		pu.SetCreatorID(*u)
-	}
-	return pu
-}
-
 // SetForm sets the "form" field.
-func (pu *PlatformUpdate) SetForm(h *holos.Form) *PlatformUpdate {
-	pu.mutation.SetForm(h)
+func (pu *PlatformUpdate) SetForm(s *storage.Form) *PlatformUpdate {
+	pu.mutation.SetForm(s)
 	return pu
 }
 
@@ -107,8 +107,8 @@ func (pu *PlatformUpdate) ClearForm() *PlatformUpdate {
 }
 
 // SetModel sets the "model" field.
-func (pu *PlatformUpdate) SetModel(h *holos.Model) *PlatformUpdate {
-	pu.mutation.SetModel(h)
+func (pu *PlatformUpdate) SetModel(s *storage.Model) *PlatformUpdate {
+	pu.mutation.SetModel(s)
 	return pu
 }
 
@@ -150,9 +150,15 @@ func (pu *PlatformUpdate) ClearCueDefinition() *PlatformUpdate {
 	return pu
 }
 
-// SetCreator sets the "creator" edge to the User entity.
-func (pu *PlatformUpdate) SetCreator(u *User) *PlatformUpdate {
-	return pu.SetCreatorID(u.ID)
+// SetEditorID sets the "editor" edge to the User entity by ID.
+func (pu *PlatformUpdate) SetEditorID(id uuid.UUID) *PlatformUpdate {
+	pu.mutation.SetEditorID(id)
+	return pu
+}
+
+// SetEditor sets the "editor" edge to the User entity.
+func (pu *PlatformUpdate) SetEditor(u *User) *PlatformUpdate {
+	return pu.SetEditorID(u.ID)
 }
 
 // SetOrganizationID sets the "organization" edge to the Organization entity by ID.
@@ -171,9 +177,9 @@ func (pu *PlatformUpdate) Mutation() *PlatformMutation {
 	return pu.mutation
 }
 
-// ClearCreator clears the "creator" edge to the User entity.
-func (pu *PlatformUpdate) ClearCreator() *PlatformUpdate {
-	pu.mutation.ClearCreator()
+// ClearEditor clears the "editor" edge to the User entity.
+func (pu *PlatformUpdate) ClearEditor() *PlatformUpdate {
+	pu.mutation.ClearEditor()
 	return pu
 }
 
@@ -229,6 +235,9 @@ func (pu *PlatformUpdate) check() error {
 	if _, ok := pu.mutation.CreatorID(); pu.mutation.CreatorCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Platform.creator"`)
 	}
+	if _, ok := pu.mutation.EditorID(); pu.mutation.EditorCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Platform.editor"`)
+	}
 	if _, ok := pu.mutation.OrganizationID(); pu.mutation.OrganizationCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Platform.organization"`)
 	}
@@ -280,12 +289,12 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if pu.mutation.CueDefinitionCleared() {
 		_spec.ClearField(platform.FieldCueDefinition, field.TypeString)
 	}
-	if pu.mutation.CreatorCleared() {
+	if pu.mutation.EditorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.CreatorTable,
-			Columns: []string{platform.CreatorColumn},
+			Table:   platform.EditorTable,
+			Columns: []string{platform.EditorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -293,12 +302,12 @@ func (pu *PlatformUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.CreatorIDs(); len(nodes) > 0 {
+	if nodes := pu.mutation.EditorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.CreatorTable,
-			Columns: []string{platform.CreatorColumn},
+			Table:   platform.EditorTable,
+			Columns: []string{platform.EditorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -364,6 +373,20 @@ func (puo *PlatformUpdateOne) SetUpdatedAt(t time.Time) *PlatformUpdateOne {
 	return puo
 }
 
+// SetUpdatedByID sets the "updated_by_id" field.
+func (puo *PlatformUpdateOne) SetUpdatedByID(u uuid.UUID) *PlatformUpdateOne {
+	puo.mutation.SetUpdatedByID(u)
+	return puo
+}
+
+// SetNillableUpdatedByID sets the "updated_by_id" field if the given value is not nil.
+func (puo *PlatformUpdateOne) SetNillableUpdatedByID(u *uuid.UUID) *PlatformUpdateOne {
+	if u != nil {
+		puo.SetUpdatedByID(*u)
+	}
+	return puo
+}
+
 // SetOrgID sets the "org_id" field.
 func (puo *PlatformUpdateOne) SetOrgID(u uuid.UUID) *PlatformUpdateOne {
 	puo.mutation.SetOrgID(u)
@@ -406,23 +429,9 @@ func (puo *PlatformUpdateOne) SetNillableDisplayName(s *string) *PlatformUpdateO
 	return puo
 }
 
-// SetCreatorID sets the "creator_id" field.
-func (puo *PlatformUpdateOne) SetCreatorID(u uuid.UUID) *PlatformUpdateOne {
-	puo.mutation.SetCreatorID(u)
-	return puo
-}
-
-// SetNillableCreatorID sets the "creator_id" field if the given value is not nil.
-func (puo *PlatformUpdateOne) SetNillableCreatorID(u *uuid.UUID) *PlatformUpdateOne {
-	if u != nil {
-		puo.SetCreatorID(*u)
-	}
-	return puo
-}
-
 // SetForm sets the "form" field.
-func (puo *PlatformUpdateOne) SetForm(h *holos.Form) *PlatformUpdateOne {
-	puo.mutation.SetForm(h)
+func (puo *PlatformUpdateOne) SetForm(s *storage.Form) *PlatformUpdateOne {
+	puo.mutation.SetForm(s)
 	return puo
 }
 
@@ -433,8 +442,8 @@ func (puo *PlatformUpdateOne) ClearForm() *PlatformUpdateOne {
 }
 
 // SetModel sets the "model" field.
-func (puo *PlatformUpdateOne) SetModel(h *holos.Model) *PlatformUpdateOne {
-	puo.mutation.SetModel(h)
+func (puo *PlatformUpdateOne) SetModel(s *storage.Model) *PlatformUpdateOne {
+	puo.mutation.SetModel(s)
 	return puo
 }
 
@@ -476,9 +485,15 @@ func (puo *PlatformUpdateOne) ClearCueDefinition() *PlatformUpdateOne {
 	return puo
 }
 
-// SetCreator sets the "creator" edge to the User entity.
-func (puo *PlatformUpdateOne) SetCreator(u *User) *PlatformUpdateOne {
-	return puo.SetCreatorID(u.ID)
+// SetEditorID sets the "editor" edge to the User entity by ID.
+func (puo *PlatformUpdateOne) SetEditorID(id uuid.UUID) *PlatformUpdateOne {
+	puo.mutation.SetEditorID(id)
+	return puo
+}
+
+// SetEditor sets the "editor" edge to the User entity.
+func (puo *PlatformUpdateOne) SetEditor(u *User) *PlatformUpdateOne {
+	return puo.SetEditorID(u.ID)
 }
 
 // SetOrganizationID sets the "organization" edge to the Organization entity by ID.
@@ -497,9 +512,9 @@ func (puo *PlatformUpdateOne) Mutation() *PlatformMutation {
 	return puo.mutation
 }
 
-// ClearCreator clears the "creator" edge to the User entity.
-func (puo *PlatformUpdateOne) ClearCreator() *PlatformUpdateOne {
-	puo.mutation.ClearCreator()
+// ClearEditor clears the "editor" edge to the User entity.
+func (puo *PlatformUpdateOne) ClearEditor() *PlatformUpdateOne {
+	puo.mutation.ClearEditor()
 	return puo
 }
 
@@ -567,6 +582,9 @@ func (puo *PlatformUpdateOne) check() error {
 	}
 	if _, ok := puo.mutation.CreatorID(); puo.mutation.CreatorCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Platform.creator"`)
+	}
+	if _, ok := puo.mutation.EditorID(); puo.mutation.EditorCleared() && !ok {
+		return errors.New(`ent: clearing a required unique edge "Platform.editor"`)
 	}
 	if _, ok := puo.mutation.OrganizationID(); puo.mutation.OrganizationCleared() && !ok {
 		return errors.New(`ent: clearing a required unique edge "Platform.organization"`)
@@ -636,12 +654,12 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 	if puo.mutation.CueDefinitionCleared() {
 		_spec.ClearField(platform.FieldCueDefinition, field.TypeString)
 	}
-	if puo.mutation.CreatorCleared() {
+	if puo.mutation.EditorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.CreatorTable,
-			Columns: []string{platform.CreatorColumn},
+			Table:   platform.EditorTable,
+			Columns: []string{platform.EditorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
@@ -649,12 +667,12 @@ func (puo *PlatformUpdateOne) sqlSave(ctx context.Context) (_node *Platform, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.CreatorIDs(); len(nodes) > 0 {
+	if nodes := puo.mutation.EditorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
-			Table:   platform.CreatorTable,
-			Columns: []string{platform.CreatorColumn},
+			Table:   platform.EditorTable,
+			Columns: []string{platform.EditorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),

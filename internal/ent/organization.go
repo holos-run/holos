@@ -23,12 +23,14 @@ type Organization struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// CreatedByID holds the value of the "created_by_id" field.
+	CreatedByID uuid.UUID `json:"created_by_id,omitempty"`
+	// UpdatedByID holds the value of the "updated_by_id" field.
+	UpdatedByID uuid.UUID `json:"updated_by_id,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// DisplayName holds the value of the "display_name" field.
 	DisplayName string `json:"display_name,omitempty"`
-	// CreatorID holds the value of the "creator_id" field.
-	CreatorID uuid.UUID `json:"creator_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the OrganizationQuery when eager-loading is set.
 	Edges        OrganizationEdges `json:"edges"`
@@ -39,13 +41,15 @@ type Organization struct {
 type OrganizationEdges struct {
 	// Creator holds the value of the creator edge.
 	Creator *User `json:"creator,omitempty"`
+	// Editor holds the value of the editor edge.
+	Editor *User `json:"editor,omitempty"`
 	// Users holds the value of the users edge.
 	Users []*User `json:"users,omitempty"`
 	// Platforms holds the value of the platforms edge.
 	Platforms []*Platform `json:"platforms,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // CreatorOrErr returns the Creator value or an error if the edge
@@ -59,10 +63,21 @@ func (e OrganizationEdges) CreatorOrErr() (*User, error) {
 	return nil, &NotLoadedError{edge: "creator"}
 }
 
+// EditorOrErr returns the Editor value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e OrganizationEdges) EditorOrErr() (*User, error) {
+	if e.Editor != nil {
+		return e.Editor, nil
+	} else if e.loadedTypes[1] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "editor"}
+}
+
 // UsersOrErr returns the Users value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) UsersOrErr() ([]*User, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.Users, nil
 	}
 	return nil, &NotLoadedError{edge: "users"}
@@ -71,7 +86,7 @@ func (e OrganizationEdges) UsersOrErr() ([]*User, error) {
 // PlatformsOrErr returns the Platforms value or an error if the edge
 // was not loaded in eager-loading.
 func (e OrganizationEdges) PlatformsOrErr() ([]*Platform, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Platforms, nil
 	}
 	return nil, &NotLoadedError{edge: "platforms"}
@@ -86,7 +101,7 @@ func (*Organization) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case organization.FieldCreatedAt, organization.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case organization.FieldID, organization.FieldCreatorID:
+		case organization.FieldID, organization.FieldCreatedByID, organization.FieldUpdatedByID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -121,6 +136,18 @@ func (o *Organization) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				o.UpdatedAt = value.Time
 			}
+		case organization.FieldCreatedByID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field created_by_id", values[i])
+			} else if value != nil {
+				o.CreatedByID = *value
+			}
+		case organization.FieldUpdatedByID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_by_id", values[i])
+			} else if value != nil {
+				o.UpdatedByID = *value
+			}
 		case organization.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -132,12 +159,6 @@ func (o *Organization) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field display_name", values[i])
 			} else if value.Valid {
 				o.DisplayName = value.String
-			}
-		case organization.FieldCreatorID:
-			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field creator_id", values[i])
-			} else if value != nil {
-				o.CreatorID = *value
 			}
 		default:
 			o.selectValues.Set(columns[i], values[i])
@@ -155,6 +176,11 @@ func (o *Organization) Value(name string) (ent.Value, error) {
 // QueryCreator queries the "creator" edge of the Organization entity.
 func (o *Organization) QueryCreator() *UserQuery {
 	return NewOrganizationClient(o.config).QueryCreator(o)
+}
+
+// QueryEditor queries the "editor" edge of the Organization entity.
+func (o *Organization) QueryEditor() *UserQuery {
+	return NewOrganizationClient(o.config).QueryEditor(o)
 }
 
 // QueryUsers queries the "users" edge of the Organization entity.
@@ -196,14 +222,17 @@ func (o *Organization) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(o.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("created_by_id=")
+	builder.WriteString(fmt.Sprintf("%v", o.CreatedByID))
+	builder.WriteString(", ")
+	builder.WriteString("updated_by_id=")
+	builder.WriteString(fmt.Sprintf("%v", o.UpdatedByID))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(o.Name)
 	builder.WriteString(", ")
 	builder.WriteString("display_name=")
 	builder.WriteString(o.DisplayName)
-	builder.WriteString(", ")
-	builder.WriteString("creator_id=")
-	builder.WriteString(fmt.Sprintf("%v", o.CreatorID))
 	builder.WriteByte(')')
 	return builder.String()
 }

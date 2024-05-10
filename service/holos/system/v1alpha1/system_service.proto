@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package holos.system.v1alpha1;
+
+option go_package = "github.com/holos-run/holos/service/gen/holos/system/v1alpha1;system";
+
+// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+
+// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+
+message SeedDatabaseRequest {}
+message SeedDatabaseResponse {}
+
+message DropTablesRequest {}
+message DropTablesResponse {}
+
+service SystemService {
+  rpc SeedDatabase(SeedDatabaseRequest) returns (SeedDatabaseResponse) {}
+  rpc DropTables(DropTablesRequest) returns (DropTablesResponse) {}
+}
