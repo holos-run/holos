@@ -57,9 +57,9 @@ export class Form extends Message<Form> {
    * fields represents FormlyFieldConfig[] encoded as an array of JSON objects
    * organized by section.
    *
-   * @generated from field: repeated google.protobuf.Struct fields = 1;
+   * @generated from field: repeated google.protobuf.Struct field_configs = 1;
    */
-  fields: Struct[] = [];
+  fieldConfigs: Struct[] = [];
 
   constructor(data?: PartialMessage<Form>) {
     super();
@@ -69,7 +69,7 @@ export class Form extends Message<Form> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "holos.storage.v1alpha1.Form";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "fields", kind: "message", T: Struct, repeated: true },
+    { no: 1, name: "field_configs", kind: "message", T: Struct, repeated: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Form {

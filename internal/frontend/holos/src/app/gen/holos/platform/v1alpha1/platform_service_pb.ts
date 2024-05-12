@@ -4,8 +4,8 @@
 // @ts-nocheck
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
-import { FieldMask, Message, proto3 } from "@bufbuild/protobuf";
-import { Platform } from "./platform_pb.js";
+import { FieldMask, Message, proto3, Struct } from "@bufbuild/protobuf";
+import { Form, Platform } from "./platform_pb.js";
 
 /**
  * @generated from message holos.platform.v1alpha1.CreatePlatformRequest
@@ -164,6 +164,56 @@ export class GetPlatformResponse extends Message<GetPlatformResponse> {
 }
 
 /**
+ * @generated from message holos.platform.v1alpha1.UpdatePlatformRequest
+ */
+export class UpdatePlatformRequest extends Message<UpdatePlatformRequest> {
+  /**
+   * Update operations to perform.  Fields are set to the provided value if
+   * selected by the mask.  Absent fields are cleared if they are selected by
+   * the mask.
+   *
+   * @generated from field: holos.platform.v1alpha1.UpdatePlatformOperation update = 1;
+   */
+  update?: UpdatePlatformOperation;
+
+  /**
+   * FieldMask represents the mutation operations to perform.  Marked optional
+   * for the nil guard check.  Required.
+   *
+   * @generated from field: optional google.protobuf.FieldMask update_mask = 2;
+   */
+  updateMask?: FieldMask;
+
+  constructor(data?: PartialMessage<UpdatePlatformRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.platform.v1alpha1.UpdatePlatformRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "update", kind: "message", T: UpdatePlatformOperation },
+    { no: 2, name: "update_mask", kind: "message", T: FieldMask, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdatePlatformRequest {
+    return new UpdatePlatformRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UpdatePlatformRequest {
+    return new UpdatePlatformRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UpdatePlatformRequest {
+    return new UpdatePlatformRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UpdatePlatformRequest | PlainMessage<UpdatePlatformRequest> | undefined, b: UpdatePlatformRequest | PlainMessage<UpdatePlatformRequest> | undefined): boolean {
+    return proto3.util.equals(UpdatePlatformRequest, a, b);
+  }
+}
+
+/**
  * @generated from message holos.platform.v1alpha1.UpdatePlatformResponse
  */
 export class UpdatePlatformResponse extends Message<UpdatePlatformResponse> {
@@ -197,51 +247,6 @@ export class UpdatePlatformResponse extends Message<UpdatePlatformResponse> {
 
   static equals(a: UpdatePlatformResponse | PlainMessage<UpdatePlatformResponse> | undefined, b: UpdatePlatformResponse | PlainMessage<UpdatePlatformResponse> | undefined): boolean {
     return proto3.util.equals(UpdatePlatformResponse, a, b);
-  }
-}
-
-/**
- * @generated from message holos.platform.v1alpha1.UpdatePlatformRequest
- */
-export class UpdatePlatformRequest extends Message<UpdatePlatformRequest> {
-  /**
-   * @generated from field: holos.platform.v1alpha1.Platform platform = 1;
-   */
-  platform?: Platform;
-
-  /**
-   * FieldMask represents the request Platform fields to update.
-   *
-   * @generated from field: google.protobuf.FieldMask field_mask = 2;
-   */
-  fieldMask?: FieldMask;
-
-  constructor(data?: PartialMessage<UpdatePlatformRequest>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.platform.v1alpha1.UpdatePlatformRequest";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "platform", kind: "message", T: Platform },
-    { no: 2, name: "field_mask", kind: "message", T: FieldMask },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdatePlatformRequest {
-    return new UpdatePlatformRequest().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UpdatePlatformRequest {
-    return new UpdatePlatformRequest().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UpdatePlatformRequest {
-    return new UpdatePlatformRequest().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: UpdatePlatformRequest | PlainMessage<UpdatePlatformRequest> | undefined, b: UpdatePlatformRequest | PlainMessage<UpdatePlatformRequest> | undefined): boolean {
-    return proto3.util.equals(UpdatePlatformRequest, a, b);
   }
 }
 
@@ -324,6 +329,77 @@ export class ListPlatformsResponse extends Message<ListPlatformsResponse> {
 
   static equals(a: ListPlatformsResponse | PlainMessage<ListPlatformsResponse> | undefined, b: ListPlatformsResponse | PlainMessage<ListPlatformsResponse> | undefined): boolean {
     return proto3.util.equals(ListPlatformsResponse, a, b);
+  }
+}
+
+/**
+ * @generated from message holos.platform.v1alpha1.UpdatePlatformOperation
+ */
+export class UpdatePlatformOperation extends Message<UpdatePlatformOperation> {
+  /**
+   * Platform UUID to update.
+   *
+   * @generated from field: string platform_id = 1;
+   */
+  platformId = "";
+
+  /**
+   * Update the platform name.
+   *
+   * @generated from field: optional string name = 2;
+   */
+  name?: string;
+
+  /**
+   * Update the platform display name.
+   *
+   * @generated from field: optional string display_name = 3;
+   */
+  displayName?: string;
+
+  /**
+   * Replace the form model.
+   *
+   * @generated from field: optional google.protobuf.Struct model = 4;
+   */
+  model?: Struct;
+
+  /**
+   * Replace the form.
+   *
+   * @generated from field: optional holos.platform.v1alpha1.Form form = 5;
+   */
+  form?: Form;
+
+  constructor(data?: PartialMessage<UpdatePlatformOperation>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.platform.v1alpha1.UpdatePlatformOperation";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 3, name: "display_name", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
+    { no: 4, name: "model", kind: "message", T: Struct, opt: true },
+    { no: 5, name: "form", kind: "message", T: Form, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdatePlatformOperation {
+    return new UpdatePlatformOperation().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UpdatePlatformOperation {
+    return new UpdatePlatformOperation().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UpdatePlatformOperation {
+    return new UpdatePlatformOperation().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: UpdatePlatformOperation | PlainMessage<UpdatePlatformOperation> | undefined, b: UpdatePlatformOperation | PlainMessage<UpdatePlatformOperation> | undefined): boolean {
+    return proto3.util.equals(UpdatePlatformOperation, a, b);
   }
 }
 

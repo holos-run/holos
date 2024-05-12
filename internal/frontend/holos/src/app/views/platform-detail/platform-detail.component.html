@@ -4,7 +4,7 @@
       <div class="grid-container">
         <form [formGroup]="form" (ngSubmit)="onSubmit(model)">
           <formly-form [model]="model" [fields]="fields" [options]="options" [form]="form"></formly-form>
-          <button type="submit" mat-flat-button color="primary" [disabled]="!form.valid">Submit</button>
+          <button type="submit" mat-flat-button color="primary" [disabled]="!form.valid || isLoading">Submit</button>
         </form>
       </div>
     </mat-tab>

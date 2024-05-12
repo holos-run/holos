@@ -5,6 +5,7 @@ option go_package = "github.com/holos-run/holos/service/gen/holos/platform/v1alp
 
 import "buf/validate/validate.proto";
 import "google/protobuf/field_mask.proto";
+import "google/protobuf/struct.proto";
 import "holos/platform/v1alpha1/platform.proto";
 
 message CreatePlatformRequest {
@@ -25,14 +26,18 @@ message GetPlatformResponse {
   Platform platform = 1;
 }
 
-message UpdatePlatformResponse {
-  Platform platform = 1;
+message UpdatePlatformRequest {
+  // Update operations to perform.  Fields are set to the provided value if
+  // selected by the mask.  Absent fields are cleared if they are selected by
+  // the mask.
+  UpdatePlatformOperation update = 1;
+  // FieldMask represents the mutation operations to perform.  Marked optional
+  // for the nil guard check.  Required.
+  optional google.protobuf.FieldMask update_mask = 2;
 }
 
-message UpdatePlatformRequest {
+message UpdatePlatformResponse {
   Platform platform = 1;
-  // FieldMask represents the request Platform fields to update.
-  google.protobuf.FieldMask field_mask = 2;
 }
 
 message ListPlatformsRequest {
@@ -43,6 +48,63 @@ message ListPlatformsRequest {
 
 message ListPlatformsResponse {
   repeated Platform platforms = 1;
+}
+
+message UpdatePlatformOperation {
+  // Platform UUID to update.
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+  // Update the platform name.
+  optional string name = 2 [ 
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 39,
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_start_hyphen"
+      message: "Cannot start with a hyphen."
+      expression: "!this.startsWith('-')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_end_hyphen"
+      message: "Cannot end with a hyphen."
+      expression: "!this.endsWith('-')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.no_consecutive_hyphens"
+      message: "Cannot include consecutive hyphens."
+      expression: "!this.contains('--')"
+    },
+    (buf.validate.field).cel = {
+      id: "name.pattern"
+      message: "All characters must be either a hyphen or alphanumeric."
+      // https://github.com/google/cel-spec/blob/master/doc/langdef.md#regular-expressions
+      expression: "this.matches('^[A-Za-z0-9-]+$')"
+    }];
+  // Update the platform display name.
+  optional string display_name = 3 [
+    (buf.validate.field).string = {
+      min_len: 1,
+      max_len: 100,
+    },
+    (buf.validate.field).cel = {
+      id: "display_name.no_start_space"
+      message: "Cannot start with a space."
+      expression: "!this.startsWith(' ')"
+    },
+    (buf.validate.field).cel = {
+      id: "display_name.no_end_space"
+      message: "Cannot end with a space."
+      expression: "!this.endsWith(' ')"
+    },
+    (buf.validate.field).cel = {
+      id: "display_name.no_consecutive_spaces"
+      message: "Cannot include consecutive spaces."
+      expression: "!this.contains('  ')"
+    }];
+  // Replace the form model.
+  optional google.protobuf.Struct model = 4;
+  // Replace the form.
+  optional Form form = 5;
 }
 
 service PlatformService {

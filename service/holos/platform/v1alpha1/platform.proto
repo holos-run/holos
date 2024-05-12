@@ -12,7 +12,7 @@ import "holos/object/v1alpha1/object.proto";
 
 message Platform {
   // Unique id assigned by the server.
-  string id = 1;
+  string id = 1 [(buf.validate.field).string.uuid = true];
   // Owner of the platform.
   Owner owner = 2;
   // name is the platform short name as a dns label.
@@ -37,10 +37,10 @@ message Platform {
       expression: "!this.contains('--')"
     },
     (buf.validate.field).cel = {
-      id: "name"
+      id: "name.pattern"
       message: "All characters must be either a hyphen or alphanumeric."
       // https://github.com/google/cel-spec/blob/master/doc/langdef.md#regular-expressions
-      expression: "this.matches('^[A-Za-z0-9-]$')"
+      expression: "this.matches('^[A-Za-z0-9-]+$')"
     }
    ];
   optional string display_name = 4 [
@@ -49,17 +49,17 @@ message Platform {
       max_len: 100,
     },
     (buf.validate.field).cel = {
-      id: "name.no_start_space"
+      id: "display_name.no_start_space"
       message: "Cannot start with a space."
       expression: "!this.startsWith(' ')"
     },
     (buf.validate.field).cel = {
-      id: "name.no_end_space"
+      id: "display_name.no_end_space"
       message: "Cannot end with a space."
       expression: "!this.endsWith(' ')"
     },
     (buf.validate.field).cel = {
-      id: "name.no_consecutive_spaces"
+      id: "display_name.no_consecutive_spaces"
       message: "Cannot include consecutive spaces."
       expression: "!this.contains('  ')"
     }];
@@ -89,5 +89,5 @@ message Spec {
 message Form {
   // fields represents FormlyFieldConfig[] encoded as an array of JSON objects
   // organized by section.
-  repeated google.protobuf.Struct fields = 1;
+  repeated google.protobuf.Struct field_configs = 1;
 }

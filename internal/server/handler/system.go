@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -121,13 +122,17 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[s
 			return errors.Wrap(err)
 		}
 
+		decoder := json.NewDecoder(bytes.NewReader([]byte(BareForm)))
+		decoder.DisallowUnknownFields()
 		var form storage.Form
-		if err := json.Unmarshal([]byte(BareForm), &form); err != nil {
+		if err := decoder.Decode(&form); err != nil {
 			return errors.Wrap(err)
 		}
 
+		decoder = json.NewDecoder(bytes.NewReader([]byte(Model)))
+		decoder.DisallowUnknownFields()
 		var model storage.Model
-		if err := json.Unmarshal([]byte(Model), &model); err != nil {
+		if err := decoder.Decode(&model); err != nil {
 			return errors.Wrap(err)
 		}
 
@@ -174,7 +179,7 @@ const Model = `{"model":{}}`
 
 const BareForm = `
 {
-  "fields": [
+  "field_configs": [
     {
       "key": "org",
       "wrappers": [

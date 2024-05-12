@@ -9,6 +9,8 @@ import { FormlyFieldConfig, FormlyFormOptions, FormlyModule } from '@ngx-formly/
 import { FormlyMaterialModule } from '@ngx-formly/material';
 import { Subject, takeUntil } from 'rxjs';
 import { PlatformService } from '../../services/platform.service';
+import { Platform } from '../../gen/holos/platform/v1alpha1/platform_pb';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-platform-detail',
@@ -29,7 +31,10 @@ import { PlatformService } from '../../services/platform.service';
 })
 export class PlatformDetailComponent implements OnDestroy {
   private platformService = inject(PlatformService);
+  private _snackBar: MatSnackBar = inject(MatSnackBar);
   private platformId: string = "";
+  private platform: Platform = new Platform();
+  isLoading = false;
 
   private destroy$: Subject<boolean> = new Subject<boolean>();
   form = new FormGroup({});
@@ -52,8 +57,17 @@ export class PlatformDetailComponent implements OnDestroy {
 
   onSubmit(model: JsonValue) {
     if (this.form.valid) {
-      console.log(model)
-      window.alert("call UpdatePlatform")
+      this.isLoading = true;
+      this.platformService
+        .updateModel(this.platform.id, model)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(platform => {
+          this._snackBar.open('Saved ' + platform?.displayName, 'OK', {
+            duration: 5000,
+          }).afterDismissed().subscribe(() => {
+            this.isLoading = false;
+          })
+        })
     }
   }
 
@@ -64,6 +78,9 @@ export class PlatformDetailComponent implements OnDestroy {
       .getPlatform(platformId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(platform => {
+        if (platform !== undefined) {
+          this.platform = platform
+        }
         if (platform?.spec?.model !== undefined) {
           this.setModel(platform.spec.model.toJson())
         }
@@ -71,7 +88,7 @@ export class PlatformDetailComponent implements OnDestroy {
           // NOTE: We could mix functions into the json data via mapped fields,
           // but consider carefully before doing so.  Refer to
           // https://formly.dev/docs/examples/other/json-powered
-          this.fields = platform.spec.form.fields.map(field => field.toJson() as FormlyFieldConfig)
+          this.fields = platform.spec.form.fieldConfigs.map(fieldConfig => fieldConfig.toJson() as FormlyFieldConfig)
         }
       })
   }

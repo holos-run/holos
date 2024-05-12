@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"connectrpc.com/connect"
 	"github.com/gofrs/uuid"
@@ -12,9 +13,12 @@ import (
 	"github.com/holos-run/holos/internal/ent/user"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
+	"github.com/holos-run/holos/internal/server/middleware/logger"
+	"github.com/holos-run/holos/internal/strings"
 	object "github.com/holos-run/holos/service/gen/holos/object/v1alpha1"
 	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
 	storage "github.com/holos-run/holos/service/gen/holos/storage/v1alpha1"
+	fieldmask_utils "github.com/mennanov/fieldmask-utils"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -56,6 +60,31 @@ func (h *PlatformHandler) CreatePlatform(ctx context.Context, req *connect.Reque
 	return connect.NewResponse(resp), nil
 }
 
+// GetPlatform implements the PlatformService GetPlatform rpc method.
+func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[platform.GetPlatformRequest]) (*connect.Response[platform.GetPlatformResponse], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
+	dbPlatform, err := h.getPlatform(ctx, req.Msg.GetPlatformId(), authnID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	rpcPlatform := PlatformToRPC(dbPlatform)
+
+	mask, err := fieldmask_utils.MaskFromPaths(req.Msg.GetFieldMask().GetPaths(), strings.PascalCase)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+	var rpcPlatformMasked platform.Platform
+	if err = fieldmask_utils.StructToStruct(mask, rpcPlatform, &rpcPlatformMasked); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	return connect.NewResponse(&platform.GetPlatformResponse{Platform: &rpcPlatformMasked}), nil
+}
+
 // ListPlatforms implements the PlatformService ListPlatforms rpc method.
 func (h *PlatformHandler) ListPlatforms(ctx context.Context, req *connect.Request[platform.ListPlatformsRequest]) (*connect.Response[platform.ListPlatformsResponse], error) {
 	if req == nil || req.Msg == nil {
@@ -66,25 +95,18 @@ func (h *PlatformHandler) ListPlatforms(ctx context.Context, req *connect.Reques
 		return nil, errors.Wrap(err)
 	}
 
-	resp := &platform.ListPlatformsResponse{Platforms: rpcPlatforms(reqDBOrg)}
-	return connect.NewResponse(resp), nil
-}
-
-// GetPlatform implements the PlatformService GetPlatform rpc method.
-func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[platform.GetPlatformRequest]) (*connect.Response[platform.GetPlatformResponse], error) {
-	authnID, err := authn.FromContext(ctx)
+	mask, err := fieldmask_utils.MaskFromPaths(req.Msg.GetFieldMask().GetPaths(), strings.PascalCase)
 	if err != nil {
-		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
 	}
 
-	p, err := h.getPlatform(ctx, req.Msg.GetPlatformId(), authnID)
+	platforms, err := rpcPlatforms(reqDBOrg, mask)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	// JEFFTODO: FieldMask in the PlatformToRPC() method.
-
-	return connect.NewResponse(&platform.GetPlatformResponse{Platform: PlatformToRPC(p)}), nil
+	resp := &platform.ListPlatformsResponse{Platforms: platforms}
+	return connect.NewResponse(resp), nil
 }
 
 // getEditor ensures the user identity stored in the context is a member of the
@@ -114,45 +136,87 @@ func getEditor(ctx context.Context, db *ent.Client, authnID authn.Identity, orgI
 	return editor, nil
 }
 
-func (h *PlatformHandler) UpdatePlatform(ctx context.Context, req *connect.Request[platform.UpdatePlatformRequest]) (*connect.Response[platform.UpdatePlatformResponse], error) {
+func (h *PlatformHandler) UpdatePlatform(
+	ctx context.Context,
+	req *connect.Request[platform.UpdatePlatformRequest],
+) (*connect.Response[platform.UpdatePlatformResponse], error) {
 	authnID, err := authn.FromContext(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 
-	editor, err := getEditor(ctx, h.db, authnID, req.Msg.GetPlatform().GetOwner().GetOrgId())
+	// Update mask is required to avoid an older client accidentally writing over
+	// fields added to the update operation.
+	if req.Msg.GetUpdateMask() == nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(errors.New("missing update mask")))
+	}
+
+	// Refer to https://github.com/mennanov/fieldmask-utils/blob/v1.1.2/README.md#naming-function
+	mask, err := fieldmask_utils.MaskFromProtoFieldMask(req.Msg.GetUpdateMask(), strings.PascalCase)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	p, err := h.getPlatform(ctx, req.Msg.GetPlatform().GetId(), authnID)
+	ops := make(map[string]interface{})
+	if err := fieldmask_utils.StructToMap(mask, req.Msg.GetUpdate(), ops, fieldmask_utils.WithMapVisitor(newVisitor(ctx))); err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	p, err := h.getPlatform(ctx, req.Msg.GetUpdate().GetPlatformId(), authnID)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	// JEFFTODO: Field Mask
-	builder := p.Update().
-		SetName(req.Msg.GetPlatform().GetName()).
-		SetDisplayName(req.Msg.GetPlatform().GetDisplayName()).
-		SetForm(&storage.Form{
-			Fields: req.Msg.GetPlatform().GetSpec().GetForm().GetFields(),
-		}).
-		SetModel(&storage.Model{
-			Model: req.Msg.GetPlatform().GetSpec().GetModel(),
-		}).
-		SetEditor(editor)
+	log := logger.FromContext(ctx).With("platform_id", p.ID.String(), "org_id", p.OrgID.String())
 
-	entPlatform, err := builder.Save(ctx)
+	if len(ops) == 0 {
+		err = errors.New("nothing to do: provide fields to update in the mask")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	editor, err := getEditor(ctx, h.db, authnID, p.OrgID.String())
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	log = log.With("op", "update", "editor", editor.Email)
+
+	builder := p.Update()
+	builder.SetEditor(editor)
+	for field := range ops {
+		log := log.With("field", field)
+		switch field {
+		case "Name":
+			name := req.Msg.GetUpdate().GetName()
+			log.InfoContext(ctx, "update", field, name)
+			builder.SetName(name)
+		case "DisplayName":
+			name := req.Msg.GetUpdate().GetDisplayName()
+			log.InfoContext(ctx, "update", field, name)
+			builder.SetDisplayName(name)
+		case "Model":
+			log.InfoContext(ctx, "update")
+			builder.SetModel(&storage.Model{Model: req.Msg.GetUpdate().GetModel()})
+		case "Form":
+			log.InfoContext(ctx, "update")
+			builder.SetForm(&storage.Form{FieldConfigs: req.Msg.GetUpdate().GetForm().GetFieldConfigs()})
+		default:
+			err := errors.Wrap(errors.New("could not update: unknown field " + field))
+			log.ErrorContext(ctx, "could not update", "err", err)
+			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		}
+	}
+
+	dbPlatform, err := builder.Save(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
-	resp := &platform.UpdatePlatformResponse{
-		Platform: PlatformToRPC(entPlatform),
+	resp := platform.UpdatePlatformResponse{
+		Platform: PlatformToRPC(dbPlatform),
 	}
 
-	return connect.NewResponse(resp), nil
-
+	return connect.NewResponse(&resp), nil
 }
 
 // getPlatform returns a platform by id ensuring the request comes from an
@@ -173,9 +237,9 @@ func (h *PlatformHandler) getPlatform(ctx context.Context, id string, uid authn.
 		Only(ctx)
 	if err != nil {
 		if ent.MaskNotFound(err) == nil {
-			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
+			return nil, connect.NewError(connect.CodeNotFound, err)
 		} else {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+			return nil, connect.NewError(connect.CodeFailedPrecondition, err)
 		}
 	}
 
@@ -195,7 +259,7 @@ func PlatformToRPC(entity *ent.Platform) *platform.Platform {
 		Spec: &platform.Spec{
 			Model: entity.Model.GetModel(),
 			Form: &platform.Form{
-				Fields: entity.Form.GetFields(),
+				FieldConfigs: entity.Form.GetFieldConfigs(),
 			},
 		},
 		Detail: &object.Detail{
@@ -263,14 +327,30 @@ func getAuthnUsersOrg(ctx context.Context, orgID string, db *ent.Client) (*ent.U
 	return dbUser, reqDBOrg, nil
 }
 
-func rpcPlatforms(reqDBOrg *ent.Organization) []*platform.Platform {
+func rpcPlatforms(reqDBOrg *ent.Organization, mask fieldmask_utils.Mask) ([]*platform.Platform, error) {
 	if reqDBOrg == nil {
-		return nil
+		return nil, nil
 	}
+
 	// one extra in case a new platform is appended.
 	platforms := make([]*platform.Platform, 0, 1+len(reqDBOrg.Edges.Platforms))
-	for _, platform := range reqDBOrg.Edges.Platforms {
-		platforms = append(platforms, PlatformToRPC(platform))
+	for _, dbPlatform := range reqDBOrg.Edges.Platforms {
+		var platformMasked platform.Platform
+		if err := fieldmask_utils.StructToStruct(mask, PlatformToRPC(dbPlatform), &platformMasked); err != nil {
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+		}
+		platforms = append(platforms, &platformMasked)
 	}
-	return platforms
+	return platforms, nil
+}
+
+// newVisitor returns a new fieldmask visitor function for use with
+// fieldmask_utils.StructToMap.  This is here largely as an placeholder to
+// remember we can mutate the value if we want.
+func newVisitor(ctx context.Context) func(filter fieldmask_utils.FieldFilter, src, dst reflect.Value, srcFieldName, dstFieldName string, srcFieldValue reflect.Value) fieldmask_utils.MapVisitorResult {
+	return func(filter fieldmask_utils.FieldFilter, src, dst reflect.Value, srcFieldName, dstFieldName string, srcFieldValue reflect.Value) fieldmask_utils.MapVisitorResult {
+		return fieldmask_utils.MapVisitorResult{
+			UpdatedDst: &dst,
+		}
+	}
 }

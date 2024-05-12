@@ -17,5 +17,5 @@ message Model {
 message Form {
   // fields represents FormlyFieldConfig[] encoded as an array of JSON objects
   // organized by section.
-  repeated google.protobuf.Struct fields = 1;
+  repeated google.protobuf.Struct field_configs = 1;
 }
