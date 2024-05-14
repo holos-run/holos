@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { DropTablesRequest, DropTablesResponse, SeedDatabaseRequest, SeedDatabaseResponse } from "./system_service_pb.js";
+import { DropTablesRequest, DropTablesResponse, GetVersionRequest, GetVersionResponse, SeedDatabaseRequest, SeedDatabaseResponse } from "./system_service_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -13,12 +13,12 @@ export const SystemService = {
   typeName: "holos.system.v1alpha1.SystemService",
   methods: {
     /**
-     * @generated from rpc holos.system.v1alpha1.SystemService.SeedDatabase
+     * @generated from rpc holos.system.v1alpha1.SystemService.GetVersion
      */
-    seedDatabase: {
-      name: "SeedDatabase",
-      I: SeedDatabaseRequest,
-      O: SeedDatabaseResponse,
+    getVersion: {
+      name: "GetVersion",
+      I: GetVersionRequest,
+      O: GetVersionResponse,
       kind: MethodKind.Unary,
     },
     /**
@@ -28,6 +28,15 @@ export const SystemService = {
       name: "DropTables",
       I: DropTablesRequest,
       O: DropTablesResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc holos.system.v1alpha1.SystemService.SeedDatabase
+     */
+    seedDatabase: {
+      name: "SeedDatabase",
+      I: SeedDatabaseRequest,
+      O: SeedDatabaseResponse,
       kind: MethodKind.Unary,
     },
   }

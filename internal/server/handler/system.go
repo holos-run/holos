@@ -13,8 +13,11 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
+	holosstrings "github.com/holos-run/holos/internal/strings"
 	storage "github.com/holos-run/holos/service/gen/holos/storage/v1alpha1"
 	system "github.com/holos-run/holos/service/gen/holos/system/v1alpha1"
+	"github.com/holos-run/holos/version"
+	fieldmask_utils "github.com/mennanov/fieldmask-utils"
 )
 
 const AdminEmail = "jeff@openinfrastructure.co"
@@ -39,6 +42,26 @@ func (h *SystemHandler) checkAdmin(ctx context.Context) error {
 		return connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 	return nil
+}
+
+func (h *SystemHandler) GetVersion(ctx context.Context, req *connect.Request[system.GetVersionRequest]) (*connect.Response[system.GetVersionResponse], error) {
+	_, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
+	mask, err := fieldmask_utils.MaskFromProtoFieldMask(req.Msg.GetFieldMask(), holosstrings.PascalCase)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	srcVersion := version.NewVersionInfo()
+	var rpcVersion system.Version
+	if err := fieldmask_utils.StructToStruct(mask, &srcVersion, &rpcVersion); err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	return connect.NewResponse(&system.GetVersionResponse{Version: &rpcVersion}), nil
 }
 
 func (h *SystemHandler) DropTables(ctx context.Context, req *connect.Request[system.DropTablesRequest]) (*connect.Response[system.DropTablesResponse], error) {

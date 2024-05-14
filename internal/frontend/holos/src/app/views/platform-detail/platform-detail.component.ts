@@ -3,14 +3,14 @@ import { Component, Input, OnDestroy, inject } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
 import { MatDivider } from '@angular/material/divider';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTab, MatTabGroup } from '@angular/material/tabs';
 import { JsonValue } from '@bufbuild/protobuf';
 import { FormlyFieldConfig, FormlyFormOptions, FormlyModule } from '@ngx-formly/core';
 import { FormlyMaterialModule } from '@ngx-formly/material';
 import { Subject, takeUntil } from 'rxjs';
-import { PlatformService } from '../../services/platform.service';
 import { Platform } from '../../gen/holos/platform/v1alpha1/platform_pb';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { PlatformService } from '../../services/platform.service';
 
 @Component({
   selector: 'app-platform-detail',

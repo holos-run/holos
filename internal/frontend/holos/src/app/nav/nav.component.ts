@@ -1,20 +1,21 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { AsyncPipe, NgIf } from '@angular/common';
-import { MatToolbarModule } from '@angular/material/toolbar';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatIconModule } from '@angular/material/icon';
-import { Observable } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
-import { ProfileButtonComponent } from '../profile-button/profile-button.component';
-import { User } from '../gen/holos/user/v1alpha1/user_pb';
-import { UserService } from '../services/user.service';
+import { MatIconModule } from '@angular/material/icon';
+import { MatListModule } from '@angular/material/list';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Observable, Subject } from 'rxjs';
+import { map, shareReplay, takeUntil } from 'rxjs/operators';
 import { Organization } from '../gen/holos/organization/v1alpha1/organization_pb';
+import { User } from '../gen/holos/user/v1alpha1/user_pb';
+import { ProfileButtonComponent } from '../profile-button/profile-button.component';
 import { OrganizationService } from '../services/organization.service';
+import { UserService } from '../services/user.service';
+import { VersionButtonComponent } from '../version-button/version-button.component';
 
 @Component({
   selector: 'app-nav',
@@ -34,19 +35,17 @@ import { OrganizationService } from '../services/organization.service';
     RouterOutlet,
     MatCardModule,
     ProfileButtonComponent,
+    VersionButtonComponent,
   ]
 })
-export class NavComponent implements OnInit {
+export class NavComponent implements OnInit, OnDestroy {
   private breakpointObserver = inject(BreakpointObserver);
   private userService = inject(UserService);
   private orgService = inject(OrganizationService);
+  private destroy$: Subject<boolean> = new Subject<boolean>();
 
   user$!: Observable<User | null>;
   org$!: Observable<Organization | undefined>;
-
-  refreshOrg(): void {
-    this.orgService.refreshOrganizations()
-  }
 
   isHandset$: Observable<boolean> = this.breakpointObserver.observe(Breakpoints.Handset)
     .pipe(
@@ -54,8 +53,17 @@ export class NavComponent implements OnInit {
       shareReplay()
     );
 
+  refreshOrg(): void {
+    this.orgService.refreshOrganizations()
+  }
+
   ngOnInit(): void {
-    this.user$ = this.userService.getUser();
-    this.org$ = this.orgService.activeOrg();
+    this.user$ = this.userService.getUser().pipe(takeUntil(this.destroy$));
+    this.org$ = this.orgService.activeOrg().pipe(takeUntil(this.destroy$));
+  }
+
+  public ngOnDestroy(): void {
+    this.destroy$.next(true);
+    this.destroy$.complete();
   }
 }

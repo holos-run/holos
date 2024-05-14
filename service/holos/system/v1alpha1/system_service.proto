@@ -1,12 +1,19 @@
 syntax = "proto3";
 
 package holos.system.v1alpha1;
-
 option go_package = "github.com/holos-run/holos/service/gen/holos/system/v1alpha1;system";
 
-// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+import "google/protobuf/field_mask.proto";
+import "holos/system/v1alpha1/system.proto";
 
-// For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
+message GetVersionRequest {
+  // FieldMask represents the fields to include in the response.
+  google.protobuf.FieldMask field_mask = 1;
+}
+
+message GetVersionResponse {
+  Version version = 1;
+}
 
 message SeedDatabaseRequest {}
 message SeedDatabaseResponse {}
@@ -15,6 +22,7 @@ message DropTablesRequest {}
 message DropTablesResponse {}
 
 service SystemService {
-  rpc SeedDatabase(SeedDatabaseRequest) returns (SeedDatabaseResponse) {}
+  rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {}
   rpc DropTables(DropTablesRequest) returns (DropTablesResponse) {}
+  rpc SeedDatabase(SeedDatabaseRequest) returns (SeedDatabaseResponse) {}
 }

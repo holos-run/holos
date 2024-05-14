@@ -1,0 +1,23 @@
+@if (version$ | async; as version) {
+  <button mat-button [matMenuTriggerFor]="menu">
+    {{ version.version }}
+  </button>
+
+  <mat-menu class="version-menu" #menu="matMenu">
+    <mat-card class="version-card">
+      <mat-card-header>
+        <mat-card-title>{{ version.version }}</mat-card-title>
+        <mat-card-subtitle>Server version info</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <pre>Git: {{ version.gitCommit | truncate }}</pre>
+        <pre>Go: {{ version.goVersion | truncate }}</pre>
+        <pre>OS: {{ version.os | truncate }}</pre>
+        <pre>Arch: {{ version.arch | truncate }}</pre>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button (click)="refreshVersion()" [disabled]="isLoading">Refresh</button>
+      </mat-card-actions>
+    </mat-card>
+  </mat-menu>
+}

@@ -4,7 +4,84 @@
 // @ts-nocheck
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
-import { Message, proto3 } from "@bufbuild/protobuf";
+import { FieldMask, Message, proto3 } from "@bufbuild/protobuf";
+import { Version } from "./system_pb.js";
+
+/**
+ * @generated from message holos.system.v1alpha1.GetVersionRequest
+ */
+export class GetVersionRequest extends Message<GetVersionRequest> {
+  /**
+   * FieldMask represents the fields to include in the response.
+   *
+   * @generated from field: google.protobuf.FieldMask field_mask = 1;
+   */
+  fieldMask?: FieldMask;
+
+  constructor(data?: PartialMessage<GetVersionRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.system.v1alpha1.GetVersionRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "field_mask", kind: "message", T: FieldMask },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetVersionRequest {
+    return new GetVersionRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetVersionRequest {
+    return new GetVersionRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetVersionRequest {
+    return new GetVersionRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetVersionRequest | PlainMessage<GetVersionRequest> | undefined, b: GetVersionRequest | PlainMessage<GetVersionRequest> | undefined): boolean {
+    return proto3.util.equals(GetVersionRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message holos.system.v1alpha1.GetVersionResponse
+ */
+export class GetVersionResponse extends Message<GetVersionResponse> {
+  /**
+   * @generated from field: holos.system.v1alpha1.Version version = 1;
+   */
+  version?: Version;
+
+  constructor(data?: PartialMessage<GetVersionResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.system.v1alpha1.GetVersionResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "version", kind: "message", T: Version },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetVersionResponse {
+    return new GetVersionResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetVersionResponse {
+    return new GetVersionResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetVersionResponse {
+    return new GetVersionResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetVersionResponse | PlainMessage<GetVersionResponse> | undefined, b: GetVersionResponse | PlainMessage<GetVersionResponse> | undefined): boolean {
+    return proto3.util.equals(GetVersionResponse, a, b);
+  }
+}
 
 /**
  * @generated from message holos.system.v1alpha1.SeedDatabaseRequest

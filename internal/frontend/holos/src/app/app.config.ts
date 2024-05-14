@@ -10,6 +10,7 @@ import { UserService } from './gen/holos/user/v1alpha1/user_service_connect';
 import { OrganizationService } from './gen/holos/organization/v1alpha1/organization_service_connect';
 import { PlatformService } from './gen/holos/platform/v1alpha1/platform_service_connect';
 import { HolosPanelWrapperComponent } from '../wrappers/holos-panel-wrapper/holos-panel-wrapper.component';
+import { SystemService } from './gen/holos/system/v1alpha1/system_service_connect';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -19,6 +20,7 @@ export const appConfig: ApplicationConfig = {
     provideClient(UserService),
     provideClient(OrganizationService),
     provideClient(PlatformService),
+    provideClient(SystemService),
     importProvidersFrom(
       ConnectModule.forRoot({
         baseUrl: window.location.origin

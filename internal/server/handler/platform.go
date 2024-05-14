@@ -73,7 +73,7 @@ func (h *PlatformHandler) GetPlatform(ctx context.Context, req *connect.Request[
 	}
 	rpcPlatform := PlatformToRPC(dbPlatform)
 
-	mask, err := fieldmask_utils.MaskFromPaths(req.Msg.GetFieldMask().GetPaths(), strings.PascalCase)
+	mask, err := fieldmask_utils.MaskFromProtoFieldMask(req.Msg.GetFieldMask(), strings.PascalCase)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
 	}
@@ -95,7 +95,7 @@ func (h *PlatformHandler) ListPlatforms(ctx context.Context, req *connect.Reques
 		return nil, errors.Wrap(err)
 	}
 
-	mask, err := fieldmask_utils.MaskFromPaths(req.Msg.GetFieldMask().GetPaths(), strings.PascalCase)
+	mask, err := fieldmask_utils.MaskFromProtoFieldMask(req.Msg.GetFieldMask(), strings.PascalCase)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
 	}
@@ -348,7 +348,9 @@ func rpcPlatforms(reqDBOrg *ent.Organization, mask fieldmask_utils.Mask) ([]*pla
 // fieldmask_utils.StructToMap.  This is here largely as an placeholder to
 // remember we can mutate the value if we want.
 func newVisitor(ctx context.Context) func(filter fieldmask_utils.FieldFilter, src, dst reflect.Value, srcFieldName, dstFieldName string, srcFieldValue reflect.Value) fieldmask_utils.MapVisitorResult {
+	log := logger.FromContext(ctx)
 	return func(filter fieldmask_utils.FieldFilter, src, dst reflect.Value, srcFieldName, dstFieldName string, srcFieldValue reflect.Value) fieldmask_utils.MapVisitorResult {
+		log.DebugContext(ctx, "visitor", "srcFieldName", srcFieldName, "dstFieldName", dstFieldName)
 		return fieldmask_utils.MapVisitorResult{
 			UpdatedDst: &dst,
 		}

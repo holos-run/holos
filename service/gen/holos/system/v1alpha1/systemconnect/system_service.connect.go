@@ -33,25 +33,30 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// SystemServiceSeedDatabaseProcedure is the fully-qualified name of the SystemService's
-	// SeedDatabase RPC.
-	SystemServiceSeedDatabaseProcedure = "/holos.system.v1alpha1.SystemService/SeedDatabase"
+	// SystemServiceGetVersionProcedure is the fully-qualified name of the SystemService's GetVersion
+	// RPC.
+	SystemServiceGetVersionProcedure = "/holos.system.v1alpha1.SystemService/GetVersion"
 	// SystemServiceDropTablesProcedure is the fully-qualified name of the SystemService's DropTables
 	// RPC.
 	SystemServiceDropTablesProcedure = "/holos.system.v1alpha1.SystemService/DropTables"
+	// SystemServiceSeedDatabaseProcedure is the fully-qualified name of the SystemService's
+	// SeedDatabase RPC.
+	SystemServiceSeedDatabaseProcedure = "/holos.system.v1alpha1.SystemService/SeedDatabase"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
 	systemServiceServiceDescriptor            = v1alpha1.File_holos_system_v1alpha1_system_service_proto.Services().ByName("SystemService")
-	systemServiceSeedDatabaseMethodDescriptor = systemServiceServiceDescriptor.Methods().ByName("SeedDatabase")
+	systemServiceGetVersionMethodDescriptor   = systemServiceServiceDescriptor.Methods().ByName("GetVersion")
 	systemServiceDropTablesMethodDescriptor   = systemServiceServiceDescriptor.Methods().ByName("DropTables")
+	systemServiceSeedDatabaseMethodDescriptor = systemServiceServiceDescriptor.Methods().ByName("SeedDatabase")
 )
 
 // SystemServiceClient is a client for the holos.system.v1alpha1.SystemService service.
 type SystemServiceClient interface {
-	SeedDatabase(context.Context, *connect.Request[v1alpha1.SeedDatabaseRequest]) (*connect.Response[v1alpha1.SeedDatabaseResponse], error)
+	GetVersion(context.Context, *connect.Request[v1alpha1.GetVersionRequest]) (*connect.Response[v1alpha1.GetVersionResponse], error)
 	DropTables(context.Context, *connect.Request[v1alpha1.DropTablesRequest]) (*connect.Response[v1alpha1.DropTablesResponse], error)
+	SeedDatabase(context.Context, *connect.Request[v1alpha1.SeedDatabaseRequest]) (*connect.Response[v1alpha1.SeedDatabaseResponse], error)
 }
 
 // NewSystemServiceClient constructs a client for the holos.system.v1alpha1.SystemService service.
@@ -64,10 +69,10 @@ type SystemServiceClient interface {
 func NewSystemServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) SystemServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &systemServiceClient{
-		seedDatabase: connect.NewClient[v1alpha1.SeedDatabaseRequest, v1alpha1.SeedDatabaseResponse](
+		getVersion: connect.NewClient[v1alpha1.GetVersionRequest, v1alpha1.GetVersionResponse](
 			httpClient,
-			baseURL+SystemServiceSeedDatabaseProcedure,
-			connect.WithSchema(systemServiceSeedDatabaseMethodDescriptor),
+			baseURL+SystemServiceGetVersionProcedure,
+			connect.WithSchema(systemServiceGetVersionMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
 		dropTables: connect.NewClient[v1alpha1.DropTablesRequest, v1alpha1.DropTablesResponse](
@@ -76,18 +81,25 @@ func NewSystemServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(systemServiceDropTablesMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		seedDatabase: connect.NewClient[v1alpha1.SeedDatabaseRequest, v1alpha1.SeedDatabaseResponse](
+			httpClient,
+			baseURL+SystemServiceSeedDatabaseProcedure,
+			connect.WithSchema(systemServiceSeedDatabaseMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // systemServiceClient implements SystemServiceClient.
 type systemServiceClient struct {
-	seedDatabase *connect.Client[v1alpha1.SeedDatabaseRequest, v1alpha1.SeedDatabaseResponse]
+	getVersion   *connect.Client[v1alpha1.GetVersionRequest, v1alpha1.GetVersionResponse]
 	dropTables   *connect.Client[v1alpha1.DropTablesRequest, v1alpha1.DropTablesResponse]
+	seedDatabase *connect.Client[v1alpha1.SeedDatabaseRequest, v1alpha1.SeedDatabaseResponse]
 }
 
-// SeedDatabase calls holos.system.v1alpha1.SystemService.SeedDatabase.
-func (c *systemServiceClient) SeedDatabase(ctx context.Context, req *connect.Request[v1alpha1.SeedDatabaseRequest]) (*connect.Response[v1alpha1.SeedDatabaseResponse], error) {
-	return c.seedDatabase.CallUnary(ctx, req)
+// GetVersion calls holos.system.v1alpha1.SystemService.GetVersion.
+func (c *systemServiceClient) GetVersion(ctx context.Context, req *connect.Request[v1alpha1.GetVersionRequest]) (*connect.Response[v1alpha1.GetVersionResponse], error) {
+	return c.getVersion.CallUnary(ctx, req)
 }
 
 // DropTables calls holos.system.v1alpha1.SystemService.DropTables.
@@ -95,10 +107,16 @@ func (c *systemServiceClient) DropTables(ctx context.Context, req *connect.Reque
 	return c.dropTables.CallUnary(ctx, req)
 }
 
+// SeedDatabase calls holos.system.v1alpha1.SystemService.SeedDatabase.
+func (c *systemServiceClient) SeedDatabase(ctx context.Context, req *connect.Request[v1alpha1.SeedDatabaseRequest]) (*connect.Response[v1alpha1.SeedDatabaseResponse], error) {
+	return c.seedDatabase.CallUnary(ctx, req)
+}
+
 // SystemServiceHandler is an implementation of the holos.system.v1alpha1.SystemService service.
 type SystemServiceHandler interface {
-	SeedDatabase(context.Context, *connect.Request[v1alpha1.SeedDatabaseRequest]) (*connect.Response[v1alpha1.SeedDatabaseResponse], error)
+	GetVersion(context.Context, *connect.Request[v1alpha1.GetVersionRequest]) (*connect.Response[v1alpha1.GetVersionResponse], error)
 	DropTables(context.Context, *connect.Request[v1alpha1.DropTablesRequest]) (*connect.Response[v1alpha1.DropTablesResponse], error)
+	SeedDatabase(context.Context, *connect.Request[v1alpha1.SeedDatabaseRequest]) (*connect.Response[v1alpha1.SeedDatabaseResponse], error)
 }
 
 // NewSystemServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -107,10 +125,10 @@ type SystemServiceHandler interface {
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
 func NewSystemServiceHandler(svc SystemServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	systemServiceSeedDatabaseHandler := connect.NewUnaryHandler(
-		SystemServiceSeedDatabaseProcedure,
-		svc.SeedDatabase,
-		connect.WithSchema(systemServiceSeedDatabaseMethodDescriptor),
+	systemServiceGetVersionHandler := connect.NewUnaryHandler(
+		SystemServiceGetVersionProcedure,
+		svc.GetVersion,
+		connect.WithSchema(systemServiceGetVersionMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
 	systemServiceDropTablesHandler := connect.NewUnaryHandler(
@@ -119,12 +137,20 @@ func NewSystemServiceHandler(svc SystemServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(systemServiceDropTablesMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	systemServiceSeedDatabaseHandler := connect.NewUnaryHandler(
+		SystemServiceSeedDatabaseProcedure,
+		svc.SeedDatabase,
+		connect.WithSchema(systemServiceSeedDatabaseMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/holos.system.v1alpha1.SystemService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case SystemServiceSeedDatabaseProcedure:
-			systemServiceSeedDatabaseHandler.ServeHTTP(w, r)
+		case SystemServiceGetVersionProcedure:
+			systemServiceGetVersionHandler.ServeHTTP(w, r)
 		case SystemServiceDropTablesProcedure:
 			systemServiceDropTablesHandler.ServeHTTP(w, r)
+		case SystemServiceSeedDatabaseProcedure:
+			systemServiceSeedDatabaseHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -134,10 +160,14 @@ func NewSystemServiceHandler(svc SystemServiceHandler, opts ...connect.HandlerOp
 // UnimplementedSystemServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedSystemServiceHandler struct{}
 
-func (UnimplementedSystemServiceHandler) SeedDatabase(context.Context, *connect.Request[v1alpha1.SeedDatabaseRequest]) (*connect.Response[v1alpha1.SeedDatabaseResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("holos.system.v1alpha1.SystemService.SeedDatabase is not implemented"))
+func (UnimplementedSystemServiceHandler) GetVersion(context.Context, *connect.Request[v1alpha1.GetVersionRequest]) (*connect.Response[v1alpha1.GetVersionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("holos.system.v1alpha1.SystemService.GetVersion is not implemented"))
 }
 
 func (UnimplementedSystemServiceHandler) DropTables(context.Context, *connect.Request[v1alpha1.DropTablesRequest]) (*connect.Response[v1alpha1.DropTablesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("holos.system.v1alpha1.SystemService.DropTables is not implemented"))
+}
+
+func (UnimplementedSystemServiceHandler) SeedDatabase(context.Context, *connect.Request[v1alpha1.SeedDatabaseRequest]) (*connect.Response[v1alpha1.SeedDatabaseResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("holos.system.v1alpha1.SystemService.SeedDatabase is not implemented"))
 }
