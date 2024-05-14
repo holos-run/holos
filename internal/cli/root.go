@@ -5,11 +5,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/holos-run/holos/version"
+
+	"github.com/holos-run/holos/internal/holos"
+	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server"
 
 	"github.com/holos-run/holos/internal/cli/build"
 	"github.com/holos-run/holos/internal/cli/controller"
 	"github.com/holos-run/holos/internal/cli/create"
+	"github.com/holos-run/holos/internal/cli/generate"
 	"github.com/holos-run/holos/internal/cli/get"
 	"github.com/holos-run/holos/internal/cli/kv"
 	"github.com/holos-run/holos/internal/cli/login"
@@ -19,9 +24,6 @@ import (
 	"github.com/holos-run/holos/internal/cli/rpc"
 	"github.com/holos-run/holos/internal/cli/token"
 	"github.com/holos-run/holos/internal/cli/txtar"
-	"github.com/holos-run/holos/internal/holos"
-	"github.com/holos-run/holos/internal/logger"
-	"github.com/holos-run/holos/version"
 )
 
 // New returns a new root *cobra.Command for command line execution.
@@ -41,7 +43,7 @@ func New(cfg *holos.Config) *cobra.Command {
 				return err
 			}
 			log := cfg.Logger()
-			c.SetContext(logger.NewContext(c.Context(), log))
+			c.Root().SetContext(logger.NewContext(c.Context(), log))
 			// Set the default logger after flag parsing.
 			slog.SetDefault(log)
 			return nil
@@ -65,6 +67,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(logout.New(cfg))
 	rootCmd.AddCommand(token.New(cfg))
 	rootCmd.AddCommand(rpc.New(cfg))
+	rootCmd.AddCommand(generate.New(cfg))
 
 	// Maybe not needed?
 	rootCmd.AddCommand(txtar.New(cfg))

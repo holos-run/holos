@@ -6,3 +6,4 @@ coverage.out
 *.hold/
 /deploy/
 .vscode/
+tmp/

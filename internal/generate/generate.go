@@ -1,0 +1,97 @@
+package generate
+
+import (
+	"context"
+	"embed"
+	"fmt"
+	"io/fs"
+	"os"
+	"path/filepath"
+
+	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/server/middleware/logger"
+)
+
+//go:embed all:platforms
+var platforms embed.FS
+
+// root is the root path to copy platform cue code from.
+const root = "platforms"
+
+// Platforms returns a slice of embedded platforms or nil if there are none.
+func Platforms() []string {
+	entries, err := fs.ReadDir(platforms, root)
+	if err != nil {
+		return nil
+	}
+	dirs := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() && entry.Name() != "cue.mod" {
+			dirs = append(dirs, entry.Name())
+		}
+	}
+	return dirs
+}
+
+// GeneratePlatform writes the cue code for a platform to the local working
+// directory.
+func GeneratePlatform(ctx context.Context, name string) error {
+	// Check for a valid platform
+	platformPath := filepath.Join(root, name)
+	if !dirExists(platforms, platformPath) {
+		return errors.Wrap(fmt.Errorf("cannot generate: have: [%s] want: %+v", name, Platforms()))
+	}
+
+	// Copy the cue.mod directory
+	if err := copyEmbedFS(ctx, platforms, filepath.Join(root, "cue.mod"), "cue.mod"); err != nil {
+		return errors.Wrap(err)
+	}
+
+	// Copy the named platform
+	if err := copyEmbedFS(ctx, platforms, platformPath, "."); err != nil {
+		return errors.Wrap(err)
+	}
+
+	return nil
+}
+
+func dirExists(srcFS embed.FS, path string) bool {
+	entries, err := fs.ReadDir(srcFS, path)
+	if err != nil {
+		return false
+	}
+	return len(entries) > 0
+}
+
+func copyEmbedFS(ctx context.Context, srcFS embed.FS, srcPath, dstPath string) error {
+	log := logger.FromContext(ctx)
+	return fs.WalkDir(srcFS, srcPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		relPath, err := filepath.Rel(srcPath, path)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		dstFullPath := filepath.Join(dstPath, relPath)
+
+		if d.IsDir() {
+			if err := os.MkdirAll(dstFullPath, os.ModePerm); err != nil {
+				return errors.Wrap(err)
+			}
+			log.DebugContext(ctx, "created", "directory", dstFullPath)
+		} else {
+			data, err := srcFS.ReadFile(path)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			if err := os.WriteFile(dstFullPath, data, os.ModePerm); err != nil {
+				return errors.Wrap(err)
+			}
+			log.DebugContext(ctx, "wrote", "file", dstFullPath)
+		}
+		return nil
+	})
+}
