@@ -54,6 +54,9 @@ jobs:
       - name: List keys
         run: gpg -K
 
+      - name: Git diff
+        run: git diff
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
