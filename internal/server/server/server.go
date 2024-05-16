@@ -9,12 +9,14 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/grpcreflect"
+	"connectrpc.com/otelconnect"
 	"connectrpc.com/validate"
 	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/frontend"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/server/handler"
+	"github.com/holos-run/holos/internal/server/interceptor"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/service/gen/holos/organization/v1alpha1/organizationconnect"
@@ -113,7 +115,12 @@ func (s *Server) registerConnectRpc() error {
 		return errors.Wrap(fmt.Errorf("could not initialize proto validation interceptor: %w", err))
 	}
 
-	opts := connect.WithInterceptors(validator)
+	otel, err := otelconnect.NewInterceptor()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	opts := connect.WithInterceptors(interceptor.NewLogger(), otel, validator)
 
 	s.handle(userconnect.NewUserServiceHandler(handler.NewUserHandler(s.db), opts))
 	s.handle(organizationconnect.NewOrganizationServiceHandler(handler.NewOrganizationHandler(s.db), opts))
