@@ -1,18 +1,26 @@
 package handler
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 
 	"connectrpc.com/connect"
+	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/internal/ent/user"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
+	"github.com/holos-run/holos/internal/strings"
 	object "github.com/holos-run/holos/service/gen/holos/object/v1alpha1"
+	org "github.com/holos-run/holos/service/gen/holos/organization/v1alpha1"
+	storage "github.com/holos-run/holos/service/gen/holos/storage/v1alpha1"
 	holos "github.com/holos-run/holos/service/gen/holos/user/v1alpha1"
+	fieldmask_utils "github.com/mennanov/fieldmask-utils"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -50,8 +58,12 @@ func (h *UserHandler) GetUser(ctx context.Context, req *connect.Request[holos.Ge
 }
 
 func (h *UserHandler) CreateUser(ctx context.Context, req *connect.Request[holos.CreateUserRequest]) (*connect.Response[holos.CreateUserResponse], error) {
+	_, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
 	var createdUser *ent.User
-	var err error
 	if rpcUser := req.Msg.GetUser(); rpcUser != nil {
 		createdUser, err = h.createUser(ctx, h.db, rpcUser)
 	} else {
@@ -65,6 +77,145 @@ func (h *UserHandler) CreateUser(ctx context.Context, req *connect.Request[holos
 		User: UserToRPC(createdUser),
 	})
 	return res, nil
+}
+
+func (h *UserHandler) RegisterUser(ctx context.Context, req *connect.Request[holos.RegisterUserRequest]) (*connect.Response[holos.RegisterUserResponse], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
+	var dbUser *ent.User
+	var dbOrg *ent.Organization
+	var rpcUser holos.User
+	var rpcOrg org.Organization
+
+	userMask, err := fieldmask_utils.MaskFromProtoFieldMask(req.Msg.GetUserMask(), strings.PascalCase)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+	orgMask, err := fieldmask_utils.MaskFromProtoFieldMask(req.Msg.GetOrganizationMask(), strings.PascalCase)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	// Server assigns IDs.
+	userID, err := uuid.NewV7()
+	if err != nil {
+		return nil, errors.Wrap(connect.NewError(connect.CodeInternal, err))
+	}
+	orgID, err := uuid.NewV7()
+	if err != nil {
+		return nil, errors.Wrap(connect.NewError(connect.CodeInternal, err))
+	}
+	bareID, err := uuid.NewV7()
+	if err != nil {
+		return nil, errors.Wrap(connect.NewError(connect.CodeInternal, err))
+	}
+	refID, err := uuid.NewV7()
+	if err != nil {
+		return nil, errors.Wrap(connect.NewError(connect.CodeInternal, err))
+	}
+
+	// Perform registration in a single transaction.
+	if err := WithTx(ctx, h.db, func(tx *ent.Tx) (err error) {
+		// Create the user
+		dbUser, err = tx.User.Create().
+			SetID(userID).
+			SetEmail(authnID.Email()).
+			SetIss(authnID.Issuer()).
+			SetSub(authnID.Subject()).
+			SetName(authnID.Name()).
+			Save(ctx)
+		if err != nil {
+			if ent.IsConstraintError(err) {
+				rpcErr := connect.NewError(connect.CodeAlreadyExists, errors.New("user already registered"))
+				errInfo := &errdetails.ErrorInfo{
+					Reason:   "USER_EXISTS",
+					Domain:   "user.holos.run",
+					Metadata: map[string]string{"email": authnID.Email()},
+				}
+				if detail, detailErr := connect.NewErrorDetail(errInfo); detailErr != nil {
+					logger.FromContext(ctx).ErrorContext(ctx, detailErr.Error(), "err", detailErr)
+				} else {
+					rpcErr.AddDetail(detail)
+				}
+				return errors.Wrap(rpcErr)
+			}
+			return errors.Wrap(err)
+		}
+		// Create the org
+		dbOrg, err = tx.Organization.Create().
+			SetID(orgID).
+			SetName(cleanAndAppendRandom(authnID.Name())).
+			SetDisplayName(authnID.GivenName() + "'s Org").
+			SetCreatorID(userID).
+			SetEditorID(userID).
+			AddUserIDs(userID).
+			Save(ctx)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		// Create the platforms.
+		decoder := json.NewDecoder(bytes.NewReader([]byte(BareForm)))
+		decoder.DisallowUnknownFields()
+		var form storage.Form
+		if err := decoder.Decode(&form); err != nil {
+			return errors.Wrap(err)
+		}
+
+		decoder = json.NewDecoder(bytes.NewReader([]byte(Model)))
+		decoder.DisallowUnknownFields()
+		var model storage.Model
+		if err := decoder.Decode(&model); err != nil {
+			return errors.Wrap(err)
+		}
+
+		// Add the platforms.
+		err = tx.Platform.Create().
+			SetID(bareID).
+			SetName("bare").
+			SetDisplayName("Bare Platform").
+			SetForm(&form).
+			SetModel(&model).
+			SetCreatorID(userID).
+			SetEditorID(userID).
+			SetOrgID(orgID).
+			Exec(ctx)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		err = tx.Platform.Create().
+			SetID(refID).
+			SetName("reference").
+			SetDisplayName("Holos Reference Platform").
+			SetForm(&form).
+			SetModel(&model).
+			SetCreatorID(userID).
+			SetEditorID(userID).
+			SetOrgID(orgID).
+			Exec(ctx)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		return nil
+	}); err != nil {
+		return nil, errors.Wrap(connect.NewError(connect.CodeFailedPrecondition, err))
+	}
+
+	if err = fieldmask_utils.StructToStruct(userMask, UserToRPC(dbUser), &rpcUser); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+	if err = fieldmask_utils.StructToStruct(orgMask, OrganizationToRPC(dbOrg), &rpcOrg); err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	msg := holos.RegisterUserResponse{
+		User:         &rpcUser,
+		Organization: &rpcOrg,
+	}
+
+	return connect.NewResponse(&msg), nil
 }
 
 // UserToRPC returns an *holos.User adapted from *ent.User u.

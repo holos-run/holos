@@ -37,13 +37,17 @@ const (
 	UserServiceCreateUserProcedure = "/holos.user.v1alpha1.UserService/CreateUser"
 	// UserServiceGetUserProcedure is the fully-qualified name of the UserService's GetUser RPC.
 	UserServiceGetUserProcedure = "/holos.user.v1alpha1.UserService/GetUser"
+	// UserServiceRegisterUserProcedure is the fully-qualified name of the UserService's RegisterUser
+	// RPC.
+	UserServiceRegisterUserProcedure = "/holos.user.v1alpha1.UserService/RegisterUser"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
-	userServiceServiceDescriptor          = v1alpha1.File_holos_user_v1alpha1_user_service_proto.Services().ByName("UserService")
-	userServiceCreateUserMethodDescriptor = userServiceServiceDescriptor.Methods().ByName("CreateUser")
-	userServiceGetUserMethodDescriptor    = userServiceServiceDescriptor.Methods().ByName("GetUser")
+	userServiceServiceDescriptor            = v1alpha1.File_holos_user_v1alpha1_user_service_proto.Services().ByName("UserService")
+	userServiceCreateUserMethodDescriptor   = userServiceServiceDescriptor.Methods().ByName("CreateUser")
+	userServiceGetUserMethodDescriptor      = userServiceServiceDescriptor.Methods().ByName("GetUser")
+	userServiceRegisterUserMethodDescriptor = userServiceServiceDescriptor.Methods().ByName("RegisterUser")
 )
 
 // UserServiceClient is a client for the holos.user.v1alpha1.UserService service.
@@ -52,6 +56,8 @@ type UserServiceClient interface {
 	CreateUser(context.Context, *connect.Request[v1alpha1.CreateUserRequest]) (*connect.Response[v1alpha1.CreateUserResponse], error)
 	// Get an existing user by id, email, or subject.
 	GetUser(context.Context, *connect.Request[v1alpha1.GetUserRequest]) (*connect.Response[v1alpha1.GetUserResponse], error)
+	// Register an user and initialize an organization, bare platform, and reference platform.
+	RegisterUser(context.Context, *connect.Request[v1alpha1.RegisterUserRequest]) (*connect.Response[v1alpha1.RegisterUserResponse], error)
 }
 
 // NewUserServiceClient constructs a client for the holos.user.v1alpha1.UserService service. By
@@ -76,13 +82,20 @@ func NewUserServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(userServiceGetUserMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		registerUser: connect.NewClient[v1alpha1.RegisterUserRequest, v1alpha1.RegisterUserResponse](
+			httpClient,
+			baseURL+UserServiceRegisterUserProcedure,
+			connect.WithSchema(userServiceRegisterUserMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // userServiceClient implements UserServiceClient.
 type userServiceClient struct {
-	createUser *connect.Client[v1alpha1.CreateUserRequest, v1alpha1.CreateUserResponse]
-	getUser    *connect.Client[v1alpha1.GetUserRequest, v1alpha1.GetUserResponse]
+	createUser   *connect.Client[v1alpha1.CreateUserRequest, v1alpha1.CreateUserResponse]
+	getUser      *connect.Client[v1alpha1.GetUserRequest, v1alpha1.GetUserResponse]
+	registerUser *connect.Client[v1alpha1.RegisterUserRequest, v1alpha1.RegisterUserResponse]
 }
 
 // CreateUser calls holos.user.v1alpha1.UserService.CreateUser.
@@ -95,12 +108,19 @@ func (c *userServiceClient) GetUser(ctx context.Context, req *connect.Request[v1
 	return c.getUser.CallUnary(ctx, req)
 }
 
+// RegisterUser calls holos.user.v1alpha1.UserService.RegisterUser.
+func (c *userServiceClient) RegisterUser(ctx context.Context, req *connect.Request[v1alpha1.RegisterUserRequest]) (*connect.Response[v1alpha1.RegisterUserResponse], error) {
+	return c.registerUser.CallUnary(ctx, req)
+}
+
 // UserServiceHandler is an implementation of the holos.user.v1alpha1.UserService service.
 type UserServiceHandler interface {
 	// Create a new user from authenticated claims or the provided User resource.
 	CreateUser(context.Context, *connect.Request[v1alpha1.CreateUserRequest]) (*connect.Response[v1alpha1.CreateUserResponse], error)
 	// Get an existing user by id, email, or subject.
 	GetUser(context.Context, *connect.Request[v1alpha1.GetUserRequest]) (*connect.Response[v1alpha1.GetUserResponse], error)
+	// Register an user and initialize an organization, bare platform, and reference platform.
+	RegisterUser(context.Context, *connect.Request[v1alpha1.RegisterUserRequest]) (*connect.Response[v1alpha1.RegisterUserResponse], error)
 }
 
 // NewUserServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -121,12 +141,20 @@ func NewUserServiceHandler(svc UserServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(userServiceGetUserMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	userServiceRegisterUserHandler := connect.NewUnaryHandler(
+		UserServiceRegisterUserProcedure,
+		svc.RegisterUser,
+		connect.WithSchema(userServiceRegisterUserMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/holos.user.v1alpha1.UserService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case UserServiceCreateUserProcedure:
 			userServiceCreateUserHandler.ServeHTTP(w, r)
 		case UserServiceGetUserProcedure:
 			userServiceGetUserHandler.ServeHTTP(w, r)
+		case UserServiceRegisterUserProcedure:
+			userServiceRegisterUserHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -142,4 +170,8 @@ func (UnimplementedUserServiceHandler) CreateUser(context.Context, *connect.Requ
 
 func (UnimplementedUserServiceHandler) GetUser(context.Context, *connect.Request[v1alpha1.GetUserRequest]) (*connect.Response[v1alpha1.GetUserResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("holos.user.v1alpha1.UserService.GetUser is not implemented"))
+}
+
+func (UnimplementedUserServiceHandler) RegisterUser(context.Context, *connect.Request[v1alpha1.RegisterUserRequest]) (*connect.Response[v1alpha1.RegisterUserResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("holos.user.v1alpha1.UserService.RegisterUser is not implemented"))
 }

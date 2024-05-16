@@ -7,6 +7,7 @@ import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialM
 import { FieldMask, Message, proto3 } from "@bufbuild/protobuf";
 import { User } from "./user_pb.js";
 import { UserRef } from "../../object/v1alpha1/object_pb.js";
+import { Organization } from "../../organization/v1alpha1/organization_pb.js";
 
 /**
  * Create a User from the oidc id token claims or the provided user.  Each one
@@ -169,6 +170,121 @@ export class GetUserResponse extends Message<GetUserResponse> {
 
   static equals(a: GetUserResponse | PlainMessage<GetUserResponse> | undefined, b: GetUserResponse | PlainMessage<GetUserResponse> | undefined): boolean {
     return proto3.util.equals(GetUserResponse, a, b);
+  }
+}
+
+/**
+ * Register a User from the oidc id token claims or the provided user.  Each one
+ * of subject, email, and user id must be globally unique.
+ *
+ * @generated from message holos.user.v1alpha1.RegisterUserRequest
+ */
+export class RegisterUserRequest extends Message<RegisterUserRequest> {
+  /**
+   * User resource to create.  If absent, the server populates User fields with
+   * the oidc id token claims of the authenticated request.
+   * NOTE: The server may ignore this request field and register the user solely
+   * from authenticated identity claims.
+   *
+   * @generated from field: optional holos.user.v1alpha1.User user = 1;
+   */
+  user?: User;
+
+  /**
+   * Mask of the user fields to include in the response.
+   *
+   * @generated from field: optional google.protobuf.FieldMask user_mask = 2;
+   */
+  userMask?: FieldMask;
+
+  /**
+   * Organization resource to create.  If absent, the server generates an
+   * organization based on the user fields.
+   * NOTE: The server may ignore this request field and register the
+   * organization solely from authenticated identity claims.
+   *
+   * @generated from field: optional holos.organization.v1alpha1.Organization organization = 3;
+   */
+  organization?: Organization;
+
+  /**
+   * Mask of the organization fields to include in the response.
+   *
+   * @generated from field: optional google.protobuf.FieldMask organization_mask = 4;
+   */
+  organizationMask?: FieldMask;
+
+  constructor(data?: PartialMessage<RegisterUserRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.user.v1alpha1.RegisterUserRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "user", kind: "message", T: User, opt: true },
+    { no: 2, name: "user_mask", kind: "message", T: FieldMask, opt: true },
+    { no: 3, name: "organization", kind: "message", T: Organization, opt: true },
+    { no: 4, name: "organization_mask", kind: "message", T: FieldMask, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RegisterUserRequest {
+    return new RegisterUserRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RegisterUserRequest {
+    return new RegisterUserRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RegisterUserRequest {
+    return new RegisterUserRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: RegisterUserRequest | PlainMessage<RegisterUserRequest> | undefined, b: RegisterUserRequest | PlainMessage<RegisterUserRequest> | undefined): boolean {
+    return proto3.util.equals(RegisterUserRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message holos.user.v1alpha1.RegisterUserResponse
+ */
+export class RegisterUserResponse extends Message<RegisterUserResponse> {
+  /**
+   * @generated from field: holos.user.v1alpha1.User user = 1;
+   */
+  user?: User;
+
+  /**
+   * @generated from field: holos.organization.v1alpha1.Organization organization = 2;
+   */
+  organization?: Organization;
+
+  constructor(data?: PartialMessage<RegisterUserResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.user.v1alpha1.RegisterUserResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "user", kind: "message", T: User },
+    { no: 2, name: "organization", kind: "message", T: Organization },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): RegisterUserResponse {
+    return new RegisterUserResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): RegisterUserResponse {
+    return new RegisterUserResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): RegisterUserResponse {
+    return new RegisterUserResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: RegisterUserResponse | PlainMessage<RegisterUserResponse> | undefined, b: RegisterUserResponse | PlainMessage<RegisterUserResponse> | undefined): boolean {
+    return proto3.util.equals(RegisterUserResponse, a, b);
   }
 }
 

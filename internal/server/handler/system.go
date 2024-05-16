@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	"connectrpc.com/connect"
@@ -20,7 +21,7 @@ import (
 	fieldmask_utils "github.com/mennanov/fieldmask-utils"
 )
 
-const AdminEmail = "jeff@openinfrastructure.co"
+var adminEmails = []string{"jeff@openinfrastructure.co", "jeff@ois.run"}
 
 // NewSystemHandler returns a new SystemService implementation.
 func NewSystemHandler(db *ent.Client) *SystemHandler {
@@ -37,8 +38,8 @@ func (h *SystemHandler) checkAdmin(ctx context.Context) error {
 	if err != nil {
 		return connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
-	if authnID.Email() != AdminEmail {
-		err := fmt.Errorf("not an admin:\n\thave (%+v)\n\twant (%+v)", authnID.Email(), AdminEmail)
+	if !slices.Contains(adminEmails, authnID.Email()) {
+		err := fmt.Errorf("not an admin:\n\thave (%+v)\n\twant (%+v)", authnID.Email(), strings.Join(adminEmails, ","))
 		return connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
 	}
 	return nil

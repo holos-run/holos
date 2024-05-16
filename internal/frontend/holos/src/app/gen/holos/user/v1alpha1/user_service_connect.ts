@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateUserRequest, CreateUserResponse, GetUserRequest, GetUserResponse } from "./user_service_pb.js";
+import { CreateUserRequest, CreateUserResponse, GetUserRequest, GetUserResponse, RegisterUserRequest, RegisterUserResponse } from "./user_service_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -34,6 +34,17 @@ export const UserService = {
       name: "GetUser",
       I: GetUserRequest,
       O: GetUserResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * Register an user and initialize an organization, bare platform, and reference platform.
+     *
+     * @generated from rpc holos.user.v1alpha1.UserService.RegisterUser
+     */
+    registerUser: {
+      name: "RegisterUser",
+      I: RegisterUserRequest,
+      O: RegisterUserResponse,
       kind: MethodKind.Unary,
     },
   }

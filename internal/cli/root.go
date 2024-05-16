@@ -20,6 +20,7 @@ import (
 	"github.com/holos-run/holos/internal/cli/login"
 	"github.com/holos-run/holos/internal/cli/logout"
 	"github.com/holos-run/holos/internal/cli/preflight"
+	"github.com/holos-run/holos/internal/cli/register"
 	"github.com/holos-run/holos/internal/cli/render"
 	"github.com/holos-run/holos/internal/cli/rpc"
 	"github.com/holos-run/holos/internal/cli/token"
@@ -68,6 +69,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(token.New(cfg))
 	rootCmd.AddCommand(rpc.New(cfg))
 	rootCmd.AddCommand(generate.New(cfg))
+	rootCmd.AddCommand(register.New(cfg))
 
 	// Maybe not needed?
 	rootCmd.AddCommand(txtar.New(cfg))

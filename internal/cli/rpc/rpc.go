@@ -45,7 +45,7 @@ func NewPlatformModel(cfg *Config) *cobra.Command {
 	cmd := command.New("platform-model")
 	cmd.Short = "get the platform model"
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		ctx := cmd.Context()
+		ctx := cmd.Root().Context()
 		log := logger.FromContext(ctx)
 		// client := platformconnect.NewPlatformServiceClient(token.NewClient(cfg.token), cfg.client.Server())
 		client := platformconnect.NewPlatformServiceClient(token.NewClient(cfg.token), cfg.client.Server())
