@@ -11,6 +11,17 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+func NewClientContext(ctx context.Context) *ClientContext {
+	cc := &ClientContext{}
+	if cc.Exists() {
+		if err := cc.Load(ctx); err != nil {
+			logger.FromContext(ctx).WarnContext(ctx, "could not load client context", "err", err)
+			return nil
+		}
+	}
+	return cc
+}
+
 // ClientContext represents the context the holos api is working in.  Used to
 // store and recall values from the filesystem.
 type ClientContext struct {

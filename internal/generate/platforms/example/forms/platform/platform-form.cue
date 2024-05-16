@@ -1,6 +1,6 @@
 package forms
 
-import v1 "github.com/holos-run/holos/api/v1alpha1"
+import v1 "github.com/holos-run/holos/v1alpha1"
 
 // Provides a concrete v1.#Form
 FormBuilder.Output
@@ -24,12 +24,22 @@ let FormBuilder = v1.#FormBuilder & {
 					required:    true
 				}
 				validation: messages: {
-					pattern:   "It must be \(props.minLength) to \(props.maxLength) lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
-					minLength: "Must be at least \(props.minLength) characters"
-					maxLength: "Must be at most \(props.maxLength) characters"
+					pattern: "It must be 3 to 30 lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
 				}
 			}
 
+			// platform.spec.config.user.sections.org.fields.domain
+			domain: {
+				type: "input"
+				props: {
+					label:       "Domain"
+					placeholder: "example.com"
+					minLength:   3
+					maxLength:   100
+					description: "DNS domain, e.g. 'example.com'"
+					required:    true
+				}
+			}
 			// platform.spec.config.user.sections.org.fields.displayName
 			displayName: {
 				type: "input"
@@ -38,6 +48,16 @@ let FormBuilder = v1.#FormBuilder & {
 					placeholder: "Example Organization"
 					description: "Display name, e.g. 'Example Organization'"
 					maxLength:   100
+					required:    true
+				}
+			}
+			// platform.spec.config.user.sections.org.fields.contactEmail
+			contactEmail: {
+				type: "input"
+				props: {
+					label:       "Contact Email"
+					placeholder: "platform-team@example.com"
+					description: "Technical contact email address"
 					required:    true
 				}
 			}
@@ -140,9 +160,7 @@ let FormBuilder = v1.#FormBuilder & {
 					required:    true
 				}
 				validation: messages: {
-					pattern: "It must be \(props.minLength) to \(props.maxLength) lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
-					minLength: "Must be at least \(props.minLength) characters."
-					maxLength: "Must be at most \(props.maxLength) characters."
+					pattern: "It must be 3 to 30 lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
 				}
 			}
 
@@ -230,6 +248,32 @@ let FormBuilder = v1.#FormBuilder & {
 				}
 				validation: messages: {
 					pattern: "All characters must be either a hyphen or alphanumeric.  Cannot start with a hyphen.  Cannot include consecutive hyphens."
+				}
+			}
+		}
+	}
+
+	Sections: backups: {
+		displayName: "Backups"
+		description: "Configure platform level data backup settings.  Requires AWS."
+
+		fieldConfigs: {
+			s3bucket: {
+				// https://formly.dev/docs/api/ui/material/input
+				type: "select"
+				props: {
+					label:       "S3 Bucket Region"
+					description: "Select the S3 Bucket Region."
+					multiple:    true
+					options:     AWSRegions
+				}
+				expressions: {
+					// Disable the control if AWS is not selected.
+					"props.disabled": "!" + AWSSelected
+					// Required if AWS is selected.
+					"props.required": AWSSelected
+					// Change the label depending on AWS
+					"props.description": AWSSelected + " ? '\(props.description)' : 'Enable AWS in the Cloud Provider section to configure backups.'"
 				}
 			}
 		}

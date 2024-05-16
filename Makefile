@@ -113,7 +113,7 @@ snapshot:  ## Go release snapshot
 
 .PHONY: buf
 buf: ## buf generate
-	cd service && buf mod update
+	cd service && buf dep update
 	buf generate
 
 .PHONY: tools

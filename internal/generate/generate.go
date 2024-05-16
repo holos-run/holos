@@ -3,13 +3,16 @@ package generate
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 
+	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
+	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
 )
 
 //go:embed all:platforms
@@ -35,12 +38,45 @@ func Platforms() []string {
 
 // GeneratePlatform writes the cue code for a platform to the local working
 // directory.
-func GeneratePlatform(ctx context.Context, name string) error {
+func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, name string) error {
+	log := logger.FromContext(ctx)
 	// Check for a valid platform
 	platformPath := filepath.Join(root, name)
 	if !dirExists(platforms, platformPath) {
 		return errors.Wrap(fmt.Errorf("cannot generate: have: [%s] want: %+v", name, Platforms()))
 	}
+
+	// Link the local platform the SaaS platform ID.
+	rpcPlatforms, err := rpc.Platforms(ctx, orgID)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	var rpcPlatform *platform.Platform
+	for _, p := range rpcPlatforms {
+		if p.GetName() == name {
+			rpcPlatform = p
+			break
+		}
+	}
+	if rpcPlatform == nil {
+		return errors.Wrap(errors.New("cannot generate: platform not found in the holos server"))
+	}
+
+	// Write the platform data.
+	data, err := json.MarshalIndent(rpcPlatform, "", "  ")
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	if len(data) > 0 {
+		data = append(data, '\n')
+	}
+	log = log.With("platform_id", rpcPlatform.GetId())
+	path := "platform.metadata.json"
+	if err := os.WriteFile(path, data, 0644); err != nil {
+		return errors.Wrap(fmt.Errorf("could not write platform metadata: %w", err))
+	}
+	log.InfoContext(ctx, "wrote "+path, "path", filepath.Join(getCwd(ctx), path))
 
 	// Copy the cue.mod directory
 	if err := copyEmbedFS(ctx, platforms, filepath.Join(root, "cue.mod"), "cue.mod"); err != nil {
@@ -52,7 +88,7 @@ func GeneratePlatform(ctx context.Context, name string) error {
 		return errors.Wrap(err)
 	}
 
-	logger.FromContext(ctx).InfoContext(ctx, "generated platform "+name, "path", getCwd(ctx))
+	log.InfoContext(ctx, "generated platform "+name, "path", getCwd(ctx))
 
 	return nil
 }

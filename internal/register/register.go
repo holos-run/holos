@@ -2,9 +2,9 @@ package register
 
 import (
 	"context"
-	"flag"
 
 	"connectrpc.com/connect"
+	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
@@ -15,38 +15,10 @@ import (
 	"github.com/holos-run/holos/service/gen/holos/user/v1alpha1/userconnect"
 )
 
-type Config struct {
-	holos  *holos.Config
-	client *holos.ClientConfig
-	token  *token.Config
-}
-
-func (c *Config) ClientFlagSet() *flag.FlagSet {
-	if c == nil {
-		return nil
-	}
-	return c.client.FlagSet()
-}
-
-func (c *Config) TokenFlagSet() *flag.FlagSet {
-	if c == nil {
-		return nil
-	}
-	return c.token.FlagSet()
-}
-
-func NewConfig(cfg *holos.Config) *Config {
-	return &Config{
-		holos:  cfg,
-		client: holos.NewClientConfig(),
-		token:  token.NewConfig(),
-	}
-}
-
 // User registers the user with the holos server.
-func User(ctx context.Context, cfg *Config) error {
+func User(ctx context.Context, cfg *client.Config) error {
 	log := logger.FromContext(ctx)
-	client := userconnect.NewUserServiceClient(token.NewClient(cfg.token), cfg.client.Server())
+	client := userconnect.NewUserServiceClient(token.NewClient(cfg.Token()), cfg.Client().Server())
 
 	var err error
 	var u *user.User
@@ -108,8 +80,8 @@ func getUser(ctx context.Context, client userconnect.UserServiceClient) (*user.U
 
 // getOrg returns the first organization returned from the ListOrganizations rpc
 // method.
-func getOrg(ctx context.Context, cfg *Config) (*org.Organization, error) {
-	client := organizationconnect.NewOrganizationServiceClient(token.NewClient(cfg.token), cfg.client.Server())
+func getOrg(ctx context.Context, cfg *client.Config) (*org.Organization, error) {
+	client := organizationconnect.NewOrganizationServiceClient(token.NewClient(cfg.Token()), cfg.Client().Server())
 	req := connect.NewRequest(&org.ListOrganizationsRequest{})
 	resp, err := client.ListOrganizations(ctx, req)
 	if err != nil {
