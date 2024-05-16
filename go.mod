@@ -6,6 +6,7 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.33.0-20240401165935-b983156c5e99.1
 	connectrpc.com/connect v1.16.0
 	connectrpc.com/grpcreflect v1.2.0
+	connectrpc.com/otelconnect v0.7.0
 	connectrpc.com/validate v0.1.0
 	cuelang.org/go v0.8.0
 	entgo.io/ent v0.13.1
@@ -30,6 +31,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/net v0.24.0
 	golang.org/x/tools v0.20.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240325203815-454cdb8f5daa
 	google.golang.org/protobuf v1.33.1-0.20240408130810-98873a205002
 	honnef.co/go/tools v0.4.7
 	k8s.io/api v0.29.2
@@ -44,7 +46,6 @@ require (
 	ariga.io/atlas v0.19.1-0.20240203083654-5948b60a8e43 // indirect
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	connectrpc.com/otelconnect v0.7.0 // indirect
 	cuelabs.dev/go/oci/ociregistry v0.0.0-20240314152124-224736b49f2e // indirect
 	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
@@ -248,7 +249,6 @@ require (
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240325203815-454cdb8f5daa // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240325203815-454cdb8f5daa // indirect
 	google.golang.org/grpc v1.62.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
