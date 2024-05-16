@@ -52,6 +52,8 @@ func GeneratePlatform(ctx context.Context, name string) error {
 		return errors.Wrap(err)
 	}
 
+	logger.FromContext(ctx).InfoContext(ctx, "generated platform "+name, "path", getCwd(ctx))
+
 	return nil
 }
 
@@ -94,4 +96,18 @@ func copyEmbedFS(ctx context.Context, srcFS embed.FS, srcPath, dstPath string) e
 		}
 		return nil
 	})
+}
+
+func getCwd(ctx context.Context) string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		logger.FromContext(ctx).WarnContext(ctx, "could not get working directory", "err", err)
+		return "."
+	}
+	abs, err := filepath.Abs(cwd)
+	if err != nil {
+		logger.FromContext(ctx).WarnContext(ctx, "could not get absolute path", "err", err)
+		return cwd
+	}
+	return abs
 }
