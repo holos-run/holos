@@ -58,7 +58,6 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			log := logger.FromContext(ctx).With("platform_id", p.GetId())
 			// Build the form from the cue code.
 			form, err := push.PlatformForm(ctx, name)
 			if err != nil {
@@ -68,8 +67,7 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 			if err := rpc.UpdateForm(ctx, p.GetId(), form); err != nil {
 				return errors.Wrap(err)
 			}
-			log.InfoContext(ctx, "form updated")
-			slog.Default().InfoContext(ctx, fmt.Sprintf("%s/ui/platform/%s", cfg.Client().Server(), p.GetId()))
+			slog.Default().InfoContext(ctx, fmt.Sprintf("pushed: %s/ui/platform/%s", cfg.Client().Server(), p.GetId()))
 		}
 		return nil
 	}
