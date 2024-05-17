@@ -11,7 +11,6 @@ package v1alpha1
 	// Metadata represents the holos component name
 	metadata?: #ObjectMeta    @go(Metadata)
 	spec?:     #BuildPlanSpec @go(Spec)
-	platform?: {...} @go(Platform,map[string]any)
 }
 
 #BuildPlanSpec: {

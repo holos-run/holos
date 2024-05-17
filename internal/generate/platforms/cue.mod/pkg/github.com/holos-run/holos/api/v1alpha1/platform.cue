@@ -12,9 +12,5 @@ package v1alpha1
 		// model represents the user defined platform model, which is produced and
 		// defined by the user supplied form.
 		model: {...}
-
-		// components represents components to manage in the platform, organized by
-		// the kind of cluster the rendered configuration applies to.
-		components: {}
 	}
 }

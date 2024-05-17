@@ -4,10 +4,23 @@
 
 package v1alpha1
 
-// Platform represents a platform to manage.  A Platform resource tells holos
-// which components to build.  The primary use case is to specify the cluster
-// names, cluster types, and holos components to build.
+import "google.golang.org/protobuf/types/known/structpb"
+
+// Platform represents a platform to manage.  A Platform resource informs holos
+// which components to build.  The platform resource also acts as a container
+// for the platform model form values provided by the PlatformService.  The
+// primary use case is to collect the cluster names, cluster types, platform
+// model, and holos components to build into one resource.
 #Platform: {
 	#TypeMeta
-	metadata?: #ObjectMeta @go(Metadata)
+	metadata?: #ObjectMeta   @go(Metadata)
+	spec?:     #PlatformSpec @go(Spec)
+}
+
+// PlatformSpec represents the platform build plan specification.
+#PlatformSpec: {
+	// Model represents the platform model holos gets from from the
+	// holos.platform.v1alpha1.PlatformService.GetPlatform method and provides to
+	// CUE using a tag.
+	model?: structpb.#Struct @go(Model)
 }
