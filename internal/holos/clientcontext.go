@@ -11,6 +11,8 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+// NewClientContext loads a ClientContext from the file system if it exists,
+// otherwise returns a ClientContext with default values.
 func NewClientContext(ctx context.Context) *ClientContext {
 	cc := &ClientContext{}
 	if cc.Exists() {

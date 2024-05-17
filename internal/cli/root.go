@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/spf13/cobra"
@@ -12,6 +13,7 @@ import (
 	"github.com/holos-run/holos/internal/server"
 
 	"github.com/holos-run/holos/internal/cli/build"
+	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/cli/controller"
 	"github.com/holos-run/holos/internal/cli/create"
 	"github.com/holos-run/holos/internal/cli/generate"
@@ -72,6 +74,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(generate.New(cfg))
 	rootCmd.AddCommand(register.New(cfg))
 	rootCmd.AddCommand(push.New(cfg))
+	rootCmd.AddCommand(newOrgCmd())
 
 	// Maybe not needed?
 	rootCmd.AddCommand(txtar.New(cfg))
@@ -86,4 +89,16 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(controller.New(cfg))
 
 	return rootCmd
+}
+
+func newOrgCmd() (cmd *cobra.Command) {
+	cmd = command.New("orgid")
+	cmd.Short = "print the current context org id."
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Root().Context()
+		cc := holos.NewClientContext(ctx)
+		_, err := fmt.Fprintln(cmd.OutOrStdout(), cc.OrgID)
+		return err
+	}
+	return cmd
 }
