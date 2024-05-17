@@ -16,6 +16,7 @@ require (
 	github.com/fullstorydev/grpcurl v1.9.1
 	github.com/go-jose/go-jose/v3 v3.0.3
 	github.com/gofrs/uuid v4.4.0+incompatible
+	github.com/gogo/protobuf v1.3.2
 	github.com/int128/kubelogin v1.28.0
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/lmittmann/tint v1.0.4
@@ -114,7 +115,6 @@ require (
 	github.com/go-task/slim-sprig v0.0.0-20230315185526-52ccab3ef572 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gofrs/uuid/v5 v5.0.0 // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
