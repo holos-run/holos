@@ -12,7 +12,15 @@ func NewLogger() connect.UnaryInterceptorFunc {
 	interceptor := func(next connect.UnaryFunc) connect.UnaryFunc {
 		return connect.UnaryFunc(func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
 			start := time.Now()
-			rpcLogger := logger.FromContext(ctx).With("procedure", req.Spec().Procedure)
+			rpcLogger := logger.FromContext(ctx).With(
+				"procedure", req.Spec().Procedure,
+				"request_id", req.Header().Get("x-request-id"),
+				"traceid", req.Header().Get("x-b3-traceid"),
+				"spanid", req.Header().Get("x-b3-spanid"),
+				"parentspanid", req.Header().Get("x-b3-parentspanid"),
+				"sampled", req.Header().Get("x-b3-sampled"),
+				"host", req.Header().Get("host"),
+			)
 			ctx = logger.NewContext(ctx, rpcLogger)
 			resp, err := next(ctx, req)
 			go emitLog(ctx, start, err)
