@@ -28,11 +28,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	cmd.Flags().AddGoFlagSet(flagSet)
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if cfg.ClusterName() == "" {
-			return errors.Wrap(fmt.Errorf("missing cluster name"))
-		}
-
-		ctx := cmd.Context()
+		ctx := cmd.Root().Context()
 		log := logger.FromContext(ctx).With("cluster", cfg.ClusterName())
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
 

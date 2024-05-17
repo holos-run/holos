@@ -99,7 +99,9 @@ func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
 	}
 
 	// Refer to https://github.com/cue-lang/cue/blob/v0.7.0/cmd/cue/cmd/common.go#L429
-	cfg.Tags = append(cfg.Tags, "cluster="+b.Cluster())
+	if b.Cluster() != "" {
+		cfg.Tags = append(cfg.Tags, "cluster="+b.Cluster())
+	}
 	log.DebugContext(ctx, fmt.Sprintf("cue: tags %v", cfg.Tags))
 
 	return load.Instances(args, &cfg), nil
