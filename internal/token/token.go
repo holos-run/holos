@@ -15,6 +15,7 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	hlogger "github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
+	"github.com/holos-run/holos/version"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
 	"github.com/int128/kubelogin/pkg/infrastructure/clock"
 	"github.com/int128/kubelogin/pkg/infrastructure/logger"
@@ -119,6 +120,8 @@ func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return nil, errors.Wrap(fmt.Errorf("could not get token: %w", err))
 	}
 	req.Header.Set(authn.Header, token.Bearer)
+	ua := fmt.Sprintf("holos/%s (%s)", version.Version, version.GoVersion)
+	req.Header.Set("User-Agent", ua)
 	return t.Transport.RoundTrip(req)
 }
 

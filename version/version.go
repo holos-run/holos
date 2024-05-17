@@ -16,7 +16,7 @@ var Minor string
 //go:embed embedded/patch
 var Patch string
 
-// Version of this module
+// Version of this module for example "0.70.0"
 var Version = strings.ReplaceAll(Major+"."+Minor+"."+Patch, "\n", "")
 
 // GitCommit defined dynamically by the Makefile
