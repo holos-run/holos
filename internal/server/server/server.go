@@ -6,6 +6,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"sync/atomic"
+	"time"
 
 	"connectrpc.com/connect"
 	"connectrpc.com/grpcreflect"
@@ -177,6 +178,9 @@ func (s *Server) startServer() *http.Server {
 		// WriteTimeout: s.cfg.ServerConfig.HttpServerTimeout,
 		// ReadTimeout:  s.cfg.ServerConfig.HttpServerTimeout,
 		// IdleTimeout:  2 * s.cfg.ServerConfig.HttpServerTimeout,
+		// "we encourage you to set ReadHeaderTimeout in particular."
+		// Refer to: https://connectrpc.com/docs/faq#stream-error
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	httpLog := s.cfg.Logger().With("addr", srv.Addr, "server", "http")
