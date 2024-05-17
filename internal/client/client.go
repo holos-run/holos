@@ -64,6 +64,6 @@ func (c *Client) UpdateForm(ctx context.Context, platformID string, form *object
 		return errors.Wrap(err)
 	}
 	log := logger.FromContext(ctx)
-	log.InfoContext(ctx, "updated platform", "platform_id", platformID, "duration", time.Since(start))
+	log.DebugContext(ctx, "updated platform", "platform_id", platformID, "duration", time.Since(start))
 	return nil
 }

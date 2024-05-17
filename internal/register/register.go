@@ -48,8 +48,17 @@ func User(ctx context.Context, cfg *client.Config) error {
 		}
 	}
 
-	// Ensure the current user id gets saved.
-	cc.UserID = u.GetId()
+	server := cfg.Client().Server()
+
+	// If the user switched servers, they've switched contexts and we need to
+	// replace the current context.  Consider indexing the client context on the
+	// server hostname instead of replacing it.  For now, it's easy enough to
+	// re-run the registration command to get the current context.
+	if cc.UserID != u.GetId() {
+		log.WarnContext(ctx, "context changed", "server", server, "prevUserID", cc.UserID, "currentUserID", u.GetId())
+		cc.UserID = u.GetId()
+		cc.OrgID = ""
+	}
 
 	// Ensure an org ID gets saved.
 	if cc.OrgID == "" {
@@ -65,7 +74,7 @@ func User(ctx context.Context, cfg *client.Config) error {
 		return errors.Wrap(err)
 	}
 
-	log.InfoContext(ctx, "user", "email", u.GetEmail(), "user_id", cc.UserID, "org_id", cc.OrgID)
+	log.InfoContext(ctx, "user", "email", u.GetEmail(), "server", server, "user_id", cc.UserID, "org_id", cc.OrgID)
 	return nil
 }
 

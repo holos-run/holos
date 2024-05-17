@@ -2,11 +2,15 @@
 package push
 
 import (
+	"fmt"
+	"log/slog"
+
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/push"
+	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -46,6 +50,7 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 		if ctx == nil {
 			return errors.Wrap(errors.New("cannot execute: no context"))
 		}
+		ctx = logger.NewContext(ctx, logger.FromContext(ctx).With("server", cfg.Client().Server()))
 		rpc := client.New(cfg)
 		for _, name := range args {
 			// Get the platform metadata for the platform id.
@@ -53,6 +58,7 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err)
 			}
+			log := logger.FromContext(ctx).With("platform_id", p.GetId())
 			// Build the form from the cue code.
 			form, err := push.PlatformForm(ctx, name)
 			if err != nil {
@@ -62,6 +68,8 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 			if err := rpc.UpdateForm(ctx, p.GetId(), form); err != nil {
 				return errors.Wrap(err)
 			}
+			log.InfoContext(ctx, "form updated")
+			slog.Default().InfoContext(ctx, fmt.Sprintf("%s/ui/platform/%s", cfg.Client().Server(), p.GetId()))
 		}
 		return nil
 	}

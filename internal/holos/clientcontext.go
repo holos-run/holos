@@ -40,6 +40,9 @@ func (cc *ClientContext) Save(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	if len(data) > 0 {
+		data = append(data, '\n')
+	}
 	if err := os.WriteFile(config, data, 0644); err != nil {
 		return err
 	}
