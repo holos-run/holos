@@ -59,7 +59,9 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 				return errors.Wrap(err)
 			}
 			// Make the rpc call to update the platform form.
-			return rpc.UpdateForm(ctx, p.GetId(), form)
+			if err := rpc.UpdateForm(ctx, p.GetId(), form); err != nil {
+				return errors.Wrap(err)
+			}
 		}
 		return nil
 	}
