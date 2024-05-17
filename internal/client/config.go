@@ -2,16 +2,27 @@
 package client
 
 import (
+	"context"
 	"flag"
 
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/token"
 )
 
+func NewConfig(cfg *holos.Config) *Config {
+	return &Config{
+		holos:   cfg,
+		client:  holos.NewClientConfig(),
+		context: holos.NewClientContext(context.Background()),
+		token:   token.NewConfig(),
+	}
+}
+
 type Config struct {
-	holos  *holos.Config
-	client *holos.ClientConfig
-	token  *token.Config
+	holos   *holos.Config
+	client  *holos.ClientConfig
+	context *holos.ClientContext
+	token   *token.Config
 }
 
 func (c *Config) ClientFlagSet() *flag.FlagSet {
@@ -42,10 +53,11 @@ func (c *Config) Client() *holos.ClientConfig {
 	return c.client
 }
 
-func NewConfig(cfg *holos.Config) *Config {
-	return &Config{
-		holos:  cfg,
-		client: holos.NewClientConfig(),
-		token:  token.NewConfig(),
+// Context returns the ClientContext useful to get the OrgID and UserID for rpc
+// calls.
+func (c *Config) Context() *holos.ClientContext {
+	if c == nil {
+		return nil
 	}
+	return c.context
 }

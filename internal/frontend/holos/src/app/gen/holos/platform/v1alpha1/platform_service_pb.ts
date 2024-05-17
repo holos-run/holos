@@ -5,7 +5,8 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { FieldMask, Message, proto3, Struct } from "@bufbuild/protobuf";
-import { Form, Platform } from "./platform_pb.js";
+import { Platform } from "./platform_pb.js";
+import { Form } from "../../object/v1alpha1/object_pb.js";
 
 /**
  * @generated from message holos.platform.v1alpha1.CreatePlatformRequest
@@ -367,7 +368,7 @@ export class UpdatePlatformOperation extends Message<UpdatePlatformOperation> {
   /**
    * Replace the form.
    *
-   * @generated from field: optional holos.platform.v1alpha1.Form form = 5;
+   * @generated from field: optional holos.object.v1alpha1.Form form = 5;
    */
   form?: Form;
 

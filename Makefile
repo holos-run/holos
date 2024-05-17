@@ -61,7 +61,7 @@ vet: ## Vet Go code.
 
 .PHONY: gencue
 gencue: ## Generate CUE definitions
-	cd docs/examples && cue get go github.com/holos-run/holos/api/...
+	cd internal/generate/platforms && cue get go github.com/holos-run/holos/api/v1alpha1/...
 
 .PHONY: rmgen
 rmgen: ## Remove generated code
@@ -76,7 +76,7 @@ rmgen: ## Remove generated code
 regenerate: generate ## Re-generate code (delete and re-create)
 
 .PHONY: generate
-generate: buf ## Generate code.
+generate: buf gencue ## Generate code.
 	go generate ./...
 
 .PHONY: build

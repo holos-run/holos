@@ -5,7 +5,7 @@
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
 import { Message, proto3, Struct } from "@bufbuild/protobuf";
-import { Detail } from "../../object/v1alpha1/object_pb.js";
+import { Detail, Form } from "../../object/v1alpha1/object_pb.js";
 
 /**
  * @generated from message holos.platform.v1alpha1.Platform
@@ -147,7 +147,7 @@ export class Spec extends Message<Spec> {
   model?: Struct;
 
   /**
-   * @generated from field: optional holos.platform.v1alpha1.Form form = 2;
+   * @generated from field: optional holos.object.v1alpha1.Form form = 2;
    */
   form?: Form;
 
@@ -177,48 +177,6 @@ export class Spec extends Message<Spec> {
 
   static equals(a: Spec | PlainMessage<Spec> | undefined, b: Spec | PlainMessage<Spec> | undefined): boolean {
     return proto3.util.equals(Spec, a, b);
-  }
-}
-
-/**
- * Form represents the Formly input form.
- *
- * @generated from message holos.platform.v1alpha1.Form
- */
-export class Form extends Message<Form> {
-  /**
-   * fields represents FormlyFieldConfig[] encoded as an array of JSON objects
-   * organized by section.
-   *
-   * @generated from field: repeated google.protobuf.Struct field_configs = 1;
-   */
-  fieldConfigs: Struct[] = [];
-
-  constructor(data?: PartialMessage<Form>) {
-    super();
-    proto3.util.initPartial(data, this);
-  }
-
-  static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.platform.v1alpha1.Form";
-  static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "field_configs", kind: "message", T: Struct, repeated: true },
-  ]);
-
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Form {
-    return new Form().fromBinary(bytes, options);
-  }
-
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Form {
-    return new Form().fromJson(jsonValue, options);
-  }
-
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Form {
-    return new Form().fromJsonString(jsonString, options);
-  }
-
-  static equals(a: Form | PlainMessage<Form> | undefined, b: Form | PlainMessage<Form> | undefined): boolean {
-    return proto3.util.equals(Form, a, b);
   }
 }
 

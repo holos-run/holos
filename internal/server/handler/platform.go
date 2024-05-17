@@ -258,7 +258,7 @@ func PlatformToRPC(entity *ent.Platform) *platform.Platform {
 		DisplayName: &entity.DisplayName,
 		Spec: &platform.Spec{
 			Model: entity.Model.GetModel(),
-			Form: &platform.Form{
+			Form: &object.Form{
 				FieldConfigs: entity.Form.GetFieldConfigs(),
 			},
 		},

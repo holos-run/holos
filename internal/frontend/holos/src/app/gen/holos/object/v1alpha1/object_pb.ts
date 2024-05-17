@@ -4,7 +4,7 @@
 // @ts-nocheck
 
 import type { BinaryReadOptions, FieldList, JsonReadOptions, JsonValue, PartialMessage, PlainMessage } from "@bufbuild/protobuf";
-import { Message, proto3, Timestamp } from "@bufbuild/protobuf";
+import { Message, proto3, Struct, Timestamp } from "@bufbuild/protobuf";
 
 /**
  * @generated from message holos.object.v1alpha1.Detail
@@ -322,6 +322,48 @@ export class ResourceOwner extends Message<ResourceOwner> {
 
   static equals(a: ResourceOwner | PlainMessage<ResourceOwner> | undefined, b: ResourceOwner | PlainMessage<ResourceOwner> | undefined): boolean {
     return proto3.util.equals(ResourceOwner, a, b);
+  }
+}
+
+/**
+ * Form represents a Formly json powered form.
+ *
+ * @generated from message holos.object.v1alpha1.Form
+ */
+export class Form extends Message<Form> {
+  /**
+   * fields represents FormlyFieldConfig[] encoded as an array of JSON objects
+   * organized by section.
+   *
+   * @generated from field: repeated google.protobuf.Struct field_configs = 1;
+   */
+  fieldConfigs: Struct[] = [];
+
+  constructor(data?: PartialMessage<Form>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.object.v1alpha1.Form";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "field_configs", kind: "message", T: Struct, repeated: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): Form {
+    return new Form().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): Form {
+    return new Form().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): Form {
+    return new Form().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: Form | PlainMessage<Form> | undefined, b: Form | PlainMessage<Form> | undefined): boolean {
+    return proto3.util.equals(Form, a, b);
   }
 }
 

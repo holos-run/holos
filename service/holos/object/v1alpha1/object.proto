@@ -5,7 +5,7 @@ package holos.object.v1alpha1;
 option go_package = "github.com/holos-run/holos/service/gen/holos/object/v1alpha1;object";
 
 import "google/protobuf/timestamp.proto";
-// git clone https://github.com/bufbuild/protovalidate then add <parent>/protovalidate/proto/protovalidate to your editor proto search path
+import "google/protobuf/struct.proto";
 import "buf/validate/validate.proto";
 
 // For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
@@ -79,4 +79,11 @@ message ResourceOwner {
     string org_id = 1 [(buf.validate.field).string.uuid = true];
     string user_id = 2 [(buf.validate.field).string.uuid = true];
   }
+}
+
+// Form represents a Formly json powered form.
+message Form {
+  // fields represents FormlyFieldConfig[] encoded as an array of JSON objects
+  // organized by section.
+  repeated google.protobuf.Struct field_configs = 1;
 }

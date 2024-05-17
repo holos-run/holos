@@ -6,6 +6,7 @@ option go_package = "github.com/holos-run/holos/service/gen/holos/platform/v1alp
 import "buf/validate/validate.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/struct.proto";
+import "holos/object/v1alpha1/object.proto";
 import "holos/platform/v1alpha1/platform.proto";
 
 message CreatePlatformRequest {
@@ -104,7 +105,7 @@ message UpdatePlatformOperation {
   // Replace the form model.
   optional google.protobuf.Struct model = 4;
   // Replace the form.
-  optional Form form = 5;
+  optional holos.object.v1alpha1.Form form = 5;
 }
 
 service PlatformService {

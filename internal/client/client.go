@@ -3,10 +3,13 @@ package client
 
 import (
 	"context"
-	"errors"
+	"time"
 
 	"connectrpc.com/connect"
+	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/token"
+	object "github.com/holos-run/holos/service/gen/holos/object/v1alpha1"
 	"github.com/holos-run/holos/service/gen/holos/organization/v1alpha1/organizationconnect"
 	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
 	"github.com/holos-run/holos/service/gen/holos/platform/v1alpha1/platformconnect"
@@ -48,4 +51,19 @@ func (c *Client) Platforms(ctx context.Context, orgID string) ([]*platform.Platf
 		return nil, err
 	}
 	return resp.Msg.GetPlatforms(), nil
+}
+
+func (c *Client) UpdateForm(ctx context.Context, platformID string, form *object.Form) error {
+	start := time.Now()
+	req := &platform.UpdatePlatformRequest{
+		Update:     &platform.UpdatePlatformOperation{PlatformId: platformID, Form: form},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"form"}},
+	}
+	_, err := c.pltSvc.UpdatePlatform(ctx, connect.NewRequest(req))
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	log := logger.FromContext(ctx)
+	log.InfoContext(ctx, "updated platform", "platform_id", platformID, "duration", time.Since(start))
+	return nil
 }

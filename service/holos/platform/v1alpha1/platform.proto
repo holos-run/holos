@@ -82,12 +82,5 @@ message Spec {
   // The model is a Struct to ensure any valid JSON object defined by the user
   // via the form can be represented and stored.
   google.protobuf.Struct model = 1;
-  optional Form form = 2;
-}
-
-// Form represents the Formly input form.
-message Form {
-  // fields represents FormlyFieldConfig[] encoded as an array of JSON objects
-  // organized by section.
-  repeated google.protobuf.Struct field_configs = 1;
+  optional holos.object.v1alpha1.Form form = 2;
 }

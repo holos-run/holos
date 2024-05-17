@@ -8,3 +8,6 @@ package v1alpha1
 	kind?:       string @go(Kind)
 	apiVersion?: string @go(APIVersion)
 }
+
+// Discriminator is an interface to discriminate the kind api object.
+#Discriminator: _

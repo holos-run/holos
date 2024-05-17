@@ -1,14 +1,9 @@
 package v1alpha1
 
-// #Form represents a web app form to provide to the Holos API for display in
-// the web app.  A form is implemented as an Formly FieldConfig array using
-// Angular Material form field components.
+// Form represents a collection of Formly json powered form.
 #Form: {
-	#TypeMeta
 	apiVersion: #APIVersion
 	kind:       "Form"
-
-	spec: fields: [...#FieldConfig]
 }
 
 // #FormBuilder provides a concrete #Form via the Output field.
@@ -17,7 +12,7 @@ package v1alpha1
 	Sections: {[NAME=string]: #FormSection & {name: NAME}}
 
 	Output: #Form & {
-		spec: fields: [for s in Sections {s.wrapper}]
+		spec: form: field_configs: [for s in Sections {s.wrapper}]
 	}
 }
 

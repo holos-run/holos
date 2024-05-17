@@ -46,10 +46,20 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 		if ctx == nil {
 			return errors.Wrap(errors.New("cannot execute: no context"))
 		}
+		rpc := client.New(cfg)
 		for _, name := range args {
-			if err := push.PlatformForm(ctx, name); err != nil {
+			// Get the platform metadata for the platform id.
+			p, err := push.LoadPlatform(ctx, name)
+			if err != nil {
 				return errors.Wrap(err)
 			}
+			// Build the form from the cue code.
+			form, err := push.PlatformForm(ctx, name)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			// Make the rpc call to update the platform form.
+			return rpc.UpdateForm(ctx, p.GetId(), form)
 		}
 		return nil
 	}
