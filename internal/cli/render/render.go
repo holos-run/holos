@@ -7,6 +7,7 @@ import (
 
 	"github.com/holos-run/holos/internal/builder"
 	"github.com/holos-run/holos/internal/cli/command"
+	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
@@ -22,6 +23,10 @@ func New(cfg *holos.Config) *cobra.Command {
 	cmd.Flags().AddGoFlagSet(cfg.WriteFlagSet())
 	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
 
+	config := client.NewConfig(cfg)
+	cmd.PersistentFlags().AddGoFlagSet(config.ClientFlagSet())
+	cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
+
 	var printInstances bool
 	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
 	flagSet.BoolVar(&printInstances, "print-instances", false, "expand /... paths for xargs")
@@ -33,7 +38,7 @@ func New(cfg *holos.Config) *cobra.Command {
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
 
 		if printInstances {
-			instances, err := build.Instances(ctx)
+			instances, err := build.Instances(ctx, config)
 			if err != nil {
 				return errors.Wrap(err)
 			}
@@ -43,13 +48,14 @@ func New(cfg *holos.Config) *cobra.Command {
 			return nil
 		}
 
-		results, err := build.Run(cmd.Context())
+		results, err := build.Run(ctx, config)
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		// TODO: Avoid accidental over-writes if to holos component instances result in
-		// the same file path. Write files into a blank temporary directory, error if a
-		// file exists, then move the directory into place.
+		// TODO: Avoid accidental over-writes if two or more holos component
+		// instances result in the same file path. Write files into a blank
+		// temporary directory, error if a file exists, then move the directory into
+		// place.
 		var result Result
 		for _, result = range results {
 			if result.Continue() {

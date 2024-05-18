@@ -54,7 +54,7 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 		rpc := client.New(cfg)
 		for _, name := range args {
 			// Get the platform metadata for the platform id.
-			p, err := push.LoadPlatform(ctx, name)
+			p, err := client.LoadPlatform(ctx, name)
 			if err != nil {
 				return errors.Wrap(err)
 			}

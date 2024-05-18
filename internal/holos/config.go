@@ -170,15 +170,25 @@ func (c *Config) Finalize() error {
 
 // Vet validates the config.
 func (c *Config) Vet() error {
+	if c == nil || c.logConfig == nil {
+		return fmt.Errorf("cannot vet: not configured")
+	}
 	return c.logConfig.Vet()
 }
 
-// Logger returns a *slog.Logger configured by the user.
+// Logger returns a *slog.Logger configured by the user or the default logger if
+// no logger has been configured by the user.
 func (c *Config) Logger() *slog.Logger {
+	if c == nil {
+		return slog.Default()
+	}
 	if c.logger != nil {
 		return c.logger
 	}
-	return c.logConfig.NewLogger(c.options.stderr)
+	if c.logConfig == nil {
+		return slog.Default()
+	}
+	return c.logConfig.NewLogger(c.Stderr())
 }
 
 // NewTopLevelLogger returns a *slog.Logger with a handler that filters source
@@ -189,21 +199,33 @@ func (c *Config) NewTopLevelLogger() *slog.Logger {
 
 // Stdin should be used instead of os.Stdin to capture input from tests.
 func (c *Config) Stdin() io.Reader {
+	if c == nil || c.options == nil {
+		return os.Stdin
+	}
 	return c.options.stdin
 }
 
 // Stdout should be used instead of os.Stdout to capture output for tests.
 func (c *Config) Stdout() io.Writer {
+	if c == nil || c.options == nil {
+		return os.Stdout
+	}
 	return c.options.stdout
 }
 
 // Stderr should be used instead of os.Stderr to capture output for tests.
 func (c *Config) Stderr() io.Writer {
+	if c == nil || c.options == nil {
+		return os.Stderr
+	}
 	return c.options.stderr
 }
 
 // WriteTo returns the write to path configured by flags.
 func (c *Config) WriteTo() string {
+	if c == nil {
+		return ""
+	}
 	return c.writeTo
 }
 
@@ -230,6 +252,9 @@ func (c *Config) Write(p []byte) {
 
 // ClusterName returns the cluster name configured by flags.
 func (c *Config) ClusterName() string {
+	if c == nil {
+		return ""
+	}
 	return c.clusterName
 }
 
@@ -243,7 +268,7 @@ func (c *Config) KVKubeconfig() string {
 
 // KVNamespace returns the configured namespace to operate against in the provisioner cluster.
 func (c *Config) KVNamespace() string {
-	if c.kvNamespace == nil {
+	if c == nil || c.kvNamespace == nil {
 		return DefaultProvisionerNamespace
 	}
 	return *c.kvNamespace
@@ -251,7 +276,7 @@ func (c *Config) KVNamespace() string {
 
 // TxtarIndex returns the
 func (c *Config) TxtarIndex() int {
-	if c.txtarIndex == nil {
+	if c == nil || c.txtarIndex == nil {
 		return 0
 	}
 	return *c.txtarIndex
@@ -259,7 +284,7 @@ func (c *Config) TxtarIndex() int {
 
 // ProvisionerClientset returns a kubernetes client set for the provisioner cluster.
 func (c *Config) ProvisionerClientset() (kubernetes.Interface, error) {
-	if c.provisionerClientset == nil {
+	if c == nil || c.provisionerClientset == nil {
 		kcfg, err := clientcmd.BuildConfigFromFlags("", c.KVKubeconfig())
 		if err != nil {
 			return nil, errors.Wrap(err)

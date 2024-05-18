@@ -15,6 +15,7 @@ import (
 	"github.com/holos-run/holos/service/gen/holos/platform/v1alpha1/platformconnect"
 	"github.com/holos-run/holos/service/gen/holos/user/v1alpha1/userconnect"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func New(cfg *Config) *Client {
@@ -66,4 +67,20 @@ func (c *Client) UpdateForm(ctx context.Context, platformID string, form *object
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "updated platform", "platform_id", platformID, "duration", time.Since(start))
 	return nil
+}
+
+// PlatformModel gets the platform model from the PlatformService.
+func (c *Client) PlatformModel(ctx context.Context, platformID string) (*structpb.Struct, error) {
+	start := time.Now()
+	req := &platform.GetPlatformRequest{
+		PlatformId: platformID,
+		FieldMask:  &fieldmaskpb.FieldMask{Paths: []string{"spec.model"}},
+	}
+	pf, err := c.pltSvc.GetPlatform(ctx, connect.NewRequest(req))
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	log := logger.FromContext(ctx)
+	log.DebugContext(ctx, "get platform", "platform_id", platformID, "duration", time.Since(start))
+	return pf.Msg.GetPlatform().GetSpec().GetModel(), nil
 }

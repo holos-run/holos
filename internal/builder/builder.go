@@ -17,6 +17,7 @@ import (
 	"github.com/holos-run/holos/api/v1alpha1"
 
 	"github.com/holos-run/holos"
+	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
 )
@@ -70,7 +71,7 @@ func (b *Builder) Cluster() string {
 }
 
 // Instances returns the cue build instances being built.
-func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
+func (b *Builder) Instances(ctx context.Context, cfg *client.Config) ([]*build.Instance, error) {
 	log := logger.FromContext(ctx)
 
 	mod, err := b.findCueMod()
@@ -79,7 +80,24 @@ func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
 	}
 	dir := string(mod)
 
-	cfg := load.Config{Dir: dir}
+	cueConfig := load.Config{Dir: dir}
+
+	// Get the platform model from the PlatformService
+	rpc := client.New(cfg)
+	p, err := client.LoadPlatform(ctx, dir)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	m, err := rpc.PlatformModel(ctx, p.GetId())
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	platformModelJSON, err := m.MarshalJSON()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	// TODO: Should probably use load.TagVar instead.
+	cueConfig.Tags = append(cueConfig.Tags, "platform_model="+string(platformModelJSON))
 
 	// Make args relative to the module directory
 	args := make([]string, len(b.cfg.args))
@@ -100,17 +118,17 @@ func (b *Builder) Instances(ctx context.Context) ([]*build.Instance, error) {
 
 	// Refer to https://github.com/cue-lang/cue/blob/v0.7.0/cmd/cue/cmd/common.go#L429
 	if b.Cluster() != "" {
-		cfg.Tags = append(cfg.Tags, "cluster="+b.Cluster())
+		cueConfig.Tags = append(cueConfig.Tags, "cluster="+b.Cluster())
 	}
-	log.DebugContext(ctx, fmt.Sprintf("cue: tags %v", cfg.Tags))
+	log.DebugContext(ctx, fmt.Sprintf("cue: tags %v", cueConfig.Tags))
 
-	return load.Instances(args, &cfg), nil
+	return load.Instances(args, &cueConfig), nil
 }
 
-func (b *Builder) Run(ctx context.Context) (results []*v1alpha1.Result, err error) {
+func (b *Builder) Run(ctx context.Context, cfg *client.Config) (results []*v1alpha1.Result, err error) {
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "cue: building instances")
-	instances, err := b.Instances(ctx)
+	instances, err := b.Instances(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -166,6 +184,7 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 	decoder.DisallowUnknownFields()
 
 	switch tm.Kind {
+	// TODO(jeff) Process a v1alpha1.Result here, the result is tightly coupled to a BuildPlan.
 	case "BuildPlan":
 		var bp v1alpha1.BuildPlan
 		if err = decoder.Decode(&bp); err != nil {
@@ -173,6 +192,7 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 			return
 		}
 		results, err = b.buildPlan(ctx, &bp, path)
+	// TODO(jeff) Platform should not return a Result like an individual holos component does.
 	case "Platform":
 		var pf v1alpha1.Platform
 		if err = decoder.Decode(&pf); err != nil {
@@ -187,9 +207,30 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 	return
 }
 
+// buildPlatform builds all of the holos components specified in a Platform resource returned from CUE.
+//
+// TODO(jeff): There is technical debt here in the way results are handled.
+// Results were intended as a way to define how holos should build various kinds
+// of individual components, not a whole platform though.  After launch,
+// refactor the platform building to return something else.  The result itself
+// also needs to be refactored to an interface instead of a struct.  Each kind
+// of component should implement the interface.
 func (b *Builder) buildPlatform(ctx context.Context, pf *v1alpha1.Platform) (results []*v1alpha1.Result, err error) {
 	log := logger.FromContext(ctx)
-	log.ErrorContext(ctx, "not implemented", "platform", pf)
+	// TODO: Iterate over each platform component in Platform.spec.components.
+	// each component should note the cluster name and path to the holos
+	// component.
+	data, err := pf.Spec.Model.MarshalJSON()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	if len(data) > 0 {
+		data = append(data, '\n')
+	}
+	buf := bytes.NewBuffer(data)
+	if _, err := buf.WriteTo(os.Stdout); err != nil {
+		log.ErrorContext(ctx, "could not write", "err", err)
+	}
 	return nil, errors.Wrap(fmt.Errorf("not implemeneted"))
 }
 

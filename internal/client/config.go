@@ -61,3 +61,11 @@ func (c *Config) Context() *holos.ClientContext {
 	}
 	return c.context
 }
+
+// Holos returns the *holos.Config
+func (c *Config) Holos() *holos.Config {
+	if c == nil {
+		return nil
+	}
+	return c.holos
+}
