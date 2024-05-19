@@ -534,6 +534,65 @@ func (x *Form) GetFieldConfigs() []*structpb.Struct {
 	return nil
 }
 
+// PlatformConfig represents the data passed from the holos cli to CUE when
+// rendering configuration.
+type PlatformConfig struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Platform UUID.
+	PlatformId string `protobuf:"bytes,1,opt,name=platform_id,json=platformId,proto3" json:"platform_id,omitempty"`
+	// Platform Model.
+	PlatformModel *structpb.Struct `protobuf:"bytes,2,opt,name=platform_model,json=platformModel,proto3,oneof" json:"platform_model,omitempty"`
+}
+
+func (x *PlatformConfig) Reset() {
+	*x = PlatformConfig{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_holos_object_v1alpha1_object_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PlatformConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlatformConfig) ProtoMessage() {}
+
+func (x *PlatformConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_holos_object_v1alpha1_object_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlatformConfig.ProtoReflect.Descriptor instead.
+func (*PlatformConfig) Descriptor() ([]byte, []int) {
+	return file_holos_object_v1alpha1_object_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *PlatformConfig) GetPlatformId() string {
+	if x != nil {
+		return x.PlatformId
+	}
+	return ""
+}
+
+func (x *PlatformConfig) GetPlatformModel() *structpb.Struct {
+	if x != nil {
+		return x.PlatformModel
+	}
+	return nil
+}
+
 var File_holos_object_v1alpha1_object_proto protoreflect.FileDescriptor
 
 var file_holos_object_v1alpha1_object_proto_rawDesc = []byte{
@@ -619,12 +678,21 @@ var file_holos_object_v1alpha1_object_proto_rawDesc = []byte{
 	0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x17,
 	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
 	0x2e, 0x53, 0x74, 0x72, 0x75, 0x63, 0x74, 0x52, 0x0c, 0x66, 0x69, 0x65, 0x6c, 0x64, 0x43, 0x6f,
-	0x6e, 0x66, 0x69, 0x67, 0x73, 0x42, 0x45, 0x5a, 0x43, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x68, 0x6f, 0x6c, 0x6f, 0x73, 0x2d, 0x72, 0x75, 0x6e, 0x2f, 0x68, 0x6f,
-	0x6c, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x67, 0x65, 0x6e, 0x2f,
-	0x68, 0x6f, 0x6c, 0x6f, 0x73, 0x2f, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x2f, 0x76, 0x31, 0x61,
-	0x6c, 0x70, 0x68, 0x61, 0x31, 0x3b, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x66, 0x69, 0x67, 0x73, 0x22, 0x93, 0x01, 0x0a, 0x0e, 0x50, 0x6c, 0x61, 0x74, 0x66, 0x6f,
+	0x72, 0x6d, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x29, 0x0a, 0x0b, 0x70, 0x6c, 0x61, 0x74,
+	0x66, 0x6f, 0x72, 0x6d, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x08, 0xba,
+	0x48, 0x05, 0x72, 0x03, 0xb0, 0x01, 0x01, 0x52, 0x0a, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72,
+	0x6d, 0x49, 0x64, 0x12, 0x43, 0x0a, 0x0e, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d, 0x5f,
+	0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x67, 0x6f,
+	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x53, 0x74,
+	0x72, 0x75, 0x63, 0x74, 0x48, 0x00, 0x52, 0x0d, 0x70, 0x6c, 0x61, 0x74, 0x66, 0x6f, 0x72, 0x6d,
+	0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x88, 0x01, 0x01, 0x42, 0x11, 0x0a, 0x0f, 0x5f, 0x70, 0x6c, 0x61,
+	0x74, 0x66, 0x6f, 0x72, 0x6d, 0x5f, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x42, 0x45, 0x5a, 0x43, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x68, 0x6f, 0x6c, 0x6f, 0x73, 0x2d,
+	0x72, 0x75, 0x6e, 0x2f, 0x68, 0x6f, 0x6c, 0x6f, 0x73, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63,
+	0x65, 0x2f, 0x67, 0x65, 0x6e, 0x2f, 0x68, 0x6f, 0x6c, 0x6f, 0x73, 0x2f, 0x6f, 0x62, 0x6a, 0x65,
+	0x63, 0x74, 0x2f, 0x76, 0x31, 0x61, 0x6c, 0x70, 0x68, 0x61, 0x31, 0x3b, 0x6f, 0x62, 0x6a, 0x65,
+	0x63, 0x74, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -639,7 +707,7 @@ func file_holos_object_v1alpha1_object_proto_rawDescGZIP() []byte {
 	return file_holos_object_v1alpha1_object_proto_rawDescData
 }
 
-var file_holos_object_v1alpha1_object_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_holos_object_v1alpha1_object_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_holos_object_v1alpha1_object_proto_goTypes = []interface{}{
 	(*Detail)(nil),                // 0: holos.object.v1alpha1.Detail
 	(*Subject)(nil),               // 1: holos.object.v1alpha1.Subject
@@ -648,21 +716,23 @@ var file_holos_object_v1alpha1_object_proto_goTypes = []interface{}{
 	(*ResourceEditor)(nil),        // 4: holos.object.v1alpha1.ResourceEditor
 	(*ResourceOwner)(nil),         // 5: holos.object.v1alpha1.ResourceOwner
 	(*Form)(nil),                  // 6: holos.object.v1alpha1.Form
-	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),       // 8: google.protobuf.Struct
+	(*PlatformConfig)(nil),        // 7: holos.object.v1alpha1.PlatformConfig
+	(*timestamppb.Timestamp)(nil), // 8: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),       // 9: google.protobuf.Struct
 }
 var file_holos_object_v1alpha1_object_proto_depIdxs = []int32{
 	4, // 0: holos.object.v1alpha1.Detail.created_by:type_name -> holos.object.v1alpha1.ResourceEditor
-	7, // 1: holos.object.v1alpha1.Detail.created_at:type_name -> google.protobuf.Timestamp
+	8, // 1: holos.object.v1alpha1.Detail.created_at:type_name -> google.protobuf.Timestamp
 	4, // 2: holos.object.v1alpha1.Detail.updated_by:type_name -> holos.object.v1alpha1.ResourceEditor
-	7, // 3: holos.object.v1alpha1.Detail.updated_at:type_name -> google.protobuf.Timestamp
+	8, // 3: holos.object.v1alpha1.Detail.updated_at:type_name -> google.protobuf.Timestamp
 	1, // 4: holos.object.v1alpha1.UserRef.subject:type_name -> holos.object.v1alpha1.Subject
-	8, // 5: holos.object.v1alpha1.Form.field_configs:type_name -> google.protobuf.Struct
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	9, // 5: holos.object.v1alpha1.Form.field_configs:type_name -> google.protobuf.Struct
+	9, // 6: holos.object.v1alpha1.PlatformConfig.platform_model:type_name -> google.protobuf.Struct
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_holos_object_v1alpha1_object_proto_init() }
@@ -755,6 +825,18 @@ func file_holos_object_v1alpha1_object_proto_init() {
 				return nil
 			}
 		}
+		file_holos_object_v1alpha1_object_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PlatformConfig); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_holos_object_v1alpha1_object_proto_msgTypes[0].OneofWrappers = []interface{}{}
 	file_holos_object_v1alpha1_object_proto_msgTypes[2].OneofWrappers = []interface{}{
@@ -773,13 +855,14 @@ func file_holos_object_v1alpha1_object_proto_init() {
 		(*ResourceOwner_OrgId)(nil),
 		(*ResourceOwner_UserId)(nil),
 	}
+	file_holos_object_v1alpha1_object_proto_msgTypes[7].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_holos_object_v1alpha1_object_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

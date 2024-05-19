@@ -22,6 +22,7 @@ import (
 	"github.com/holos-run/holos/internal/cli/login"
 	"github.com/holos-run/holos/internal/cli/logout"
 	"github.com/holos-run/holos/internal/cli/preflight"
+	"github.com/holos-run/holos/internal/cli/pull"
 	"github.com/holos-run/holos/internal/cli/push"
 	"github.com/holos-run/holos/internal/cli/register"
 	"github.com/holos-run/holos/internal/cli/render"
@@ -73,6 +74,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(rpc.New(cfg))
 	rootCmd.AddCommand(generate.New(cfg))
 	rootCmd.AddCommand(register.New(cfg))
+	rootCmd.AddCommand(pull.New(cfg))
 	rootCmd.AddCommand(push.New(cfg))
 	rootCmd.AddCommand(newOrgCmd())
 

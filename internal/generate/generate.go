@@ -72,11 +72,10 @@ func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, nam
 		data = append(data, '\n')
 	}
 	log = log.With("platform_id", rpcPlatform.GetId())
-	path := "platform.metadata.json"
-	if err := os.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(client.PlatformMetadataFile, data, 0644); err != nil {
 		return errors.Wrap(fmt.Errorf("could not write platform metadata: %w", err))
 	}
-	log.InfoContext(ctx, "wrote "+path, "path", filepath.Join(getCwd(ctx), path))
+	log.InfoContext(ctx, "wrote "+client.PlatformMetadataFile, "path", filepath.Join(getCwd(ctx), client.PlatformMetadataFile))
 
 	// Copy the cue.mod directory
 	if err := copyEmbedFS(ctx, platforms, filepath.Join(root, "cue.mod"), "cue.mod"); err != nil {

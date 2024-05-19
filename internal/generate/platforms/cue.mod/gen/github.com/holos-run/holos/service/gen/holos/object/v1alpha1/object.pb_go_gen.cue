@@ -114,3 +114,13 @@ _#isResourceOwner_ResourceOwner: _
 	// organized by section.
 	field_configs?: [...null | structpb.#Struct] @go(FieldConfigs,[]*structpb.Struct) @protobuf(1,bytes,rep,json=fieldConfigs,proto3)
 }
+
+// PlatformConfig represents the data passed from the holos cli to CUE when
+// rendering configuration.
+#PlatformConfig: {
+	// Platform UUID.
+	platform_id?: string @go(PlatformId) @protobuf(1,bytes,opt,json=platformId,proto3)
+
+	// Platform Model.
+	platform_model?: null | structpb.#Struct @go(PlatformModel,*structpb.Struct) @protobuf(2,bytes,opt,json=platformModel,proto3,oneof)
+}

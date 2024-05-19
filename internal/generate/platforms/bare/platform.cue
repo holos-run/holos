@@ -3,6 +3,12 @@ package holos
 import "encoding/json"
 
 import v1 "github.com/holos-run/holos/api/v1alpha1"
+import dto "github.com/holos-run/holos/service/gen/holos/object/v1alpha1:object"
+
+// _PlatformConfig represents all of the data passed from holos to cue.
+// Intended to carry the platform model and project models.
+_PlatformConfig: dto.#PlatformConfig & json.Unmarshal(_PlatformConfigJSON)
+_PlatformConfigJSON: string | *"{}" @tag(platform_config, type=string)
 
 // _Platform provides a platform resource to the holos cli for rendering.  The
 // field is hidden because most components need to refer to platform data,
@@ -15,8 +21,6 @@ _Platform: v1.#Platform & {
 	// spec is the platform specification
 	spec: {
 		// model represents the web form values provided by the user.
-		model: json.Unmarshal(_model)
-		// _model is the json representation of model injected into CUE from holos.
-		_model: string | *"{}" @tag(platform_model, type=string)
+		model: _PlatformConfig.platform_model
 	}
 }

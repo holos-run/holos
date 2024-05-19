@@ -367,3 +367,53 @@ export class Form extends Message<Form> {
   }
 }
 
+/**
+ * PlatformConfig represents the data passed from the holos cli to CUE when
+ * rendering configuration.
+ *
+ * @generated from message holos.object.v1alpha1.PlatformConfig
+ */
+export class PlatformConfig extends Message<PlatformConfig> {
+  /**
+   * Platform UUID.
+   *
+   * @generated from field: string platform_id = 1;
+   */
+  platformId = "";
+
+  /**
+   * Platform Model.
+   *
+   * @generated from field: optional google.protobuf.Struct platform_model = 2;
+   */
+  platformModel?: Struct;
+
+  constructor(data?: PartialMessage<PlatformConfig>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.object.v1alpha1.PlatformConfig";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "platform_model", kind: "message", T: Struct, opt: true },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformConfig {
+    return new PlatformConfig().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformConfig {
+    return new PlatformConfig().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformConfig {
+    return new PlatformConfig().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: PlatformConfig | PlainMessage<PlatformConfig> | undefined, b: PlatformConfig | PlainMessage<PlatformConfig> | undefined): boolean {
+    return proto3.util.equals(PlatformConfig, a, b);
+  }
+}
+

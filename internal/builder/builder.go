@@ -82,22 +82,16 @@ func (b *Builder) Instances(ctx context.Context, cfg *client.Config) ([]*build.I
 
 	cueConfig := load.Config{Dir: dir}
 
-	// Get the platform model from the PlatformService
-	rpc := client.New(cfg)
-	p, err := client.LoadPlatform(ctx, dir)
+	// Get the platform model from the PlatformConfig
+	pc, err := client.LoadPlatformConfig(ctx, dir)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	m, err := rpc.PlatformModel(ctx, p.GetId())
+	data, err := json.Marshal(pc)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	platformModelJSON, err := m.MarshalJSON()
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	// TODO: Should probably use load.TagVar instead.
-	cueConfig.Tags = append(cueConfig.Tags, "platform_model="+string(platformModelJSON))
+	cueConfig.Tags = append(cueConfig.Tags, "platform_config="+string(data))
 
 	// Make args relative to the module directory
 	args := make([]string, len(b.cfg.args))

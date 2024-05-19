@@ -87,3 +87,12 @@ message Form {
   // organized by section.
   repeated google.protobuf.Struct field_configs = 1;
 }
+
+// PlatformConfig represents the data passed from the holos cli to CUE when
+// rendering configuration.
+message PlatformConfig {
+  // Platform UUID.
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+  // Platform Model.
+  optional google.protobuf.Struct platform_model = 2;
+}
