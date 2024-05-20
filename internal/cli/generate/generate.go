@@ -20,6 +20,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	cmd.Args = cobra.NoArgs
 
 	cmd.AddCommand(NewPlatform(cfg))
+	cmd.AddCommand(NewComponent())
 
 	return cmd
 }
@@ -39,6 +40,47 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 			if err := generate.GeneratePlatform(ctx, client, clientContext.OrgID, name); err != nil {
 				return errors.Wrap(err)
 			}
+		}
+		return nil
+	}
+
+	return cmd
+}
+
+// NewComponent returns a command to generate a holos component
+func NewComponent() *cobra.Command {
+	cmd := command.New("component")
+	cmd.Short = "generate a component from an embedded schematic"
+
+	cmd.AddCommand(NewCueComponent())
+
+	return cmd
+}
+
+func NewCueComponent() *cobra.Command {
+	cmd := command.New("cue")
+	cmd.Short = "generate a cue component from an embedded schematic"
+
+	components := generate.CueComponents()
+	cmd.Long = fmt.Sprintf("Embedded cue components available to generate:\n\n  %s", strings.Join(components, "\n  "))
+	for _, name := range components {
+		cmd.AddCommand(makeCueCommand(name))
+	}
+	return cmd
+}
+
+func makeCueCommand(name string) *cobra.Command {
+	cmd := command.New(name)
+	cmd.Short = fmt.Sprintf("generate a %s cue component from an embedded schematic", name)
+	cmd.Args = cobra.NoArgs
+
+	cfg := &generate.CueConfig{}
+	cmd.Flags().AddGoFlagSet(cfg.FlagSet())
+
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Root().Context()
+		if err := generate.GenerateCueComponent(ctx, name, cfg); err != nil {
+			return errors.Wrap(err)
 		}
 		return nil
 	}
