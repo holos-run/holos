@@ -94,5 +94,5 @@ message PlatformConfig {
   // Platform UUID.
   string platform_id = 1 [(buf.validate.field).string.uuid = true];
   // Platform Model.
-  optional google.protobuf.Struct platform_model = 2;
+  google.protobuf.Struct platform_model = 2;
 }

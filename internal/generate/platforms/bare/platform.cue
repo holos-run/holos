@@ -22,5 +22,23 @@ _Platform: v1.#Platform & {
 	spec: {
 		// model represents the web form values provided by the user.
 		model: _PlatformConfig.platform_model
+		components: [for c in _components {c}]
+
+		_components: [string]: v1.#PlatformSpecComponent
+		_components: {
+			for WorkloadCluster in _Clusters.Workload {
+				"\(WorkloadCluster)-configmap": {
+					path: "components/configmap"
+					cluster: WorkloadCluster
+				}
+			}
+		}
 	}
+}
+
+// _Clusters represents the clusters in the platform.  The default values are
+// intended to be provided by the user in a file which is not written over by
+// `holos generate`.
+_Clusters: {
+	Workload: [...string] | *["mycluster"]
 }

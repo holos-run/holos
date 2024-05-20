@@ -384,7 +384,7 @@ export class PlatformConfig extends Message<PlatformConfig> {
   /**
    * Platform Model.
    *
-   * @generated from field: optional google.protobuf.Struct platform_model = 2;
+   * @generated from field: google.protobuf.Struct platform_model = 2;
    */
   platformModel?: Struct;
 
@@ -397,7 +397,7 @@ export class PlatformConfig extends Message<PlatformConfig> {
   static readonly typeName = "holos.object.v1alpha1.PlatformConfig";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "platform_model", kind: "message", T: Struct, opt: true },
+    { no: 2, name: "platform_model", kind: "message", T: Struct },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformConfig {

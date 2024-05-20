@@ -11,15 +11,24 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/render"
 	"github.com/spf13/cobra"
 )
 
-// New returns the render subcommand for the root command
 func New(cfg *holos.Config) *cobra.Command {
-	cmd := command.New("render [directory...]")
+	cmd := command.New("render")
+	cmd.Args = cobra.NoArgs
+	cmd.Short = "render platform configuration"
+	cmd.AddCommand(NewComponent(cfg))
+	cmd.AddCommand(NewPlatform(cfg))
+	return cmd
+}
+
+// New returns the component subcommand for the render command
+func NewComponent(cfg *holos.Config) *cobra.Command {
+	cmd := command.New("component [directory...]")
 	cmd.Args = cobra.MinimumNArgs(1)
 	cmd.Short = "write kubernetes api objects to the filesystem"
-	cmd.Flags().SortFlags = false
 	cmd.Flags().AddGoFlagSet(cfg.WriteFlagSet())
 	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
 
@@ -75,6 +84,30 @@ func New(cfg *holos.Config) *cobra.Command {
 		}
 		return nil
 	}
+	return cmd
+}
+
+func NewPlatform(cfg *holos.Config) *cobra.Command {
+	cmd := command.New("platform [directory]")
+	cmd.Args = cobra.ExactArgs(1)
+	cmd.Short = "render all platform components"
+
+	config := client.NewConfig(cfg)
+	cmd.PersistentFlags().AddGoFlagSet(config.ClientFlagSet())
+	cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
+
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Root().Context()
+		build := builder.New(builder.Entrypoints(args))
+
+		platform, err := build.Platform(ctx, config)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		return render.Platform(ctx, platform, cmd.ErrOrStderr())
+	}
+
 	return cmd
 }
 

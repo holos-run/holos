@@ -122,5 +122,5 @@ _#isResourceOwner_ResourceOwner: _
 	platform_id?: string @go(PlatformId) @protobuf(1,bytes,opt,json=platformId,proto3)
 
 	// Platform Model.
-	platform_model?: null | structpb.#Struct @go(PlatformModel,*structpb.Struct) @protobuf(2,bytes,opt,json=platformModel,proto3,oneof)
+	platform_model?: null | structpb.#Struct @go(PlatformModel,*structpb.Struct) @protobuf(2,bytes,opt,json=platformModel,proto3)
 }

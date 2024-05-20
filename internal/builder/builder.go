@@ -186,46 +186,11 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 			return
 		}
 		results, err = b.buildPlan(ctx, &bp, path)
-	// TODO(jeff) Platform should not return a Result like an individual holos component does.
-	case "Platform":
-		var pf v1alpha1.Platform
-		if err = decoder.Decode(&pf); err != nil {
-			err = errors.Wrap(fmt.Errorf("could not decode Platform %s: %w", instance.Dir, err))
-			return
-		}
-		results, err = b.buildPlatform(ctx, &pf)
 	default:
 		err = errors.Wrap(fmt.Errorf("unknown kind: %v", tm.Kind))
 	}
 
 	return
-}
-
-// buildPlatform builds all of the holos components specified in a Platform resource returned from CUE.
-//
-// TODO(jeff): There is technical debt here in the way results are handled.
-// Results were intended as a way to define how holos should build various kinds
-// of individual components, not a whole platform though.  After launch,
-// refactor the platform building to return something else.  The result itself
-// also needs to be refactored to an interface instead of a struct.  Each kind
-// of component should implement the interface.
-func (b *Builder) buildPlatform(ctx context.Context, pf *v1alpha1.Platform) (results []*v1alpha1.Result, err error) {
-	log := logger.FromContext(ctx)
-	// TODO: Iterate over each platform component in Platform.spec.components.
-	// each component should note the cluster name and path to the holos
-	// component.
-	data, err := pf.Spec.Model.MarshalJSON()
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	if len(data) > 0 {
-		data = append(data, '\n')
-	}
-	buf := bytes.NewBuffer(data)
-	if _, err := buf.WriteTo(os.Stdout); err != nil {
-		log.ErrorContext(ctx, "could not write", "err", err)
-	}
-	return nil, errors.Wrap(fmt.Errorf("not implemeneted"))
 }
 
 func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha1.BuildPlan, path holos.InstancePath) (results []*v1alpha1.Result, err error) {

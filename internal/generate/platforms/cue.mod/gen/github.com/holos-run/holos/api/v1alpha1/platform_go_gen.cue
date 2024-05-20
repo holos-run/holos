@@ -13,8 +13,8 @@ import "google.golang.org/protobuf/types/known/structpb"
 // model, and holos components to build into one resource.
 #Platform: {
 	#TypeMeta
-	metadata?: #ObjectMeta   @go(Metadata)
-	spec?:     #PlatformSpec @go(Spec)
+	metadata: #ObjectMeta   @go(Metadata)
+	spec:     #PlatformSpec @go(Spec)
 }
 
 // PlatformSpec represents the platform build plan specification.
@@ -22,5 +22,16 @@ import "google.golang.org/protobuf/types/known/structpb"
 	// Model represents the platform model holos gets from from the
 	// holos.platform.v1alpha1.PlatformService.GetPlatform method and provides to
 	// CUE using a tag.
-	model?: structpb.#Struct @go(Model)
+	model: structpb.#Struct @go(Model)
+	components: [...#PlatformSpecComponent] @go(Components,[]PlatformSpecComponent)
+}
+
+// PlatformSpecComponent represents a component to build or render with flags to
+// pass, for example the cluster name.
+#PlatformSpecComponent: {
+	// Path is the path of the component relative to the platform root.
+	path: string @go(Path)
+
+	// Cluster is the cluster name to use when building the component.
+	cluster: string @go(Cluster)
 }

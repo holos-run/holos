@@ -1,9 +1,6 @@
 package command
 
 import (
-	"fmt"
-
-	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/version"
 	"github.com/spf13/cobra"
 )
@@ -19,9 +16,6 @@ func New(name string) *cobra.Command {
 		Args:    cobra.NoArgs,
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,
-		},
-		RunE: func(c *cobra.Command, args []string) error {
-			return errors.Wrap(fmt.Errorf("could not run %v: not implemented", c.Name()))
 		},
 		SilenceUsage:  true,
 		SilenceErrors: true,
