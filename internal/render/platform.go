@@ -22,7 +22,7 @@ func Platform(ctx context.Context, pf *v1alpha1.Platform, stderr io.Writer) erro
 		args := []string{"render", "component", "--cluster-name", component.Cluster, component.Path}
 		result, err := util.RunCmd(ctx, "holos", args...)
 		if err != nil {
-			io.Copy(stderr, result.Stderr)
+			_, _ = io.Copy(stderr, result.Stderr)
 			return errors.Wrap(fmt.Errorf("could not render component: %w", err))
 		}
 		duration := time.Since(start)

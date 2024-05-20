@@ -24,17 +24,18 @@ func (b *Builder) Platform(ctx context.Context, cfg *client.Config) (*v1alpha1.P
 		return nil, errors.Wrap(err)
 	}
 
-	// We only process the first instance, assume the render platform subcommand enforces this.
-	for idx, instance := range instances {
-		log.DebugContext(ctx, "cue: building instance", "idx", idx, "dir", instance.Dir)
-		p, err := b.runPlatform(ctx, instance)
-		if err != nil {
-			return nil, errors.Wrap(fmt.Errorf("could not build platform: %w", err))
-		}
-		return p, nil
+	if len(instances) != 1 {
+		return nil, errors.Wrap(errors.New(fmt.Sprintf("instances length %d must be exactly 1", len(instances))))
 	}
 
-	return nil, errors.Wrap(errors.New("missing platform instance"))
+	// We only process the first instance, assume the render platform subcommand enforces this.
+	instance := instances[0]
+	log.DebugContext(ctx, "cue: building instance", "dir", instance.Dir)
+	p, err := b.runPlatform(ctx, instance)
+	if err != nil {
+		return nil, errors.Wrap(fmt.Errorf("could not build platform: %w", err))
+	}
+	return p, nil
 }
 
 func (b Builder) runPlatform(ctx context.Context, instance *build.Instance) (*v1alpha1.Platform, error) {
