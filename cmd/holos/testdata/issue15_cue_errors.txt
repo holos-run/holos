@@ -3,12 +3,15 @@
 stderr 'apiObjectMap.foo.bar: cannot convert incomplete value'
 stderr '/component.cue:\d+:\d+$'
 
+-- platform.config.json --
+{}
 -- cue.mod --
 package holos
 -- component.cue --
 package holos
 
 _cluster: string @tag(cluster, string)
+_platform_config: string @tag(platform_config, string)
 
 apiVersion: "holos.run/v1alpha1"
 kind: "BuildPlan"

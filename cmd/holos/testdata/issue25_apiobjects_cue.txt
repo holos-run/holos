@@ -3,6 +3,8 @@ exec holos build .
 stdout '^kind: SecretStore$'
 stdout '# Source: CUE apiObjects.SecretStore.default'
 
+-- platform.config.json --
+{}
 -- cue.mod --
 package holos
 -- component.cue --
@@ -13,6 +15,7 @@ kind: "BuildPlan"
 spec: components: KubernetesObjectsList: [{apiObjectMap: #APIObjects.apiObjectMap}]
 
 _cluster: string @tag(cluster, string)
+_platform_config: string @tag(platform_config, string)
 
 #SecretStore: {
     kind: string

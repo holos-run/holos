@@ -2,6 +2,8 @@
 ! exec holos build .
 stderr 'Error: execution error at \(zitadel/templates/secret_zitadel-masterkey.yaml:2:4\): Either set .Values.zitadel.masterkey xor .Values.zitadel.masterkeySecretName'
 
+-- platform.config.json --
+{}
 -- cue.mod --
 package holos
 -- zitadel.cue --
@@ -12,6 +14,7 @@ kind: "BuildPlan"
 spec: components: HelmChartList: [_HelmChart]
 
 _cluster: string @tag(cluster, string)
+_platform_config: string @tag(platform_config, string)
 
 _HelmChart: {
   apiVersion: "holos.run/v1alpha1"

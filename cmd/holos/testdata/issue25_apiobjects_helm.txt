@@ -4,6 +4,8 @@ stdout '^kind: SecretStore$'
 stdout '# Source: CUE apiObjects.SecretStore.default'
 stderr 'skipping helm: no chart name specified'
 
+-- platform.config.json --
+{}
 -- cue.mod --
 package holos
 -- component.cue --
@@ -14,6 +16,7 @@ kind: "BuildPlan"
 spec: components: HelmChartList: [{apiObjectMap: #APIObjects.apiObjectMap}]
 
 _cluster: string @tag(cluster, string)
+_platform_config: string @tag(platform_config, string)
 
 #SecretStore: {
     kind: string
