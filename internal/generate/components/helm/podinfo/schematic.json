@@ -1,0 +1,10 @@
+{
+  "name": "podinfo",
+  "short": "simple helm chart example",
+  "long": "Podinfo is a tiny web application made with Go that showcases best practices of running microservices in Kubernetes.",
+  "chart": "podinfo",
+  "reponame": "podinfo",
+  "repourl": "https://stefanprodan.github.io/podinfo",
+  "version": "6.6.2",
+  "namespace": "default"
+}

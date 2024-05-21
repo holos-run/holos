@@ -2,6 +2,8 @@ package generate
 
 import (
 	"fmt"
+	"log/slog"
+	"path/filepath"
 	"strings"
 
 	"github.com/holos-run/holos/internal/cli/command"
@@ -61,12 +63,9 @@ func NewComponent() *cobra.Command {
 
 func NewHelmComponent() *cobra.Command {
 	cmd := command.New("helm")
-	cmd.Short = "generate a helm component from an embedded schematic"
+	cmd.Short = "generate a helm component from a schematic"
 
-	components := generate.HelmComponents()
-	cmd.Long = fmt.Sprintf("Embedded helm components available to generate:\n\n  %s", strings.Join(components, "\n  "))
-
-	for _, name := range components {
+	for _, name := range generate.HelmComponents() {
 		cmd.AddCommand(makeHelmCommand(name))
 	}
 
@@ -75,11 +74,9 @@ func NewHelmComponent() *cobra.Command {
 
 func NewCueComponent() *cobra.Command {
 	cmd := command.New("cue")
-	cmd.Short = "generate a cue component from an embedded schematic"
+	cmd.Short = "generate a cue component from a schematic"
 
-	components := generate.CueComponents()
-	cmd.Long = fmt.Sprintf("Embedded cue components available to generate:\n\n  %s", strings.Join(components, "\n  "))
-	for _, name := range components {
+	for _, name := range generate.CueComponents() {
 		cmd.AddCommand(makeCueCommand(name))
 	}
 	return cmd
@@ -106,11 +103,15 @@ func makeCueCommand(name string) *cobra.Command {
 
 func makeHelmCommand(name string) *cobra.Command {
 	cmd := command.New(name)
-	cmd.Short = fmt.Sprintf("generate a %s helm component from an embedded schematic", name)
+	cfg, err := generate.NewSchematic(filepath.Join("components", "helm"), name)
+	if err != nil {
+		slog.Error("could not get schematic", "err", err)
+		return nil
+	}
+	cmd.Short = cfg.Short
+	cmd.Long = cfg.Long
 	cmd.Args = cobra.NoArgs
-
-	cfg := &generate.HelmConfig{}
-	cmd.Flags().AddGoFlagSet(cfg.FlagSet(name))
+	cmd.Flags().AddGoFlagSet(cfg.FlagSet())
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()

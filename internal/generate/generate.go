@@ -41,17 +41,25 @@ func copyEmbedFS(ctx context.Context, srcFS embed.FS, srcPath, dstPath string, m
 				return errors.Wrap(err)
 			}
 			log.DebugContext(ctx, "created", "directory", dstFullPath)
-		} else {
-			data, err := srcFS.ReadFile(path)
-			if err != nil {
-				return errors.Wrap(err)
-			}
-			buf := mapFunc(data)
-			if err := os.WriteFile(dstFullPath, buf.Bytes(), os.ModePerm); err != nil {
-				return errors.Wrap(err)
-			}
-			log.DebugContext(ctx, "wrote", "file", dstFullPath)
+			return nil
 		}
+
+		if filepath.Base(path) == "schematic.json" {
+			log.DebugContext(ctx, "skipped", "file", dstFullPath)
+			return nil
+		}
+
+		data, err := srcFS.ReadFile(path)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		buf := mapFunc(data)
+		if err := os.WriteFile(dstFullPath, buf.Bytes(), os.ModePerm); err != nil {
+			return errors.Wrap(err)
+		}
+
+		log.DebugContext(ctx, "wrote", "file", dstFullPath)
 		return nil
 	})
 }

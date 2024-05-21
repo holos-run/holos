@@ -1,0 +1,8 @@
+{
+  "name": "podinfo-oci",
+  "short": "oci helm chart example",
+  "long": "Podinfo is a tiny web application made with Go that showcases best practices of running microservices in Kubernetes.",
+  "chart": "oci://ghcr.io/stefanprodan/charts/podinfo",
+  "version": "6.6.2",
+  "namespace": "default"
+}

@@ -11,10 +11,5 @@ let Chart = {
 	Repo: name: "{{ .RepoName }}"
 	Repo: url:  "{{ .RepoURL }}"
 
-	Values: {
-		installCRDs: true
-		startupapicheck: enabled: false
-		// Must not use kube-system on gke autopilot.  GKE Warden blocks access.
-		global: leaderElection: namespace: Namespace
-	}
+	Values: {}
 }

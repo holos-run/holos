@@ -1,0 +1,10 @@
+{
+  "name": "cert-manager",
+  "short": "cloud native certificate management",
+  "long": "Automatically provision and manage TLS certificates in Kubernetes",
+  "chart": "cert-manager",
+  "version": "1.14.5",
+  "namespace": "cert-manager",
+  "reponame": "jetstack",
+  "repourl": "https://charts.jetstack.io"
+}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"encoding/json"
 	"flag"
 	"io/fs"
 	"log/slog"
@@ -20,6 +21,65 @@ var components embed.FS
 
 // componentsRoot is the root path to copy component cue code from.
 const componentsRoot = "components"
+
+func NewSchematic(root string, name string) (*Schematic, error) {
+	data, err := components.ReadFile(filepath.Join(root, name, "schematic.json"))
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	schematic := Schematic{Name: name}
+	if err := json.Unmarshal(data, &schematic); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return &schematic, nil
+}
+
+// Schematic represents the flags and command metadata stored in the
+// schematic.yaml file along side each schematic.
+type Schematic struct {
+	// Name represents the name of the resource the schematic generates.
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+
+	Short string `json:"short,omitempty" yaml:"short,omitempty"`
+	Long  string `json:"long,omitempty" yaml:"long,omitempty"`
+
+	Chart     *string `json:"chart,omitempty" yaml:"chart,omitempty"`
+	Version   *string `json:"version,omitempty" yaml:"version,omitempty"`
+	Namespace *string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+
+	RepoName *string `json:"reponame,omitempty" yaml:"reponame,omitempty"`
+	RepoURL  *string `json:"repourl,omitempty" yaml:"repourl,omitempty"`
+
+	flagSet *flag.FlagSet
+}
+
+func (s *Schematic) FlagSet() *flag.FlagSet {
+	if s == nil {
+		return nil
+	}
+	if s.flagSet != nil {
+		return s.flagSet
+	}
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.StringVar(&s.Name, "name", s.Name, "component name")
+	if s.Chart != nil {
+		fs.StringVar(s.Chart, "chart", *s.Chart, "chart name")
+	}
+	if s.Version != nil {
+		fs.StringVar(s.Version, "component-version", *s.Version, "component version")
+	}
+	if s.Namespace != nil {
+		fs.StringVar(s.Namespace, "namespace", *s.Namespace, "namespace")
+	}
+	if s.RepoName != nil {
+		fs.StringVar(s.RepoName, "repo-name", *s.RepoName, "chart repository name")
+	}
+	if s.RepoURL != nil {
+		fs.StringVar(s.RepoURL, "repo-url", *s.RepoURL, "chart repository url")
+	}
+	s.flagSet = fs
+	return fs
+}
 
 // CueConfig represents the config values passed to cue go templates.
 type CueConfig struct {
@@ -125,10 +185,10 @@ func GenerateCueComponent(ctx context.Context, name string, cfg *CueConfig) erro
 
 // GenerateHelmComponent writes the cue code for a component to the local working
 // directory.
-func GenerateHelmComponent(ctx context.Context, name string, cfg *HelmConfig) error {
+func GenerateHelmComponent(ctx context.Context, name string, cfg *Schematic) error {
 	path := filepath.Join(componentsRoot, "helm", name)
-	dstPath := filepath.Join(getCwd(ctx), cfg.ComponentName)
-	log := logger.FromContext(ctx).With("name", cfg.ComponentName, "path", dstPath)
+	dstPath := filepath.Join(getCwd(ctx), cfg.Name)
+	log := logger.FromContext(ctx).With("name", cfg.Name, "path", dstPath)
 	log.DebugContext(ctx, "mkdir")
 	if err := os.MkdirAll(dstPath, os.ModePerm); err != nil {
 		return errors.Wrap(err)
