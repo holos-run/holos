@@ -1,8 +1,5 @@
 package holos
 
-// Produce a helm chart build plan.
-(#Helm & Chart).Output
-
 let Chart = {
 	Name:      "{{ .Name }}"
 	Version:   "{{ .Version }}"
@@ -18,3 +15,6 @@ let Chart = {
 		global: leaderElection: namespace: Namespace
 	}
 }
+
+// Produce a helm chart build plan.
+(#Helm & Chart).Output
