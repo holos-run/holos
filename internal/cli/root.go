@@ -36,7 +36,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     "holos",
 		Short:   "holos manages a holistic integrated software development platform",
-		Version: version.Version,
+		Version: version.GetVersion(),
 		Args:    cobra.NoArgs,
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true, // Don't complete the complete subcommand itself

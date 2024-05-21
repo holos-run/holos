@@ -16,10 +16,12 @@ $( shell mkdir -p bin)
 export PATH := $(PWD)/internal/frontend/holos/node_modules/.bin:$(PATH)
 
 GIT_COMMIT=$(shell git rev-parse HEAD)
+GIT_SUFFIX=$(shell test -n "`git status --porcelain`" && echo "-dirty" || echo "")
+GIT_DETAIL=$(shell git describe --tags HEAD)
 GIT_TREE_STATE=$(shell test -n "`git status --porcelain`" && echo "dirty" || echo "clean")
 BUILD_DATE=$(shell date -Iseconds)
 
-LD_FLAGS="-w -X ${ORG_PATH}/${PROJ}/version.GitCommit=${GIT_COMMIT} -X ${ORG_PATH}/${PROJ}/version.GitTreeState=${GIT_TREE_STATE} -X ${ORG_PATH}/${PROJ}/version.BuildDate=${BUILD_DATE}"
+LD_FLAGS="-w -X ${ORG_PATH}/${PROJ}/version.GitDescribe=${GIT_DETAIL}${GIT_SUFFIX} -X ${ORG_PATH}/${PROJ}/version.GitCommit=${GIT_COMMIT} -X ${ORG_PATH}/${PROJ}/version.GitTreeState=${GIT_TREE_STATE} -X ${ORG_PATH}/${PROJ}/version.BuildDate=${BUILD_DATE}"
 
 .PHONY: default
 default: test

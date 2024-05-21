@@ -19,6 +19,9 @@ var Patch string
 // Version of this module for example "0.70.0"
 var Version = strings.ReplaceAll(Major+"."+Minor+"."+Patch, "\n", "")
 
+// GitDescribe is intended as the output of git describe --tags plus DIRTY if dirty.
+var GitDescribe string
+
 // GitCommit defined dynamically by the Makefile
 var GitCommit string
 var GitTreeState string
@@ -67,4 +70,11 @@ func NewVersionBrief() VersionBrief {
 		GitCommit:    GitCommit,
 		GitTreeState: GitTreeState,
 	}
+}
+
+func GetVersion() string {
+	if GitDescribe != "" {
+		return strings.Replace(GitDescribe, "v", "", 1)
+	}
+	return Version
 }
