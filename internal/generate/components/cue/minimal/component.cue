@@ -1,6 +1,7 @@
 package holos
 
 import v1 "github.com/holos-run/holos/api/v1alpha1"
+
 import "encoding/yaml"
 
 let ComponentName = "{{ .ComponentName }}"
@@ -16,7 +17,7 @@ v1.#BuildPlan & {
 
 // OBJECTS represents the kubernetes api objects to manage.
 let OBJECTS = v1.#APIObjects & {
-  // Add Kubernetes API Objects to manage here.
+	// Add Kubernetes API Objects to manage here.
 	apiObjects: ConfigMap: "\(ComponentName)": {
 		metadata: {
 			name:      ComponentName

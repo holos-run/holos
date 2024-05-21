@@ -140,7 +140,7 @@ let FormBuilder = v1.#FormBuilder & {
 					required:    true
 				}
 				validation: messages: {
-					pattern: "It must be \(props.minLength) to \(props.maxLength) lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
+					pattern:   "It must be \(props.minLength) to \(props.maxLength) lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
 					minLength: "Must be at least \(props.minLength) characters."
 					maxLength: "Must be at most \(props.maxLength) characters."
 				}

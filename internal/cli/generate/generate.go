@@ -41,6 +41,7 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 				return errors.Wrap(err)
 			}
 		}
+
 		return nil
 	}
 
@@ -53,6 +54,21 @@ func NewComponent() *cobra.Command {
 	cmd.Short = "generate a component from an embedded schematic"
 
 	cmd.AddCommand(NewCueComponent())
+	cmd.AddCommand(NewHelmComponent())
+
+	return cmd
+}
+
+func NewHelmComponent() *cobra.Command {
+	cmd := command.New("helm")
+	cmd.Short = "generate a helm component from an embedded schematic"
+
+	components := generate.HelmComponents()
+	cmd.Long = fmt.Sprintf("Embedded helm components available to generate:\n\n  %s", strings.Join(components, "\n  "))
+
+	for _, name := range components {
+		cmd.AddCommand(makeHelmCommand(name))
+	}
 
 	return cmd
 }
@@ -80,6 +96,25 @@ func makeCueCommand(name string) *cobra.Command {
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
 		if err := generate.GenerateCueComponent(ctx, name, cfg); err != nil {
+			return errors.Wrap(err)
+		}
+		return nil
+	}
+
+	return cmd
+}
+
+func makeHelmCommand(name string) *cobra.Command {
+	cmd := command.New(name)
+	cmd.Short = fmt.Sprintf("generate a %s helm component from an embedded schematic", name)
+	cmd.Args = cobra.NoArgs
+
+	cfg := &generate.HelmConfig{}
+	cmd.Flags().AddGoFlagSet(cfg.FlagSet(name))
+
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Root().Context()
+		if err := generate.GenerateHelmComponent(ctx, name, cfg); err != nil {
 			return errors.Wrap(err)
 		}
 		return nil

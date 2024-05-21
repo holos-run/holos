@@ -3,11 +3,12 @@ package holos
 import "encoding/json"
 
 import v1 "github.com/holos-run/holos/api/v1alpha1"
+
 import dto "github.com/holos-run/holos/service/gen/holos/object/v1alpha1:object"
 
 // _PlatformConfig represents all of the data passed from holos to cue.
 // Intended to carry the platform model and project models.
-_PlatformConfig: dto.#PlatformConfig & json.Unmarshal(_PlatformConfigJSON)
+_PlatformConfig:     dto.#PlatformConfig & json.Unmarshal(_PlatformConfigJSON)
 _PlatformConfigJSON: string | *"{}" @tag(platform_config, type=string)
 
 // _Platform provides a platform resource to the holos cli for rendering.  The
@@ -16,7 +17,9 @@ _PlatformConfigJSON: string | *"{}" @tag(platform_config, type=string)
 // resource itself is output once when rendering the entire platform, see the
 // platform/ subdirectory.
 _Platform: v1.#Platform & {
-	metadata: name: string | *"bare" @tag(platform_name, type=string)
+	metadata: {
+		name: string | *"bare" @tag(platform_name, type=string)
+	}
 
 	// spec is the platform specification
 	spec: {
@@ -28,7 +31,7 @@ _Platform: v1.#Platform & {
 		_components: {
 			for WorkloadCluster in _Clusters.Workload {
 				"\(WorkloadCluster)-configmap": {
-					path: "components/configmap"
+					path:    "components/configmap"
 					cluster: WorkloadCluster
 				}
 			}

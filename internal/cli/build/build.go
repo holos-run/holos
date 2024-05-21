@@ -10,6 +10,7 @@ import (
 	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
+	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -17,6 +18,7 @@ import (
 func makeBuildRunFunc(cfg *client.Config) command.RunFunc {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
+		logger.FromContext(ctx).DebugContext(ctx, "RunE", "args", args)
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.Holos().ClusterName()))
 		results, err := build.Run(ctx, cfg)
 		if err != nil {
