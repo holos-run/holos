@@ -52,7 +52,8 @@ func LoadPlatformConfig(ctx context.Context, name string) (*object.PlatformConfi
 
 // SavePlatformConfig writes pc to the platform root directory path identified by name.
 func SavePlatformConfig(ctx context.Context, name string, pc *object.PlatformConfig) (string, error) {
-	data, err := protojson.Marshal(pc)
+	encoder := protojson.MarshalOptions{Multiline: true}
+	data, err := encoder.Marshal(pc)
 	if err != nil {
 		return "", err
 	}
