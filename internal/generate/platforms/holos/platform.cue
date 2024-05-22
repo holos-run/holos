@@ -6,6 +6,9 @@ package holos
 	workload: clusters: aws1:         _
 }
 
+// Namespaces to manage.
+#Namespaces: holos: _
+
 // Platform components to manage.
 #Platform: Components: {
 	for Fleet in #Fleets {

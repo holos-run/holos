@@ -7,7 +7,7 @@ import v1 "github.com/holos-run/holos/api/v1alpha1"
 import dto "github.com/holos-run/holos/service/gen/holos/object/v1alpha1:object"
 
 // #PlatformConfig represents all of the data passed from holos to cue, used to
-// cary the platform and project models.
+// carry the platform and project models.
 #PlatformConfig:     dto.#PlatformConfig & json.Unmarshal(_PlatformConfigJSON)
 _PlatformConfigJSON: string | *"{}" @tag(platform_config, type=string)
 
@@ -31,13 +31,22 @@ _PlatformConfigJSON: string | *"{}" @tag(platform_config, type=string)
   // Components represent the components to include in the platform.
   Components: [string]: v1.#PlatformSpecComponent
 
+  // Model represents the platform model from the web app form
+  Model: #PlatformConfig.platform_model
+
   Output: v1.#Platform & {
     metadata: name: Name
 
     spec: {
       // model represents the web form values provided by the user.
-      model: #PlatformConfig.platform_model
+      model: Model
       components: [for c in Components {c}]
     }
   }
+}
+
+// #Namespaces represents all managed namespaces across all clusters in the platform.
+// Holos platforms adopt the sig-multicluster position on namespace sameness.
+#Namespaces: {
+  [Name=string]: name: Name
 }

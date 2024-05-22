@@ -1,0 +1,6 @@
+{
+  "name": "configmap",
+  "namespace": "default",
+  "short": "simple configmap example",
+  "long": "End-to-end demonstration of data flowing from the web ui to a cluster resource"
+}

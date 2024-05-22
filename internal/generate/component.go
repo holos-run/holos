@@ -81,43 +81,6 @@ func (s *Schematic) FlagSet() *flag.FlagSet {
 	return fs
 }
 
-// CueConfig represents the config values passed to cue go templates.
-type CueConfig struct {
-	ComponentName string
-	flagSet       *flag.FlagSet
-}
-
-func (c *CueConfig) FlagSet() *flag.FlagSet {
-	if c == nil {
-		return nil
-	}
-	if c.flagSet != nil {
-		return c.flagSet
-	}
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.StringVar(&c.ComponentName, "name", "example", "component name")
-	c.flagSet = fs
-	return fs
-}
-
-type HelmConfig struct {
-	ComponentName string
-	flagSet       *flag.FlagSet
-}
-
-func (c *HelmConfig) FlagSet(name string) *flag.FlagSet {
-	if c == nil {
-		return nil
-	}
-	if c.flagSet != nil {
-		return c.flagSet
-	}
-	fs := flag.NewFlagSet("", flag.ContinueOnError)
-	fs.StringVar(&c.ComponentName, "name", name, "component name")
-	c.flagSet = fs
-	return fs
-}
-
 // CueComponents returns a slice of embedded component schematics or nil if there are none.
 func CueComponents() []string {
 	entries, err := fs.ReadDir(components, filepath.Join(componentsRoot, "cue"))
@@ -163,30 +126,12 @@ func makeRenderFunc[T any](log *slog.Logger, path string, cfg T) func([]byte) *b
 	}
 }
 
-// GenerateCueComponent writes the cue code for a component to the local working
+// GenerateComponent writes the cue code for a component to the local working
 // directory.
-func GenerateCueComponent(ctx context.Context, name string, cfg *CueConfig) error {
-	path := filepath.Join(componentsRoot, "cue", name)
-	dstPath := filepath.Join(getCwd(ctx), cfg.ComponentName)
-	log := logger.FromContext(ctx).With("name", cfg.ComponentName, "path", dstPath)
-	log.DebugContext(ctx, "mkdir")
-	if err := os.MkdirAll(dstPath, os.ModePerm); err != nil {
-		return errors.Wrap(err)
-	}
-
-	mapper := makeRenderFunc(log, path, cfg)
-	if err := copyEmbedFS(ctx, components, path, dstPath, mapper); err != nil {
-		return errors.Wrap(err)
-	}
-
-	log.InfoContext(ctx, "generated component")
-	return nil
-}
-
-// GenerateHelmComponent writes the cue code for a component to the local working
-// directory.
-func GenerateHelmComponent(ctx context.Context, name string, cfg *Schematic) error {
-	path := filepath.Join(componentsRoot, "helm", name)
+func GenerateComponent(ctx context.Context, kind string, name string, cfg *Schematic) error {
+	// use name from args to build the source path
+	path := filepath.Join(componentsRoot, kind, name)
+	// use cfg.Name from flags to build the destination path
 	dstPath := filepath.Join(getCwd(ctx), cfg.Name)
 	log := logger.FromContext(ctx).With("name", cfg.Name, "path", dstPath)
 	log.DebugContext(ctx, "mkdir")

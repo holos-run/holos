@@ -5,6 +5,7 @@ import v1 "github.com/holos-run/holos/api/v1alpha1"
 
 // #Helm represents a holos build plan composed of one or more helm charts.
 #Helm: {
+  // Name represents the holos component name
   Name: string
   Version: string
   Namespace: string
@@ -29,5 +30,27 @@ import v1 "github.com/holos-run/holos/api/v1alpha1"
   // output represents the build plan provided to the holos cli.
 	Output: v1.#BuildPlan & {
     spec: components: helmChartList: [Chart]
+  }
+}
+
+// #Kubernetes represents a holos build plan composed of inline kubernetes api
+// objects.
+#Kubernetes: {
+  // Name represents the holos component name
+  Name: string
+  Namespace: string
+
+  Resources: [Kind=string]: [NAME=string]: {
+    kind: Kind
+    metadata: name: string | *NAME
+  }
+
+  // output represents the build plan provided to the holos cli.
+	Output: v1.#BuildPlan & {
+    // resources is a map unlike other build plans which use a list.
+    spec: components: resources: "\(Name)": {
+      metadata: name: Name
+      apiObjectMap: (v1.#APIObjects & { apiObjects: Resources }).apiObjectMap
+    }
   }
 }

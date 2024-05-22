@@ -1,0 +1,6 @@
+{
+  "name": "namespaces",
+  "namespace": "default",
+  "short": "manage namespaces on multiple clusters",
+  "long": "Manage namespaces across all clusters in the platform following sig-multicluster namespace sameness position."
+}

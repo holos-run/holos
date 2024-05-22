@@ -66,7 +66,7 @@ func NewHelmComponent() *cobra.Command {
 	cmd.Short = "generate a helm component from a schematic"
 
 	for _, name := range generate.HelmComponents() {
-		cmd.AddCommand(makeHelmCommand(name))
+		cmd.AddCommand(makeSchematicCommand("helm", name))
 	}
 
 	return cmd
@@ -77,33 +77,14 @@ func NewCueComponent() *cobra.Command {
 	cmd.Short = "generate a cue component from a schematic"
 
 	for _, name := range generate.CueComponents() {
-		cmd.AddCommand(makeCueCommand(name))
+		cmd.AddCommand(makeSchematicCommand("cue", name))
 	}
 	return cmd
 }
 
-func makeCueCommand(name string) *cobra.Command {
+func makeSchematicCommand(kind, name string) *cobra.Command {
 	cmd := command.New(name)
-	cmd.Short = fmt.Sprintf("generate a %s cue component from an embedded schematic", name)
-	cmd.Args = cobra.NoArgs
-
-	cfg := &generate.CueConfig{}
-	cmd.Flags().AddGoFlagSet(cfg.FlagSet())
-
-	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		ctx := cmd.Root().Context()
-		if err := generate.GenerateCueComponent(ctx, name, cfg); err != nil {
-			return errors.Wrap(err)
-		}
-		return nil
-	}
-
-	return cmd
-}
-
-func makeHelmCommand(name string) *cobra.Command {
-	cmd := command.New(name)
-	cfg, err := generate.NewSchematic(filepath.Join("components", "helm"), name)
+	cfg, err := generate.NewSchematic(filepath.Join("components", kind), name)
 	if err != nil {
 		slog.Error("could not get schematic", "err", err)
 		return nil
@@ -115,7 +96,7 @@ func makeHelmCommand(name string) *cobra.Command {
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
-		if err := generate.GenerateHelmComponent(ctx, name, cfg); err != nil {
+		if err := generate.GenerateComponent(ctx, kind, name, cfg); err != nil {
 			return errors.Wrap(err)
 		}
 		return nil

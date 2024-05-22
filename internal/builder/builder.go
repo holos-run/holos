@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"cuelang.org/go/cue/build"
 	"cuelang.org/go/cue/cuecontext"
@@ -91,7 +92,18 @@ func (b *Builder) Instances(ctx context.Context, cfg *client.Config) ([]*build.I
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
+
+	// Refer to https://github.com/cue-lang/cue/blob/v0.7.0/cmd/cue/cmd/common.go#L429
 	cueConfig.Tags = append(cueConfig.Tags, "platform_config="+string(data))
+	if b.Cluster() != "" {
+		cueConfig.Tags = append(cueConfig.Tags, "cluster="+b.Cluster())
+	}
+	log.DebugContext(ctx, fmt.Sprintf("cue: tags %v", cueConfig.Tags))
+
+	prefix := []string{"cue", "export", "--out", "yaml"}
+	for _, tag := range cueConfig.Tags {
+		prefix = append(prefix, "-t", fmt.Sprintf("'%s'", tag))
+	}
 
 	// Make args relative to the module directory
 	args := make([]string, len(b.cfg.args))
@@ -106,15 +118,12 @@ func (b *Builder) Instances(ctx context.Context, cfg *client.Config) ([]*build.I
 		}
 		relPath = "./" + relPath
 		args[idx] = relPath
-		equiv := fmt.Sprintf("cue export --out yaml -t cluster=%v %v", b.Cluster(), relPath)
-		log.Debug("cue: equivalent command: " + equiv)
-	}
 
-	// Refer to https://github.com/cue-lang/cue/blob/v0.7.0/cmd/cue/cmd/common.go#L429
-	if b.Cluster() != "" {
-		cueConfig.Tags = append(cueConfig.Tags, "cluster="+b.Cluster())
+		equiv := make([]string, len(prefix), 1+len(prefix))
+		copy(equiv, prefix)
+		equiv = append(equiv, relPath)
+		log.Debug(strings.Join(equiv, " "), "comment", "cue equivalent command")
 	}
-	log.DebugContext(ctx, fmt.Sprintf("cue: tags %v", cueConfig.Tags))
 
 	return load.Instances(args, &cueConfig), nil
 }
