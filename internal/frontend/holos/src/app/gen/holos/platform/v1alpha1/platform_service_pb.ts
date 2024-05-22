@@ -13,9 +13,14 @@ import { Form } from "../../object/v1alpha1/object_pb.js";
  */
 export class CreatePlatformRequest extends Message<CreatePlatformRequest> {
   /**
-   * @generated from field: holos.platform.v1alpha1.Platform platform = 1;
+   * @generated from field: string org_id = 1;
    */
-  platform?: Platform;
+  orgId = "";
+
+  /**
+   * @generated from field: holos.platform.v1alpha1.PlatformMutation create = 2;
+   */
+  create?: PlatformMutation;
 
   constructor(data?: PartialMessage<CreatePlatformRequest>) {
     super();
@@ -25,7 +30,8 @@ export class CreatePlatformRequest extends Message<CreatePlatformRequest> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "holos.platform.v1alpha1.CreatePlatformRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "platform", kind: "message", T: Platform },
+    { no: 1, name: "org_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "create", kind: "message", T: PlatformMutation },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreatePlatformRequest {
@@ -169,19 +175,26 @@ export class GetPlatformResponse extends Message<GetPlatformResponse> {
  */
 export class UpdatePlatformRequest extends Message<UpdatePlatformRequest> {
   /**
+   * Platform UUID to update.
+   *
+   * @generated from field: string platform_id = 1;
+   */
+  platformId = "";
+
+  /**
    * Update operations to perform.  Fields are set to the provided value if
    * selected by the mask.  Absent fields are cleared if they are selected by
    * the mask.
    *
-   * @generated from field: holos.platform.v1alpha1.UpdatePlatformOperation update = 1;
+   * @generated from field: holos.platform.v1alpha1.PlatformMutation update = 2;
    */
-  update?: UpdatePlatformOperation;
+  update?: PlatformMutation;
 
   /**
    * FieldMask represents the mutation operations to perform.  Marked optional
    * for the nil guard check.  Required.
    *
-   * @generated from field: optional google.protobuf.FieldMask update_mask = 2;
+   * @generated from field: optional google.protobuf.FieldMask update_mask = 3;
    */
   updateMask?: FieldMask;
 
@@ -193,8 +206,9 @@ export class UpdatePlatformRequest extends Message<UpdatePlatformRequest> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "holos.platform.v1alpha1.UpdatePlatformRequest";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "update", kind: "message", T: UpdatePlatformOperation },
-    { no: 2, name: "update_mask", kind: "message", T: FieldMask, opt: true },
+    { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "update", kind: "message", T: PlatformMutation },
+    { no: 3, name: "update_mask", kind: "message", T: FieldMask, opt: true },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdatePlatformRequest {
@@ -334,16 +348,11 @@ export class ListPlatformsResponse extends Message<ListPlatformsResponse> {
 }
 
 /**
- * @generated from message holos.platform.v1alpha1.UpdatePlatformOperation
+ * PlatformMutation represents the fields to create or update.
+ *
+ * @generated from message holos.platform.v1alpha1.PlatformMutation
  */
-export class UpdatePlatformOperation extends Message<UpdatePlatformOperation> {
-  /**
-   * Platform UUID to update.
-   *
-   * @generated from field: string platform_id = 1;
-   */
-  platformId = "";
-
+export class PlatformMutation extends Message<PlatformMutation> {
   /**
    * Update the platform name.
    *
@@ -372,35 +381,34 @@ export class UpdatePlatformOperation extends Message<UpdatePlatformOperation> {
    */
   form?: Form;
 
-  constructor(data?: PartialMessage<UpdatePlatformOperation>) {
+  constructor(data?: PartialMessage<PlatformMutation>) {
     super();
     proto3.util.initPartial(data, this);
   }
 
   static readonly runtime: typeof proto3 = proto3;
-  static readonly typeName = "holos.platform.v1alpha1.UpdatePlatformOperation";
+  static readonly typeName = "holos.platform.v1alpha1.PlatformMutation";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
     { no: 3, name: "display_name", kind: "scalar", T: 9 /* ScalarType.STRING */, opt: true },
     { no: 4, name: "model", kind: "message", T: Struct, opt: true },
     { no: 5, name: "form", kind: "message", T: Form, opt: true },
   ]);
 
-  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): UpdatePlatformOperation {
-    return new UpdatePlatformOperation().fromBinary(bytes, options);
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformMutation {
+    return new PlatformMutation().fromBinary(bytes, options);
   }
 
-  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): UpdatePlatformOperation {
-    return new UpdatePlatformOperation().fromJson(jsonValue, options);
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): PlatformMutation {
+    return new PlatformMutation().fromJson(jsonValue, options);
   }
 
-  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): UpdatePlatformOperation {
-    return new UpdatePlatformOperation().fromJsonString(jsonString, options);
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): PlatformMutation {
+    return new PlatformMutation().fromJsonString(jsonString, options);
   }
 
-  static equals(a: UpdatePlatformOperation | PlainMessage<UpdatePlatformOperation> | undefined, b: UpdatePlatformOperation | PlainMessage<UpdatePlatformOperation> | undefined): boolean {
-    return proto3.util.equals(UpdatePlatformOperation, a, b);
+  static equals(a: PlatformMutation | PlainMessage<PlatformMutation> | undefined, b: PlatformMutation | PlainMessage<PlatformMutation> | undefined): boolean {
+    return proto3.util.equals(PlatformMutation, a, b);
   }
 }
 

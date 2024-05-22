@@ -3,6 +3,7 @@ package client
 
 import (
 	"context"
+	"flag"
 	"time"
 
 	"connectrpc.com/connect"
@@ -17,6 +18,26 @@ import (
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
 	"google.golang.org/protobuf/types/known/structpb"
 )
+
+type PlatformMutation struct {
+	Name        string
+	DisplayName string
+	flagSet     *flag.FlagSet
+}
+
+func (pm *PlatformMutation) FlagSet() *flag.FlagSet {
+	if pm == nil {
+		return nil
+	}
+	if pm.flagSet != nil {
+		return pm.flagSet
+	}
+	fs := flag.NewFlagSet("", flag.ContinueOnError)
+	fs.StringVar(&pm.Name, "name", "example", "platform name")
+	fs.StringVar(&pm.DisplayName, "display-name", "Example Platform", "platform display name")
+	pm.flagSet = fs
+	return fs
+}
 
 func New(cfg *Config) *Client {
 	t := token.NewClient(cfg.Token())
@@ -57,7 +78,8 @@ func (c *Client) Platforms(ctx context.Context, orgID string) ([]*platform.Platf
 func (c *Client) UpdateForm(ctx context.Context, platformID string, form *object.Form) error {
 	start := time.Now()
 	req := &platform.UpdatePlatformRequest{
-		Update:     &platform.UpdatePlatformOperation{PlatformId: platformID, Form: form},
+		PlatformId: platformID,
+		Update:     &platform.PlatformMutation{Form: form},
 		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"form"}},
 	}
 	_, err := c.pltSvc.UpdatePlatform(ctx, connect.NewRequest(req))
@@ -83,4 +105,23 @@ func (c *Client) PlatformModel(ctx context.Context, platformID string) (*structp
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "get platform", "platform_id", platformID, "duration", time.Since(start))
 	return pf.Msg.GetPlatform().GetSpec().GetModel(), nil
+}
+
+func (c *Client) CreatePlatform(ctx context.Context, pm PlatformMutation) (*platform.Platform, error) {
+	log := logger.FromContext(ctx).With("platform", pm.Name)
+	start := time.Now()
+	req := &platform.CreatePlatformRequest{
+		OrgId: c.cfg.context.OrgID,
+		Create: &platform.PlatformMutation{
+			Name:        &pm.Name,
+			DisplayName: &pm.DisplayName,
+		},
+	}
+	pf, err := c.pltSvc.CreatePlatform(ctx, connect.NewRequest(req))
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	log = log.With("platform_id", pf.Msg.GetPlatform().GetId())
+	log.DebugContext(ctx, "create platform", "duration", time.Since(start))
+	return pf.Msg.GetPlatform(), nil
 }

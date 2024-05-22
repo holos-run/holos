@@ -5,7 +5,7 @@ import { ObservableClient } from '../../connect/observable-client';
 import { Organization } from '../gen/holos/organization/v1alpha1/organization_pb';
 import { Platform } from '../gen/holos/platform/v1alpha1/platform_pb';
 import { PlatformService as ConnectPlatformService } from '../gen/holos/platform/v1alpha1/platform_service_connect';
-import { GetPlatformRequest, ListPlatformsRequest, UpdatePlatformOperation, UpdatePlatformRequest } from '../gen/holos/platform/v1alpha1/platform_service_pb';
+import { GetPlatformRequest, ListPlatformsRequest, PlatformMutation, UpdatePlatformRequest } from '../gen/holos/platform/v1alpha1/platform_service_pb';
 
 @Injectable({
   providedIn: 'root'
@@ -26,9 +26,9 @@ export class PlatformService {
   }
 
   updateModel(platformId: string, model: JsonValue): Observable<Platform | undefined> {
-    const update = new UpdatePlatformOperation({ platformId: platformId, model: Struct.fromJson(model) })
+    const update = new PlatformMutation({ model: Struct.fromJson(model) })
     const updateMask = new FieldMask({ paths: ["model"] })
-    const req = new UpdatePlatformRequest({ update: update, updateMask: updateMask })
+    const req = new UpdatePlatformRequest({ platformId: platformId, update: update, updateMask: updateMask })
     return this.client.updatePlatform(req).pipe(
       switchMap(resp => { return of(resp.platform) })
     )

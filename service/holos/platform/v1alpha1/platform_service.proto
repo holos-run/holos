@@ -10,7 +10,8 @@ import "holos/object/v1alpha1/object.proto";
 import "holos/platform/v1alpha1/platform.proto";
 
 message CreatePlatformRequest {
-  Platform platform = 1;
+  string org_id = 1 [(buf.validate.field).string.uuid = true];
+  PlatformMutation create = 2;
 }
 
 message CreatePlatformResponse {
@@ -28,13 +29,15 @@ message GetPlatformResponse {
 }
 
 message UpdatePlatformRequest {
+  // Platform UUID to update.
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
   // Update operations to perform.  Fields are set to the provided value if
   // selected by the mask.  Absent fields are cleared if they are selected by
   // the mask.
-  UpdatePlatformOperation update = 1;
+  PlatformMutation update = 2;
   // FieldMask represents the mutation operations to perform.  Marked optional
   // for the nil guard check.  Required.
-  optional google.protobuf.FieldMask update_mask = 2;
+  optional google.protobuf.FieldMask update_mask = 3;
 }
 
 message UpdatePlatformResponse {
@@ -51,9 +54,8 @@ message ListPlatformsResponse {
   repeated Platform platforms = 1;
 }
 
-message UpdatePlatformOperation {
-  // Platform UUID to update.
-  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+// PlatformMutation represents the fields to create or update.
+message PlatformMutation {
   // Update the platform name.
   optional string name = 2 [ 
     (buf.validate.field).string = {

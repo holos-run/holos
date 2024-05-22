@@ -34,20 +34,22 @@ type PlatformHandler struct {
 
 // CreatePlatform implements the PlatformService CreatePlatform rpc method.
 func (h *PlatformHandler) CreatePlatform(ctx context.Context, req *connect.Request[platform.CreatePlatformRequest]) (*connect.Response[platform.CreatePlatformResponse], error) {
-	if req == nil || req.Msg == nil || req.Msg.Platform == nil || req.Msg.Platform.Owner == nil {
-		return nil, errors.Wrap(connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("missing platform owner org")))
-	}
-	orgID := req.Msg.Platform.Owner.GetOrgId()
+	orgID := req.Msg.GetOrgId()
 	dbUser, dbOrg, err := getAuthnUsersOrg(ctx, orgID, h.db)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
+	m := req.Msg.GetCreate()
+
 	builder := h.db.Platform.Create().
 		SetOrgID(dbOrg.ID).
 		SetCreatorID(dbUser.ID).
-		SetName(req.Msg.Platform.Name).
-		SetDisplayName(req.Msg.Platform.GetDisplayName())
+		SetUpdatedByID(dbUser.ID).
+		SetName(m.GetName()).
+		SetDisplayName(m.GetDisplayName()).
+		SetForm(&storage.Form{FieldConfigs: m.GetForm().GetFieldConfigs()}).
+		SetModel(&storage.Model{Model: m.GetModel()})
 	entPlatform, err := builder.Save(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
@@ -157,22 +159,22 @@ func (h *PlatformHandler) UpdatePlatform(
 		return nil, errors.Wrap(err)
 	}
 
-	ops := make(map[string]interface{})
-	if err := fieldmask_utils.StructToMap(mask, req.Msg.GetUpdate(), ops, fieldmask_utils.WithMapVisitor(newVisitor(ctx))); err != nil {
+	mutations := make(map[string]interface{})
+	if err := fieldmask_utils.StructToMap(mask, req.Msg.GetUpdate(), mutations, fieldmask_utils.WithMapVisitor(newVisitor(ctx))); err != nil {
 		return nil, errors.Wrap(err)
 	}
 
-	p, err := h.getPlatform(ctx, req.Msg.GetUpdate().GetPlatformId(), authnID)
+	if len(mutations) == 0 {
+		err = errors.New("nothing to do: provide fields to update in the mask")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	p, err := h.getPlatform(ctx, req.Msg.GetPlatformId(), authnID)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
 	log := logger.FromContext(ctx).With("platform_id", p.ID.String(), "org_id", p.OrgID.String())
-
-	if len(ops) == 0 {
-		err = errors.New("nothing to do: provide fields to update in the mask")
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
-	}
 
 	editor, err := getEditor(ctx, h.db, authnID, p.OrgID.String())
 	if err != nil {
@@ -181,25 +183,28 @@ func (h *PlatformHandler) UpdatePlatform(
 
 	log = log.With("op", "update", "editor", editor.Email)
 
+	m := req.Msg.GetUpdate()
+
 	builder := p.Update()
 	builder.SetEditor(editor)
-	for field := range ops {
+
+	for field := range mutations {
 		log := log.With("field", field)
 		switch field {
 		case "Name":
-			name := req.Msg.GetUpdate().GetName()
+			name := m.GetName()
 			log.InfoContext(ctx, "update", field, name)
 			builder.SetName(name)
 		case "DisplayName":
-			name := req.Msg.GetUpdate().GetDisplayName()
+			name := m.GetDisplayName()
 			log.InfoContext(ctx, "update", field, name)
 			builder.SetDisplayName(name)
 		case "Model":
 			log.InfoContext(ctx, "update")
-			builder.SetModel(&storage.Model{Model: req.Msg.GetUpdate().GetModel()})
+			builder.SetModel(&storage.Model{Model: m.GetModel()})
 		case "Form":
 			log.InfoContext(ctx, "update")
-			builder.SetForm(&storage.Form{FieldConfigs: req.Msg.GetUpdate().GetForm().GetFieldConfigs()})
+			builder.SetForm(&storage.Form{FieldConfigs: m.GetForm().GetFieldConfigs()})
 		default:
 			err := errors.Wrap(errors.New("could not update: unknown field " + field))
 			log.ErrorContext(ctx, "could not update", "err", err)
