@@ -43,7 +43,6 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
-		log := logger.FromContext(ctx).With("cluster", cfg.ClusterName())
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
 
 		if printInstances {
@@ -67,6 +66,10 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 		// place.
 		var result Result
 		for _, result = range results {
+			log := logger.FromContext(ctx).With(
+				"cluster", cfg.ClusterName(),
+				"name", result.Name(),
+			)
 			if result.Continue() {
 				continue
 			}
@@ -76,11 +79,15 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 				return errors.Wrap(err)
 			}
 			// Kustomization
-			path = result.KustomizationFilename(cfg.WriteTo(), cfg.ClusterName())
-			if err := result.Save(ctx, path, result.KustomizationContent()); err != nil {
-				return errors.Wrap(err)
+			if result.KustomizationContent() == "" {
+				log.DebugContext(ctx, "flux kustomization: skipped "+result.Name(), "status", "ok", "action", "skipped")
+			} else {
+				path = result.KustomizationFilename(cfg.WriteTo(), cfg.ClusterName())
+				if err := result.Save(ctx, path, result.KustomizationContent()); err != nil {
+					return errors.Wrap(err)
+				}
 			}
-			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered", "name", result.Name())
+			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered")
 		}
 		return nil
 	}
