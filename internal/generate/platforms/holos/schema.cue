@@ -5,6 +5,7 @@ import "encoding/json"
 import v1 "github.com/holos-run/holos/api/v1alpha1"
 
 import dto "github.com/holos-run/holos/service/gen/holos/object/v1alpha1:object"
+import corev1 "k8s.io/api/core/v1"
 
 // _PlatformConfig represents all of the data passed from holos to cue, used to
 // carry the platform and project models.
@@ -56,5 +57,7 @@ _Platform: #Platform & {
 _Namespaces: #Namespaces
 // #Namespaces defines the shape of _Namespaces.
 #Namespaces: {
-  [Name=string]: name: Name
+  [Name=string]: corev1.#Namespace & {
+    metadata: name: Name
+  }
 }
