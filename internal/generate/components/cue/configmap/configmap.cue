@@ -10,8 +10,8 @@ let Objects = {
 		ConfigMap: {
 			example: {
 				metadata: namespace: "{{ .Namespace }}"
-				// #Platform.Model represents the web form model
-				data: platform: yaml.Marshal({model: #Platform.Model})
+				// _Platform.Model represents the web form model
+				data: platform: yaml.Marshal({model: _Platform.Model})
 			}
 		}
 	}

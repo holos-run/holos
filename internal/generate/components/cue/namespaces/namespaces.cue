@@ -7,7 +7,7 @@ let Objects = {
 	Namespace: "{{ .Namespace }}"
 
 	Resources: {
-		for ns in #Namespaces {
+		for ns in _Namespaces {
 			Namespace: "\(ns.name)": corev1.#Namespace
 		}
 	}
