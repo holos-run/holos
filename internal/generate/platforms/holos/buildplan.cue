@@ -5,7 +5,7 @@ import v1 "github.com/holos-run/holos/api/v1alpha1"
 import corev1 "k8s.io/api/core/v1"
 
 
-// #Helm represents a holos build plan composed of one or more helm charts.
+// #Helm represents a holos build plan composed of one helm chart.
 #Helm: {
   // Name represents the holos component name
   Name: string
@@ -32,6 +32,21 @@ import corev1 "k8s.io/api/core/v1"
   // output represents the build plan provided to the holos cli.
 	Output: v1.#BuildPlan & {
     spec: components: helmChartList: [Chart]
+  }
+}
+
+// #Kustomize represents a holos build plan composed of one kustomize build.
+#Kustomize: {
+  // Name represents the holos component name
+  Name: string
+
+  Kustomization: v1.#KustomizeBuild & {
+    metadata: name: string | *Name
+  }
+
+  // output represents the build plan provided to the holos cli.
+	Output: v1.#BuildPlan & {
+    spec: components: kustomizeBuildList: [Kustomization]
   }
 }
 

@@ -61,3 +61,21 @@ _Namespaces: #Namespaces
     metadata: name: Name
   }
 }
+
+
+// _Projects represents holos projects in the platform.
+_Projects: #Projects
+// #Projects defines the shape of _Projects
+#Projects: [Name=string]: #Project & {
+    metadata: name: Name
+}
+
+// #Project defines the shape of one project.
+#Project: {
+  metadata: name: string
+
+  spec: {
+    // namespaces represents the namespaces associated with this project.
+    namespaces: #Namespaces
+  }
+}

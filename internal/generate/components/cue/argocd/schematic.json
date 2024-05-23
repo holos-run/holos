@@ -1,0 +1,7 @@
+{
+  "name": "argocd",
+  "namespace": "argocd",
+  "short": "argocd kustomize",
+  "long": "Manage argocd using a kustomization.yaml build plan.",
+  "version": "2.11.2"
+}
