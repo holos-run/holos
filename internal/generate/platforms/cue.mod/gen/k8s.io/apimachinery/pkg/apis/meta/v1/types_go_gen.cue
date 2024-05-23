@@ -198,7 +198,7 @@ import (
 	// and services.
 	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels
 	// +optional
-	labels?: {[string]: string} @go(Labels,map[string]string) @protobuf(12,bytes,rep)
+	labels?: {[string]: string} @go(Labels,map[string]string) @protobuf(11,bytes,rep)
 
 	// Annotations is an unstructured key value map stored with a resource that may be
 	// set by external tools to store and retrieve arbitrary metadata. They are not
