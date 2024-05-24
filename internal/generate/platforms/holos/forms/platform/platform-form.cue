@@ -27,6 +27,7 @@ let FormBuilder = v1.#FormBuilder & {
 					pattern:   "It must be \(props.minLength) to \(props.maxLength) lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
 					minLength: "Must be at least \(props.minLength) characters"
 					maxLength: "Must be at most \(props.maxLength) characters"
+					required:  pattern
 				}
 			}
 
@@ -40,196 +41,117 @@ let FormBuilder = v1.#FormBuilder & {
 					maxLength:   100
 					required:    true
 				}
-			}
-		}
-	}
-
-	Sections: cloud: {
-		displayName: "Cloud Providers"
-		description: "Select the services that provide resources for the platform."
-
-		fieldConfigs: {
-			providers: {
-				// https://formly.dev/docs/api/ui/material/select/
-				type: "select"
-				props: {
-					label:           "Select Providers"
-					description:     "Select the cloud providers the platform builds upon."
-					multiple:        true
-					selectAllOption: "Select All"
-					options: [
-						{value: "aws", label:        "Amazon Web Services"},
-						{value: "gcp", label:        "Google Cloud Platform"},
-						{value: "azure", label:      "Microsoft Azure"},
-						{value: "cloudflare", label: "Cloudflare"},
-						{value: "github", label:     "GitHub"},
-						{value: "ois", label:        "Open Infrastructure Services"},
-						{value: "onprem", label:     "On Premises", disabled: true},
-					]
-				}
-			}
-		}
-	}
-
-	Sections: aws: {
-		displayName: "Amazon Web Services"
-		description: "Provide the information necessary for Holos to manage AWS resources to provide the platform."
-
-		expressions: hide: "!\(AWSSelected)"
-
-		fieldConfigs: {
-			primaryRoleARN: {
-				// https://formly.dev/docs/api/ui/material/input
-				type: "input"
-				props: {
-					label:       "Holos Admin Role ARN"
-					description: "Enter the AWS Role ARN Holos will use to bootstrap resources.  For example, arn:aws:iam::123456789012:role/HolosAdminAccess"
-					pattern:     "^arn:.*"
-					minLength:   4
-					required:    true
-				}
 				validation: messages: {
-					pattern: "Must be a valid ARN.  Refer to https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html"
-				}
-			}
-
-			regions: {
-				// https://formly.dev/docs/api/ui/material/select/
-				type: "select"
-				props: {
-					label:           "Select Regions"
-					description:     "Select the AWS regions this platform operates in."
-					multiple:        true
-					required:        true
-					selectAllOption: "Select All"
-					options:         AWSRegions
+					required: "Enter a display name."
 				}
 			}
 		}
 	}
 
-	Sections: gcp: {
-		displayName: "Google Cloud Platform"
-		description: "Use this form to configure platform level GCP settings."
-
-		expressions: hide: "!\(GCPSelected)"
+	Sections: eso: {
+		displayName: "Secret Store"
+		description: "Configure the platform secret store.  These values are used by the external-secrets-creds component.  Note: this information is not sufficient to read secrets.  To read secrets, the credential refresher job requires the workload clusters to be configured as workload identity providers."
 
 		fieldConfigs: {
-			regions: {
-				// https://formly.dev/docs/api/ui/material/select/
-				type: "select"
-				props: {
-					label:           "Select Regions"
-					description:     "Select the GCP regions this platform operates in."
-					multiple:        true
-					selectAllOption: "Select All"
-					// gcloud compute regions list --format=json | jq '.[] | {value: .name, label: .description}' regions.json | jq -s | cue export --out cue
-					options: GCPRegions
-				}
-			}
-
 			gcpProjectID: {
-				// https://formly.dev/docs/api/ui/material/input
 				type: "input"
 				props: {
-					label:       "Project ID"
-					description: "Enter the project id where the provisioner cluster resides."
-					pattern:     "^[a-z]([0-9a-z]|-){1,28}[0-9a-z]$"
+					label:       "GCP Project ID"
+					description: "GCP Project ID of the management cluster. \(validation.messages.required)"
+					pattern:     "^[a-z]([a-z0-9]|-){4,28}[a-z]$"
 					minLength:   6
 					maxLength:   30
 					required:    true
 				}
 				validation: messages: {
-					pattern:   "It must be \(props.minLength) to \(props.maxLength) lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited."
-					minLength: "Must be at least \(props.minLength) characters."
-					maxLength: "Must be at most \(props.maxLength) characters."
+					pattern:  "It must be 6 to 30 lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited. \(required)"
+					required: "gcloud projects list"
 				}
+
 			}
 
 			gcpProjectNumber: {
-				// https://formly.dev/docs/api/ui/material/input
 				type: "input"
 				props: {
-					label: "Project Number"
-					// note type number here
-					type:        "number"
-					description: "Enter the project number where the provisioner cluster resides."
+					label:       "GCP Project Number"
+					description: "GCP Project Number of the management cluster.  \(validation.messages.required)"
 					pattern:     "^[0-9]+$"
 					required:    true
 				}
 				validation: messages: {
-					pattern: "Must be a valid project number."
+					pattern:  "Must be a positive integer.  \(required)"
+					required: "gcloud projects list"
 				}
 			}
 
-			provisionerCABundle: {
+			gcpServiceAccount: {
 				type: "input"
 				props: {
-					label:       "Provisioner CA Bundle"
-					description: "Enter the provisioner cluster ca bundle.  kubectl config view --minify --flatten -ojsonpath='{.clusters[0].cluster.certificate-authority-data}'"
-					pattern:     "^[0-9a-zA-Z]+=*$"
+					label:       "ESO Credential Refresher Service Account"
+					placeholder: "eso-creds-refresher@my-project-id.iam.gserviceaccount.com"
+					description: "GCP Service Account email for the external secrets creds refresher job.  \(validation.messages.required)"
+					minLength:   3
+					maxLength:   250
 					required:    true
 				}
 				validation: messages: {
-					pattern: "Must be a base64 encoded pem encoded certificate bundle."
+					required: "gcloud iam service-accounts list"
 				}
 			}
 
-			provisionerURL: {
+			gkeClusterName: {
 				type: "input"
 				props: {
-					label:       "Provisioner URL"
-					description: "Enter the URL of the provisioner cluster API endpoint.  kubectl config view --minify --flatten -ojsonpath='{.clusters[0].cluster.server}'"
+					label:       "GKE Cluster Name"
+					placeholder: "management"
+					description: "GKE Cluster Name of the management cluster.  \(validation.messages.required)"
+					pattern:     "^[a-z]$|^[a-z][0-9a-z]$|^[a-z]([0-9a-z]|-){0,38}[0-9a-z]$"
+					minLength:   1
+					maxLength:   40
+					required:    true
+				}
+				validation: messages: {
+					pattern:  "Lowercase letters, numbers, and hyphens only.  Must start with a letter.  Must end with a number or letter.  \(required)"
+					required: "gcloud container clusters list"
+				}
+			}
+
+			gkeRegion: {
+				type: "select"
+				props: {
+					label:       "Select Region"
+					description: "Select the GCP region of the management cluster."
+					multiple:    false
+					options:     GCPRegions
+				}
+			}
+
+			gkeCABundle: {
+				type: "input"
+				props: {
+					label:       "Management Cluster CA Bundle"
+					description: "Enter the management cluster ca bundle.  \(validation.messages.required)"
+					pattern:     "^[0-9a-zA-Z]+=*$"
+					minLength:   1
+					required:    true
+				}
+				validation: messages: {
+					required: "kubectl config view --minify --flatten -ojsonpath='{.clusters[0].cluster.certificate-authority-data}'"
+					pattern:  "Must be a base64 encoded pem encoded certificate bundle.  \(required)"
+				}
+			}
+
+			gkeClusterURL: {
+				type: "input"
+				props: {
+					label:       "Management Cluster URL"
+					description: "Enter the URL of the management cluster API endpoint.  \(validation.messages.required)"
 					pattern:     "^https://.*$"
 					required:    true
 				}
 				validation: messages: {
-					pattern: "Must be a https:// URL."
-				}
-			}
-		}
-	}
-
-	Sections: cloudflare: {
-		displayName: "Cloudflare"
-		description: "Cloudflare is primarily used for DNS automation."
-
-		expressions: hide: "!" + CloudflareSelected
-
-		fieldConfigs: {
-			email: {
-				// https://formly.dev/docs/api/ui/material/input
-				type: "input"
-				props: {
-					label:       "Account Email"
-					description: "Enter the Cloudflare email address to manage DNS"
-					minLength:   3
-					required:    true
-				}
-			}
-		}
-	}
-
-	Sections: github: {
-		displayName: "GitHub"
-		description: "GitHub is primarily used to host Git repositories and execute Actions workflows."
-
-		expressions: hide: "!\(GitHubSelected)"
-
-		fieldConfigs: {
-			primaryOrg: {
-				// https://formly.dev/docs/api/ui/material/input
-				type: "input"
-				props: {
-					label:       "Organization"
-					description: "Enter the primary GitHub organization associed with the platform."
-					pattern:     "^(?!-)(?!.*--)([a-zA-Z0-9]|-){1,39}$"
-					minLength:   1
-					maxLength:   39
-					required:    true
-				}
-				validation: messages: {
-					pattern: "All characters must be either a hyphen or alphanumeric.  Cannot start with a hyphen.  Cannot include consecutive hyphens."
+					pattern:  "Must be a https:// URL.  \(required)"
+					required: "kubectl config view --minify --flatten -ojsonpath='{.clusters[0].cluster.server}'"
 				}
 			}
 		}
@@ -278,37 +200,3 @@ let GCPRegions = [
 	{value: "us-west3", label:                "us-west3"},
 	{value: "us-west4", label:                "us-west4"},
 ]
-
-let AWSRegions = [
-	{value: "us-east-1", label:      "N. Virginia (us-east-1)"},
-	{value: "us-east-2", label:      "Ohio (us-east-2)"},
-	{value: "us-west-1", label:      "N. California (us-west-1)"},
-	{value: "us-west-2", label:      "Oregon (us-west-2)"},
-	{value: "us-gov-west1", label:   "US GovCloud West (us-gov-west1)"},
-	{value: "us-gov-east1", label:   "US GovCloud East (us-gov-east1)"},
-	{value: "ca-central-1", label:   "Canada (ca-central-1)"},
-	{value: "eu-north-1", label:     "Stockholm (eu-north-1)"},
-	{value: "eu-west-1", label:      "Ireland (eu-west-1)"},
-	{value: "eu-west-2", label:      "London (eu-west-2)"},
-	{value: "eu-west-3", label:      "Paris (eu-west-3)"},
-	{value: "eu-central-1", label:   "Frankfurt (eu-central-1)"},
-	{value: "eu-south-1", label:     "Milan (eu-south-1)"},
-	{value: "af-south-1", label:     "Cape Town (af-south-1)"},
-	{value: "ap-northeast-1", label: "Tokyo (ap-northeast-1)"},
-	{value: "ap-northeast-2", label: "Seoul (ap-northeast-2)"},
-	{value: "ap-northeast-3", label: "Osaka (ap-northeast-3)"},
-	{value: "ap-southeast-1", label: "Singapore (ap-southeast-1)"},
-	{value: "ap-southeast-2", label: "Sydney (ap-southeast-2)"},
-	{value: "ap-east-1", label:      "Hong Kong (ap-east-1)"},
-	{value: "ap-south-1", label:     "Mumbai (ap-south-1)"},
-	{value: "me-south-1", label:     "Bahrain (me-south-1)"},
-	{value: "sa-east-1", label:      "São Paulo (sa-east-1)"},
-	{value: "cn-north-1", label:     "Bejing (cn-north-1)"},
-	{value: "cn-northwest-1", label: "Ningxia (cn-northwest-1)"},
-	{value: "ap-southeast-3", label: "Jakarta (ap-southeast-3)"},
-]
-
-let AWSSelected = "formState.model.cloud?.providers?.includes(\"aws\")"
-let GCPSelected = "formState.model.cloud?.providers?.includes(\"gcp\")"
-let GitHubSelected = "formState.model.cloud?.providers?.includes(\"github\")"
-let CloudflareSelected = "formState.model.cloud?.providers?.includes(\"cloudflare\")"
