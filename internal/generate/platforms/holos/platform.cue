@@ -41,16 +41,20 @@ _Platform: Components: {
 
 	// Components to manage on workload clusters.
 	for Cluster in _Fleets.workload.clusters {
-		"\(Cluster.name)/argocd": {
-			path:    "components/argocd"
-			cluster: Cluster.name
-		}
 		"\(Cluster.name)/external-secrets": {
 			path:    "components/external-secrets"
 			cluster: Cluster.name
 		}
 		"\(Cluster.name)/eso-creds-refresher": {
 			path:    "components/eso-creds-refresher"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/secretstores": {
+			path:    "components/secretstores"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/argocd": {
+			path:    "components/argocd"
 			cluster: Cluster.name
 		}
 	}
