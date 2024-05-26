@@ -156,6 +156,30 @@ let FormBuilder = v1.#FormBuilder & {
 			}
 		}
 	}
+
+	Sections: letsencrypt: {
+		displayName: "Let's Encrypt"
+		description: "Configure Let's Encrypt account settings to provision TLS certificates."
+
+		fieldConfigs: {
+			// platform.spec.config.user.sections.org.fields.name
+			email: {
+				type: "input"
+				props: {
+					label: "Account Email"
+					// placeholder: "example" placeholder cannot be used with validation?
+					description: "Let's Encrypt Account Email, e.g. 'platform@example.com'"
+					minLength:   3
+					maxLength:   100
+					required:    true
+				}
+				validation: messages: {
+					minLength: "Must be at least \(props.minLength) characters"
+					maxLength: "Must be at most \(props.maxLength) characters"
+				}
+			}
+		}
+	}
 }
 
 let GCPRegions = [

@@ -44,6 +44,10 @@ _Platform: Components: {
 			path:    "components/eso-creds-manager"
 			cluster: Cluster.name
 		}
+		"\(Cluster.name)/cert-letsencrypt": {
+			path:    "components/cert-letsencrypt"
+			cluster: Cluster.name
+		}
 	}
 
 	// Components to manage on workload clusters.
