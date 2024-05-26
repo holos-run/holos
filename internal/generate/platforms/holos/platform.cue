@@ -15,9 +15,12 @@ for project in _Projects {
 }
 
 // Projects to manage.
-_Projects: holos: spec: namespaces: "holos-system":                  _
-_Projects: argocd: spec: namespaces: argocd:                         _
-_Projects: "external-secrets": spec: namespaces: "external-secrets": _
+_Projects: {
+	holos: spec: namespaces: "holos-system":                  _
+	argocd: spec: namespaces: argocd:                         _
+	"external-secrets": spec: namespaces: "external-secrets": _
+	certificates: spec: namespaces: "cert-manager":           _
+}
 
 // Platform components to manage.
 _Platform: Components: {
@@ -26,6 +29,10 @@ _Platform: Components: {
 		for Cluster in Fleet.clusters {
 			"\(Cluster.name)/namespaces": {
 				path:    "components/namespaces"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/cert-manager": {
+				path:    "components/cert-manager"
 				cluster: Cluster.name
 			}
 		}
