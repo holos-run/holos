@@ -1,8 +1,6 @@
 package holos
 
-import certv1 "cert-manager.io/certificate/v1"
-
-// _Fleets represents the clusters in the platform.
+// _Fleets represent the clusters in the platform.
 _Fleets: {
 	management: clusters: management: _
 	workload: clusters: aws1:         _
@@ -34,17 +32,7 @@ _Projects: {
 // Manage certificates for admin services in workload clusters.
 for Cluster in _Fleets.workload.clusters {
 	let Name = "argocd.admin.\(Cluster.name).\(_Platform.Model.org.domain)"
-	_Projects: argocd: spec: certificates: "\(Name)": certv1.#Certificate & {
-		metadata: name:      Name
-		metadata: namespace: "istio-ingress"
-		spec: {
-			commonName: Name
-			dnsNames: [commonName]
-			secretName: commonName
-			issuerRef: kind: "ClusterIssuer"
-			issuerRef: name: "letsencrypt"
-		}
-	}
+	_Projects: argocd: spec: certificates: "\(Name)": #IngressCertificate & {metadata: name: Name}
 }
 
 // Platform components to manage.

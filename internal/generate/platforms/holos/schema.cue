@@ -93,3 +93,16 @@ _Projects: #Projects
 		certificates: #Certificates
 	}
 }
+
+// #IngressCertificate defines a certificate for use by the ingress gateway.
+#IngressCertificate: certv1.#Certificate & {
+	metadata: name:      string
+	metadata: namespace: "istio-ingress"
+	spec: {
+		commonName: metadata.name
+		dnsNames: [commonName]
+		secretName: commonName
+		issuerRef: kind: "ClusterIssuer"
+		issuerRef: name: "letsencrypt"
+	}
+}
