@@ -10,8 +10,7 @@ _Fleets: {
 }
 
 // Namespaces to manage.
-_Namespaces: "holos-system":  _
-_Namespaces: "istio-ingress": _
+_Namespaces: "holos-system": _
 
 for project in _Projects {
 	// Include all project namespaces in the platform namespaces.
@@ -24,8 +23,12 @@ for project in _Projects {
 _Projects: {
 	holos: spec: namespaces: "holos-system":                  _
 	"external-secrets": spec: namespaces: "external-secrets": _
-	certificates: spec: namespaces: "cert-manager":           _
-	argocd: spec: namespaces: argocd:                         _
+	istio: spec: namespaces: {
+		"istio-system":  _
+		"istio-ingress": _
+	}
+	certificates: spec: namespaces: "cert-manager": _
+	argocd: spec: namespaces: argocd:               _
 }
 
 // Manage certificates for admin services in workload clusters.
@@ -88,6 +91,10 @@ _Platform: Components: {
 		}
 		"\(Cluster.name)/secretstores": {
 			path:    "components/secretstores"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/istio-base": {
+			path:    "components/istio/base"
 			cluster: Cluster.name
 		}
 		"\(Cluster.name)/argocd": {
