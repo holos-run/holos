@@ -85,6 +85,20 @@ _Platform: Components: {
 			path:    "components/istio/base"
 			cluster: Cluster.name
 		}
+		"\(Cluster.name)/istio-cni": {
+			path:    "components/istio/mesh/cni"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/istiod": {
+			path:    "components/istio/mesh/istiod"
+			cluster: Cluster.name
+		}
+		// NOTE: istiod must be fully up and running in-cluster when this component
+		// is applied, otherwise the gateway image tag of "auto" isn't replaced.
+		"\(Cluster.name)/istio-gateway": {
+			path:    "components/istio/mesh/gateway"
+			cluster: Cluster.name
+		}
 		"\(Cluster.name)/argocd": {
 			path:    "components/argocd"
 			cluster: Cluster.name
