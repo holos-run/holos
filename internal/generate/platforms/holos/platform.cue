@@ -1,25 +1,47 @@
 package holos
 
+import certv1 "cert-manager.io/certificate/v1"
+
 // _Fleets represents the clusters in the platform.
 _Fleets: {
 	management: clusters: management: _
 	workload: clusters: aws1:         _
+	workload: clusters: aws2:         _
 }
 
 // Namespaces to manage.
-_Namespaces: "holos-system": _
+_Namespaces: "holos-system":  _
+_Namespaces: "istio-ingress": _
 
-// Include all project namespaces in the platform namespaces.
 for project in _Projects {
+	// Include all project namespaces in the platform namespaces.
 	_Namespaces: project.spec.namespaces
+	// Include project certificates
+	_Certificates: project.spec.certificates
 }
 
 // Projects to manage.
 _Projects: {
 	holos: spec: namespaces: "holos-system":                  _
-	argocd: spec: namespaces: argocd:                         _
 	"external-secrets": spec: namespaces: "external-secrets": _
 	certificates: spec: namespaces: "cert-manager":           _
+	argocd: spec: namespaces: argocd:                         _
+}
+
+// Manage certificates for admin services in workload clusters.
+for Cluster in _Fleets.workload.clusters {
+	let Name = "argocd.admin.\(Cluster.name).\(_Platform.Model.org.domain)"
+	_Projects: argocd: spec: certificates: "\(Name)": certv1.#Certificate & {
+		metadata: name:      Name
+		metadata: namespace: "istio-ingress"
+		spec: {
+			commonName: Name
+			dnsNames: [commonName]
+			secretName: commonName
+			issuerRef: kind: "ClusterIssuer"
+			issuerRef: name: "letsencrypt"
+		}
+	}
 }
 
 // Platform components to manage.
@@ -46,6 +68,10 @@ _Platform: Components: {
 		}
 		"\(Cluster.name)/cert-letsencrypt": {
 			path:    "components/cert-letsencrypt"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/certificates": {
+			path:    "components/certificates"
 			cluster: Cluster.name
 		}
 	}

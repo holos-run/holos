@@ -31,7 +31,6 @@ let FormBuilder = v1.#FormBuilder & {
 				}
 			}
 
-			// platform.spec.config.user.sections.org.fields.displayName
 			displayName: {
 				type: "input"
 				props: {
@@ -43,6 +42,22 @@ let FormBuilder = v1.#FormBuilder & {
 				}
 				validation: messages: {
 					required: "Enter a display name."
+				}
+			}
+
+			domain: {
+				type: "input"
+				props: {
+					label:       "Domain Name"
+					placeholder: "example.com"
+					description: "Domain name, e.g. 'example.com'"
+					pattern: "^([a-z0-9]([a-z0-9]|-){0,61}[a-z0-9]{0,1}\\.?)+[a-z]{2,6}$"
+					maxLength:   100
+					required:    true
+				}
+				validation: messages: {
+					required: "Enter a valid domain name."
+					pattern: required
 				}
 			}
 		}

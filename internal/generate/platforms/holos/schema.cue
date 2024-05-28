@@ -8,6 +8,8 @@ import dto "github.com/holos-run/holos/service/gen/holos/object/v1alpha1:object"
 
 import corev1 "k8s.io/api/core/v1"
 
+import certv1 "cert-manager.io/certificate/v1"
+
 // _PlatformConfig represents all of the data passed from holos to cue, used to
 // carry the platform and project models.
 _PlatformConfig:     dto.#PlatformConfig & json.Unmarshal(_PlatformConfigJSON)
@@ -63,6 +65,16 @@ _Namespaces: #Namespaces
 	}
 }
 
+// _Certificates represents all managed public facing tls certificates in the
+// platform.
+_Certificates: #Certificates
+// #Certificates defines the shape of _Certificates
+#Certificates: {
+	[Name=string]: certv1.#Certificate & {
+		metadata: name: Name
+	}
+}
+
 // _Projects represents holos projects in the platform.
 _Projects: #Projects
 // #Projects defines the shape of _Projects
@@ -77,5 +89,7 @@ _Projects: #Projects
 	spec: {
 		// namespaces represents the namespaces associated with this project.
 		namespaces: #Namespaces
+		// certificates represents the public tls certs associated with this project.
+		certificates: #Certificates
 	}
 }
