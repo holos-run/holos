@@ -19,20 +19,30 @@ for project in _Projects {
 
 // Projects to manage.
 _Projects: {
+	// Admin projects accessible at *.admin.<cluster>.<org.domain>
 	holos: spec: namespaces: "holos-system": metadata: labels: _Selector.Admin.matchLabels
+	argocd: spec: namespaces: argocd: metadata: labels:        _Selector.Admin.matchLabels
 
+	// Sync secrets from the management cluster to workload clusters.
 	"external-secrets": spec: namespaces: "external-secrets": _
+
+	// Istio service mesh
 	istio: spec: namespaces: {
 		"istio-system":   _
 		"istio-gateways": _
 	}
+
+	// cert-manager primarily for the management cluster but also used in workload
+	// clusters to provide cluster scoped ca cert.
 	certificates: spec: namespaces: "cert-manager": _
-	argocd: spec: namespaces: argocd:               _
+
+	// Postgres Operator
+	pgo: spec: namespaces: "postgres-operator": _
+
 	login: spec: {
-		// Namespace zitadel with grant to attach HTTPRoute resources to the login
-		// listeners.
+		// Namespace for zitadel.
 		namespaces: zitadel: metadata: labels: _Selector.Login.matchLabels
-		// Cert for *.login.example.com and login.example.com
+		// Certificate for login.example.com and *.login.example.com
 		certificates: "login.\(_Platform.Model.org.domain)": #IngressCertificate & {
 			metadata: name: string
 			spec: dnsNames: [metadata.name, "*." + metadata.name]
@@ -124,6 +134,14 @@ _Platform: Components: {
 		}
 		"\(Cluster.name)/httpbin": {
 			path:    "components/istio/mesh/httpbin"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/postgres-crds": {
+			path:    "components/pgo/crds"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/postgres-operator": {
+			path:    "components/pgo/controller"
 			cluster: Cluster.name
 		}
 		"\(Cluster.name)/argocd": {
