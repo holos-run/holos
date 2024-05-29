@@ -19,11 +19,12 @@ for project in _Projects {
 
 // Projects to manage.
 _Projects: {
-	holos: spec: namespaces: "holos-system":                  _
+	holos: spec: namespaces: "holos-system": metadata: labels: _AdminSelector.matchLabels
+
 	"external-secrets": spec: namespaces: "external-secrets": _
 	istio: spec: namespaces: {
-		"istio-system":  _
-		"istio-ingress": _
+		"istio-system":   _
+		"istio-gateways": _
 	}
 	certificates: spec: namespaces: "cert-manager": _
 	argocd: spec: namespaces: argocd:               _
@@ -31,7 +32,17 @@ _Projects: {
 
 // Manage certificates for admin services in workload clusters.
 for Cluster in _Fleets.workload.clusters {
-	let Name = "argocd.admin.\(Cluster.name).\(_Platform.Model.org.domain)"
+	// Issue a wildcard cert for all admin interfaces.   We need to verify this is
+	// well-behaved with Istio and HTTP2.
+	let Admin = "admin.\(Cluster.name).\(_Platform.Model.org.domain)"
+	_Projects: holos: spec: certificates: "\(Admin)": #IngressCertificate & {
+		metadata: name: Admin
+		spec: dnsNames: [Admin, "*.\(Admin)"]
+	}
+
+	// Issue a dedicated cert for argocd.  This may be removed if the wildcard
+	// works with the Gateway API.
+	let Name = "argocd.\(Admin)"
 	_Projects: argocd: spec: certificates: "\(Name)": #IngressCertificate & {metadata: name: Name}
 }
 
@@ -81,6 +92,10 @@ _Platform: Components: {
 			path:    "components/secretstores"
 			cluster: Cluster.name
 		}
+		"\(Cluster.name)/gateway-api": {
+			path:    "components/gateway-api"
+			cluster: Cluster.name
+		}
 		"\(Cluster.name)/istio-base": {
 			path:    "components/istio/base"
 			cluster: Cluster.name
@@ -93,10 +108,12 @@ _Platform: Components: {
 			path:    "components/istio/mesh/istiod"
 			cluster: Cluster.name
 		}
-		// NOTE: istiod must be fully up and running in-cluster when this component
-		// is applied, otherwise the gateway image tag of "auto" isn't replaced.
-		"\(Cluster.name)/istio-gateway": {
-			path:    "components/istio/mesh/gateway"
+		"\(Cluster.name)/istio-gateways": {
+			path:    "components/istio/mesh/gateways"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/httpbin": {
+			path:    "components/istio/mesh/httpbin"
 			cluster: Cluster.name
 		}
 		"\(Cluster.name)/argocd": {

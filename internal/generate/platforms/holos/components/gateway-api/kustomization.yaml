@@ -1,0 +1,6 @@
+---
+# Refer to https://istio.io/latest/docs/tasks/traffic-management/ingress/gateway-api/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.1.0"

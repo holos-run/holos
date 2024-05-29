@@ -6,12 +6,16 @@ import (
 
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	gwv1 "gateway.networking.k8s.io/gateway/v1"
+	hrv1 "gateway.networking.k8s.io/httproute/v1"
 
 	ci "cert-manager.io/clusterissuer/v1"
 	certv1 "cert-manager.io/certificate/v1"
 
 	ss "external-secrets.io/secretstore/v1beta1"
+	es "external-secrets.io/externalsecret/v1beta1"
 )
 
 // #Resources represents kubernetes api objects output along side a build plan.
@@ -25,6 +29,8 @@ import (
 	Namespace: [string]:          corev1.#Namespace
 	ServiceAccount: [string]:     corev1.#ServiceAccount
 	ConfigMap: [string]:          corev1.#ConfigMap
+	Service: [string]:            corev1.#Service
+	Deployment: [string]:         appsv1.#Deployment
 	Job: [string]:                batchv1.#Job
 	CronJob: [string]:            batchv1.#CronJob
 	ClusterRole: [string]:        rbacv1.#ClusterRole
@@ -34,6 +40,12 @@ import (
 	ClusterIssuer: [string]:      ci.#ClusterIssuer
 	Certificate: [string]:        certv1.#Certificate
 	SecretStore: [string]:        ss.#SecretStore
+	ExternalSecret: [string]:     es.#ExternalSecret
+	HTTPRoute: [string]:          hrv1.#HTTPRoute
+
+	Gateway: [string]: gwv1.#Gateway & {
+		spec: gatewayClassName: string | *"istio"
+	}
 }
 
 // #Helm represents a holos build plan composed of one helm chart.

@@ -13,6 +13,11 @@ package holos
 		enablePrometheusMerge: false | *true
 		rootNamespace:         string | *"istio-system"
 		trustDomain:           string | *"cluster.local"
+		// NOTE: Use a Pod annotation to configure proxyProtocol, the proxyProtocol
+		// field here has no effect when tested on istio 1.22.0. Refer to the
+		// default Gateway in the gateways component for where the proxyProtocol is
+		// configured.
+		gatewayTopology: numTrustedProxies: 2
 		extensionProviders: []
 	}
 }
