@@ -19,7 +19,7 @@ for project in _Projects {
 
 // Projects to manage.
 _Projects: {
-	holos: spec: namespaces: "holos-system": metadata: labels: _AdminSelector.matchLabels
+	holos: spec: namespaces: "holos-system": metadata: labels: _Selector.Admin.matchLabels
 
 	"external-secrets": spec: namespaces: "external-secrets": _
 	istio: spec: namespaces: {
@@ -28,6 +28,16 @@ _Projects: {
 	}
 	certificates: spec: namespaces: "cert-manager": _
 	argocd: spec: namespaces: argocd:               _
+	login: spec: {
+		// Namespace zitadel with grant to attach HTTPRoute resources to the login
+		// listeners.
+		namespaces: zitadel: metadata: labels: _Selector.Login.matchLabels
+		// Cert for *.login.example.com and login.example.com
+		certificates: "login.\(_Platform.Model.org.domain)": #IngressCertificate & {
+			metadata: name: string
+			spec: dnsNames: [metadata.name, "*." + metadata.name]
+		}
+	}
 }
 
 // Manage certificates for admin services in workload clusters.
@@ -121,4 +131,16 @@ _Platform: Components: {
 			cluster: Cluster.name
 		}
 	}
+}
+
+// _Selector represents label selectors
+_Selector: {
+	// Admin represents the label selector for an admin service. An admin service is
+	// defined as a service accessible at a host matching
+	// *.admin.<cluster>.<org.domain>  Used by Gateway API to grant HTTPRoute access
+	// to Namespaces that contain admin services.
+	Admin: matchLabels: "holos.run/admin.grant": "true"
+	// Login represents the label selector for zitadel; `*.login.<org.domain> and
+	// login.<org.domain>`
+	Login: matchLabels: "holos.run/login.grant": "true"
 }

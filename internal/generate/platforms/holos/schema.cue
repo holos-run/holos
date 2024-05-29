@@ -96,13 +96,13 @@ _Projects: #Projects
 // #IngressCertificate defines a certificate for use by the ingress gateway.
 #IngressCertificate: certv1.#Certificate & {
 	metadata: name:      string
-	metadata: namespace: "istio-gateways"
+	metadata: namespace: string | *#IstioGatewaysNamespace
 	spec: {
 		commonName: metadata.name
+		secretName: metadata.name
 		dnsNames: [...string] | *[commonName]
-		secretName: commonName
 		issuerRef: kind: "ClusterIssuer"
-		issuerRef: name: "letsencrypt"
+		issuerRef: name: string | *"letsencrypt"
 	}
 }
 
@@ -110,7 +110,7 @@ _Projects: #Projects
 // synced to the workload cluster using an ExternalSecret.
 #ExternalCert: es.#ExternalSecret & {
 	metadata: name:      string
-	metadata: namespace: string | *"istio-gateways"
+	metadata: namespace: string | *#IstioGatewaysNamespace
 	spec: {
 		target: name: metadata.name
 		target: template: type: "kubernetes.io/tls"
@@ -128,15 +128,15 @@ _Projects: #Projects
 		]
 		refreshInterval: string | *"1h"
 		secretStoreRef: kind: "SecretStore"
-		secretStoreRef: name: "default"
+		secretStoreRef: name: string | *"default"
 	}
 }
 
 // #IstioGatewaysNamespace represents the namespace where kubernetes Gateway API
 // resources are deployed for istio.  This namespace was previously named
-// "istio-ingress" when the istio Gateway api was used.
+// "istio-ingress" when the istio Gateway API was used.
 #IstioGatewaysNamespace: "istio-gateways"
 
-// _AdminSelector represents the label selector for an admin service.  Used by
-// Gateway API to grant HTTPRoute access to Namespace resources.
-_AdminSelector: matchLabels: "holos.run/admin.grant": "true"
+// #Selector represents label selectors.
+#Selector: [string]: matchLabels: {[string]: string}
+_Selector: #Selector
