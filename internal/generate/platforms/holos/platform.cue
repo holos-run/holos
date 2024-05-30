@@ -3,8 +3,15 @@ package holos
 // _Fleets represent the clusters in the platform.
 _Fleets: {
 	management: clusters: management: _
-	workload: clusters: aws1:         _
-	workload: clusters: aws2:         _
+	workload: clusters: aws1: primary: true
+	workload: clusters: aws2: _
+}
+
+// Map all clusters in all fleets into the _Clusters struct.
+for Fleet in _Fleets {
+	for Cluster in Fleet.clusters {
+		_Clusters: "\(Cluster.name)": Cluster
+	}
 }
 
 // Namespaces to manage.
@@ -96,6 +103,12 @@ _Platform: Components: {
 			path:    "components/certificates"
 			cluster: Cluster.name
 		}
+		// Provision a root ca and certs on the management cluster for the zitadel
+		// database in a workload cluster.
+		"\(Cluster.name)/zitadel-certs": {
+			path:    "components/login/zitadel-certs"
+			cluster: Cluster.name
+		}
 	}
 
 	// Components to manage on workload clusters.
@@ -144,6 +157,16 @@ _Platform: Components: {
 			path:    "components/pgo/controller"
 			cluster: Cluster.name
 		}
+		// ZITADEL components
+		"\(Cluster.name)/zitadel-secrets": {
+			path:    "components/login/zitadel-secrets"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/zitadel-database": {
+			path:    "components/login/zitadel-database"
+			cluster: Cluster.name
+		}
+		// ArgoCD components
 		"\(Cluster.name)/argocd": {
 			path:    "components/argocd"
 			cluster: Cluster.name

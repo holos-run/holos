@@ -15,7 +15,18 @@ _PlatformConfig:     dto.#PlatformConfig & json.Unmarshal(_PlatformConfigJSON)
 _PlatformConfigJSON: string | *"{}" @tag(platform_config, type=string)
 
 // #Cluster represents a single cluster in the platform.
-#Cluster: name: string
+#Cluster: {
+	// name represents the name of the cluster.
+	name: string
+	// primary is true if the cluster is the sole primary cluster within the scope
+	// of a fleet.
+	primary: true | *false
+}
+
+_Clusters: #Clusters
+// #Clusters defines the shape of _Clusters and clusters fields of other
+// collections like #Fleet.clusters.
+#Clusters: [Name=string]: #Cluster & {name: Name}
 
 // _Fleets represents all the fleets in the platform.
 _Fleets: #Fleets
@@ -25,8 +36,8 @@ _Fleets: #Fleets
 // #Fleet represents a grouping of similar clusters.  A platform is usually
 // composed of a workload fleet and a management fleet.
 #Fleet: {
-	name: string
-	clusters: [Name=string]: #Cluster & {name: Name}
+	name:     string
+	clusters: #Clusters
 }
 
 // _Platform represents and provides a platform to holos for rendering.
@@ -103,6 +114,19 @@ _Projects: #Projects
 		dnsNames: [...string] | *[commonName]
 		issuerRef: kind: "ClusterIssuer"
 		issuerRef: name: string | *"letsencrypt"
+	}
+}
+
+// #ExternalSecret represents a typical external secret resource in the holos
+// platform.  The default SecretStore in the same namespace is used.
+#ExternalSecret: es.#ExternalSecret & {
+	metadata: name: string
+	spec: {
+		target: name: metadata.name
+		dataFrom: [{extract: {key: metadata.name}}]
+		refreshInterval: "1h"
+		secretStoreRef: kind: "SecretStore"
+		secretStoreRef: name: "default"
 	}
 }
 

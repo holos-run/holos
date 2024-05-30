@@ -11,11 +11,14 @@ import (
 	gwv1 "gateway.networking.k8s.io/gateway/v1"
 	hrv1 "gateway.networking.k8s.io/httproute/v1"
 
+	is "cert-manager.io/issuer/v1"
 	ci "cert-manager.io/clusterissuer/v1"
 	certv1 "cert-manager.io/certificate/v1"
 
 	ss "external-secrets.io/secretstore/v1beta1"
 	es "external-secrets.io/externalsecret/v1beta1"
+
+	pc "postgres-operator.crunchydata.com/postgrescluster/v1beta1"
 )
 
 // #Resources represents kubernetes api objects output along side a build plan.
@@ -37,11 +40,13 @@ import (
 	ClusterRoleBinding: [string]: rbacv1.#ClusterRoleBinding
 	Role: [string]:               rbacv1.#Role
 	RoleBinding: [string]:        rbacv1.#RoleBinding
+	Issuer: [string]:             is.#Issuer
 	ClusterIssuer: [string]:      ci.#ClusterIssuer
 	Certificate: [string]:        certv1.#Certificate
 	SecretStore: [string]:        ss.#SecretStore
 	ExternalSecret: [string]:     es.#ExternalSecret
 	HTTPRoute: [string]:          hrv1.#HTTPRoute
+	PostgresCluster: [string]:    pc.#PostgresCluster
 
 	Gateway: [string]: gwv1.#Gateway & {
 		spec: gatewayClassName: string | *"istio"

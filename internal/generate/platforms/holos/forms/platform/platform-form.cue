@@ -195,6 +195,49 @@ let FormBuilder = v1.#FormBuilder & {
 			}
 		}
 	}
+
+	Sections: zitadel: {
+		displayName: "ZITADEL"
+		description: "Configure platform level ZITADEL settings.  Requires AWS."
+
+		fieldConfigs: {
+			backupBucketName: {
+				type: "input"
+				props: {
+					label:       "ZITADEL Backup Bucket Name"
+					description: "S3 bucket name, e.g. 'myorg-zitadel-backups'"
+					pattern:     "^[a-z]([a-z0-9.-]){1,61}[0-9a-z]$"
+					minLength:   3
+					maxLength:   63
+					required:    true
+				}
+				validation: messages: {
+					pattern:   "It must be \(props.minLength) to \(props.maxLength) lowercase letters, numbers, dots, or hyphens. It must start with a letter. It must end with a letter or number."
+					minLength: "Must be at least \(props.minLength) characters"
+					maxLength: "Must be at most \(props.maxLength) characters"
+					required:  pattern
+				}
+			}
+			backupBucketRegion: {
+				type: "select"
+				props: {
+					label:       "ZITADEL Backup Bucket Region"
+					description: "Select the S3 bucket region for database backups."
+					multiple:    false
+					options:     AWSRegions
+					required:    true
+				}
+			}
+			backupRestore: {
+				type: "checkbox"
+				props: {
+					label:       "Provision from Backup"
+					description: "If checked, the PostgresCluster will provision from backups.  Uncheck this box for initial provisioning.  Check it after a successful backup."
+					required:    true
+				}
+			}
+		}
+	}
 }
 
 let GCPRegions = [
@@ -238,4 +281,33 @@ let GCPRegions = [
 	{value: "us-west2", label:                "us-west2"},
 	{value: "us-west3", label:                "us-west3"},
 	{value: "us-west4", label:                "us-west4"},
+]
+
+let AWSRegions = [
+	{value: "us-east-1", label:      "N. Virginia (us-east-1)"},
+	{value: "us-east-2", label:      "Ohio (us-east-2)"},
+	{value: "us-west-1", label:      "N. California (us-west-1)"},
+	{value: "us-west-2", label:      "Oregon (us-west-2)"},
+	{value: "us-gov-west1", label:   "US GovCloud West (us-gov-west1)"},
+	{value: "us-gov-east1", label:   "US GovCloud East (us-gov-east1)"},
+	{value: "ca-central-1", label:   "Canada (ca-central-1)"},
+	{value: "eu-north-1", label:     "Stockholm (eu-north-1)"},
+	{value: "eu-west-1", label:      "Ireland (eu-west-1)"},
+	{value: "eu-west-2", label:      "London (eu-west-2)"},
+	{value: "eu-west-3", label:      "Paris (eu-west-3)"},
+	{value: "eu-central-1", label:   "Frankfurt (eu-central-1)"},
+	{value: "eu-south-1", label:     "Milan (eu-south-1)"},
+	{value: "af-south-1", label:     "Cape Town (af-south-1)"},
+	{value: "ap-northeast-1", label: "Tokyo (ap-northeast-1)"},
+	{value: "ap-northeast-2", label: "Seoul (ap-northeast-2)"},
+	{value: "ap-northeast-3", label: "Osaka (ap-northeast-3)"},
+	{value: "ap-southeast-1", label: "Singapore (ap-southeast-1)"},
+	{value: "ap-southeast-2", label: "Sydney (ap-southeast-2)"},
+	{value: "ap-east-1", label:      "Hong Kong (ap-east-1)"},
+	{value: "ap-south-1", label:     "Mumbai (ap-south-1)"},
+	{value: "me-south-1", label:     "Bahrain (me-south-1)"},
+	{value: "sa-east-1", label:      "São Paulo (sa-east-1)"},
+	{value: "cn-north-1", label:     "Bejing (cn-north-1)"},
+	{value: "cn-northwest-1", label: "Ningxia (cn-northwest-1)"},
+	{value: "ap-southeast-3", label: "Jakarta (ap-southeast-3)"},
 ]
