@@ -4,6 +4,8 @@ import (
 	"encoding/yaml"
 	v1 "github.com/holos-run/holos/api/v1alpha1"
 
+	kc "sigs.k8s.io/kustomize/api/types"
+
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -72,13 +74,56 @@ import (
 		metadata: name: string | *Name
 		namespace: string | *Namespace
 		chart: name:       string | *Name
+		chart: release:    chart.name
 		chart: version:    string | *Version
 		chart: repository: Repo
+
 		// Render the values to yaml for holos to provide to helm.
 		valuesContent: yaml.Marshal(Values)
 
+		// Kustomize post-processor
+		if EnableKustomizePostProcessor == true {
+			// resourcesFile represents the file helm output is written two and
+			// kustomize reads from.  Typically "resources.yaml" but referenced as a
+			// constant to ensure the holos cli uses the same file.
+			resourcesFile: v1.#ResourcesFile
+			// kustomizeFiles represents the files in a kustomize directory tree.
+			kustomizeFiles: v1.#FileContentMap
+			for FileName, Object in KustomizeFiles {
+				kustomizeFiles: "\(FileName)": yaml.Marshal(Object)
+			}
+		}
+
 		apiObjectMap: (v1.#APIObjects & {apiObjects: Resources}).apiObjectMap
 	}
+
+	// EnableKustomizePostProcessor processes helm output with kustomize if true.
+	EnableKustomizePostProcessor: true | *false
+	// KustomizeFiles represents additional files to include in a Kustomization
+	// resources list.  Useful to patch helm output.  The implementation is a
+	// struct with filename keys and structs as values.  Holos encodes the struct
+	// value to yaml then writes the result to the filename key.  Component
+	// authors may then reference the filename in the kustomization.yaml resources
+	// or patches lists.
+	// Requires EnableKustomizePostProcessor: true.
+	KustomizeFiles: {
+		// Embed KustomizeResources
+		KustomizeResources
+
+		// The kustomization.yaml file must be included for kustomize to work.
+		"kustomization.yaml": kc.#Kustomization & {
+			apiVersion: "kustomize.config.k8s.io/v1beta1"
+			kind:       "Kustomization"
+			resources: [v1.#ResourcesFile, for FileName, _ in KustomizeResources {FileName}]
+			patches: [for x in KustomizePatches {x}]
+		}
+	}
+	// KustomizePatches represents patches to apply to the helm output.  Requires
+	// EnableKustomizePostProcessor: true.
+	KustomizePatches: [ArbitraryLabel=string]: kc.#Patch
+	// KustomizeResources represents additional resources files to include in the
+	// kustomize resources list.
+	KustomizeResources: [FileName=string]: {...}
 
 	// output represents the build plan provided to the holos cli.
 	Output: v1.#BuildPlan & {

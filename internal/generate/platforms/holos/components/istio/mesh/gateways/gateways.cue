@@ -32,8 +32,8 @@ let Objects = {
 			}
 			spec: {
 				// Work with a struct of listeners instead of a list.
-				_listeners: (#WildcardListener & {Name: "admin", Selector: _Selector.Admin}).Output
-				_listeners: (#WildcardListener & {Name: "login", Selector: _Selector.Login, Cluster: false}).Output
+				_listeners: (#WildcardListener & {Name: "admin", Selector: _Selector.GrantSubdomainAdmin}).Output
+				_listeners: (#WildcardListener & {Name: "login", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
 				listeners: [for x in _listeners {x}]
 			}
 		}

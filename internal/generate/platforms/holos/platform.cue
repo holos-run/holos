@@ -27,8 +27,8 @@ for project in _Projects {
 // Projects to manage.
 _Projects: {
 	// Admin projects accessible at *.admin.<cluster>.<org.domain>
-	holos: spec: namespaces: "holos-system": metadata: labels: _Selector.Admin.matchLabels
-	argocd: spec: namespaces: argocd: metadata: labels:        _Selector.Admin.matchLabels
+	holos: spec: namespaces: "holos-system": metadata: labels: _Selector.GrantSubdomainAdmin.matchLabels
+	argocd: spec: namespaces: argocd: metadata: labels:        _Selector.GrantSubdomainAdmin.matchLabels
 
 	// Sync secrets from the management cluster to workload clusters.
 	"external-secrets": spec: namespaces: "external-secrets": _
@@ -48,7 +48,7 @@ _Projects: {
 
 	login: spec: {
 		// Namespace for zitadel.
-		namespaces: zitadel: metadata: labels: _Selector.Login.matchLabels
+		namespaces: zitadel: metadata: labels: _Selector.GrantSubdomainLogin.matchLabels
 		// Certificate for login.example.com and *.login.example.com
 		certificates: "login.\(_Platform.Model.org.domain)": #IngressCertificate & {
 			metadata: name: string
@@ -166,6 +166,10 @@ _Platform: Components: {
 			path:    "components/login/zitadel-database"
 			cluster: Cluster.name
 		}
+		"\(Cluster.name)/zitadel-server": {
+			path:    "components/login/zitadel-server"
+			cluster: Cluster.name
+		}
 		// ArgoCD components
 		"\(Cluster.name)/argocd": {
 			path:    "components/argocd"
@@ -176,12 +180,18 @@ _Platform: Components: {
 
 // _Selector represents label selectors
 _Selector: {
-	// Admin represents the label selector for an admin service. An admin service is
-	// defined as a service accessible at a host matching
-	// *.admin.<cluster>.<org.domain>  Used by Gateway API to grant HTTPRoute access
-	// to Namespaces that contain admin services.
-	Admin: matchLabels: "holos.run/admin.grant": "true"
-	// Login represents the label selector for zitadel; `*.login.<org.domain> and
+	// GrantSubdomainAdmin represents the label selector to grant HTTPRoute
+	// attachment for the admin subdomain. An admin service is defined as a
+	// service accessible at a host matching *.admin.<cluster>.<org.domain>  Used
+	// by Gateway API to grant HTTPRoute access to Namespaces that contain admin
+	// services.
+	GrantSubdomainAdmin: matchLabels: "grant.holos.run/subdomain.admin": "true"
+	// GrantSubdomainLogin represents the label selector to grant HTTPRoute
+	// attachment for the login subdomain; `*.login.<org.domain> and
 	// login.<org.domain>`
-	Login: matchLabels: "holos.run/login.grant": "true"
+	GrantSubdomainLogin: matchLabels: "grant.holos.run/subdomain.login": "true"
+	// GrantSubdomainApp represents the label selector to grant HTTPRoute
+	// attachment for the app subdomain; `*.login.<org.domain> and
+	// login.<org.domain>`
+	GrantSubdomainApp: matchLabels: "grant.holos.run/subdomain.app": "true"
 }

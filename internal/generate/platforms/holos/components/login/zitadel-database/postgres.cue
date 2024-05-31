@@ -3,8 +3,11 @@ package holos
 // Produce a kubernetes objects build plan.
 (#Kubernetes & Objects).Output
 
+// The Secret containing the pgbackrest s3.conf file has the same name as the S3
+// bucket the backups are sent to.
+let S3Secret = _Platform.Model.zitadel.backupBucketName
+
 let Cluster = _Clusters[_ClusterName]
-let S3Secret = "pgo-s3-creds"
 let ZitadelUser = _DBName
 let ZitadelAdmin = "\(_DBName)-admin"
 
