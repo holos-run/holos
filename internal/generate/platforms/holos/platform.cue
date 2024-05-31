@@ -3,8 +3,8 @@ package holos
 // _Fleets represent the clusters in the platform.
 _Fleets: {
 	management: clusters: management: _
-	workload: clusters: aws1: primary: true
-	workload: clusters: aws2: _
+	workload: clusters: aws1:         _
+	workload: clusters: aws2: primary: true
 }
 
 // Map all clusters in all fleets into the _Clusters struct.
@@ -141,8 +141,8 @@ _Platform: Components: {
 			path:    "components/istio/mesh/istiod"
 			cluster: Cluster.name
 		}
-		"\(Cluster.name)/istio-gateways": {
-			path:    "components/istio/mesh/gateways"
+		"\(Cluster.name)/gateway": {
+			path:    "components/istio/mesh/gateway"
 			cluster: Cluster.name
 		}
 		"\(Cluster.name)/httpbin": {

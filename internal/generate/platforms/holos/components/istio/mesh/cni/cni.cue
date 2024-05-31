@@ -4,9 +4,11 @@ package holos
 (#Helm & Chart).Output
 
 let Chart = {
-	Name:      "cni"
+	Name:      "istio-cni"
 	Version:   #IstioVersion
 	Namespace: "istio-system"
+
+	Chart: chart: name: "cni"
 
 	Repo: name: "istio"
 	Repo: url:  "https://istio-release.storage.googleapis.com/charts"
