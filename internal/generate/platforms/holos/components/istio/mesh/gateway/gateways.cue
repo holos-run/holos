@@ -75,7 +75,7 @@ let Objects = {
 			tls: {
 				certificateRefs: [{
 					kind: "Secret"
-					name: _Hostname
+					name: "any.\(_Hostname)"
 				}]
 			}
 			allowedRoutes: namespaces: from:     "Selector"

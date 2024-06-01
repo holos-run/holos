@@ -109,7 +109,7 @@ _Projects: #Projects
 	metadata: name:      string
 	metadata: namespace: string | *#IstioGatewaysNamespace
 	spec: {
-		commonName: metadata.name
+		commonName: string | *metadata.name
 		secretName: metadata.name
 		dnsNames: [...string] | *[commonName]
 		issuerRef: kind: "ClusterIssuer"

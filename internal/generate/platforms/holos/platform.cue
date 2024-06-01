@@ -50,9 +50,10 @@ _Projects: {
 		// Namespace for zitadel.
 		namespaces: zitadel: metadata: labels: _Selector.GrantSubdomainLogin.matchLabels
 		// Certificate for login.example.com and *.login.example.com
-		certificates: "login.\(_Platform.Model.org.domain)": #IngressCertificate & {
-			metadata: name: string
-			spec: dnsNames: [metadata.name, "*." + metadata.name]
+		let Subdomain = "login.\(_Platform.Model.org.domain)"
+		certificates: "\(Subdomain)": #IngressCertificate
+		certificates: "any.\(Subdomain)": #IngressCertificate & {
+			spec: commonName: "*." + Subdomain
 		}
 	}
 }
@@ -61,15 +62,17 @@ _Projects: {
 for Cluster in _Fleets.workload.clusters {
 	// Issue a wildcard cert for all admin interfaces.   We need to verify this is
 	// well-behaved with Istio and HTTP2.
-	let Admin = "admin.\(Cluster.name).\(_Platform.Model.org.domain)"
-	_Projects: holos: spec: certificates: "\(Admin)": #IngressCertificate & {
-		metadata: name: Admin
-		spec: dnsNames: [Admin, "*.\(Admin)"]
+	let Subdomain = "admin.\(Cluster.name).\(_Platform.Model.org.domain)"
+	_Projects: holos: spec: {
+		certificates: "\(Subdomain)": #IngressCertificate
+		certificates: "any.\(Subdomain)": #IngressCertificate & {
+			spec: commonName: "*." + Subdomain
+		}
 	}
 
 	// Issue a dedicated cert for argocd.  This may be removed if the wildcard
 	// works with the Gateway API.
-	let Name = "argocd.\(Admin)"
+	let Name = "argocd.\(Subdomain)"
 	_Projects: argocd: spec: certificates: "\(Name)": #IngressCertificate & {metadata: name: Name}
 }
 
