@@ -77,5 +77,39 @@ let Objects = {
 				},
 			]
 		}
+		// Multiple HTTPRoutes to test Chrome http2 connection reuse with *.admin
+		// wildcard cert.
+		HTTPRoute: (#HTTPBinClone & {Name: "httpbin1", _Service: Service}).Output
+		HTTPRoute: (#HTTPBinClone & {Name: "httpbin2", _Service: Service}).Output
+		HTTPRoute: (#HTTPBinClone & {Name: "httpbin3", _Service: Service}).Output
+		HTTPRoute: (#HTTPBinClone & {Name: "httpbin4", _Service: Service}).Output
+	}
+}
+
+#HTTPBinClone: {
+	Name: string
+	_Service: {...}
+	let Host = Name + ".admin.\(_ClusterName).\(_Platform.Model.org.domain)"
+	Output: "\(Name)": {
+		metadata: namespace: "holos-system"
+		metadata: labels: app: "httpbin"
+		spec: hostnames: [Host]
+		spec: parentRefs: [
+			{
+				name:      "default"
+				namespace: #IstioGatewaysNamespace
+			},
+		]
+		spec: rules: [
+			{
+				matches: [{path: {type: "PathPrefix", value: "/"}}]
+				backendRefs: [
+					{
+						name: _Service.httpbin.metadata.name
+						port: _Service.httpbin.spec._ports.http.port
+					},
+				]
+			},
+		]
 	}
 }
