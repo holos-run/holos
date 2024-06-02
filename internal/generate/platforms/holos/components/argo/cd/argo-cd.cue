@@ -1,6 +1,9 @@
 package holos
 
-import "encoding/yaml"
+import (
+	"encoding/yaml"
+	"strings"
+)
 
 // Produce a helm chart build plan.
 (#Helm & Chart).Output
@@ -19,16 +22,17 @@ let Chart = {
 	Repo: url:  "https://argoproj.github.io/argo-helm"
 
 	Resources: [_]: [_]: metadata: namespace: Namespace
-	// Grant the Gateway namespace the ability to refer to the backend httpbin
-	// service in HTTPRoutes.
+	// Grant the Gateway namespace the ability to refer to the backend service
+	// from HTTPRoute resources.
 	Resources: ReferenceGrant: (#IstioGatewaysNamespace): #ReferenceGrant
 
 	EnableKustomizePostProcessor: true
-	// Force all resources into the zitadel namespace, some resources in the helm
-	// chart do not specify the namespace so they may get mis-applied depending on
-	// the kubectl (client-go) context.
+	// Force all resources into the component namespace, some resources in the
+	// helm chart may not specify the namespace so they may get mis-applied
+	// depending on the kubectl (client-go) context.
 	KustomizeFiles: "kustomization.yaml": namespace: Namespace
 
+	// Patch the backend with the service mesh sidecar.
 	KustomizePatches: {
 		mesh: {
 			target: {
@@ -53,6 +57,15 @@ let Chart = {
 			"admin.enabled": false
 			"oidc.config":   yaml.Marshal(OIDCConfig)
 		}
+
+		// Refer to https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/
+		let Policy = [
+			"g, prod-cluster-view, role:readonly",
+			"g, prod-cluster-edit, role:readonly",
+			"g, prod-cluster-admin, role:admin",
+		]
+
+		configs: rbac: "policy.csv": strings.Join(Policy, "\n")
 	}
 }
 

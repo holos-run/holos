@@ -312,7 +312,7 @@ package holos
 
 			// -- File containing user-defined policies and role definitions.
 			// @default -- `''` (See [values.yaml])
-			"policy.csv": ""
+			"policy.csv": string | *""
 			// Policy rules are in the form:
 			//  p, subject, resource, action, object, effect
 			// Role definitions and bindings are in the form:
