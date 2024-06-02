@@ -35,8 +35,12 @@ _Projects: {
 
 	// Istio service mesh
 	istio: spec: namespaces: {
-		"istio-system":   _
-		"istio-gateways": _
+		"istio-system": _
+		"istio-gateways": {
+			// All subdomains should be included here for the authproxy HTTPRoute to
+			// attach to all listeners.
+			metadata: labels: _Selector.GrantSubdomainAdmin.matchLabels
+		}
 	}
 
 	// cert-manager primarily for the management cluster but also used in workload
@@ -171,6 +175,11 @@ _Platform: Components: {
 		}
 		"\(Cluster.name)/zitadel-server": {
 			path:    "components/login/zitadel-server"
+			cluster: Cluster.name
+		}
+		// Auth Proxy for platform services
+		"\(Cluster.name)/authproxy": {
+			path:    "components/istio/mesh/authproxy"
 			cluster: Cluster.name
 		}
 		// ArgoCD components
