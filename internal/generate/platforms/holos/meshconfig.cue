@@ -18,7 +18,13 @@ package holos
 		// default Gateway in the gateways component for where the proxyProtocol is
 		// configured.
 		gatewayTopology: numTrustedProxies: 2
-		extensionProviders: []
+		extensionProviders: [
+			// The auth proxy attached to Gateway default
+			#ExtAuthzProxy & {
+				name: _AuthProxy.provider
+				envoyExtAuthzHttp: service: "\(_AuthProxy.metadata.name).\(_AuthProxy.metadata.namespace).svc.cluster.local"
+			},
+		]
 	}
 }
 
@@ -33,7 +39,7 @@ package holos
 		headersToUpstreamOnAllow: [
 			"authorization",
 			"path",
-			"x-oidc-id-token",
+			_AuthProxy.idTokenHeader,
 		]
 		includeAdditionalHeadersInCheck: "X-Auth-Request-Redirect": "%REQ(x-forwarded-proto)%://%REQ(:authority)%%REQ(:path)%%REQ(:query)%"
 		includeRequestHeadersInCheck: [
@@ -41,7 +47,7 @@ package holos
 			"cookie",
 			"x-forwarded-for",
 		]
-		port:    4180
+		port:    _AuthProxy.servicePort
 		service: string
 	}
 }

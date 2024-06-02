@@ -40,6 +40,8 @@ _Projects: {
 			// All subdomains should be included here for the authproxy HTTPRoute to
 			// attach to all listeners.
 			metadata: labels: _Selector.GrantSubdomainAdmin.matchLabels
+			metadata: labels: _Selector.GrantSubdomainLogin.matchLabels
+			metadata: labels: _Selector.GrantSubdomainApp.matchLabels
 		}
 	}
 
@@ -181,9 +183,17 @@ _Platform: Components: {
 			path:    "components/login/zitadel-server"
 			cluster: Cluster.name
 		}
+		"\(Cluster.name)/zitadel-routes": {
+			path:    "components/login/zitadel-routes"
+			cluster: Cluster.name
+		}
 		// Auth Proxy for platform services
 		"\(Cluster.name)/authproxy": {
-			path:    "components/istio/mesh/authproxy"
+			path:    "components/istio/mesh/iap/authproxy"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/authpolicy": {
+			path:    "components/istio/mesh/iap/authpolicy"
 			cluster: Cluster.name
 		}
 		// ArgoCD components
@@ -224,4 +234,23 @@ _AuthProxy: {
 	// servicePort is the port oauth2-proxy listens on and the Service is
 	// reachable at.
 	servicePort: 4180
+
+	// issuerHost is the hostname portion of issuerURL
+	issuerHost: "login." + _Platform.Model.org.domain
+	// issuerURL is the oidc id provider issuer, zitadel for this platform.
+	issuerURL: "https://" + issuerHost
+
+	// clientID is the client id of the authproxy in the id provider (zitadel).
+	clientID: _Platform.Model.authproxy.clientID
+	// projectID is the zitadel project id of Holos Platform project in the id
+	// provider (zitadel).
+	projectID: _Platform.Model.authproxy.projectID
+
+	// idTokenHeader is the header where the authproxy places the id token on
+	// successful authentication.  Useful for services in the mesh to validate and
+	// assert for authorization.
+	idTokenHeader: "x-oidc-id-token"
+
+	// provider is the istio meshconfig extauthz provider of the authproxy
+	provider: "default-gateway-authproxy"
 }

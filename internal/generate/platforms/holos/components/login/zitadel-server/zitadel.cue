@@ -5,9 +5,6 @@ import (
 	kc "sigs.k8s.io/kustomize/api/types"
 )
 
-// The external domain zitadel is accessible at.
-_ExternalDomain: "login.\(_Platform.Model.org.domain)"
-
 // Produce a helm chart build plan.
 (#Helm & Chart).Output
 
@@ -16,7 +13,7 @@ let Cluster = _Clusters[_ClusterName]
 let Chart = {
 	Name:      "zitadel-server"
 	Version:   "7.11.0"
-	Namespace: "zitadel"
+	Namespace: _ZitadelNamespace
 
 	Chart: chart: name: "zitadel"
 	Chart: enableHooks: true
@@ -28,28 +25,16 @@ let Chart = {
 
 	Resources: [_]: [_]: metadata: namespace: Namespace
 	Resources: ExternalSecret: "zitadel-masterkey": #ExternalSecret
-	Resources: HTTPRoute: zitadel: {
-		spec: hostnames: [_ExternalDomain, "*.\(_ExternalDomain)"]
-		spec: parentRefs: [
-			{
-				name:      "default"
-				namespace: #IstioGatewaysNamespace
-			},
-		]
-		spec: rules: [
-			{
-				matches: [{path: {type: "PathPrefix", value: "/"}}]
-				backendRefs: [
-					{
-						name: "zitadel"
-						port: 8080
-					},
-				]
-			},
-		]
-	}
+	// Grant the Gateway namespace the ability to refer to the backend httpbin
+	// service in HTTPRoutes.
+	Resources: ReferenceGrant: (#IstioGatewaysNamespace): #ReferenceGrant
 
 	EnableKustomizePostProcessor: true
+	// Force all resources into the zitadel namespace, some resources in the helm
+	// chart do not specify the namespace so they may get mis-applied depending on
+	// the kubectl (client-go) context.
+	KustomizeFiles: "kustomization.yaml": namespace: Namespace
+
 	KustomizePatches: {
 		mesh: {
 			target: name:    "zitadel"

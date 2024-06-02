@@ -10,9 +10,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+
 	gwv1 "gateway.networking.k8s.io/gateway/v1"
 	hrv1 "gateway.networking.k8s.io/httproute/v1"
 	rgv1 "gateway.networking.k8s.io/referencegrant/v1beta1"
+
+	ra "security.istio.io/requestauthentication/v1"
+	ap "security.istio.io/authorizationpolicy/v1"
 
 	is "cert-manager.io/issuer/v1"
 	ci "cert-manager.io/clusterissuer/v1"
@@ -32,25 +36,27 @@ import (
 		metadata: name: string | *NAME
 	}
 
-	Namespace: [string]:          corev1.#Namespace
-	ServiceAccount: [string]:     corev1.#ServiceAccount
-	ConfigMap: [string]:          corev1.#ConfigMap
-	Service: [string]:            corev1.#Service
-	Deployment: [string]:         appsv1.#Deployment
-	Job: [string]:                batchv1.#Job
-	CronJob: [string]:            batchv1.#CronJob
-	ClusterRole: [string]:        rbacv1.#ClusterRole
-	ClusterRoleBinding: [string]: rbacv1.#ClusterRoleBinding
-	Role: [string]:               rbacv1.#Role
-	RoleBinding: [string]:        rbacv1.#RoleBinding
-	Issuer: [string]:             is.#Issuer
-	ClusterIssuer: [string]:      ci.#ClusterIssuer
-	Certificate: [string]:        certv1.#Certificate
-	SecretStore: [string]:        ss.#SecretStore
-	ExternalSecret: [string]:     es.#ExternalSecret
-	HTTPRoute: [string]:          hrv1.#HTTPRoute
-	ReferenceGrant: [string]:     rgv1.#ReferenceGrant
-	PostgresCluster: [string]:    pc.#PostgresCluster
+	Namespace: [string]:             corev1.#Namespace
+	ServiceAccount: [string]:        corev1.#ServiceAccount
+	ConfigMap: [string]:             corev1.#ConfigMap
+	Service: [string]:               corev1.#Service
+	Deployment: [string]:            appsv1.#Deployment
+	Job: [string]:                   batchv1.#Job
+	CronJob: [string]:               batchv1.#CronJob
+	ClusterRole: [string]:           rbacv1.#ClusterRole
+	ClusterRoleBinding: [string]:    rbacv1.#ClusterRoleBinding
+	Role: [string]:                  rbacv1.#Role
+	RoleBinding: [string]:           rbacv1.#RoleBinding
+	Issuer: [string]:                is.#Issuer
+	ClusterIssuer: [string]:         ci.#ClusterIssuer
+	Certificate: [string]:           certv1.#Certificate
+	SecretStore: [string]:           ss.#SecretStore
+	ExternalSecret: [string]:        es.#ExternalSecret
+	HTTPRoute: [string]:             hrv1.#HTTPRoute
+	ReferenceGrant: [string]:        rgv1.#ReferenceGrant
+	PostgresCluster: [string]:       pc.#PostgresCluster
+	RequestAuthentication: [string]: ra.#RequestAuthentication
+	AuthorizationPolicy: [string]:   ap.#AuthorizationPolicy
 
 	Gateway: [string]: gwv1.#Gateway & {
 		spec: gatewayClassName: string | *"istio"

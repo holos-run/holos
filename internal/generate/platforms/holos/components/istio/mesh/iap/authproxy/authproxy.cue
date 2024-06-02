@@ -5,8 +5,6 @@ import "encoding/yaml"
 // Produce a kubernetes objects build plan.
 (#Kubernetes & Objects).Output
 
-let AuthProxyClientID = "269746420997801880@holos_platform"
-
 let AuthProxyPrefix = _AuthProxy.pathPrefix
 
 // Auth Proxy
@@ -20,13 +18,7 @@ let Objects = {
 	Name:      _AuthProxy.metadata.name
 	Namespace: _AuthProxy.metadata.namespace
 
-	let Metadata = {
-		name:      string
-		namespace: Namespace
-		labels: "app.kubernetes.io/name":    name
-		labels: "app.kubernetes.io/part-of": "default-gateway"
-		...
-	}
+	let Metadata = _IAP.metadata
 
 	let ProxyMetadata = Metadata & {name: Name}
 	let RedisMetadata = Metadata & {name: Name + "-redis"}
@@ -42,7 +34,7 @@ let Objects = {
 			data: "config.yaml": yaml.Marshal(AuthProxyConfig)
 			let AuthProxyConfig = {
 				injectResponseHeaders: [{
-					name: "x-oidc-id-token"
+					name: _AuthProxy.idTokenHeader
 					values: [{claim: "id_token"}]
 				}]
 				providers: [{
@@ -51,7 +43,7 @@ let Objects = {
 					provider: "oidc"
 					// A specific org may be required with urn:zitadel:iam:org:domain:primary:\(_Platform.Model.org.domain)
 					scope:                 "openid profile email groups offline_access"
-					clientID:              AuthProxyClientID
+					clientID:              _AuthProxy.clientID
 					clientSecretFile:      "/dev/null"
 					code_challenge_method: "S256"
 					loginURLParameters: [{
@@ -59,7 +51,7 @@ let Objects = {
 						name: "approval_prompt"
 					}]
 					oidcConfig: {
-						issuerURL: "https://login.\(_Platform.Model.org.domain)"
+						issuerURL: _AuthProxy.issuerURL
 						audienceClaims: ["aud"]
 						emailClaim:  "email"
 						groupsClaim: "groups"

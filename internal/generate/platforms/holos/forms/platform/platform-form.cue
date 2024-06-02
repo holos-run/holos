@@ -232,8 +232,48 @@ let FormBuilder = v1.#FormBuilder & {
 				type: "checkbox"
 				props: {
 					label:       "Provision from Backup"
-					description: "If checked, the PostgresCluster will provision from backups.  Uncheck this box for initial provisioning.  Check it after a successful backup."
+					description: "If checked, the PostgresCluster will provision from backups.  Uncheck this box for initial provisioning.  Check it after a successful backup.  NOTE: Moving from false to true will trigger an in-place restore from the most recent backup.  Data since the most recent backup will be lost."
 					required:    true
+				}
+			}
+		}
+	}
+
+	Sections: authproxy: {
+		displayName: "Platform Auth Proxy"
+		description: "Enter configuration values from the Auth Proxy application in the Holos Platform project in the platform identity provider (ZITADEL)."
+
+		fieldConfigs: {
+			clientID: {
+				type: "input"
+				props: {
+					label:       "Client ID"
+					description: "Client ID of the Auth Proxy application in the Holos Platform ZITADEL project."
+					minLength:   1
+					maxLength:   512
+					required:    true
+				}
+				validation: messages: {
+					minLength: "Must be at least \(props.minLength) characters"
+					maxLength: "Must be at most \(props.maxLength) characters"
+					required:  "Required: " + props.description
+				}
+			}
+			projectID: {
+				type: "input"
+				props: {
+					label:       "Project ID"
+					description: "Project Resource ID of the Holos Platform project in ZITADEL."
+					pattern:     "^[0-9]+$"
+					minLength:   1
+					maxLength:   100
+					required:    true
+				}
+				validation: messages: {
+					minLength: "Must be at least \(props.minLength) characters"
+					maxLength: "Must be at most \(props.maxLength) characters"
+					pattern:   "Must be a positive whole number."
+					required:  "Required: " + props.description
 				}
 			}
 		}
