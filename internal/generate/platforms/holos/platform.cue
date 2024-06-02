@@ -27,8 +27,8 @@ for project in _Projects {
 // Projects to manage.
 _Projects: {
 	// Admin projects accessible at *.admin.<cluster>.<org.domain>
-	holos: spec: namespaces: "holos-system": metadata: labels: _Selector.GrantSubdomainAdmin.matchLabels
-	argocd: spec: namespaces: argocd: metadata: labels:        _Selector.GrantSubdomainAdmin.matchLabels
+	holos: spec: namespaces: "holos-system": _
+	argocd: spec: namespaces: argocd:        _
 
 	// Sync secrets from the management cluster to workload clusters.
 	"external-secrets": spec: namespaces: "external-secrets": _
@@ -54,7 +54,7 @@ _Projects: {
 
 	login: spec: {
 		// Namespace for zitadel.
-		namespaces: zitadel: metadata: labels: _Selector.GrantSubdomainLogin.matchLabels
+		namespaces: zitadel: _
 		// Certificate for login.example.com and *.login.example.com
 		let Subdomain = "login.\(_Platform.Model.org.domain)"
 		certificates: "\(Subdomain)": #IngressCertificate
@@ -197,8 +197,16 @@ _Platform: Components: {
 			cluster: Cluster.name
 		}
 		// ArgoCD components
-		"\(Cluster.name)/argocd": {
-			path:    "components/argocd"
+		"\(Cluster.name)/argo-crds": {
+			path:    "components/argo/crds"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/argo-cd": {
+			path:    "components/argo/cd"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/argo-routes": {
+			path:    "components/argo/routes"
 			cluster: Cluster.name
 		}
 	}

@@ -240,25 +240,11 @@ let FormBuilder = v1.#FormBuilder & {
 	}
 
 	Sections: authproxy: {
-		displayName: "Platform Auth Proxy"
+		displayName: "Auth Proxy"
 		description: "Enter configuration values from the Auth Proxy application in the Holos Platform project in the platform identity provider (ZITADEL)."
 
+		fieldConfigs: clientID: (#StandardFields & {DisplayName: displayName}).clientID
 		fieldConfigs: {
-			clientID: {
-				type: "input"
-				props: {
-					label:       "Client ID"
-					description: "Client ID of the Auth Proxy application in the Holos Platform ZITADEL project."
-					minLength:   1
-					maxLength:   512
-					required:    true
-				}
-				validation: messages: {
-					minLength: "Must be at least \(props.minLength) characters"
-					maxLength: "Must be at most \(props.maxLength) characters"
-					required:  "Required: " + props.description
-				}
-			}
 			projectID: {
 				type: "input"
 				props: {
@@ -276,6 +262,34 @@ let FormBuilder = v1.#FormBuilder & {
 					required:  "Required: " + props.description
 				}
 			}
+		}
+	}
+
+	Sections: argocd: {
+		displayName: "ArgoCD"
+		description: "Enter configuration values from the ArgoCD application in the Holos Platform project in ZITADEL."
+
+		fieldConfigs: clientID: (#StandardFields & {DisplayName: displayName}).clientID
+	}
+}
+
+#StandardFields: {
+	DisplayName: string
+	clientID: {
+		type: "input"
+		props: {
+			label:       "Client ID"
+			description: "Client ID of the \(DisplayName) application in the Holos Platform ZITADEL project."
+			pattern:     "^[0-9]+@[a-z0-9_]+$"
+			minLength:   1
+			maxLength:   512
+			required:    true
+		}
+		validation: messages: {
+			minLength: "Must be at least \(props.minLength) characters"
+			maxLength: "Must be at most \(props.maxLength) characters"
+			pattern:   "Must be like 999999999999999999@holos_platform"
+			required:  "Required: " + props.description
 		}
 	}
 }
