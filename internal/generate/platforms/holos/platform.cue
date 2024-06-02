@@ -209,6 +209,10 @@ _Platform: Components: {
 			path:    "components/argo/routes"
 			cluster: Cluster.name
 		}
+		"\(Cluster.name)/argo-creds": {
+			path:    "components/argo/creds"
+			cluster: Cluster.name
+		}
 	}
 }
 
