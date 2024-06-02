@@ -12,6 +12,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	gwv1 "gateway.networking.k8s.io/gateway/v1"
 	hrv1 "gateway.networking.k8s.io/httproute/v1"
+	rgv1 "gateway.networking.k8s.io/referencegrant/v1beta1"
 
 	is "cert-manager.io/issuer/v1"
 	ci "cert-manager.io/clusterissuer/v1"
@@ -48,11 +49,24 @@ import (
 	SecretStore: [string]:        ss.#SecretStore
 	ExternalSecret: [string]:     es.#ExternalSecret
 	HTTPRoute: [string]:          hrv1.#HTTPRoute
+	ReferenceGrant: [string]:     rgv1.#ReferenceGrant
 	PostgresCluster: [string]:    pc.#PostgresCluster
 
 	Gateway: [string]: gwv1.#Gateway & {
 		spec: gatewayClassName: string | *"istio"
 	}
+}
+
+#ReferenceGrant: rgv1.#ReferenceGrant & {
+	spec: from: [{
+		group:     "gateway.networking.k8s.io"
+		kind:      "HTTPRoute"
+		namespace: #IstioGatewaysNamespace
+	}]
+	spec: to: [{
+		group: ""
+		kind:  "Service"
+	}]
 }
 
 // #Helm represents a holos build plan composed of one helm chart.

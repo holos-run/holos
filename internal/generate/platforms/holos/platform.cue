@@ -152,8 +152,12 @@ _Platform: Components: {
 			path:    "components/istio/mesh/gateway"
 			cluster: Cluster.name
 		}
-		"\(Cluster.name)/httpbin": {
-			path:    "components/istio/mesh/httpbin"
+		"\(Cluster.name)/httpbin-backend": {
+			path:    "components/istio/mesh/httpbin/backend"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/httpbin-routes": {
+			path:    "components/istio/mesh/httpbin/routes"
 			cluster: Cluster.name
 		}
 		"\(Cluster.name)/postgres-crds": {
@@ -206,4 +210,18 @@ _Selector: {
 	// attachment for the app subdomain; `*.login.<org.domain> and
 	// login.<org.domain>`
 	GrantSubdomainApp: matchLabels: "grant.holos.run/subdomain.app": "true"
+}
+
+// _AuthProxy represents the authproxy service.  The Service name is referenced
+// in multiple components and namespaces.
+_AuthProxy: {
+	metadata: name:      "authproxy"
+	metadata: namespace: #IstioGatewaysNamespace
+
+	// pathPrefix represents the path for all hostnames where the authproxy and
+	// authorization policy redirects to start the login flow.
+	pathPrefix: "/holos/authproxy"
+	// servicePort is the port oauth2-proxy listens on and the Service is
+	// reachable at.
+	servicePort: 4180
 }

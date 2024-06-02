@@ -7,7 +7,7 @@ import "encoding/yaml"
 
 let AuthProxyClientID = "269746420997801880@holos_platform"
 
-let AuthProxyPrefix = "/holos/authproxy"
+let AuthProxyPrefix = _AuthProxy.pathPrefix
 
 // Auth Proxy
 // apiObjectMap: _IngressAuthProxy.Deployment.apiObjectMap
@@ -17,8 +17,8 @@ let AuthProxyPrefix = "/holos/authproxy"
 //apiObjectMap: _AuthPolicyRules.objects.apiObjectMap
 
 let Objects = {
-	Name:      "authproxy"
-	Namespace: #IstioGatewaysNamespace
+	Name:      _AuthProxy.metadata.name
+	Namespace: _AuthProxy.metadata.namespace
 
 	let Metadata = {
 		name:      string
@@ -66,7 +66,7 @@ let Objects = {
 						userIDClaim: "sub"
 					}
 				}]
-				server: BindAddress: ":4180"
+				server: BindAddress: ":\(_AuthProxy.servicePort)"
 				upstreamConfig: upstreams: [{
 					id:         "static://200"
 					path:       "/"
@@ -133,7 +133,7 @@ let Objects = {
 								}
 							}]
 							ports: [{
-								containerPort: 4180
+								containerPort: _AuthProxy.servicePort
 								protocol:      "TCP"
 							}]
 							securityContext: {
@@ -155,7 +155,12 @@ let Objects = {
 			metadata: ProxyMetadata
 			spec: selector: ProxyMetadata.labels
 			spec: ports: [
-				{port: 4180, targetPort: 4180, protocol: "TCP", name: "http"},
+				{
+					port:       _AuthProxy.servicePort
+					targetPort: port
+					protocol:   "TCP"
+					name:       "http"
+				},
 			]
 		}
 
