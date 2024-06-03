@@ -17,6 +17,10 @@ type Result struct {
 	HolosComponent
 	// accumulatedOutput accumulates rendered api objects.
 	accumulatedOutput string
+	// DeployFiles keys represent file paths relative to the cluster deploy
+	// directory.  Map values represent the string encoded file contents.  Used to
+	// write the argocd Application, but may be used to render any file from CUE.
+	DeployFiles FileContentMap `json:"deployFiles,omitempty" yaml:"deployFiles,omitempty"`
 }
 
 // Continue returns true if Skip is true indicating the result is to be skipped over.
@@ -133,6 +137,21 @@ func (r *Result) kustomize(ctx context.Context) error {
 	return nil
 }
 
+func (r *Result) WriteDeployFiles(ctx context.Context, path string) error {
+	log := logger.FromContext(ctx)
+	if len(r.DeployFiles) == 0 {
+		return nil
+	}
+	for k, content := range r.DeployFiles {
+		path := filepath.Join(path, k)
+		if err := r.Save(ctx, path, content); err != nil {
+			return errors.Wrap(err)
+		}
+		log.InfoContext(ctx, "wrote deploy file", "path", path, "bytes", len(content))
+	}
+	return nil
+}
+
 // Save writes the content to the filesystem for git ops.
 func (r *Result) Save(ctx context.Context, path string, content string) error {
 	log := logger.FromContext(ctx)
@@ -141,7 +160,7 @@ func (r *Result) Save(ctx context.Context, path string, content string) error {
 		log.WarnContext(ctx, "could not mkdir", "path", dir, "err", err)
 		return errors.Wrap(err)
 	}
-	// Write the kube api objects
+	// Write the file content
 	if err := os.WriteFile(path, []byte(content), os.FileMode(0644)); err != nil {
 		log.WarnContext(ctx, "could not write", "path", path, "err", err)
 		return errors.Wrap(err)

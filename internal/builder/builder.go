@@ -184,6 +184,10 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 
 	// New decoder for the full object
 	decoder = json.NewDecoder(bytes.NewReader(jsonBytes))
+
+	// TODO: When we release v1, explicitly allow unknown fields so we can add
+	// fields without needing to bump the major version.  Disallow until we reach
+	// v1 for clear error reporting.
 	decoder.DisallowUnknownFields()
 
 	switch tm.Kind {
@@ -195,11 +199,14 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 			return
 		}
 		results, err = b.buildPlan(ctx, &bp, path)
+		if err != nil {
+			return results, err
+		}
 	default:
 		err = errors.Wrap(fmt.Errorf("unknown kind: %v", tm.Kind))
 	}
 
-	return
+	return results, err
 }
 
 func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha1.BuildPlan, path holos.InstancePath) (results []*v1alpha1.Result, err error) {
@@ -246,6 +253,17 @@ func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha1.BuildPlan, 
 		} else {
 			results = append(results, result)
 		}
+	}
+
+	// Add a separate Result if there are DeployFiles from the BuildPlan.
+	if len(buildPlan.Spec.DeployFiles) > 0 {
+		results = append(results, &v1alpha1.Result{
+			HolosComponent: v1alpha1.HolosComponent{
+				TypeMeta: buildPlan.TypeMeta,
+				Metadata: buildPlan.Metadata,
+			},
+			DeployFiles: buildPlan.Spec.DeployFiles,
+		})
 	}
 
 	log.DebugContext(ctx, "returning results", "len", len(results))

@@ -16,6 +16,11 @@ package v1alpha1
 #BuildPlanSpec: {
 	disabled?:   bool                 @go(Disabled)
 	components?: #BuildPlanComponents @go(Components)
+
+	// DeployFiles keys represent file paths relative to the cluster deploy
+	// directory.  Map values represent the string encoded file contents.  Used to
+	// write the argocd Application, but may be used to render any file from CUE.
+	deployFiles?: #FileContentMap @go(DeployFiles)
 }
 
 #BuildPlanComponents: {

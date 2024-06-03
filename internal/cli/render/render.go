@@ -73,6 +73,15 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 			if result.Continue() {
 				continue
 			}
+			// DeployFiles from the BuildPlan
+			if err := result.WriteDeployFiles(ctx, cfg.WriteTo()); err != nil {
+				return errors.Wrap(err)
+			}
+			// Build plans don't have anything but DeployFiles to write.
+			if result.GetKind() == "BuildPlan" {
+				continue
+			}
+
 			// API Objects
 			path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
 			if err := result.Save(ctx, path, result.AccumulatedOutput()); err != nil {
@@ -87,6 +96,7 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 					return errors.Wrap(err)
 				}
 			}
+
 			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered")
 		}
 		return nil
@@ -126,4 +136,7 @@ type Result interface {
 	Save(ctx context.Context, path string, content string) error
 	AccumulatedOutput() string
 	KustomizationContent() string
+	WriteDeployFiles(ctx context.Context, writeTo string) error
+	GetKind() string
+	GetAPIVersion() string
 }

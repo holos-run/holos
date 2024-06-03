@@ -20,3 +20,11 @@ type HolosComponent struct {
 func (hc *HolosComponent) NewResult() *Result {
 	return &Result{HolosComponent: *hc}
 }
+
+func (hc *HolosComponent) GetAPIVersion() string {
+	return hc.APIVersion
+}
+
+func (hc *HolosComponent) GetKind() string {
+	return hc.Kind
+}

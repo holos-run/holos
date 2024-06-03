@@ -16,6 +16,10 @@ type BuildPlan struct {
 type BuildPlanSpec struct {
 	Disabled   bool                `json:"disabled,omitempty" yaml:"disabled,omitempty"`
 	Components BuildPlanComponents `json:"components,omitempty" yaml:"components,omitempty"`
+	// DeployFiles keys represent file paths relative to the cluster deploy
+	// directory.  Map values represent the string encoded file contents.  Used to
+	// write the argocd Application, but may be used to render any file from CUE.
+	DeployFiles FileContentMap `json:"deployFiles,omitempty" yaml:"deployFiles,omitempty"`
 }
 
 type BuildPlanComponents struct {
