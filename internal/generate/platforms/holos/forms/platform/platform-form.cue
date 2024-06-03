@@ -267,9 +267,45 @@ let FormBuilder = v1.#FormBuilder & {
 
 	Sections: argocd: {
 		displayName: "ArgoCD"
-		description: "Enter configuration values from the ArgoCD application in the Holos Platform project in ZITADEL."
+		description: "Configure ArgoCD platform settings."
 
-		fieldConfigs: clientID: (#StandardFields & {DisplayName: displayName}).clientID
+		fieldConfigs: {
+			clientID: (#StandardFields & {DisplayName: displayName}).clientID
+
+			repoURL: {
+				type: "input"
+				props: {
+					label:       "Git repository URL"
+					description: "Git repository URL, e.g. 'git@github.com:myorg/holos-infra.git'"
+					minLength:   3
+					maxLength:   128
+					required:    true
+				}
+				validation: messages: {
+					minLength: "Must be at least \(props.minLength) characters"
+					maxLength: "Must be at most \(props.maxLength) characters"
+				}
+			}
+
+			deployRoot: {
+				type:         "input"
+				defaultValue: ""
+				props: {
+					label:       "Deploy Root"
+					description: "Path to the parent directory of the holos deploy directory."
+					required:    false
+				}
+			}
+			targetRevision: {
+				type:         "input"
+				defaultValue: "HEAD"
+				props: {
+					label:       "Target Revision"
+					description: "Git reference to deploy."
+					required:    true
+				}
+			}
+		}
 	}
 }
 

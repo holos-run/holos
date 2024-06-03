@@ -26,6 +26,8 @@ import (
 	es "external-secrets.io/externalsecret/v1beta1"
 
 	pc "postgres-operator.crunchydata.com/postgrescluster/v1beta1"
+
+	app "argoproj.io/application/v1alpha1"
 )
 
 // #Resources represents kubernetes api objects output along side a build plan.
@@ -146,7 +148,8 @@ import (
 	KustomizeResources: [FileName=string]: {...}
 
 	// output represents the build plan provided to the holos cli.
-	Output: v1.#BuildPlan & {
+	Output: #BuildPlan & {
+		metadata: name: Name
 		spec: components: helmChartList: [Chart]
 	}
 }
@@ -161,7 +164,8 @@ import (
 	}
 
 	// output represents the build plan provided to the holos cli.
-	Output: v1.#BuildPlan & {
+	Output: #BuildPlan & {
+		metadata: name: Name
 		spec: components: kustomizeBuildList: [Kustomization]
 	}
 }
@@ -175,11 +179,41 @@ import (
 	Resources: #Resources
 
 	// output represents the build plan provided to the holos cli.
-	Output: v1.#BuildPlan & {
+	Output: #BuildPlan & {
+		metadata: name: Name
 		// resources is a map unlike other build plans which use a list.
 		spec: components: resources: "\(Name)": {
 			metadata: name: Name
 			apiObjectMap: (v1.#APIObjects & {apiObjects: Resources}).apiObjectMap
 		}
 	}
+}
+
+#BuildPlan: v1.#BuildPlan & {
+	metadata: name: string
+	// Render the ArgoCD Application
+	spec: deployFiles: (#Argo & {ComponentName: metadata.name}).deployFiles
+}
+
+// #ArgoApplication represents an argocd Application resource for each
+// component, written using the #HolosComponent.deployFiles field.
+#Argo: {
+	ComponentName: string
+
+	Application: app.#Application & {
+		metadata: name:      ComponentName
+		metadata: namespace: "argocd"
+		spec: {
+			destination: server: "https://kubernetes.default.svc"
+			project: "default"
+			source: {
+				path:           "\(_Platform.Model.argocd.deployRoot)/deploy/clusters/\(_ClusterName)/components/\(ComponentName)"
+				repoURL:        _Platform.Model.argocd.repoURL
+				targetRevision: _Platform.Model.argocd.targetRevision
+			}
+		}
+	}
+
+	// deployFiles represents the output files to write along side the component.
+	deployFiles: "clusters/\(_ClusterName)/gitops/\(ComponentName).application.gen.yaml": yaml.Marshal(Application)
 }
