@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/internal/errors"
@@ -121,6 +122,14 @@ func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.InstancePat
 }
 
 // cacheChart stores a cached copy of Chart in the chart subdirectory of path.
+//
+// It is assumed that the only method responsible for writing to chartDir is
+// cacheChart itself.
+//
+// This relies on the atomicity of moving temporary directories into place on
+// the same filesystem via os.Rename. If a syscall.EEXIST error occurs during
+// renaming, it indicates that the cached chart already exists, which is an
+// expected scenario when this function is called concurrently.
 func cacheChart(ctx context.Context, path holos.InstancePath, chartDir string, chart Chart) error {
 	log := logger.FromContext(ctx)
 
@@ -156,11 +165,16 @@ func cacheChart(ctx context.Context, path holos.InstancePath, chartDir string, c
 		dst := filepath.Join(cachePath, item.Name())
 		log.DebugContext(ctx, "rename", "src", src, "dst", dst)
 		if err := os.Rename(src, dst); err != nil {
-			return errors.Wrap(fmt.Errorf("could not rename: %w", err))
+			var linkErr *os.LinkError
+			if errors.As(err, &linkErr) && errors.Is(linkErr.Err, syscall.EEXIST) {
+				log.DebugContext(ctx, "cache already exists", "chart", chart.Name, "chart_version", chart.Version, "path", cachePath)
+			} else {
+				return errors.Wrap(fmt.Errorf("could not rename: %w", err))
+			}
 		}
 	}
 
-	log.InfoContext(ctx, "cached", "chart", chart.Name, "version", chart.Version, "path", cachePath)
+	log.InfoContext(ctx, "cached", "chart", chart.Name, "chart_version", chart.Version, "path", cachePath)
 
 	return nil
 }
