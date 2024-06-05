@@ -38,8 +38,9 @@ func NewPlatform(cfg *client.Config) *cobra.Command {
 }
 
 func NewPlatformConfig(cfg *client.Config) *cobra.Command {
-	cmd := command.New("config")
-	cmd.Short = "pull platform config"
+	cmd := command.New("model")
+	cmd.Aliases = []string{"config"}
+	cmd.Short = "pull platform model"
 	cmd.Args = cobra.MinimumNArgs(1)
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {

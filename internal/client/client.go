@@ -91,6 +91,22 @@ func (c *Client) UpdateForm(ctx context.Context, platformID string, form *object
 	return nil
 }
 
+func (c *Client) UpdatePlatformModel(ctx context.Context, platformID string, model *structpb.Struct) error {
+	start := time.Now()
+	req := &platform.UpdatePlatformRequest{
+		PlatformId: platformID,
+		Update:     &platform.PlatformMutation{Model: model},
+		UpdateMask: &fieldmaskpb.FieldMask{Paths: []string{"model"}},
+	}
+	_, err := c.pltSvc.UpdatePlatform(ctx, connect.NewRequest(req))
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	log := logger.FromContext(ctx)
+	log.DebugContext(ctx, "updated platform", "platform_id", platformID, "duration", time.Since(start))
+	return nil
+}
+
 // PlatformModel gets the platform model from the PlatformService.
 func (c *Client) PlatformModel(ctx context.Context, platformID string) (*structpb.Struct, error) {
 	start := time.Now()

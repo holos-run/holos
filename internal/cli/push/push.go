@@ -35,7 +35,7 @@ func NewPlatform(cfg *client.Config) *cobra.Command {
 	cmd.Args = cobra.NoArgs
 
 	cmd.AddCommand(NewPlatformForm(cfg))
-	// cmd.AddCommand(NewPlatformModel(cfg))
+	cmd.AddCommand(NewPlatformModel(cfg))
 
 	return cmd
 }
@@ -68,6 +68,37 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 				return errors.Wrap(err)
 			}
 			slog.Default().InfoContext(ctx, fmt.Sprintf("pushed: %s/ui/platform/%s", cfg.Client().Server(), p.GetId()))
+		}
+		return nil
+	}
+
+	return cmd
+}
+
+func NewPlatformModel(cfg *client.Config) *cobra.Command {
+	cmd := command.New("model")
+	cmd.Short = "push platform model to holos server"
+	cmd.Args = cobra.MinimumNArgs(1)
+
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Root().Context()
+		if ctx == nil {
+			return errors.Wrap(errors.New("cannot execute: no context"))
+		}
+		ctx = logger.NewContext(ctx, logger.FromContext(ctx).With("server", cfg.Client().Server()))
+		rpc := client.New(cfg)
+		for _, name := range args {
+			// Get the platform config for the platform id.
+			p, err := client.LoadPlatformConfig(ctx, name)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+
+			// Make the rpc call to update the platform form.
+			if err := rpc.UpdatePlatformModel(ctx, p.PlatformId, p.PlatformModel); err != nil {
+				return errors.Wrap(err)
+			}
+			slog.Default().InfoContext(ctx, fmt.Sprintf("pushed: %s/ui/platform/%s", cfg.Client().Server(), p.PlatformId))
 		}
 		return nil
 	}
