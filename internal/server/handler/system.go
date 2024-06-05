@@ -102,8 +102,8 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[s
 		jeff, err := tx.User.Create().
 			SetID(uuid.FromStringOrNil("018f36fb-e3f2-7f7f-a72f-ce48eb16c82d")).
 			SetEmail("jeff@openinfrastructure.co").
-			SetIss("https://login.ois.run").
-			SetSub("261773693724656988").
+			SetIss("https://login.holos.run").
+			SetSub("270167759587952539").
 			SetName("Jeff McCune").
 			Save(ctx)
 		if err != nil {
@@ -111,8 +111,8 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[s
 		}
 		nate, err := tx.User.Create().
 			SetEmail("nate@openinfrastructure.co").
-			SetIss("https://login.ois.run").
-			SetSub("261775487611699776").
+			SetIss("https://login.holos.run").
+			SetSub("269610170491914136").
 			SetName("Nate McCurdy").
 			Save(ctx)
 		if err != nil {
@@ -120,8 +120,8 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[s
 		}
 		gary, err := tx.User.Create().
 			SetEmail("gary@openinfrastructure.co").
-			SetIss("https://login.ois.run").
-			SetSub("261775531836441152").
+			SetIss("https://login.holos.run").
+			SetSub("270168639938807707").
 			SetName("Gary Larizza").
 			Save(ctx)
 		if err != nil {
