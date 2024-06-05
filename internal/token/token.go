@@ -66,10 +66,11 @@ type Claims struct {
 // NewConfig returns a Config with default values.
 func NewConfig() *Config {
 	return &Config{
-		Issuer:      "https://login.ois.run",
-		ClientID:    "262479925313799528@holos_platform",
+		Issuer:      "https://login.holos.run",
+		ClientID:    "270319630705329162@holos_platform",
 		Scopes:      []string{"openid", "email", "profile", "groups", "offline_access"},
-		ExtraScopes: []string{"urn:zitadel:iam:org:domain:primary:openinfrastructure.co"},
+		ExtraScopes: []string{},
+		// ExtraScopes: []string{"urn:zitadel:iam:org:domain:primary:openinfrastructure.co"},
 	}
 }
 
