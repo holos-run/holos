@@ -32,8 +32,10 @@ let Objects = {
 			}
 			spec: {
 				// Work with a struct of listeners instead of a list.
-				_listeners: (#WildcardListener & {Name: "admin", Selector: _Selector.GrantSubdomainAdmin}).Output
+				_listeners: (#WildcardListener & {Name: "admin", Selector: _Selector.GrantSubdomainAdmin, Cluster: true}).Output
 				_listeners: (#WildcardListener & {Name: "login", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
+				_listeners: (#WildcardListener & {Name: "app", Selector:   _Selector.GrantSubdomainApp, Cluster:   false}).Output
+				_listeners: (#WildcardListener & {Name: "app", Selector:   _Selector.GrantSubdomainApp, Cluster:   true}).Output
 				listeners: [for x in _listeners {x}]
 			}
 		}
@@ -46,16 +48,19 @@ let Objects = {
 	Selector: matchLabels: {[string]: string}
 
 	_Hostname: string
+	_Prefix:   string
 	if Cluster == true {
 		_Hostname: "\(Name).\(_ClusterName).\(_Platform.Model.org.domain)"
+		_Prefix:   "region-\(Name)"
 	}
 	if Cluster == false {
 		_Hostname: "\(Name).\(_Platform.Model.org.domain)"
+		_Prefix:   "global-\(Name)"
 	}
 
 	Output: [NAME=string]: {name: NAME}
 	Output: {
-		"\(Name)-apex": {
+		"\(_Prefix)-apex": {
 			hostname: _Hostname
 			port:     443
 			protocol: "HTTPS"
@@ -68,7 +73,7 @@ let Objects = {
 			allowedRoutes: namespaces: from:     "Selector"
 			allowedRoutes: namespaces: selector: Selector
 		}
-		"\(Name)-prefix": {
+		"\(_Prefix)-prefix": {
 			hostname: "*.\(_Hostname)"
 			port:     443
 			protocol: "HTTPS"

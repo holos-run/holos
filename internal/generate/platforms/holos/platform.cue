@@ -62,24 +62,39 @@ _Projects: {
 			spec: commonName: "*." + Subdomain
 		}
 	}
-}
 
-// Manage certificates for admin services in workload clusters.
-for Cluster in _Fleets.workload.clusters {
-	// Issue a wildcard cert for all admin interfaces.   We need to verify this is
-	// well-behaved with Istio and HTTP2.
-	let Subdomain = "admin.\(Cluster.name).\(_Platform.Model.org.domain)"
-	_Projects: holos: spec: {
+	holosapp: spec: {
+		namespaces: "dev-holos":  _
+		namespaces: "prod-holos": _
+		namespaces: "jeff-holos": _
+
+		let Subdomain = "app.\(_Platform.Model.org.domain)"
 		certificates: "\(Subdomain)": #IngressCertificate
 		certificates: "any.\(Subdomain)": #IngressCertificate & {
 			spec: commonName: "*." + Subdomain
 		}
 	}
+}
 
-	// Issue a dedicated cert for argocd.  This may be removed if the wildcard
-	// works with the Gateway API.
-	let Name = "argocd.\(Subdomain)"
-	_Projects: argocd: spec: certificates: "\(Name)": #IngressCertificate & {metadata: name: Name}
+// Manage per-cluster certificates for services in workload clusters.
+for Cluster in _Fleets.workload.clusters {
+	// Issue a wildcard cert for all admin interfaces.   We need to verify this is
+	// well-behaved with Istio and HTTP2.
+	let CertPair = #ClusterCertPair & {cluster: Cluster.name}
+	_Projects: holos: spec: (CertPair & {name: "admin"}).spec
+
+	// Holos app certs
+	_Projects: holosapp: spec: (CertPair & {name: "app"}).spec
+}
+
+#ClusterCertPair: {
+	name:    string
+	cluster: string
+	let Subdomain = name + ".\(cluster).\(_Platform.Model.org.domain)"
+	spec: certificates: (Subdomain): #IngressCertificate
+	spec: certificates: "any.\(Subdomain)": #IngressCertificate & {
+		spec: commonName: "*." + Subdomain
+	}
 }
 
 // Platform components to manage.
@@ -118,6 +133,11 @@ _Platform: Components: {
 			path:    "components/login/zitadel-certs"
 			cluster: Cluster.name
 		}
+		// ECR Credentials (ecr-creds-<account-number>)
+		"\(Cluster.name)/ecr-creds-manager": {
+			path:    "components/ecr-creds-manager"
+			cluster: Cluster.name
+		}
 	}
 
 	// Components to manage on workload clusters.
@@ -134,6 +154,14 @@ _Platform: Components: {
 			path:    "components/secretstores"
 			cluster: Cluster.name
 		}
+		// Secret ecr-creds-<aws-account-number> in each Namespace to pull images
+		// from the private ECR registry.
+		"\(Cluster.name)/ecr-creds-refresher": {
+			path:    "components/ecr-creds-refresher"
+			cluster: Cluster.name
+		}
+		// We use HTTPRoute from the Kubernetes Gateway API v1 instead of
+		// VirtualService from the Istio Gateway API.
 		"\(Cluster.name)/gateway-api": {
 			path:    "components/gateway-api"
 			cluster: Cluster.name
@@ -211,6 +239,16 @@ _Platform: Components: {
 		}
 		"\(Cluster.name)/argo-creds": {
 			path:    "components/argo/creds"
+			cluster: Cluster.name
+		}
+
+		// Holos server
+		"\(Cluster.name)/apps/dev-holos-infra": {
+			path:    "apps/dev/holos/infra"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/apps/dev-holos-app": {
+			path:    "apps/dev/holos/app"
 			cluster: Cluster.name
 		}
 	}

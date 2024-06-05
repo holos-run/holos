@@ -307,6 +307,37 @@ let FormBuilder = v1.#FormBuilder & {
 			}
 		}
 	}
+
+	Sections: aws: {
+		displayName: "AWS"
+		description: "Configure AWS settings."
+
+		fieldConfigs: {
+			accountNumber: {
+				type: "input"
+				props: {
+					label:       "AWS Account Number"
+					description: "AWS Account Number.  \(validation.messages.required)"
+					pattern:     "^[0-9]+$"
+					required:    true
+				}
+				validation: messages: {
+					pattern:  "Must be a positive integer.  \(required)"
+					required: "aws sts get-caller-identity"
+				}
+			}
+			primaryRegion: {
+				type: "select"
+				props: {
+					label:       "Primary Region"
+					description: "Select the primary region for AWS resources."
+					multiple:    false
+					options:     AWSRegions
+					required:    true
+				}
+			}
+		}
+	}
 }
 
 #StandardFields: {

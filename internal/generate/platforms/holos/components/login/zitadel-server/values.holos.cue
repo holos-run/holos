@@ -3,7 +3,7 @@ package holos
 #Values: {
 	// https://github.com/zitadel/zitadel/releases
 	// Overrides the image tag whose default is the chart appVersion.
-	image: tag: "v2.49.1"
+	image: tag: "v2.54.1"
 
 	// Database credentials
 	// Refer to https://access.crunchydata.com/documentation/postgres-operator/5.2.0/architecture/user-management/

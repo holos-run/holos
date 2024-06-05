@@ -10,8 +10,7 @@ let Objects = {
 	// Constrain the metadata of all component resources.
 	Resources: [_]: [_]: metadata: _HTTPBin.metadata
 
-	// Grant the Gateway namespace the ability to refer to the backend httpbin
-	// service in HTTPRoutes.
+	// Grant the Gateway ns the ability to refer to the Service from HTTPRoutes.
 	Resources: ReferenceGrant: (#IstioGatewaysNamespace): #ReferenceGrant
 
 	Resources: {

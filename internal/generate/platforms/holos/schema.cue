@@ -164,3 +164,34 @@ _Projects: #Projects
 // #Selector represents label selectors.
 #Selector: [string]: matchLabels: {[string]: string}
 _Selector: #Selector
+
+// #AppInfo represents the data structure for an application deployed onto the
+// platform.
+#AppInfo: {
+	metadata: {
+		name:      string
+		namespace: string
+		labels: {[string]: string}
+		annotations: {[string]: string}
+	}
+
+	spec: env:       string
+	spec: component: string
+
+	spec: region: hostname: string
+	spec: global: hostname: string
+
+	spec: dns: segments: {
+		env: [] | [string]
+		name: [] | [string]
+		cluster: [] | [string]
+		domain: [] | [string]
+	}
+
+	// The primary port for HTTPRoute
+	spec: port: number
+
+	spec: selector: matchLabels: {[string]: string}
+
+	status: component: string
+}
