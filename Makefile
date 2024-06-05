@@ -7,7 +7,7 @@ REPO_PATH=$(ORG_PATH)/$(PROJ)
 VERSION := $(shell cat version/embedded/major version/embedded/minor version/embedded/patch | xargs printf "%s.%s.%s")
 BIN_NAME := holos
 
-DOCKER_REPO=quay.io/openinfrastructure/holos
+DOCKER_REPO=quay.io/holos-run/holos
 IMAGE_NAME=$(DOCKER_REPO)
 
 $( shell mkdir -p bin)
@@ -146,6 +146,11 @@ frontend: buf
 	mkdir -p internal/frontend/holos/dist
 	cd internal/frontend/holos && ng build
 	touch internal/frontend/frontend.go
+
+.PHONY: image
+image: build
+	docker build . -t ${DOCKER_REPO}:v$(shell ./bin/holos --version)
+	docker push ${DOCKER_REPO}:v$(shell ./bin/holos --version)
 
 .PHONY: help
 help:  ## Display this help menu.
