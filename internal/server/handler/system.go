@@ -160,6 +160,21 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[s
 			return errors.Wrap(err)
 		}
 
+		// The holos platform
+		err = tx.Platform.Create().
+			SetID(uuid.FromStringOrNil("018fa1cf-a609-7463-aa6e-fa53bfded1dc")).
+			SetName("holos").
+			SetDisplayName("Holos Platform").
+			SetForm(&form).
+			SetModel(&model).
+			SetCreator(jeff).
+			SetEditor(jeff).
+			SetOrgID(org.ID).
+			Exec(ctx)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
 		// Add a platform
 		err = tx.Platform.Create().
 			SetID(uuid.FromStringOrNil("018f36fb-e3ff-7f7f-a5d1-7ca2bf499e94")).
@@ -173,22 +188,6 @@ func (h *SystemHandler) SeedDatabase(ctx context.Context, req *connect.Request[s
 			Exec(ctx)
 		if err != nil {
 			return errors.Wrap(err)
-		}
-
-		stuff := []string{"Jeff", "Gary", "Nate"}
-		for _, name := range stuff {
-			err := tx.Platform.Create().
-				SetName(strings.ToLower(name)).
-				SetDisplayName(name + "'s Platform").
-				SetForm(&form).
-				SetModel(&model).
-				SetCreator(jeff).
-				SetEditor(jeff).
-				SetOrgID(org.ID).
-				Exec(ctx)
-			if err != nil {
-				return errors.Wrap(err)
-			}
 		}
 
 		return nil
