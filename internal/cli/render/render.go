@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"runtime"
 
 	"github.com/holos-run/holos/internal/builder"
 	"github.com/holos-run/holos/internal/cli/command"
@@ -113,6 +114,9 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 	cmd.PersistentFlags().AddGoFlagSet(config.ClientFlagSet())
 	cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
 
+	var concurrency int
+	cmd.Flags().IntVar(&concurrency, "concurrency", min(runtime.NumCPU(), 8), "Number of concurrent components to render")
+
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
 		build := builder.New(builder.Entrypoints(args))
@@ -122,7 +126,7 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 			return errors.Wrap(err)
 		}
 
-		return render.Platform(ctx, platform, cmd.ErrOrStderr())
+		return render.Platform(ctx, concurrency, platform, cmd.ErrOrStderr())
 	}
 
 	return cmd
