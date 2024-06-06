@@ -3,6 +3,8 @@ package holos
 // Produce a kubernetes objects build plan.
 (#Kubernetes & Objects).Output
 
+let Image = "quay.io/holos-run/holos:v0.83.1-7-gd9fe32b"
+
 _AppInfo: spec: component: "app"
 
 let Objects = {
@@ -59,7 +61,7 @@ let Objects = {
 						containers: [
 							{
 								name:            Metadata.name
-								image:           "quay.io/holos-run/holos:v0.83.1"
+								image:           Image
 								imagePullPolicy: "IfNotPresent"
 								command: [
 									"/app/bin/holos",
