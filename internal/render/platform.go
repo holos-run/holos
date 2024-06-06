@@ -26,27 +26,32 @@ func Platform(ctx context.Context, concurrency int, pf *v1alpha1.Platform, stder
 		for idx, component := range pf.Spec.Components {
 			select {
 			case <-ctx.Done():
-				return nil
+				return ctx.Err()
 			default:
 				// Capture idx and component to avoid issues with closure. Can be removed on Go 1.22.
 				idx, component := idx, component
 				// Worker go routine.  Blocks if limit has been reached.
 				g.Go(func() error {
-					start := time.Now()
-					log := logger.FromContext(ctx).With("path", component.Path, "cluster", component.Cluster, "num", idx+1, "total", total)
-					log.DebugContext(ctx, "render component")
+					select {
+					case <-ctx.Done():
+						return ctx.Err()
+					default:
+						start := time.Now()
+						log := logger.FromContext(ctx).With("path", component.Path, "cluster", component.Cluster, "num", idx+1, "total", total)
+						log.DebugContext(ctx, "render component")
 
-					// Execute a sub-process to limit CUE memory usage.
-					args := []string{"render", "component", "--cluster-name", component.Cluster, component.Path}
-					result, err := util.RunCmd(ctx, "holos", args...)
-					if err != nil {
-						_, _ = io.Copy(stderr, result.Stderr)
-						return errors.Wrap(fmt.Errorf("could not render component: %w", err))
+						// Execute a sub-process to limit CUE memory usage.
+						args := []string{"render", "component", "--cluster-name", component.Cluster, component.Path}
+						result, err := util.RunCmd(ctx, "holos", args...)
+						if err != nil {
+							_, _ = io.Copy(stderr, result.Stderr)
+							return errors.Wrap(fmt.Errorf("could not render component: %w", err))
+						}
+
+						duration := time.Since(start)
+						log.InfoContext(ctx, "ok render component", "duration", duration)
+						return nil
 					}
-
-					duration := time.Since(start)
-					log.InfoContext(ctx, "ok render component", "duration", duration)
-					return nil
 				})
 			}
 		}
