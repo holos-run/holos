@@ -33,10 +33,32 @@ let Objects = {
 			metadata: ProxyMetadata
 			data: "config.yaml": yaml.Marshal(AuthProxyConfig)
 			let AuthProxyConfig = {
-				injectResponseHeaders: [{
-					name: _AuthProxy.idTokenHeader
-					values: [{claim: "id_token"}]
-				}]
+				injectResponseHeaders: [
+					{
+						name: _AuthProxy.idTokenHeader
+						values: [{claim: "id_token"}]
+					},
+					{
+						name: "x-auth-request-email"
+						values: [{claim: "email"}]
+					},
+					{
+						name: "x-auth-request-groups"
+						values: [{claim: "groups"}]
+					},
+					{
+						name: "x-forwarded-email"
+						values: [{claim: "email"}]
+					},
+					{
+						name: "x-forwarded-user"
+						values: [{claim: "email"}]
+					},
+					{
+						name: "x-forwarded-preferred-username"
+						values: [{claim: "preferred_username"}]
+					},
+				]
 				providers: [{
 					id:       "Holos Platform"
 					name:     "Holos Platform"
@@ -55,7 +77,7 @@ let Objects = {
 						audienceClaims: ["aud"]
 						emailClaim:  "email"
 						groupsClaim: "groups"
-						userIDClaim: "sub"
+						userIDClaim: "email"
 					}
 				}]
 				server: BindAddress: ":\(_AuthProxy.servicePort)"

@@ -3,13 +3,17 @@ package holos
 // Produce a kubernetes objects build plan.
 (#Kubernetes & Objects).Output
 
-// The Secret containing the pgbackrest s3.conf file has the same name as the S3
-// bucket the backups are sent to.
-let S3Secret = _Platform.Model.zitadel.backupBucketName
+// Restore from backup.  Flip this to true after the database is provisioned and
+// a backup has been taken.
+let RestoreFromBackup = false
+
+// The Secret containing the pgbackrest s3.conf file.
+let S3Secret = "pgbackrest"
 
 let Cluster = _Clusters[_ClusterName]
-let ZitadelUser = _DBName
-let ZitadelAdmin = "\(_DBName)-admin"
+
+let DatabaseUser = _DBName
+let DatabaseAdmin = "\(_DBName)-admin"
 
 // This must be an external storage bucket for our architecture.
 let BucketRepoName = "repo2"
@@ -22,18 +26,12 @@ let BucketRepoName = "repo2"
 let RestoreOptions = []
 
 let Objects = {
-	Name:      "zitadel-database"
-	Namespace: _ZitadelNamespace
+	Name:      "backstage-database"
+	Namespace: "backstage"
 
 	Resources: {
 		// All resources go into the same namespace
-		[_]: [_]: metadata: namespace: _ZitadelNamespace
-
-		// S3 bucket configuration.  Note the S3 secret contains a single file,
-		// s3.conf, which is currently manually created and placed in the management
-		// cluster.
-		// Refer to https://pgbackrest.org/user-guide.html
-		ExternalSecret: "\(S3Secret)": #ExternalSecret
+		[_]: [_]: metadata: namespace: Namespace
 
 		PostgresCluster: db: HighlyAvailable & {
 			metadata: name: _DBName
@@ -46,17 +44,17 @@ let Objects = {
 				customReplicationTLSSecret: name: "\(_DBName)-repl-tls"
 				// Refer to https://access.crunchydata.com/documentation/postgres-operator/latest/references/crd/5.5.x/postgrescluster#postgresclusterspecusersindex
 				users: [
-					{name: ZitadelUser},
+					{name: DatabaseUser},
 					// NOTE: Users with SUPERUSER role cannot log in through pgbouncer.  Use options that allow zitadel admin to use pgbouncer.
 					// Refer to: https://github.com/CrunchyData/postgres-operator/issues/3095#issuecomment-1904712211
-					{name: ZitadelAdmin, options: "CREATEDB CREATEROLE", databases: [_DBName, "postgres"]},
+					{name: DatabaseAdmin, options: "CREATEDB CREATEROLE", databases: [_DBName, "postgres"]},
 				]
 				users: [...{databases: [_DBName, ...]}]
 				instances: [{
 					replicas: 2
 					dataVolumeClaimSpec: {
 						accessModes: ["ReadWriteOnce"]
-						resources: requests: storage: "50Gi"
+						resources: requests: storage: "20Gi"
 					}
 				}]
 				standby: {
@@ -70,9 +68,9 @@ let Objects = {
 				}
 				// Monitoring configuration
 				monitoring: pgmonitor: exporter: image: "registry.developers.crunchydata.com/crunchydata/crunchy-postgres-exporter:ubi8-5.5.1-0"
-				// Restore from backup if and only if the cluster is primary and the
-				// "Provision from Backup" form checkbox is checked.
-				if Cluster.primary && _Platform.Model.zitadel.backupRestore {
+				// Restore from backup if and only if the cluster is primary and
+				// RestoreFromBackup has transitioned from false to true.
+				if Cluster.primary && RestoreFromBackup {
 					dataSource: pgbackrest: {
 						stanza:        "db"
 						configuration: backups.pgbackrest.configuration
@@ -122,7 +120,7 @@ let Objects = {
 							name: "repo1"
 							volume: volumeClaimSpec: {
 								accessModes: ["ReadWriteOnce"]
-								resources: requests: storage: string | *"50Gi"
+								resources: requests: storage: string | *"4Gi"
 							}
 						},
 						{
@@ -131,8 +129,8 @@ let Objects = {
 							schedules: full:         string | *"0 1 * * 0"
 							schedules: differential: string | *"0 1 * * 1-6"
 							s3: {
-								bucket:   _Platform.Model.zitadel.backupBucketName
-								region:   _Platform.Model.zitadel.backupBucketRegion
+								bucket:   _BackupBucket.metadata.name
+								region:   _BackupBucket.spec.region
 								endpoint: "s3.dualstack.\(region).amazonaws.com"
 							}
 						},
@@ -156,12 +154,12 @@ let HighlyAvailable = {
 			replicas: 2
 			dataVolumeClaimSpec: {
 				accessModes: ["ReadWriteOnce"]
-				resources: requests: storage: string | *"50Gi"
+				resources: requests: storage: string | *"20Gi"
 			}
 			affinity: podAntiAffinity: preferredDuringSchedulingIgnoredDuringExecution: [{
 				weight: 1
 				podAffinityTerm: {
-					topologyKey: "kubernetes.io/hostname"
+					topologyKey: "topology.kubernetes.io/zone"
 					labelSelector: matchLabels: {
 						"postgres-operator.crunchydata.com/cluster":      metadata.name
 						"postgres-operator.crunchydata.com/instance-set": name
@@ -178,7 +176,7 @@ let HighlyAvailable = {
 			affinity: podAntiAffinity: preferredDuringSchedulingIgnoredDuringExecution: [{
 				weight: 1
 				podAffinityTerm: {
-					topologyKey: "kubernetes.io/hostname"
+					topologyKey: "topology.kubernetes.io/zone"
 					labelSelector: matchLabels: {
 						"postgres-operator.crunchydata.com/cluster": metadata.name
 						"postgres-operator.crunchydata.com/role":    "pgbouncer"

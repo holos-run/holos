@@ -29,6 +29,7 @@ _Projects: {
 	// Admin projects accessible at *.admin.<cluster>.<org.domain>
 	holos: spec: namespaces: "holos-system": _
 	argocd: spec: namespaces: argocd:        _
+	backstage: spec: namespaces: backstage:  _
 
 	// Sync secrets from the management cluster to workload clusters.
 	"external-secrets": spec: namespaces: "external-secrets": _
@@ -61,6 +62,12 @@ _Projects: {
 		certificates: "any.\(Subdomain)": #IngressCertificate & {
 			spec: commonName: "*." + Subdomain
 		}
+	}
+
+	// Crossplane
+	crossplane: spec: namespaces: {
+		"aws-pod-identity":  _
+		"crossplane-system": _
 	}
 
 	holosapp: spec: {
@@ -136,6 +143,23 @@ _Platform: Components: {
 		// ECR Credentials (ecr-creds-<account-number>)
 		"\(Cluster.name)/ecr-creds-manager": {
 			path:    "components/ecr-creds-manager"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/eks-pod-identity-webhook": {
+			path:    "components/eks-pod-identity-webhook"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/crossplane_crds": {
+			path:    "components/crossplane/crds"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/crossplane": {
+			path:    "components/crossplane/controller"
+			cluster: Cluster.name
+		}
+		// Backstage certs
+		"\(Cluster.name)/backstage-certs": {
+			path:    "components/backstage/management/certs"
 			cluster: Cluster.name
 		}
 	}
@@ -251,6 +275,24 @@ _Platform: Components: {
 			path:    "apps/dev/holos/app"
 			cluster: Cluster.name
 		}
+
+		// Backstage
+		"\(Cluster.name)/backstage-secrets": {
+			path:    "components/backstage/workload/secrets"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/backstage-database": {
+			path:    "components/backstage/workload/database"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/backstage-backend": {
+			path:    "components/backstage/workload/backend"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/backstage-routes": {
+			path:    "components/backstage/workload/routes"
+			cluster: Cluster.name
+		}
 	}
 }
 
@@ -303,4 +345,9 @@ _AuthProxy: {
 
 	// provider is the istio meshconfig extauthz provider of the authproxy
 	provider: "default-gateway-authproxy"
+}
+
+_BackupBucket: {
+	metadata: name: _Platform.Model.zitadel.backupBucketName
+	spec: region:   _Platform.Model.zitadel.backupBucketRegion
 }
