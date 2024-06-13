@@ -21,6 +21,16 @@ let Objects = {
 			}
 		}
 
+		// Manage a service account to prevent ArgoCD from pruning it.
+		ServiceAccount: "default-istio": {
+			metadata: namespace: Namespace
+			metadata: labels: {
+				"gateway.istio.io/managed":               "istio.io-gateway-controller"
+				"gateway.networking.k8s.io/gateway-name": "default"
+				"istio.io/gateway-name":                  "default"
+			}
+		}
+
 		// The default gateway with all listeners attached to tls certs.
 		Gateway: default: {
 			metadata: {
