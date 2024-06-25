@@ -63,6 +63,29 @@ let FormBuilder = v1.#FormBuilder & {
 		}
 	}
 
+	Sections: github: {
+		displayName: "GitHub"
+		description: "Configure the platform GitHub integration.  These values are used by the Backstage component."
+
+		fieldConfigs: {
+			primaryOrg: {
+				type: "input"
+				props: {
+					label:       "Organization"
+					description: "Primary GitHub orgranization where code repositories reside. \(validation.messages.required)"
+					pattern:     "^[a-z]([a-z0-9]|-){\(minLength-2),\(maxLength-2)}[a-z]$"
+					minLength:   2
+					maxLength:   39
+					required:    true
+				}
+				validation: messages: {
+					pattern:  "It must be \(props.minLength) to \(props.maxLength) lowercase letters, digits, or hyphens. It must start with a letter. Trailing hyphens are prohibited. \(required)"
+					required: "GitHub organization name"
+				}
+			}
+		}
+	}
+
 	Sections: eso: {
 		displayName: "Secret Store"
 		description: "Configure the platform secret store.  These values are used by the external-secrets-creds component.  Note: this information is not sufficient to read secrets.  To read secrets, the credential refresher job requires the workload clusters to be configured as workload identity providers."

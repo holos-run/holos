@@ -1,5 +1,7 @@
 package holos
 
+import "encoding/yaml"
+
 // Produce a kubernetes objects build plan.
 (#Kubernetes & Objects).Output
 
@@ -17,10 +19,25 @@ let Objects = {
 		"app.kubernetes.io/component": Name
 	}
 
-	// Grant the Gateway ns the ability to refer to the Service from HTTPRoutes.
-	Resources: ReferenceGrant: (#IstioGatewaysNamespace): #ReferenceGrant
-
 	Resources: {
+		// Grant the Gateway ns the ability to refer to the Service from HTTPRoutes.
+		ReferenceGrant: (#IstioGatewaysNamespace): #ReferenceGrant
+
+		// For the Github integration.
+		ExternalSecret: [_]: #ExternalSecret & {metadata: namespace: Namespace}
+		ExternalSecret: githubAppCredentials: metadata: name: "github-app-credentials"
+
+		// Primary configuration for backstage to pull unified config data.
+		ConfigMap: config: {
+			metadata: namespace: Namespace
+			metadata: name:      Name
+			data: {
+				"app-config.yaml":            yaml.Marshal(_BackstageAppConfig)
+				"app-config.production.yaml": yaml.Marshal(_BackstageProductionConfig)
+				"iam.yaml": yaml.MarshalStream([for x in _BackstageIAMConfig {x}])
+			}
+		}
+
 		Deployment: backstage: {
 			metadata: labels: MatchLabels
 			spec: {
@@ -41,9 +58,9 @@ let Objects = {
 								"node",
 								"packages/backend",
 								"--config",
-								"app-config.yaml",
+								"/config/app-config.yaml",
 								"--config",
-								"app-config.production.yaml",
+								"/config/app-config.production.yaml",
 							]
 							// Refer to https://backstage.io/docs/conf/writing#environment-variable-overrides
 							//
@@ -115,26 +132,25 @@ let Objects = {
 							}]
 							volumeMounts: [
 								{
-									name:      "app-config"
-									mountPath: "/app/app-config.yaml"
-									subPath:   "app-config.yaml"
+									name:      "config"
+									mountPath: "/config"
 								},
 								{
-									name:      "app-config"
-									mountPath: "/app/app-config.production.yaml"
-									subPath:   "app-config.production.yaml"
-								},
-								{
-									name:      "app-config"
-									mountPath: "/app/iam.yaml"
-									subPath:   "iam.yaml"
+									name:      "github-app-credentials"
+									mountPath: "/secrets/github-app-credentials"
 								},
 							]
 						}]
-						volumes: [{
-							name: "app-config"
-							secret: secretName: "backstage-backend"
-						}]
+						volumes: [
+							{
+								name: "config"
+								configMap: name: ConfigMap.config.metadata.name
+							},
+							{
+								name: "github-app-credentials"
+								secret: secretName: ExternalSecret.githubAppCredentials.metadata.name
+							},
+						]
 					}
 				}
 			}
