@@ -178,10 +178,87 @@ let Objects = {
 								key: "request.auth.audiences"
 								values: [_AuthProxy.projectID]
 							},
+						]
+					},
+				]
+			}
+		}
+
+		AuthorizationPolicy: "\(Name)-allow-portal": {
+			_description: "Allow portal access"
+
+			spec: {
+				action:   "ALLOW"
+				selector: Selector
+				rules: [
+					{
+						to: [{
+							// Refer to https://istio.io/latest/docs/ops/best-practices/security/#writing-host-match-policies
+							operation: hosts: [
+								"backstage.admin.\(_ClusterName).\(_Platform.Model.org.domain)",
+								"backstage.admin.\(_ClusterName).\(_Platform.Model.org.domain):*",
+							]
+						}]
+						when: [
+							// Must be issued by the platform identity provider.
+							{
+								key: "request.auth.principal"
+								values: [_AuthProxy.issuerURL + "/*"]
+							},
+							// Must be intended for an app within the Holos Platform ZITADEL project.
+							{
+								key: "request.auth.audiences"
+								values: [_AuthProxy.projectID]
+							},
 							// Must be presented by the istio ExtAuthz auth proxy.
 							{
 								key: "request.auth.presenter"
 								values: [_AuthProxy.clientID]
+							},
+							{
+								key: "request.auth.claims[groups]"
+								values: ["portal-view"]
+							},
+						]
+					},
+				]
+			}
+		}
+
+		AuthorizationPolicy: "\(Name)-allow-argocd": {
+			_description: "Allow portal access"
+
+			spec: {
+				action:   "ALLOW"
+				selector: Selector
+				rules: [
+					{
+						to: [{
+							// Refer to https://istio.io/latest/docs/ops/best-practices/security/#writing-host-match-policies
+							operation: hosts: [
+								"argocd.admin.\(_ClusterName).\(_Platform.Model.org.domain)",
+								"argocd.admin.\(_ClusterName).\(_Platform.Model.org.domain):*",
+							]
+						}]
+						when: [
+							// Must be issued by the platform identity provider.
+							{
+								key: "request.auth.principal"
+								values: [_AuthProxy.issuerURL + "/*"]
+							},
+							// Must be intended for an app within the Holos Platform ZITADEL project.
+							{
+								key: "request.auth.audiences"
+								values: [_AuthProxy.projectID]
+							},
+							// Must be presented by the istio ExtAuthz auth proxy.
+							{
+								key: "request.auth.presenter"
+								values: [_AuthProxy.clientID]
+							},
+							{
+								key: "request.auth.claims[groups]"
+								values: ["argocd-view"]
 							},
 						]
 					},

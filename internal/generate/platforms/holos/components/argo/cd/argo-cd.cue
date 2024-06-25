@@ -60,6 +60,7 @@ let Chart = {
 
 		// Refer to https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/
 		let Policy = [
+			"g, argocd-view, role:readonly",
 			"g, prod-cluster-view, role:readonly",
 			"g, prod-cluster-edit, role:readonly",
 			"g, prod-cluster-admin, role:admin",

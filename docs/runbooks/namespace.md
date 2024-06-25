@@ -16,7 +16,7 @@ process.  This ensures a namespace scoped `SecretStore` is created to sync
  3. Render the platform
  4. Apply the `namespaces` component to the management cluster
  5. Apply the `eso-creds-manager` component to the management cluster to create the `eso-reader` ksa for the namespace `SecretStore`
- 6. Get a timestamp: `STAMP="$(date +%s)`
+ 6. Get a timestamp: `STAMP="$(date +%s)"`
  7. Run the job to populate ecr creds: `kubectl create job -n holos-system --from=cronjob/ecr-creds-manager ecr-creds-manager-$STAMP`
  8. Wait for the job to complete: `kubectl -n holos-system logs -l job-name=ecr-creds-manager-$STAMP -f`
  9. Apply the `namespaces` component to the workload clusters

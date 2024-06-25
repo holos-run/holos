@@ -32,9 +32,7 @@ import "strings"
 // Configuration for access control on workloads. See more details
 // at:
 // https://istio.io/docs/reference/config/security/authorization-policy.html
-#AuthorizationPolicySpec: ({} | {
-	provider: _
-}) & {
+#AuthorizationPolicySpec: {
 	// Optional.
 	//
 	// Valid Options: ALLOW, DENY, AUDIT, CUSTOM

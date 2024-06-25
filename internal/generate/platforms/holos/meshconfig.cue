@@ -40,6 +40,13 @@ package holos
 			"authorization",
 			"path",
 			_AuthProxy.idTokenHeader,
+			"x-forwaded-access-token",
+			// For Backstage oauth2-proxy auth provider
+			"x-forwarded-email",
+			"x-forwarded-user",
+			"x-forwarded-preferred-username",
+			"x-auth-request-email",
+			"x-auth-request-groups",
 		]
 		includeAdditionalHeadersInCheck: "X-Auth-Request-Redirect": "%REQ(x-forwarded-proto)%://%REQ(:authority)%%REQ(:path)%%REQ(:query)%"
 		includeRequestHeadersInCheck: [

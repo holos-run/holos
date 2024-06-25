@@ -28,6 +28,11 @@ import (
 	pc "postgres-operator.crunchydata.com/postgrescluster/v1beta1"
 
 	app "argoproj.io/application/v1alpha1"
+
+	cpv1 "pkg.crossplane.io/provider/v1"
+	cpdrcv1beta1 "pkg.crossplane.io/deploymentruntimeconfig/v1beta1"
+	cpfuncv1beta1 "pkg.crossplane.io/function/v1beta1"
+	cpawspcv1beta1 "aws.upbound.io/providerconfig/v1beta1"
 )
 
 // #Resources represents kubernetes api objects output along side a build plan.
@@ -63,6 +68,12 @@ import (
 	Gateway: [string]: gwv1.#Gateway & {
 		spec: gatewayClassName: string | *"istio"
 	}
+
+	// Crossplane resources
+	DeploymentRuntimeConfig: [string]: cpdrcv1beta1.#DeploymentRuntimeConfig
+	Provider: [string]:                cpv1.#Provider
+	Function: [string]:                cpfuncv1beta1.#Function
+	ProviderConfig: [string]:          cpawspcv1beta1.#ProviderConfig
 }
 
 #ReferenceGrant: rgv1.#ReferenceGrant & {
