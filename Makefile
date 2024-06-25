@@ -148,7 +148,7 @@ frontend: buf
 	touch internal/frontend/frontend.go
 
 .PHONY: image
-image: build
+image: build ## Docker image build
 	docker build . -t ${DOCKER_REPO}:v$(shell ./bin/holos --version)
 	docker push ${DOCKER_REPO}:v$(shell ./bin/holos --version)
 
