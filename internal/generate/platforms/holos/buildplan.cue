@@ -105,7 +105,7 @@ import (
 
 	Chart: core.#HelmChart & {
 		metadata: name: string | *Name
-		namespace: string | *Namespace
+		metadata: namespace: string | *Namespace
 		chart: name:       string | *Name
 		chart: release:    chart.name
 		chart: version:    string | *Version
