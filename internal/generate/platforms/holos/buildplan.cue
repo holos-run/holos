@@ -2,7 +2,7 @@ package holos
 
 import (
 	"encoding/yaml"
-	v1 "github.com/holos-run/holos/api/v1alpha1"
+	core "github.com/holos-run/holos/api/core/v1alpha2"
 
 	kc "sigs.k8s.io/kustomize/api/types"
 
@@ -103,7 +103,7 @@ import (
 
 	Values: {...}
 
-	Chart: v1.#HelmChart & {
+	Chart: core.#HelmChart & {
 		metadata: name: string | *Name
 		namespace: string | *Namespace
 		chart: name:       string | *Name
@@ -119,15 +119,15 @@ import (
 			// resourcesFile represents the file helm output is written two and
 			// kustomize reads from.  Typically "resources.yaml" but referenced as a
 			// constant to ensure the holos cli uses the same file.
-			resourcesFile: v1.#ResourcesFile
+			resourcesFile: core.#ResourcesFile
 			// kustomizeFiles represents the files in a kustomize directory tree.
-			kustomizeFiles: v1.#FileContentMap
+			kustomizeFiles: core.#FileContentMap
 			for FileName, Object in KustomizeFiles {
 				kustomizeFiles: "\(FileName)": yaml.Marshal(Object)
 			}
 		}
 
-		apiObjectMap: (v1.#APIObjects & {apiObjects: Resources}).apiObjectMap
+		apiObjectMap: (core.#APIObjects & {apiObjects: Resources}).apiObjectMap
 	}
 
 	// EnableKustomizePostProcessor processes helm output with kustomize if true.
@@ -147,7 +147,7 @@ import (
 		"kustomization.yaml": kc.#Kustomization & {
 			apiVersion: "kustomize.config.k8s.io/v1beta1"
 			kind:       "Kustomization"
-			resources: [v1.#ResourcesFile, for FileName, _ in KustomizeResources {FileName}]
+			resources: [core.#ResourcesFile, for FileName, _ in KustomizeResources {FileName}]
 			patches: [for x in KustomizePatches {x}]
 		}
 	}
@@ -170,7 +170,7 @@ import (
 	// Name represents the holos component name
 	Name: string
 
-	Kustomization: v1.#KustomizeBuild & {
+	Kustomization: core.#KustomizeBuild & {
 		metadata: name: string | *Name
 	}
 
@@ -195,12 +195,12 @@ import (
 		// resources is a map unlike other build plans which use a list.
 		spec: components: resources: "\(Name)": {
 			metadata: name: Name
-			apiObjectMap: (v1.#APIObjects & {apiObjects: Resources}).apiObjectMap
+			apiObjectMap: (core.#APIObjects & {apiObjects: Resources}).apiObjectMap
 		}
 	}
 }
 
-#BuildPlan: v1.#BuildPlan & {
+#BuildPlan: core.#BuildPlan & {
 	metadata: name: string
 	// Render the ArgoCD Application
 	spec: deployFiles: (#Argo & {ComponentName: metadata.name}).deployFiles

@@ -26,7 +26,7 @@ func makeBuildRunFunc(cfg *client.Config) command.RunFunc {
 		}
 		outs := make([]string, 0, len(results))
 		for idx, result := range results {
-			if result == nil || result.Skip {
+			if result.Continue() {
 				slog.Debug("skip result", "idx", idx, "result", result)
 				continue
 			}

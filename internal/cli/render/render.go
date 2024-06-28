@@ -88,15 +88,6 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 			if err := result.Save(ctx, path, result.AccumulatedOutput()); err != nil {
 				return errors.Wrap(err)
 			}
-			// Kustomization
-			if result.KustomizationContent() == "" {
-				log.DebugContext(ctx, "flux kustomization: skipped "+result.Name(), "status", "ok", "action", "skipped")
-			} else {
-				path = result.KustomizationFilename(cfg.WriteTo(), cfg.ClusterName())
-				if err := result.Save(ctx, path, result.KustomizationContent()); err != nil {
-					return errors.Wrap(err)
-				}
-			}
 
 			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered")
 		}
@@ -139,7 +130,6 @@ type Result interface {
 	KustomizationFilename(writeTo string, cluster string) string
 	Save(ctx context.Context, path string, content string) error
 	AccumulatedOutput() string
-	KustomizationContent() string
 	WriteDeployFiles(ctx context.Context, writeTo string) error
 	GetKind() string
 	GetAPIVersion() string
