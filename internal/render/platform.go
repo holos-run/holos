@@ -6,14 +6,14 @@ import (
 	"io"
 	"time"
 
-	"github.com/holos-run/holos/api/v1alpha2"
+	core "github.com/holos-run/holos/api/core/v1alpha2"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/util"
 	"golang.org/x/sync/errgroup"
 )
 
-func Platform(ctx context.Context, concurrency int, pf *v1alpha2.Platform, stderr io.Writer) error {
+func Platform(ctx context.Context, concurrency int, pf *core.Platform, stderr io.Writer) error {
 	total := len(pf.Spec.Components)
 
 	g, ctx := errgroup.WithContext(ctx)

@@ -9,14 +9,15 @@ import (
 	"cuelang.org/go/cue/build"
 	"cuelang.org/go/cue/cuecontext"
 	"github.com/holos-run/holos"
-	"github.com/holos-run/holos/api/v1alpha2"
+	core "github.com/holos-run/holos/api/core/v1alpha2"
+	meta "github.com/holos-run/holos/api/meta/v1alpha2"
 	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
 )
 
 // Platform builds a platform
-func (b *Builder) Platform(ctx context.Context, cfg *client.Config) (*v1alpha2.Platform, error) {
+func (b *Builder) Platform(ctx context.Context, cfg *client.Config) (*core.Platform, error) {
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "cue: building platform instance")
 	instances, err := b.Instances(ctx, cfg)
@@ -38,7 +39,7 @@ func (b *Builder) Platform(ctx context.Context, cfg *client.Config) (*v1alpha2.P
 	return p, nil
 }
 
-func (b Builder) runPlatform(ctx context.Context, instance *build.Instance) (*v1alpha2.Platform, error) {
+func (b Builder) runPlatform(ctx context.Context, instance *build.Instance) (*core.Platform, error) {
 	path := holos.InstancePath(instance.Dir)
 	log := logger.FromContext(ctx).With("dir", path)
 
@@ -63,7 +64,7 @@ func (b Builder) runPlatform(ctx context.Context, instance *build.Instance) (*v1
 
 	decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
 	// Discriminate the type of build plan.
-	tm := &v1alpha2.TypeMeta{}
+	tm := &meta.TypeMeta{}
 	err = decoder.Decode(tm)
 	if err != nil {
 		return nil, errors.Wrap(fmt.Errorf("invalid platform: %s: %w", instance.Dir, err))
@@ -75,7 +76,7 @@ func (b Builder) runPlatform(ctx context.Context, instance *build.Instance) (*v1
 	decoder = json.NewDecoder(bytes.NewReader(jsonBytes))
 	decoder.DisallowUnknownFields()
 
-	var pf v1alpha2.Platform
+	var pf core.Platform
 	switch tm.GetKind() {
 	case "Platform":
 		if err = decoder.Decode(&pf); err != nil {

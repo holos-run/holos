@@ -2,7 +2,7 @@ package holos
 
 import (
 	"encoding/json"
-	v1 "github.com/holos-run/holos/api/v1alpha2"
+	core "github.com/holos-run/holos/api/core/v1alpha2"
 	dto "github.com/holos-run/holos/service/gen/holos/object/v1alpha1:object"
 	corev1 "k8s.io/api/core/v1"
 	certv1 "cert-manager.io/certificate/v1"
@@ -50,12 +50,12 @@ _Platform: #Platform & {
 	Name: string | *"holos"
 
 	// Components represent the platform components to render.
-	Components: [string]: v1.#PlatformSpecComponent
+	Components: [string]: core.#PlatformSpecComponent
 
 	// Model represents the platform model from the web app form.
 	Model: dto.#PlatformConfig.platform_model
 
-	Output: v1.#Platform & {
+	Output: core.#Platform & {
 		metadata: name: Name
 
 		spec: {
