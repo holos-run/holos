@@ -10,6 +10,7 @@ import (
 	_ "cuelang.org/go/cmd/cue"
 	_ "github.com/bufbuild/buf/cmd/buf"
 	_ "github.com/fullstorydev/grpcurl/cmd/grpcurl"
+	_ "golang.org/x/tools/cmd/godoc"
 	_ "google.golang.org/protobuf/cmd/protoc-gen-go"
 	_ "honnef.co/go/tools/cmd/staticcheck"
 )
