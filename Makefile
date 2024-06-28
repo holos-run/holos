@@ -64,6 +64,7 @@ vet: ## Vet Go code.
 .PHONY: gencue
 gencue: ## Generate CUE definitions
 	cd internal/generate/platforms && cue get go github.com/holos-run/holos/api/v1alpha1/...
+	cd internal/generate/platforms && cue get go github.com/holos-run/holos/api/v1alpha2/...
 
 .PHONY: rmgen
 rmgen: ## Remove generated code
@@ -123,11 +124,12 @@ tools: go-deps frontend-deps  ## install tool dependencies
 
 .PHONY: go-deps
 go-deps: ## tool versions pinned in tools.go
+	go install cuelang.org/go/cmd/cue
 	go install github.com/bufbuild/buf/cmd/buf
 	go install github.com/fullstorydev/grpcurl/cmd/grpcurl
 	go install google.golang.org/protobuf/cmd/protoc-gen-go
 	go install connectrpc.com/connect/cmd/protoc-gen-connect-go
-	go install honnef.co/go/tools/cmd/staticcheck@latest
+	go install honnef.co/go/tools/cmd/staticcheck
 	# curl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash
 
 .PHONY: frontend-deps

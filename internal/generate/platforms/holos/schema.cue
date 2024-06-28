@@ -2,7 +2,7 @@ package holos
 
 import (
 	"encoding/json"
-	v1 "github.com/holos-run/holos/api/v1alpha1"
+	v1 "github.com/holos-run/holos/api/v1alpha2"
 	dto "github.com/holos-run/holos/service/gen/holos/object/v1alpha1:object"
 	corev1 "k8s.io/api/core/v1"
 	certv1 "cert-manager.io/certificate/v1"

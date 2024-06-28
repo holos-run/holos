@@ -10,7 +10,7 @@ func (tm *TypeMeta) GetKind() string {
 }
 
 func (tm *TypeMeta) GetAPIVersion() string {
-	return tm.Kind
+	return tm.APIVersion
 }
 
 // Discriminator is an interface to discriminate the kind api object.
