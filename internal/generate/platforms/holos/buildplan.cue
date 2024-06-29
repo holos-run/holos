@@ -104,12 +104,12 @@ import (
 	Values: {...}
 
 	Chart: core.#HelmChart & {
-		metadata: name: string | *Name
+		metadata: name:      string | *Name
 		metadata: namespace: string | *Namespace
-		chart: name:       string | *Name
-		chart: release:    chart.name
-		chart: version:    string | *Version
-		chart: repository: Repo
+		chart: name:         string | *Name
+		chart: release:      chart.name
+		chart: version:      string | *Version
+		chart: repository:   Repo
 
 		// Render the values to yaml for holos to provide to helm.
 		valuesContent: yaml.Marshal(Values)
@@ -160,7 +160,7 @@ import (
 
 	// output represents the build plan provided to the holos cli.
 	Output: #BuildPlan & {
-		metadata: name: Name
+		_Name: Name
 		spec: components: helmChartList: [Chart]
 	}
 }
@@ -176,7 +176,7 @@ import (
 
 	// output represents the build plan provided to the holos cli.
 	Output: #BuildPlan & {
-		metadata: name: Name
+		_Name: Name
 		spec: components: kustomizeBuildList: [Kustomization]
 	}
 }
@@ -191,19 +191,21 @@ import (
 
 	// output represents the build plan provided to the holos cli.
 	Output: #BuildPlan & {
-		metadata: name: Name
+		_Name: Name
 		// resources is a map unlike other build plans which use a list.
 		spec: components: resources: "\(Name)": {
 			metadata: name: Name
-			apiObjectMap: (core.#APIObjects & {apiObjects: Resources}).apiObjectMap
+			apiObjectMap: (#APIObjects & {apiObjects: Resources}).apiObjectMap
 		}
 	}
 }
 
 #BuildPlan: core.#BuildPlan & {
-	metadata: name: string
-	// Render the ArgoCD Application
-	spec: deployFiles: (#Argo & {ComponentName: metadata.name}).deployFiles
+	_Name: string
+	spec: components: resources: "\(_Name)": {
+		// Render the ArgoCD Application
+		deployFiles: (#Argo & {ComponentName: _Name}).deployFiles
+	}
 }
 
 // #ArgoApplication represents an argocd Application resource for each
@@ -227,4 +229,32 @@ import (
 
 	// deployFiles represents the output files to write along side the component.
 	deployFiles: "clusters/\(_ClusterName)/gitops/\(ComponentName).application.gen.yaml": yaml.Marshal(Application)
+}
+
+// #APIObjects defines the output format for kubernetes api objects.  The holos
+// cli expects the yaml representation of each api object in the apiObjectMap
+// field.
+#APIObjects: {
+	// apiObjects represents the un-marshalled form of each kubernetes api object
+	// managed by a holos component.
+	apiObjects: {
+		[Kind=string]: {
+			[string]: {
+				kind: Kind
+				...
+			}
+		}
+		ConfigMap: [string]: corev1.#ConfigMap & {apiVersion: "v1"}
+	}
+
+	// apiObjectMap holds the marshalled representation of apiObjects
+	apiObjectMap: {
+		for kind, v in apiObjects {
+			"\(kind)": {
+				for name, obj in v {
+					"\(name)": yaml.Marshal(obj)
+				}
+			}
+		}
+	}
 }
