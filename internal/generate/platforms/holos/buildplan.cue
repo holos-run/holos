@@ -194,7 +194,8 @@ import (
 		_Name: Name
 		// resources is a map unlike other build plans which use a list.
 		spec: components: resources: "\(Name)": {
-			metadata: name: Name
+			metadata: name:      Name
+			metadata: namespace: Namespace
 			apiObjectMap: (#APIObjects & {apiObjects: Resources}).apiObjectMap
 		}
 	}

@@ -70,7 +70,7 @@ package v1alpha2
 	kustomize?: #Kustomize @go(Kustomize)
 
 	// Skip causes holos to take no action regarding this component.
-	Skip: bool
+	skip: bool & (bool | *false) @go(Skip)
 }
 
 // Metadata represents data about the holos component such as the Name.

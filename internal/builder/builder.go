@@ -261,12 +261,6 @@ func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha2.BuildPlan, 
 		}
 	}
 
-	// Add a separate Result if there are DeployFiles from the BuildPlan.
-	log.WarnContext(ctx, "TODO: Handle DeployFiles for each holos component.")
-	// if len(buildPlan.Spec.DeployFiles) > 0 {
-	// 	results = append(results, render.NewResult(buildPlan.Metadata.Name))
-	// }
-
 	log.DebugContext(ctx, "returning results", "len", len(results))
 
 	return results, nil

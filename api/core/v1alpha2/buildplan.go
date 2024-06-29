@@ -92,7 +92,7 @@ type HolosComponent struct {
 	Kustomize `json:"kustomize,omitempty" yaml:"kustomize,omitempty"`
 
 	// Skip causes holos to take no action regarding this component.
-	Skip bool
+	Skip bool `json:"skip" yaml:"skip" cue:"bool | *false"`
 }
 
 // Metadata represents data about the holos component such as the Name.

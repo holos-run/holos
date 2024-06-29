@@ -1,7 +1,7 @@
 package v1alpha2
 
 const (
-	APIVersion    = "holos.run/v1alpha2"
+	APIVersion    = "v1alpha2"
 	BuildPlanKind = "BuildPlan"
 	HelmChartKind = "HelmChart"
 	// ChartDir is the directory name created in the holos component directory to cache a chart.

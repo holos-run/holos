@@ -4,7 +4,7 @@
 
 package v1alpha2
 
-#APIVersion:    "holos.run/v1alpha2"
+#APIVersion:    "v1alpha2"
 #BuildPlanKind: "BuildPlan"
 #HelmChartKind: "HelmChart"
 
