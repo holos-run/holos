@@ -5,9 +5,9 @@ package v1alpha2
 // Structures that are versioned or persisted should inline TypeMeta.
 type TypeMeta struct {
 	// Kind is a string value representing the resource this object represents.
-	Kind string `json:"kind" yaml:"kind"`
+	Kind string `json:"kind"`
 	// APIVersion defines the versioned schema of this representation of an object.
-	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha2\""`
+	APIVersion string `json:"apiVersion" cue:"string | *\"v1alpha2\""`
 }
 
 func (tm *TypeMeta) GetKind() string {
@@ -31,7 +31,7 @@ type Discriminator interface {
 // kubernetes api objects.
 type ObjectMeta struct {
 	// Name uniquely identifies the holos component instance and must be suitable as a file name.
-	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	Name string `json:"name,omitempty"`
 	// Namespace confines a holos component to a single namespace via kustomize if set.
-	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	Namespace string `json:"namespace,omitempty"`
 }

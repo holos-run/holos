@@ -55,6 +55,7 @@ tidy: ## Tidy go module.
 .PHONY: fmt
 fmt: ## Format code.
 	cd docs/examples && cue fmt ./...
+	cd internal/generate/platforms && cue fmt ./...
 	go fmt ./...
 
 .PHONY: vet
@@ -131,6 +132,7 @@ go-deps: ## tool versions pinned in tools.go
 	go install google.golang.org/protobuf/cmd/protoc-gen-go
 	go install connectrpc.com/connect/cmd/protoc-gen-connect-go
 	go install honnef.co/go/tools/cmd/staticcheck
+	go install golang.org/x/tools/cmd/godoc
 	# curl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash
 
 .PHONY: frontend-deps

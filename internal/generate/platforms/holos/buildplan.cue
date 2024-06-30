@@ -2,7 +2,7 @@ package holos
 
 import (
 	"encoding/yaml"
-	v1 "github.com/holos-run/holos/api/v1alpha1"
+	core "github.com/holos-run/holos/api/core/v1alpha2"
 
 	kc "sigs.k8s.io/kustomize/api/types"
 
@@ -103,13 +103,13 @@ import (
 
 	Values: {...}
 
-	Chart: v1.#HelmChart & {
-		metadata: name: string | *Name
-		namespace: string | *Namespace
-		chart: name:       string | *Name
-		chart: release:    chart.name
-		chart: version:    string | *Version
-		chart: repository: Repo
+	Chart: core.#HelmChart & {
+		metadata: name:      string | *Name
+		metadata: namespace: string | *Namespace
+		chart: name:         string | *Name
+		chart: release:      chart.name
+		chart: version:      string | *Version
+		chart: repository:   Repo
 
 		// Render the values to yaml for holos to provide to helm.
 		valuesContent: yaml.Marshal(Values)
@@ -119,15 +119,15 @@ import (
 			// resourcesFile represents the file helm output is written two and
 			// kustomize reads from.  Typically "resources.yaml" but referenced as a
 			// constant to ensure the holos cli uses the same file.
-			resourcesFile: v1.#ResourcesFile
+			kustomize: resourcesFile: core.#ResourcesFile
 			// kustomizeFiles represents the files in a kustomize directory tree.
-			kustomizeFiles: v1.#FileContentMap
+			kustomize: kustomizeFiles: core.#FileContentMap
 			for FileName, Object in KustomizeFiles {
-				kustomizeFiles: "\(FileName)": yaml.Marshal(Object)
+				kustomize: kustomizeFiles: "\(FileName)": yaml.Marshal(Object)
 			}
 		}
 
-		apiObjectMap: (v1.#APIObjects & {apiObjects: Resources}).apiObjectMap
+		apiObjectMap: (#APIObjects & {apiObjects: Resources}).apiObjectMap
 	}
 
 	// EnableKustomizePostProcessor processes helm output with kustomize if true.
@@ -147,7 +147,7 @@ import (
 		"kustomization.yaml": kc.#Kustomization & {
 			apiVersion: "kustomize.config.k8s.io/v1beta1"
 			kind:       "Kustomization"
-			resources: [v1.#ResourcesFile, for FileName, _ in KustomizeResources {FileName}]
+			resources: [core.#ResourcesFile, for FileName, _ in KustomizeResources {FileName}]
 			patches: [for x in KustomizePatches {x}]
 		}
 	}
@@ -160,7 +160,8 @@ import (
 
 	// output represents the build plan provided to the holos cli.
 	Output: #BuildPlan & {
-		metadata: name: Name
+		_Name:      Name
+		_Namespace: Namespace
 		spec: components: helmChartList: [Chart]
 	}
 }
@@ -170,13 +171,13 @@ import (
 	// Name represents the holos component name
 	Name: string
 
-	Kustomization: v1.#KustomizeBuild & {
+	Kustomization: core.#KustomizeBuild & {
 		metadata: name: string | *Name
 	}
 
 	// output represents the build plan provided to the holos cli.
 	Output: #BuildPlan & {
-		metadata: name: Name
+		_Name: Name
 		spec: components: kustomizeBuildList: [Kustomization]
 	}
 }
@@ -191,19 +192,31 @@ import (
 
 	// output represents the build plan provided to the holos cli.
 	Output: #BuildPlan & {
-		metadata: name: Name
+		_Name:      Name
+		_Namespace: Namespace
 		// resources is a map unlike other build plans which use a list.
 		spec: components: resources: "\(Name)": {
-			metadata: name: Name
-			apiObjectMap: (v1.#APIObjects & {apiObjects: Resources}).apiObjectMap
+			metadata: name:      Name
+			metadata: namespace: Namespace
+			apiObjectMap: (#APIObjects & {apiObjects: Resources}).apiObjectMap
 		}
 	}
 }
 
-#BuildPlan: v1.#BuildPlan & {
-	metadata: name: string
-	// Render the ArgoCD Application
-	spec: deployFiles: (#Argo & {ComponentName: metadata.name}).deployFiles
+#BuildPlan: core.#BuildPlan & {
+	_Name:       string
+	_Namespace?: string
+	let NAME = "gitops/\(_Name)"
+
+	// Render the ArgoCD Application for GitOps.
+	spec: components: resources: (NAME): {
+		metadata: name: NAME
+		if _Namespace != _|_ {
+			metadata: namespace: _Namespace
+		}
+
+		deployFiles: (#Argo & {ComponentName: _Name}).deployFiles
+	}
 }
 
 // #ArgoApplication represents an argocd Application resource for each
@@ -227,4 +240,32 @@ import (
 
 	// deployFiles represents the output files to write along side the component.
 	deployFiles: "clusters/\(_ClusterName)/gitops/\(ComponentName).application.gen.yaml": yaml.Marshal(Application)
+}
+
+// #APIObjects defines the output format for kubernetes api objects.  The holos
+// cli expects the yaml representation of each api object in the apiObjectMap
+// field.
+#APIObjects: core.#APIObjects & {
+	// apiObjects represents the un-marshalled form of each kubernetes api object
+	// managed by a holos component.
+	apiObjects: {
+		[Kind=string]: {
+			[string]: {
+				kind: Kind
+				...
+			}
+		}
+		ConfigMap: [string]: corev1.#ConfigMap & {apiVersion: "v1"}
+	}
+
+	// apiObjectMap holds the marshalled representation of apiObjects
+	apiObjectMap: {
+		for kind, v in apiObjects {
+			"\(kind)": {
+				for name, obj in v {
+					"\(name)": yaml.Marshal(obj)
+				}
+			}
+		}
+	}
 }

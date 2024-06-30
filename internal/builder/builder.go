@@ -15,22 +15,25 @@ import (
 	"cuelang.org/go/cue/build"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
+	"github.com/holos-run/holos/api/core/v1alpha2"
 	"github.com/holos-run/holos/api/v1alpha1"
 
 	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/render"
 )
 
 const (
-	KubernetesObjects = v1alpha1.KubernetesObjectsKind
+	KubernetesObjects = v1alpha2.KubernetesObjectsKind
 	// Helm is the value of the kind field of holos build output indicating helm
 	// values and helm command information.
-	Helm = v1alpha1.HelmChartKind
+	Helm = v1alpha2.HelmChartKind
 	// Skip is the value when the instance should be skipped
 	Skip = "Skip"
-	// KustomizeBuild is the value of the kind field of cue output indicating holos should process the component using kustomize build to render output.
+	// KustomizeBuild is the value of the kind field of cue output indicating
+	// holos should process the component using kustomize build to render output.
 	KustomizeBuild = v1alpha1.KustomizeBuildKind
 )
 
@@ -128,14 +131,14 @@ func (b *Builder) Instances(ctx context.Context, cfg *client.Config) ([]*build.I
 	return load.Instances(args, &cueConfig), nil
 }
 
-func (b *Builder) Run(ctx context.Context, cfg *client.Config) (results []*v1alpha1.Result, err error) {
+func (b *Builder) Run(ctx context.Context, cfg *client.Config) (results []*render.Result, err error) {
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "cue: building instances")
 	instances, err := b.Instances(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
-	results = make([]*v1alpha1.Result, 0, len(instances)*8)
+	results = make([]*render.Result, 0, len(instances)*8)
 
 	// Each CUE instance provides a BuildPlan
 	for idx, instance := range instances {
@@ -150,7 +153,7 @@ func (b *Builder) Run(ctx context.Context, cfg *client.Config) (results []*v1alp
 	return results, nil
 }
 
-func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (results []*v1alpha1.Result, err error) {
+func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (results []*render.Result, err error) {
 	path := holos.InstancePath(instance.Dir)
 	log := logger.FromContext(ctx).With("dir", path)
 
@@ -191,9 +194,8 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 	decoder.DisallowUnknownFields()
 
 	switch tm.Kind {
-	// TODO(jeff) Process a v1alpha1.Result here, the result is tightly coupled to a BuildPlan.
 	case "BuildPlan":
-		var bp v1alpha1.BuildPlan
+		var bp v1alpha2.BuildPlan
 		if err = decoder.Decode(&bp); err != nil {
 			err = errors.Wrap(fmt.Errorf("could not decode BuildPlan %s: %w", instance.Dir, err))
 			return
@@ -209,7 +211,7 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 	return results, err
 }
 
-func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha1.BuildPlan, path holos.InstancePath) (results []*v1alpha1.Result, err error) {
+func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha2.BuildPlan, path holos.InstancePath) (results []*render.Result, err error) {
 	log := logger.FromContext(ctx)
 
 	if err := buildPlan.Validate(); err != nil {
@@ -222,11 +224,12 @@ func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha1.BuildPlan, 
 		return
 	}
 
-	// TODO: concurrent renders
-	results = make([]*v1alpha1.Result, 0, buildPlan.ResultCapacity())
+	results = make([]*render.Result, 0, buildPlan.ResultCapacity())
 	log.DebugContext(ctx, "allocated results slice", "cap", buildPlan.ResultCapacity())
+
 	for _, component := range buildPlan.Spec.Components.Resources {
-		if result, err := component.Render(ctx, path); err != nil {
+		ko := render.KubernetesObjects{Component: component}
+		if result, err := ko.Render(ctx, path); err != nil {
 			return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
 		} else {
 			results = append(results, result)
@@ -234,36 +237,28 @@ func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha1.BuildPlan, 
 	}
 
 	for _, component := range buildPlan.Spec.Components.KubernetesObjectsList {
-		if result, err := component.Render(ctx, path); err != nil {
+		ko := render.KubernetesObjects{Component: component}
+		if result, err := ko.Render(ctx, path); err != nil {
 			return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
 		} else {
 			results = append(results, result)
 		}
 	}
 	for _, component := range buildPlan.Spec.Components.HelmChartList {
-		if result, err := component.Render(ctx, path); err != nil {
+		hc := render.HelmChart{Component: component}
+		if result, err := hc.Render(ctx, path); err != nil {
 			return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
 		} else {
 			results = append(results, result)
 		}
 	}
 	for _, component := range buildPlan.Spec.Components.KustomizeBuildList {
-		if result, err := component.Render(ctx, path); err != nil {
+		kb := render.KustomizeBuild{Component: component}
+		if result, err := kb.Render(ctx, path); err != nil {
 			return nil, errors.Wrap(fmt.Errorf("could not render: %w", err))
 		} else {
 			results = append(results, result)
 		}
-	}
-
-	// Add a separate Result if there are DeployFiles from the BuildPlan.
-	if len(buildPlan.Spec.DeployFiles) > 0 {
-		results = append(results, &v1alpha1.Result{
-			HolosComponent: v1alpha1.HolosComponent{
-				TypeMeta: buildPlan.TypeMeta,
-				Metadata: buildPlan.Metadata,
-			},
-			DeployFiles: buildPlan.Spec.DeployFiles,
-		})
 	}
 
 	log.DebugContext(ctx, "returning results", "len", len(results))

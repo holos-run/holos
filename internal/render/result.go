@@ -1,4 +1,4 @@
-package v1alpha1
+package render
 
 import (
 	"context"
@@ -6,54 +6,99 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
+	"github.com/holos-run/holos/api/core/v1alpha2"
 	"github.com/holos-run/holos/internal/errors"
-	"github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/util"
 )
 
-// Result is the build result for display or writing.  Holos components Render the Result as a data pipeline.
+// NewResult returns a new Result with the given holos component.
+func NewResult(component v1alpha2.HolosComponent) *Result {
+	return &Result{
+		Kind:              "Result",
+		APIVersion:        "v1alpha2",
+		Component:         component,
+		accumulatedOutput: "",
+	}
+}
+
+// Result is the build result for display or writing.  Holos components Render
+// the Result as a data pipeline.
 type Result struct {
-	HolosComponent
+	// Kind is a string value representing the resource this object represents.
+	Kind string `json:"kind" yaml:"kind" cue:"string | *\"Result\""`
+	// APIVersion represents the versioned schema of this representation of an object.
+	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha2\""`
+
+	// Component represents the common fields of all holos component kinds.
+	Component v1alpha2.HolosComponent
+
 	// accumulatedOutput accumulates rendered api objects.
 	accumulatedOutput string
-	// DeployFiles keys represent file paths relative to the cluster deploy
-	// directory.  Map values represent the string encoded file contents.  Used to
-	// write the argocd Application, but may be used to render any file from CUE.
-	DeployFiles FileContentMap `json:"deployFiles,omitempty" yaml:"deployFiles,omitempty"`
 }
 
-// Continue returns true if Skip is true indicating the result is to be skipped over.
-func (r *Result) Continue() bool {
+func (r *Result) GetAPIVersion() string {
 	if r == nil {
-		return false
+		return ""
 	}
-	return r.Skip
+	return r.APIVersion
 }
 
+func (r *Result) GetKind() string {
+	if r == nil {
+		return ""
+	}
+	return r.Kind
+}
+
+// Continue returns true if the result should be skipped over.
+func (r *Result) Continue() bool {
+	// Skip over a nil result
+	if r == nil {
+		return true
+	}
+	return r.Component.Skip
+}
+
+// Name returns the name of the component from the Metadata field.
 func (r *Result) Name() string {
-	return r.Metadata.Name
+	if r == nil {
+		return ""
+	}
+	return r.Component.Metadata.Name
 }
 
+// Filename returns the filename representing the rendered api objects of the Result.
 func (r *Result) Filename(writeTo string, cluster string) string {
-	name := r.Metadata.Name
+	name := r.Name()
 	return filepath.Join(writeTo, "clusters", cluster, "components", name, name+".gen.yaml")
 }
 
+// KustomizationFilename returns the Flux Kustomization file path.
+//
+// Deprecated: Use DeployFiles instead.
 func (r *Result) KustomizationFilename(writeTo string, cluster string) string {
-	return filepath.Join(writeTo, "clusters", cluster, "holos", "components", r.Metadata.Name+"-kustomization.gen.yaml")
+	return filepath.Join(writeTo, "clusters", cluster, "holos", "components", r.Name()+"-kustomization.gen.yaml")
 }
 
 // AccumulatedOutput returns the accumulated rendered output.
 func (r *Result) AccumulatedOutput() string {
+	if r == nil {
+		return ""
+	}
 	return r.accumulatedOutput
 }
 
 // addObjectMap renders the provided APIObjectMap into the accumulated output.
-func (r *Result) addObjectMap(ctx context.Context, objectMap APIObjectMap) {
+func (r *Result) addObjectMap(ctx context.Context, objectMap v1alpha2.APIObjectMap) {
+	if r == nil {
+		return
+	}
 	log := logger.FromContext(ctx)
 	b := []byte(r.AccumulatedOutput())
-	kinds := make([]Kind, 0, len(objectMap))
+	kinds := make([]v1alpha2.Kind, 0, len(objectMap))
 	// Sort the keys
 	for kind := range objectMap {
 		kinds = append(kinds, kind)
@@ -63,7 +108,7 @@ func (r *Result) addObjectMap(ctx context.Context, objectMap APIObjectMap) {
 	for _, kind := range kinds {
 		v := objectMap[kind]
 		// Sort the keys
-		names := make([]Label, 0, len(v))
+		names := make([]v1alpha2.Label, 0, len(v))
 		for name := range v {
 			names = append(names, name)
 		}
@@ -83,12 +128,15 @@ func (r *Result) addObjectMap(ctx context.Context, objectMap APIObjectMap) {
 
 // kustomize replaces the accumulated output with the output of kustomize build
 func (r *Result) kustomize(ctx context.Context) error {
+	if r == nil {
+		return nil
+	}
 	log := logger.FromContext(ctx)
-	if r.ResourcesFile == "" {
+	if r.Component.Kustomize.ResourcesFile == "" {
 		log.DebugContext(ctx, "skipping kustomize: no resourcesFile")
 		return nil
 	}
-	if len(r.KustomizeFiles) < 1 {
+	if len(r.Component.Kustomize.KustomizeFiles) < 1 {
 		log.DebugContext(ctx, "skipping kustomize: no kustomizeFiles")
 		return nil
 	}
@@ -99,7 +147,7 @@ func (r *Result) kustomize(ctx context.Context) error {
 	defer util.Remove(ctx, tempDir)
 
 	// Write the main api object resources file for kustomize.
-	target := filepath.Join(tempDir, r.ResourcesFile)
+	target := filepath.Join(tempDir, r.Component.Kustomize.ResourcesFile)
 	b := []byte(r.AccumulatedOutput())
 	b = util.EnsureNewline(b)
 	if err := os.WriteFile(target, b, 0644); err != nil {
@@ -108,7 +156,7 @@ func (r *Result) kustomize(ctx context.Context) error {
 	log.DebugContext(ctx, "wrote: "+target, "op", "write", "path", target, "bytes", len(b))
 
 	// Write the kustomization tree, kustomization.yaml must be in this map for kustomize to work.
-	for file, content := range r.KustomizeFiles {
+	for file, content := range r.Component.Kustomize.KustomizeFiles {
 		target := filepath.Join(tempDir, file)
 		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 			return errors.Wrap(err)
@@ -133,11 +181,14 @@ func (r *Result) kustomize(ctx context.Context) error {
 }
 
 func (r *Result) WriteDeployFiles(ctx context.Context, path string) error {
-	log := logger.FromContext(ctx)
-	if len(r.DeployFiles) == 0 {
+	if r == nil {
 		return nil
 	}
-	for k, content := range r.DeployFiles {
+	log := logger.FromContext(ctx)
+	if len(r.Component.DeployFiles) == 0 {
+		return nil
+	}
+	for k, content := range r.Component.DeployFiles {
 		path := filepath.Join(path, k)
 		if err := r.Save(ctx, path, content); err != nil {
 			return errors.Wrap(err)
@@ -162,4 +213,18 @@ func (r *Result) Save(ctx context.Context, path string, content string) error {
 	}
 	log.DebugContext(ctx, "out: wrote "+path, "action", "write", "path", path, "status", "ok")
 	return nil
+}
+
+// SkipWriteAccumulatedOutput returns true if writing the accumulated output of
+// k8s api objects should be skipped.  Useful for results which only write
+// deployment files, like Flux or ArgoCD GitOps resources.
+func (r *Result) SkipWriteAccumulatedOutput() bool {
+	if r == nil {
+		return true
+	}
+	// This is a hack and should be moved to a HolosComponent field or similar.
+	if strings.HasPrefix(r.Component.Metadata.Name, "gitops/") {
+		return true
+	}
+	return false
 }
