@@ -206,7 +206,7 @@ import (
 #BuildPlan: core.#BuildPlan & {
 	_Name:       string
 	_Namespace?: string
-	spec: components: resources: "\(_Name)": {
+	spec: components: resources: (_Name): {
 		metadata: name: _Name
 		if _Namespace != _|_ {
 			metadata: namespace: _Namespace

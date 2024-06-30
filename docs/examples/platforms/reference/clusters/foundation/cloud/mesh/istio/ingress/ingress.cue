@@ -151,7 +151,7 @@ let OBJECTS = #APIObjects & {
 			loopback: #Service & {
 				_description: LoopbackDescription
 				metadata:     LoopbackMetaName
-				spec: selector:      LoopbackLabels
+				spec: selector: LoopbackLabels
 				spec: ports: [{port: 80, name: "http"}, {port: 443, name: "https"}]
 			}
 		}
