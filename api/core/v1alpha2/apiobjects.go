@@ -10,12 +10,8 @@ type Kind string
 
 // APIObjectMap represents the marshalled yaml representation of kubernetes api
 // objects.  Do not produce an APIObjectMap directly, instead use [APIObjects]
-// to produce the marshalled yaml representation from CUE data.
-//
-// Example:
-//
-//	# CUE
-//	apiObjectMap: (#APIObjects & {apiObjects: Resources}).apiObjectMap
+// to produce the marshalled yaml representation from CUE data, then provide the
+// result to [HolosComponent].
 type APIObjectMap map[Kind]map[Label]string
 
 // APIObjects represents kubernetes api objects to apply to the api server.
