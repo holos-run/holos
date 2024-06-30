@@ -81,7 +81,11 @@ package v1alpha2
 	// Namespace is the primary namespace of the holos component.  A holos
 	// component may manage resources in multiple namespaces, in this case
 	// consider setting the component namespace to default.
-	namespace: string @go(Namespace)
+	//
+	// This field is optional because not all resources require a namespace,
+	// particularly CRD's and DeployFiles functionality.
+	// +optional
+	namespace?: string @go(Namespace)
 }
 
 // Kustomize represents resources necessary to execute a kustomize build.

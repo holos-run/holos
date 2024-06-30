@@ -204,11 +204,14 @@ import (
 }
 
 #BuildPlan: core.#BuildPlan & {
-	_Name:      string
-	_Namespace: string
+	_Name:       string
+	_Namespace?: string
 	spec: components: resources: "\(_Name)": {
-		metadata: name:      _Name
-		metadata: namespace: _Namespace
+		metadata: name: _Name
+		if _Namespace != _|_ {
+			metadata: namespace: _Namespace
+		}
+
 		// Render the ArgoCD Application
 		deployFiles: (#Argo & {ComponentName: _Name}).deployFiles
 	}

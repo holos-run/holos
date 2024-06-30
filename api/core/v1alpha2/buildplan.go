@@ -102,7 +102,11 @@ type Metadata struct {
 	// Namespace is the primary namespace of the holos component.  A holos
 	// component may manage resources in multiple namespaces, in this case
 	// consider setting the component namespace to default.
-	Namespace string `json:"namespace" yaml:"namespace"`
+	//
+	// This field is optional because not all resources require a namespace,
+	// particularly CRD's and DeployFiles functionality.
+	// +optional
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 }
 
 // Kustomize represents resources necessary to execute a kustomize build.
