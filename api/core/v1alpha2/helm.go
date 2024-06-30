@@ -15,7 +15,7 @@ type HelmChart struct {
 	// template` command.
 	ValuesContent string `json:"valuesContent"`
 	// EnableHooks enables helm hooks when executing the `helm template` command.
-	EnableHooks bool `json:"enableHooks"`
+	EnableHooks bool `json:"enableHooks" cue:"bool | *false"`
 }
 
 // Chart represents the helm Chart.

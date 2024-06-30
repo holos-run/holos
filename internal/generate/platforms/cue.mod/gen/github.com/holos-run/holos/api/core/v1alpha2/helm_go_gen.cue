@@ -21,7 +21,7 @@ package v1alpha2
 	valuesContent: string @go(ValuesContent)
 
 	// EnableHooks enables helm hooks when executing the `helm template` command.
-	enableHooks: bool @go(EnableHooks)
+	enableHooks: bool & (bool | *false) @go(EnableHooks)
 }
 
 // Chart represents the helm Chart.

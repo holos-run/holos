@@ -127,7 +127,7 @@ import (
 			}
 		}
 
-		apiObjectMap: (core.#APIObjects & {apiObjects: Resources}).apiObjectMap
+		apiObjectMap: (#APIObjects & {apiObjects: Resources}).apiObjectMap
 	}
 
 	// EnableKustomizePostProcessor processes helm output with kustomize if true.
@@ -160,7 +160,8 @@ import (
 
 	// output represents the build plan provided to the holos cli.
 	Output: #BuildPlan & {
-		_Name: Name
+		_Name:      Name
+		_Namespace: Namespace
 		spec: components: helmChartList: [Chart]
 	}
 }
@@ -191,7 +192,8 @@ import (
 
 	// output represents the build plan provided to the holos cli.
 	Output: #BuildPlan & {
-		_Name: Name
+		_Name:      Name
+		_Namespace: Namespace
 		// resources is a map unlike other build plans which use a list.
 		spec: components: resources: "\(Name)": {
 			metadata: name:      Name
@@ -202,8 +204,11 @@ import (
 }
 
 #BuildPlan: core.#BuildPlan & {
-	_Name: string
+	_Name:      string
+	_Namespace: string
 	spec: components: resources: "\(_Name)": {
+		metadata: name:      _Name
+		metadata: namespace: _Namespace
 		// Render the ArgoCD Application
 		deployFiles: (#Argo & {ComponentName: _Name}).deployFiles
 	}
