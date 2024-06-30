@@ -206,13 +206,15 @@ import (
 #BuildPlan: core.#BuildPlan & {
 	_Name:       string
 	_Namespace?: string
-	spec: components: resources: (_Name): {
-		metadata: name: _Name
+	let NAME = "gitops/\(_Name)"
+
+	// Render the ArgoCD Application for GitOps.
+	spec: components: resources: (NAME): {
+		metadata: name: NAME
 		if _Namespace != _|_ {
 			metadata: namespace: _Namespace
 		}
 
-		// Render the ArgoCD Application
 		deployFiles: (#Argo & {ComponentName: _Name}).deployFiles
 	}
 }
