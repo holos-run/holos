@@ -6,8 +6,8 @@ package v1alpha2
 
 #KubernetesObjectsKind: "KubernetesObjects"
 
-// KubernetesObjects represents a holos component composed of kubernetes api
-// objects provided directly from CUE.
+// KubernetesObjects represents a [HolosComponent] composed of kubernetes api
+// objects provided directly from CUE using [APIObjects].
 #KubernetesObjects: {
 	#HolosComponent
 	kind: string & "KubernetesObjects" @go(Kind)

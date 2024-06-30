@@ -11,6 +11,11 @@ package v1alpha2
 
 import "google.golang.org/protobuf/types/known/structpb"
 
+#PlatformMetadata: {
+	// Name represents the Platform name.
+	name: string @go(Name)
+}
+
 // Platform represents a platform to manage.  A Platform resource informs holos
 // which components to build.  The platform resource also acts as a container
 // for the platform model form values provided by the PlatformService.  The
@@ -24,10 +29,7 @@ import "google.golang.org/protobuf/types/known/structpb"
 	apiVersion: string & (string | *"v1alpha2") @go(APIVersion)
 
 	// Metadata represents data about the object such as the Name.
-	metadata: {
-		// Name represents the Platform name.
-		name: string @go(Name)
-	} @go(Metadata,"struct{Name string \"json:\\\"name\\\" yaml:\\\"name\\\"\"}")
+	metadata: #PlatformMetadata @go(Metadata)
 
 	// Spec represents the specification.
 	spec: #PlatformSpec @go(Spec)
