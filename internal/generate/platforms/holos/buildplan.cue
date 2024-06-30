@@ -245,7 +245,7 @@ import (
 // #APIObjects defines the output format for kubernetes api objects.  The holos
 // cli expects the yaml representation of each api object in the apiObjectMap
 // field.
-#APIObjects: {
+#APIObjects: core.#APIObjects & {
 	// apiObjects represents the un-marshalled form of each kubernetes api object
 	// managed by a holos component.
 	apiObjects: {

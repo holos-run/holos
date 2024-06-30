@@ -7,13 +7,14 @@ package v1alpha2
 // HelmChart represents a holos component which wraps around an upstream helm
 // chart.  Holos orchestrates helm by providing values obtained from CUE,
 // renders the output using `helm template`, then post-processes the helm output
-// yaml using the general functionality provided by HolosComponent, for example
-// kustomize post-rendering and mixing in additional kubernetes api objects.
+// yaml using the general functionality provided by [HolosComponent], for
+// example [Kustomize] post-rendering and mixing in additional kubernetes api
+// objects.
 #HelmChart: {
 	#HolosComponent
 	kind: string & "HelmChart" @go(Kind)
 
-	// Chart represents the helm Chart.
+	// Chart represents a helm chart to manage.
 	chart: #Chart @go(Chart)
 
 	// ValuesContent represents the values.yaml file holos passes to the `helm
@@ -24,7 +25,7 @@ package v1alpha2
 	enableHooks: bool & (bool | *false) @go(EnableHooks)
 }
 
-// Chart represents the helm Chart.
+// Chart represents a helm chart.
 #Chart: {
 	// Name represents the chart name.
 	name: string @go(Name)

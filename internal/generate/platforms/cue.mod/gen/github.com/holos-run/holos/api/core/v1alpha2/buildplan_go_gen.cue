@@ -4,31 +4,21 @@
 
 package v1alpha2
 
-// Label is an arbitrary unique identifier.  Defined as a type for clarity and type checking.
-#Label: string
-
-// Kind is a kubernetes api object kind. Defined as a type for clarity and type checking.
-#Kind: string
-
-// APIObjectMap is the shape of marshalled api objects returned from cue to the
-// holos cli. A map is used to improve the clarity of error messages from cue
-// relative to a list.
-#APIObjectMap: {[string]: [string]: string}
-
 // FileContentMap represents a mapping of file names to file content.
 #FileContentMap: {[string]: string}
 
 // BuildPlan represents a build plan for the holos cli to execute.  A build plan
-// is a set of zero or more holos components.
+// is a set of zero or more holos components.  The purpose of a BuildPlan is to
+// define one or more [HolosComponent] kinds, for example a [HelmChart] or
+// [KustomizeBuild].
+//
+// A BuildPlan usually has an additional empty [KubernetesObjects] for the
+// purpose of using the [HolosComponent] DeployFiles field to deploy an ArgoCD
+// or Flux gitops resource for the holos component.
 #BuildPlan: {
-	// Kind is a string value representing the resource this object represents.
-	kind: string & "BuildPlan" @go(Kind)
-
-	// APIVersion represents the versioned schema of this representation of an object.
+	kind:       string & "BuildPlan"            @go(Kind)
 	apiVersion: string & (string | *"v1alpha2") @go(APIVersion)
-
-	// Spec represents the specification.
-	spec: #BuildPlanSpec @go(Spec)
+	spec:       #BuildPlanSpec                  @go(Spec)
 }
 
 #BuildPlanSpec: {
@@ -55,9 +45,9 @@ package v1alpha2
 	// Metadata represents data about the holos component such as the Name.
 	metadata: #Metadata @go(Metadata)
 
-	// APIObjectMap holds the marshalled representation of api objects. Think of
-	// these objects as being mixed into the upstream resources, for example
-	// adding an ExternalSecret to a rendered Helm chart.
+	// APIObjectMap holds the marshalled representation of api objects.  Useful to
+	// mix in resources to each HolosComponent type, for example adding an
+	// ExternalSecret to a HelmChart HolosComponent.  Refer to [APIObjects].
 	apiObjectMap?: #APIObjectMap @go(APIObjectMap)
 
 	// DeployFiles represents file paths relative to the cluster deploy directory
@@ -91,8 +81,10 @@ package v1alpha2
 // Kustomize represents resources necessary to execute a kustomize build.
 // Intended for at least two use cases:
 //
-//  1. Process raw yaml file resources in a holos component directory.
-//  2. Post process a HelmChart to inject istio, add custom labels, etc...
+//  1. Process a [KustomizeBuild] [HolosComponent] which represents raw yaml
+//     file resources in a holos component directory.
+//  2. Post process a [HelmChart] [HolosComponent] to inject istio, patch jobs,
+//     add custom labels, etc...
 #Kustomize: {
 	// KustomizeFiles holds file contents for kustomize, e.g. patch files.
 	kustomizeFiles?: #FileContentMap @go(KustomizeFiles)
