@@ -78,15 +78,15 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 			if err := result.WriteDeployFiles(ctx, cfg.WriteTo()); err != nil {
 				return errors.Wrap(err)
 			}
-			// Build plans don't have anything but DeployFiles to write.
-			if result.GetKind() == "BuildPlan" {
-				continue
-			}
 
 			// API Objects
-			path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
-			if err := result.Save(ctx, path, result.AccumulatedOutput()); err != nil {
-				return errors.Wrap(err)
+			if result.SkipWriteAccumulatedOutput() {
+				log.DebugContext(ctx, "skipped writing k8s objects for "+result.Name())
+			} else {
+				path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
+				if err := result.Save(ctx, path, result.AccumulatedOutput()); err != nil {
+					return errors.Wrap(err)
+				}
 			}
 
 			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered")
@@ -130,6 +130,7 @@ type Result interface {
 	KustomizationFilename(writeTo string, cluster string) string
 	Save(ctx context.Context, path string, content string) error
 	AccumulatedOutput() string
+	SkipWriteAccumulatedOutput() bool
 	WriteDeployFiles(ctx context.Context, writeTo string) error
 	GetKind() string
 	GetAPIVersion() string

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 
 	"github.com/holos-run/holos/api/core/v1alpha2"
 	"github.com/holos-run/holos/internal/errors"
@@ -212,4 +213,18 @@ func (r *Result) Save(ctx context.Context, path string, content string) error {
 	}
 	log.DebugContext(ctx, "out: wrote "+path, "action", "write", "path", path, "status", "ok")
 	return nil
+}
+
+// SkipWriteAccumulatedOutput returns true if writing the accumulated output of
+// k8s api objects should be skipped.  Useful for results which only write
+// deployment files, like Flux or ArgoCD GitOps resources.
+func (r *Result) SkipWriteAccumulatedOutput() bool {
+	if r == nil {
+		return true
+	}
+	// This is a hack and should be moved to a HolosComponent field or similar.
+	if strings.HasPrefix(r.Component.Metadata.Name, "gitops/") {
+		return true
+	}
+	return false
 }
