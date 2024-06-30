@@ -119,11 +119,11 @@ import (
 			// resourcesFile represents the file helm output is written two and
 			// kustomize reads from.  Typically "resources.yaml" but referenced as a
 			// constant to ensure the holos cli uses the same file.
-			resourcesFile: core.#ResourcesFile
+			kustomize: resourcesFile: core.#ResourcesFile
 			// kustomizeFiles represents the files in a kustomize directory tree.
-			kustomizeFiles: core.#FileContentMap
+			kustomize: kustomizeFiles: core.#FileContentMap
 			for FileName, Object in KustomizeFiles {
-				kustomizeFiles: "\(FileName)": yaml.Marshal(Object)
+				kustomize: kustomizeFiles: "\(FileName)": yaml.Marshal(Object)
 			}
 		}
 
