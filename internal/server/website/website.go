@@ -71,8 +71,9 @@ func run(ctx context.Context, cfg Config) error {
 	wmux := logger.ResponseLogger(logger.LoggingMiddleware(log)(mux))
 
 	server := &http.Server{
-		Addr:    cfg.Addr(),
-		Handler: h2c.NewHandler(wmux, &http2.Server{}),
+		Addr:              cfg.Addr(),
+		Handler:           h2c.NewHandler(wmux, &http2.Server{}),
+		ReadHeaderTimeout: 10 * time.Second,
 	}
 
 	var g errgroup.Group
