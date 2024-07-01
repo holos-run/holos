@@ -2,11 +2,6 @@
 
 //cue:generate cue get go github.com/holos-run/holos/api/core/v1alpha2
 
-// Package v1alpha2 contains the core API contract between the holos cli and cue
-// configuration code.  Platform designers, operators, and software developers
-// use this API to write configuration in CUE which `holos` loads.  The overall
-// shape of the API defines imperative actions `holos` should carry out to
-// render the complete yaml that represents a Platform.
 package v1alpha2
 
 import "google.golang.org/protobuf/types/known/structpb"

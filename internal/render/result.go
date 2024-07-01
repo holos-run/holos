@@ -157,7 +157,7 @@ func (r *Result) kustomize(ctx context.Context) error {
 
 	// Write the kustomization tree, kustomization.yaml must be in this map for kustomize to work.
 	for file, content := range r.Component.Kustomize.KustomizeFiles {
-		target := filepath.Join(tempDir, file)
+		target := filepath.Join(tempDir, string(file))
 		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
 			return errors.Wrap(err)
 		}
@@ -189,8 +189,8 @@ func (r *Result) WriteDeployFiles(ctx context.Context, path string) error {
 		return nil
 	}
 	for k, content := range r.Component.DeployFiles {
-		path := filepath.Join(path, k)
-		if err := r.Save(ctx, path, content); err != nil {
+		path := filepath.Join(path, string(k))
+		if err := r.Save(ctx, path, string(content)); err != nil {
 			return errors.Wrap(err)
 		}
 		log.InfoContext(ctx, "wrote deploy file", "path", path, "bytes", len(content))

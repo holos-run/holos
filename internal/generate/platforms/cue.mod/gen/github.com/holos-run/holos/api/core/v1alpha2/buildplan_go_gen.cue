@@ -4,13 +4,20 @@
 
 package v1alpha2
 
-// FileContentMap represents a mapping of file names to file content.
-#FileContentMap: {[string]: string}
+// FilePath represents a file path.
+#FilePath: string
 
-// BuildPlan represents a build plan for the holos cli to execute.  A build plan
-// is a set of zero or more holos components.  The purpose of a BuildPlan is to
-// define one or more [HolosComponent] kinds, for example a [HelmChart] or
-// [KustomizeBuild].
+// FileContent represents file contents.
+#FileContent: string
+
+// FileContentMap represents a mapping of file paths to file contents.  Paths
+// are relative to the `holos` output "deploy" directory, and may contain
+// sub-directories.
+#FileContentMap: {[string]: #FileContent}
+
+// BuildPlan represents a build plan for the holos cli to execute.  The purpose
+// of a BuildPlan is to define one or more [HolosComponent] kinds.  For example a
+// [HelmChart], [KustomizeBuild], or [KubernetesObjects].
 //
 // A BuildPlan usually has an additional empty [KubernetesObjects] for the
 // purpose of using the [HolosComponent] DeployFiles field to deploy an ArgoCD
@@ -21,13 +28,17 @@ package v1alpha2
 	spec:       #BuildPlanSpec                  @go(Spec)
 }
 
+// BuildPlanSpec represents the specification of the build plan.
 #BuildPlanSpec: {
-	disabled?:   bool                 @go(Disabled)
+	// Disabled causes the holos cli to take no action over the [BuildPlan].
+	disabled?: bool @go(Disabled)
+
+	// Components represents multiple [HolosComponent] kinds to manage.
 	components?: #BuildPlanComponents @go(Components)
 }
 
 #BuildPlanComponents: {
-	resources?: {[string]: #KubernetesObjects} @go(Resources,map[string]KubernetesObjects)
+	resources?: {[string]: #KubernetesObjects} @go(Resources,map[Label]KubernetesObjects)
 	kubernetesObjectsList?: [...#KubernetesObjects] @go(KubernetesObjectsList,[]KubernetesObjects)
 	helmChartList?: [...#HelmChart] @go(HelmChartList,[]HelmChart)
 	kustomizeBuildList?: [...#KustomizeBuild] @go(KustomizeBuildList,[]KustomizeBuild)

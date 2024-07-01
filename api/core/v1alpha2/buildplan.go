@@ -1,17 +1,19 @@
 package v1alpha2
 
-import (
-	"fmt"
-	"strings"
-)
+// FilePath represents a file path.
+type FilePath string
 
-// FileContentMap represents a mapping of file names to file content.
-type FileContentMap map[string]string
+// FileContent represents file contents.
+type FileContent string
 
-// BuildPlan represents a build plan for the holos cli to execute.  A build plan
-// is a set of zero or more holos components.  The purpose of a BuildPlan is to
-// define one or more [HolosComponent] kinds, for example a [HelmChart] or
-// [KustomizeBuild].
+// FileContentMap represents a mapping of file paths to file contents.  Paths
+// are relative to the `holos` output "deploy" directory, and may contain
+// sub-directories.
+type FileContentMap map[FilePath]FileContent
+
+// BuildPlan represents a build plan for the holos cli to execute.  The purpose
+// of a BuildPlan is to define one or more [HolosComponent] kinds.  For example a
+// [HelmChart], [KustomizeBuild], or [KubernetesObjects].
 //
 // A BuildPlan usually has an additional empty [KubernetesObjects] for the
 // purpose of using the [HolosComponent] DeployFiles field to deploy an ArgoCD
@@ -22,41 +24,19 @@ type BuildPlan struct {
 	Spec       BuildPlanSpec `json:"spec"`
 }
 
-func (bp *BuildPlan) Validate() error {
-	errs := make([]string, 0, 2)
-	if bp.Kind != BuildPlanKind {
-		errs = append(errs, fmt.Sprintf("kind invalid: want: %s have: %s", BuildPlanKind, bp.Kind))
-	}
-	if bp.APIVersion != APIVersion {
-		errs = append(errs, fmt.Sprintf("apiVersion invalid: want: %s have: %s", APIVersion, bp.APIVersion))
-	}
-	if len(errs) > 0 {
-		return fmt.Errorf("invalid BuildPlan: " + strings.Join(errs, ", "))
-	}
-	return nil
-}
-
-func (bp *BuildPlan) ResultCapacity() (count int) {
-	if bp == nil {
-		return 0
-	}
-	count = len(bp.Spec.Components.HelmChartList) +
-		len(bp.Spec.Components.KubernetesObjectsList) +
-		len(bp.Spec.Components.KustomizeBuildList) +
-		len(bp.Spec.Components.Resources)
-	return count
-}
-
+// BuildPlanSpec represents the specification of the build plan.
 type BuildPlanSpec struct {
-	Disabled   bool                `json:"disabled,omitempty"`
+	// Disabled causes the holos cli to take no action over the [BuildPlan].
+	Disabled bool `json:"disabled,omitempty"`
+	// Components represents multiple [HolosComponent] kinds to manage.
 	Components BuildPlanComponents `json:"components,omitempty"`
 }
 
 type BuildPlanComponents struct {
-	Resources             map[string]KubernetesObjects `json:"resources,omitempty"`
-	KubernetesObjectsList []KubernetesObjects          `json:"kubernetesObjectsList,omitempty"`
-	HelmChartList         []HelmChart                  `json:"helmChartList,omitempty"`
-	KustomizeBuildList    []KustomizeBuild             `json:"kustomizeBuildList,omitempty"`
+	Resources             map[Label]KubernetesObjects `json:"resources,omitempty"`
+	KubernetesObjectsList []KubernetesObjects         `json:"kubernetesObjectsList,omitempty"`
+	HelmChartList         []HelmChart                 `json:"helmChartList,omitempty"`
+	KustomizeBuildList    []KustomizeBuild            `json:"kustomizeBuildList,omitempty"`
 }
 
 // HolosComponent defines the fields common to all holos component kinds.  Every

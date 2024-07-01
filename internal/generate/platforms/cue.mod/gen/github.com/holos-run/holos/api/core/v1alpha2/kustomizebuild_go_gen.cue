@@ -4,8 +4,8 @@
 
 package v1alpha2
 
-// KustomizeBuild renders plain yaml files in the holos component directory
-// using kubectl kustomize build.
+// KustomizeBuild represents a [HolosComponent] that renders plain yaml files in
+// the holos component directory using `kubectl kustomize build`.
 #KustomizeBuild: {
 	#HolosComponent
 	kind: string & "KustomizeBuild" @go(Kind)

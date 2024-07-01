@@ -49,6 +49,43 @@ type Builder struct {
 	cfg config
 }
 
+type buildPlanWrapper struct {
+	buildPlan *v1alpha2.BuildPlan
+}
+
+func (b *buildPlanWrapper) validate() error {
+	if b == nil {
+		return fmt.Errorf("invalid BuildPlan: is nil")
+	}
+	bp := b.buildPlan
+	if bp == nil {
+		return fmt.Errorf("invalid BuildPlan: is nil")
+	}
+	errs := make([]string, 0, 2)
+	if bp.Kind != v1alpha2.BuildPlanKind {
+		errs = append(errs, fmt.Sprintf("kind invalid: want: %s have: %s", v1alpha1.BuildPlanKind, bp.Kind))
+	}
+	if bp.APIVersion != v1alpha2.APIVersion {
+		errs = append(errs, fmt.Sprintf("apiVersion invalid: want: %s have: %s", v1alpha2.APIVersion, bp.APIVersion))
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("invalid BuildPlan: " + strings.Join(errs, ", "))
+	}
+	return nil
+}
+
+func (b *buildPlanWrapper) resultCapacity() (count int) {
+	if b == nil {
+		return 0
+	}
+	bp := b.buildPlan
+	count = len(bp.Spec.Components.HelmChartList) +
+		len(bp.Spec.Components.KubernetesObjectsList) +
+		len(bp.Spec.Components.KustomizeBuildList) +
+		len(bp.Spec.Components.Resources)
+	return count
+}
+
 // New returns a new *Builder configured by opts Option.
 func New(opts ...Option) *Builder {
 	var cfg config
@@ -214,7 +251,9 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha2.BuildPlan, path holos.InstancePath) (results []*render.Result, err error) {
 	log := logger.FromContext(ctx)
 
-	if err := buildPlan.Validate(); err != nil {
+	bpw := buildPlanWrapper{buildPlan: buildPlan}
+
+	if err := bpw.validate(); err != nil {
 		log.WarnContext(ctx, "could not validate", "skipped", true, "err", err)
 		return nil, errors.Wrap(fmt.Errorf("could not validate %w", err))
 	}
@@ -224,8 +263,8 @@ func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha2.BuildPlan, 
 		return
 	}
 
-	results = make([]*render.Result, 0, buildPlan.ResultCapacity())
-	log.DebugContext(ctx, "allocated results slice", "cap", buildPlan.ResultCapacity())
+	results = make([]*render.Result, 0, bpw.resultCapacity())
+	log.DebugContext(ctx, "allocated results slice", "cap", bpw.resultCapacity())
 
 	for _, component := range buildPlan.Spec.Components.Resources {
 		ko := render.KubernetesObjects{Component: component}

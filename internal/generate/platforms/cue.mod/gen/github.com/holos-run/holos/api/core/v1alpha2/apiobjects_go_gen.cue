@@ -6,11 +6,23 @@ package v1alpha2
 
 import "google.golang.org/protobuf/types/known/structpb"
 
-// Label is an arbitrary unique identifier.  Defined as a type for clarity and type checking.
+// Label is an arbitrary unique identifier internal to holos itself.  The holos
+// cli is expected to never write a Label value to rendered output files,
+// therefore use a [Label] then the identifier must be unique and internal.
+// Defined as a type for clarity and type checking.
+//
+// A Label is useful to convert a CUE struct to a list, for example producing a list of [APIObject] resources from an [APIObjectMap].  A CUE struct using
+// Label keys is guaranteed to not lose data when rendering output because a
+// Label is expected to never be written to the final output.
 #Label: string
 
 // Kind is a kubernetes api object kind. Defined as a type for clarity and type checking.
 #Kind: string
+
+// APIObject represents the most basic generic form of a single kubernetes api
+// object.  Represented as a JSON object internally for compatibility between
+// tools, for example loading from CUE.
+#APIObject: structpb.#Struct
 
 // APIObjectMap represents the marshalled yaml representation of kubernetes api
 // objects.  Do not produce an APIObjectMap directly, instead use [APIObjects]
@@ -18,26 +30,19 @@ import "google.golang.org/protobuf/types/known/structpb"
 // result to [HolosComponent].
 #APIObjectMap: {[string]: [string]: string}
 
-// APIObjects represents kubernetes api objects to apply to the api server.
-// Useful to mix in resources to each HolosComponent type, for example adding an
-// ExternalSecret to a HelmChart HolosComponent.
+// APIObjects represents Kubernetes API objects defined directly from CUE code.
+// Useful to mix in resources to any kind of [HolosComponent], for example
+// adding an ExternalSecret resource to a [HelmChart].
 //
-// Kind must be the resource kind, e.g. Deployment or Service.
+// [Kind] must be the resource kind, e.g. Deployment or Service.
 //
-// Label is an arbitrary internal identifier to uniquely identify the resource
+// [Label] is an arbitrary internal identifier to uniquely identify the resource
 // within the context of a `holos` command.  Holos will never write the
 // intermediate label to rendered output.
 //
 // Refer to [HolosComponent] which accepts an [APIObjectMap] field provided by
 // [APIObjects].
 #APIObjects: {
-	// APIObjects represents Kubernetes API objects defined directly from CUE
-	// code.  Useful to mix in resources, for example adding an ExternalSecret
-	// resource to a HelmChart HolosComponent.
-	apiObjects: {[string]: [string]: structpb.#Struct} @go(APIObjects,map[Kind]map[Label]structpb.Struct)
-
-	// APIObjectMap represents the marshalled yaml representation of APIObjects,
-	// useful to inspect the rendered representation of the resource which will be
-	// sent to the kubernetes API server.
+	apiObjects: {[string]: [string]: #APIObject} @go(APIObjects,map[Kind]map[Label]APIObject)
 	apiObjectMap: #APIObjectMap @go(APIObjectMap)
 }
