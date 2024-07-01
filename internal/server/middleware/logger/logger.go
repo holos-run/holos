@@ -22,6 +22,34 @@ func FromContext(ctx context.Context) *slog.Logger {
 	return logger.FromContext(ctx)
 }
 
+// ResponseLogger logs responses at info level.  Intended for a live production
+// site to collect essential usage metrics.
+func ResponseLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		ww := wrapResponseWriter(w)
+		next.ServeHTTP(ww, r)
+		uri := r.URL.RequestURI()
+		ctx := r.Context()
+		log := slog.Default().With(
+			"status", ww.status,
+			"response_time", time.Since(start).String(),
+			"uri", uri,
+			"proto", r.Proto,
+			"method", r.Method,
+			"remote", GetClientIP(r),
+			"user-agent", r.UserAgent(),
+			"host", r.Host,
+			"trace_id", r.Header.Get("x-b3-traceid"),
+			"span_id", r.Header.Get("x-b3-spanid"),
+			"parent_span_id", r.Header.Get("x-b3-parentspanid"),
+			"request_id", r.Header.Get("x-request-id"),
+			"email", r.Header.Get("x-forwarded-email"),
+		)
+		log.InfoContext(ctx, uri)
+	})
+}
+
 // LoggingMiddleware returns a handler that adds a *slog.Logger to the request
 // context.Context retrievable by FromContext. The returned handler is useful as
 // the outer client facing edge of a middleware chain and includes attributes on

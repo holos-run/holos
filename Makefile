@@ -76,6 +76,9 @@ rmgen: ## Remove generated code
 	rm -rf internal/ent/
 	git restore --staged internal/ent/generate.go internal/ent/schema/
 	git restore internal/ent/generate.go internal/ent/schema/
+	rm -rf docs/website/build
+	git restore --staged docs/website/build
+	git restore docs/website/build
 
 .PHONY: regenerate
 regenerate: generate ## Re-generate code (delete and re-create)
@@ -85,7 +88,7 @@ generate: buf gencue ## Generate code.
 	go generate ./...
 
 .PHONY: build
-build: generate frontend ## Build holos executable.
+build: generate frontend website ## Build holos executable.
 	@echo "building ${BIN_NAME} ${VERSION}"
 	@echo "GOPATH=${GOPATH}"
 	go build -trimpath -o bin/$(BIN_NAME) -ldflags $(LD_FLAGS) $(REPO_PATH)/cmd/$(BIN_NAME)
@@ -146,11 +149,17 @@ frontend-deps: ## Setup npm and vite
 
 
 .PHONY: frontend
-frontend: buf
+frontend: buf ## Build the Angular web app
 	cd internal/frontend/holos && rm -rf dist
 	mkdir -p internal/frontend/holos/dist
 	cd internal/frontend/holos && ng build
 	touch internal/frontend/frontend.go
+
+.PHONY: website
+website: ## Build the Docusaurus web site
+	cd doc/website && git clean -fdx ./build
+	cd doc/website && yarn build
+	touch doc/website/website.go
 
 .PHONY: image
 image: build ## Docker image build

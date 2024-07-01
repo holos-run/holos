@@ -46,7 +46,7 @@ func (s *Shutdown) Graceful(stopCh <-chan struct{}, httpServer *http.Server, hea
 			s.logger.DebugContext(ctx, "SHUTDOWN_DELAY env override in effect", "delay", delay)
 		}
 	}
-	s.logger.DebugContext(ctx, "shutting down http/https server after delay", "delay", delay, "timeout", s.serverShutdownTimeout)
+	s.logger.DebugContext(ctx, "shutting down http/https server", "delay", delay, "timeout", s.serverShutdownTimeout)
 	// wait for Kubernetes readiness probe to remove this instance from the load balancer
 	// the readiness check interval must be lower than the timeout
 	time.Sleep(delay)

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	_ "embed"
 	"fmt"
 	"log/slog"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server"
+	"github.com/holos-run/holos/internal/server/website"
 
 	"github.com/holos-run/holos/internal/cli/build"
 	"github.com/holos-run/holos/internal/cli/command"
@@ -31,11 +33,15 @@ import (
 	"github.com/holos-run/holos/internal/cli/txtar"
 )
 
+//go:embed help.txt
+var helpLong string
+
 // New returns a new root *cobra.Command for command line execution.
 func New(cfg *holos.Config) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     "holos",
 		Short:   "holos manages a holistic integrated software development platform",
+		Long:    helpLong,
 		Version: version.GetVersion(),
 		Args:    cobra.NoArgs,
 		CompletionOptions: cobra.CompletionOptions{
@@ -86,6 +92,8 @@ func New(cfg *holos.Config) *cobra.Command {
 
 	// Server
 	rootCmd.AddCommand(server.New(cfg))
+	// Website
+	rootCmd.AddCommand(website.New(cfg))
 
 	// Controller
 	rootCmd.AddCommand(controller.New(cfg))
