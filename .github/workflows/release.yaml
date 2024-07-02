@@ -40,10 +40,6 @@ jobs:
         run: |
           set -x
           make tools
-          make buf
-          go generate ./...
-          make frontend
-          go mod tidy
 
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@v6

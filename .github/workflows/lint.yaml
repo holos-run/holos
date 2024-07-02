@@ -37,10 +37,6 @@ jobs:
         run: |
           set -x
           make tools
-          make buf
-          go generate ./...
-          make frontend
-          go mod tidy
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
