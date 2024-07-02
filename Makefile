@@ -123,7 +123,7 @@ frontend-deps: ## Install Angular deps for go generate
 
 .PHONY: website-deps
 website-deps: ## Install Docusaurus deps for go generate
-	cd doc/website && yarn install
+	cd doc/website && npm install
 
 .PHONY: image
 image: build ## Docker image build

@@ -4,7 +4,7 @@ package website
 
 //go:generate rm -rf build
 //go:generate mkdir build
-//go:generate yarn build
+//go:generate npm run build
 //go:generate touch $GOFILE
 
 import (
