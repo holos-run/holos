@@ -8,8 +8,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent/organization"
 	"github.com/holos-run/holos/internal/ent/platform"
-	"github.com/holos-run/holos/internal/ent/schema"
 	"github.com/holos-run/holos/internal/ent/user"
+	"github.com/holos-run/holos/internal/schema"
 )
 
 // The init function reads all schema descriptors with runtime code

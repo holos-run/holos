@@ -1,0 +1,11 @@
+#! /bin/bash
+#
+# Expected to be called by go:generate in the service directory
+
+set -euo pipefail
+
+nodebin="$(cd ../internal/frontend/holos/node_modules/.bin && pwd)"
+export PATH="${nodebin}:${PATH}"
+
+buf dep update
+(cd .. && buf generate)

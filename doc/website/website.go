@@ -2,6 +2,11 @@
 // served at /docs similar to how the ui is served at /ui.
 package website
 
+//go:generate rm -rf build
+//go:generate mkdir build
+//go:generate yarn build
+//go:generate touch $GOFILE
+
 import (
 	"embed"
 	"io/fs"

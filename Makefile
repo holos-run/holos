@@ -62,33 +62,12 @@ fmt: ## Format code.
 vet: ## Vet Go code.
 	go vet ./...
 
-.PHONY: gencue
-gencue: ## Generate CUE definitions
-	cd internal/generate/platforms && cue get go github.com/holos-run/holos/api/v1alpha1/...
-	cd internal/generate/platforms && cue get go github.com/holos-run/holos/api/core/...
-	cd internal/generate/platforms && cue get go github.com/holos-run/holos/api/meta/...
-
-.PHONY: rmgen
-rmgen: ## Remove generated code
-	git rm -rf service/gen/ internal/frontend/holos/src/app/gen/ || true
-	rm -rf service/gen/ internal/frontend/holos/src/app/gen/
-	git rm -rf internal/ent/
-	rm -rf internal/ent/
-	git restore --staged internal/ent/generate.go internal/ent/schema/
-	git restore internal/ent/generate.go internal/ent/schema/
-	rm -rf docs/website/build
-	git restore --staged docs/website/build
-	git restore docs/website/build
-
-.PHONY: regenerate
-regenerate: generate ## Re-generate code (delete and re-create)
-
 .PHONY: generate
-generate: buf gencue ## Generate code.
+generate: ## Generate code.
 	go generate ./...
 
 .PHONY: build
-build: generate frontend website ## Build holos executable.
+build: ## Build holos executable.
 	@echo "building ${BIN_NAME} ${VERSION}"
 	@echo "GOPATH=${GOPATH}"
 	go build -trimpath -o bin/$(BIN_NAME) -ldflags $(LD_FLAGS) $(REPO_PATH)/cmd/$(BIN_NAME)
@@ -119,13 +98,8 @@ coverage: test  ## Test coverage profile.
 snapshot:  ## Go release snapshot
 	goreleaser release --snapshot --clean
 
-.PHONY: buf
-buf: ## buf generate
-	cd service && buf dep update
-	buf generate
-
 .PHONY: tools
-tools: go-deps frontend-deps  ## install tool dependencies
+tools: go-deps frontend-deps website-deps ## install tool dependencies
 
 .PHONY: go-deps
 go-deps: ## tool versions pinned in tools.go
@@ -139,7 +113,7 @@ go-deps: ## tool versions pinned in tools.go
 	# curl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash
 
 .PHONY: frontend-deps
-frontend-deps: ## Setup npm and vite
+frontend-deps: ## Install Angular deps for go generate
 	cd internal/frontend/holos && npm install
 	cd internal/frontend/holos && npm install --save-dev @bufbuild/buf @connectrpc/protoc-gen-connect-es
 	cd internal/frontend/holos && npm install @connectrpc/connect @connectrpc/connect-web @bufbuild/protobuf
@@ -147,19 +121,9 @@ frontend-deps: ## Setup npm and vite
 	cd internal/frontend/holos && npm install --save-dev @connectrpc/protoc-gen-connect-query @bufbuild/protoc-gen-es
 	cd internal/frontend/holos && npm install @connectrpc/connect-query @bufbuild/protobuf
 
-
-.PHONY: frontend
-frontend: buf ## Build the Angular web app
-	cd internal/frontend/holos && rm -rf dist
-	mkdir -p internal/frontend/holos/dist
-	cd internal/frontend/holos && ng build
-	touch internal/frontend/frontend.go
-
-.PHONY: website
-website: ## Build the Docusaurus web site
-	cd doc/website && git clean -fdx ./build
-	cd doc/website && yarn build
-	touch doc/website/website.go
+.PHONY: website-deps
+website-deps: ## Install Docusaurus deps for go generate
+	cd doc/website && yarn install
 
 .PHONY: image
 image: build ## Docker image build
