@@ -1,17 +1,17 @@
-endi:
-  name: Endilie Yacop Sucipto
-  title: Maintainer of Docusaurus
-  url: https://github.com/endiliey
-  image_url: https://github.com/endiliey.png
+jeff:
+  name: Jeff McCune
+  title: Holos maintainer & creator
+  url: https://github.com/jeffmccune
+  image_url: https://github.com/jeffmccune.png
 
-yangshun:
-  name: Yangshun Tay
-  title: Front End Engineer @ Facebook
-  url: https://github.com/yangshun
-  image_url: https://github.com/yangshun.png
+gary:
+  name: Gary Larizza
+  title: Holos maintainer
+  url: https://github.com/glarizza
+  image_url: https://github.com/glarizza.png
 
-slorber:
-  name: Sébastien Lorber
-  title: Docusaurus maintainer
-  url: https://sebastienlorber.com
-  image_url: https://github.com/slorber.png
+nate:
+  name: Nate McCurdy
+  title: Holos maintainer
+  url: https://github.com/natemccurdy
+  image_url: https://github.com/natemccurdy.png
