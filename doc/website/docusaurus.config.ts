@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Holos',
-  tagline: 'Holistic development platform',
+  tagline: 'The Cloud Native Platform Distribution',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -19,7 +19,7 @@ const config: Config = {
   projectName: 'holos', // Usually your repo name.
 
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
+  onBrokenMarkdownLinks: 'throw',
 
   // Even if you don't use internationalization, you can use this field to set
   // useful metadata like html lang. For example, if your site is Chinese, you
@@ -62,10 +62,10 @@ const config: Config = {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     navbar: {
-      title: 'My Site',
+      title: '',
       logo: {
-        alt: 'My Site Logo',
         src: 'img/logo.svg',
+        srcDark: 'img/logo-dark.svg',
       },
       items: [
         {
@@ -76,7 +76,13 @@ const config: Config = {
         },
         { to: '/blog', label: 'Blog', position: 'left' },
         {
-          href: 'https://github.com/facebook/docusaurus',
+          "href": "https://pkg.go.dev/github.com/holos-run/holos?tab=doc",
+          "label": "GoDoc",
+          "position": "left",
+          "className": "header-godoc-link",
+        },
+        {
+          href: 'https://github.com/holos-run/holos',
           label: 'GitHub',
           position: 'right',
         },
@@ -98,16 +104,8 @@ const config: Config = {
           title: 'Community',
           items: [
             {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-            },
-            {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
-            },
-            {
-              label: 'Twitter',
-              href: 'https://twitter.com/docusaurus',
+              label: 'Discuss',
+              href: 'https://github.com/orgs/holos-run/discussions',
             },
           ],
         },
@@ -120,16 +118,35 @@ const config: Config = {
             },
             {
               label: 'GitHub',
-              href: 'https://github.com/facebook/docusaurus',
+              href: 'https://github.com/holos-run/holos',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} The Holos Authors.`,
     },
     prism: {
+      // Refer to https://docusaurus.io/docs/api/themes/configuration#theme
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
+      // Refer to https://docusaurus.io/docs/next/markdown-features/code-blocks#supported-languages
+      additionalLanguages: ['protobuf', 'cue', 'bash', 'diff', 'json'],
+      magicComments: [
+        {
+          className: 'theme-code-block-highlighted-line',
+          line: 'highlight-next-line',
+          block: { start: 'highlight-start', end: 'highlight-end' },
+        },
+        {
+          className: 'code-block-error-message',
+          line: 'highlight-next-line-error-message',
+        },
+        {
+          className: 'code-block-info-line',
+          line: 'highlight-next-line-info',
+          block: { start: 'highlight-info-start', end: 'highlight-info-end' },
+        },
+      ],
     },
   } satisfies Preset.ThemeConfig,
 };

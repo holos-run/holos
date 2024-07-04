@@ -2,46 +2,12 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Holos
 
-Let's discover **Docusaurus in less than 5 minutes**.
+Holos provides a software development platform that holistically integrates the most popular cloud native projects.
 
-## Getting Started
+Organizations large and small need a development platform to deliver their software quickly, reliabily, and securely.  Desinging and building a development platform is an expensive and time-consuming edeavour, usually taking a team of 2-3 experienced engineers 6-9 months to deliver a platform.
 
-Get started by **creating a new site**.
+Holos provides a shortcut by delivering a complete, holistic software development platform built from the best of breed open source projects.
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
-
-### What you'll need
-
-- [Node.js](https://nodejs.org/en/download/) version 18.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
-
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+For organizations that already have a software development platform, holos provides a suite of tools to simplify the configuration and integration of could native software.
