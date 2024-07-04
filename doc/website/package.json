@@ -27,6 +27,8 @@
     "@docusaurus/module-type-aliases": "^3.4.0",
     "@docusaurus/tsconfig": "^3.4.0",
     "@docusaurus/types": "^3.4.0",
+    "@wcj/html-to-markdown-cli": "^2.1.1",
+    "html-to-markdown": "^1.0.0",
     "typescript": "~5.2.2"
   },
   "browserslist": {

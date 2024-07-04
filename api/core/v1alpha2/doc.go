@@ -22,3 +22,5 @@
 // Note that Holos operates as a data pipeline, so the output of a [HelmChart]
 // may be provided to [Kustomize] for post-processing.
 package v1alpha2
+
+//go:generate ../../../hack/gendoc
