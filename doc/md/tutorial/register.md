@@ -1,7 +1,3 @@
----
-sidebar_position: 2
----
-
 # Registration
 
 Holos leverages a simple web app to collect and store platform attributes with a web form.  Register an account with the web app to create and retrieve the platform model.

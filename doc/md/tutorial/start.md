@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 # Install Holos
 
 Holos is distributed as a single file executable.
