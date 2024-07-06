@@ -2,9 +2,9 @@
 
 ⚡️ Holos will help you build your **software development platform in no time.**
 
-💸 Building a software development platform is time consuming and expensive. Instead, focus on your application and let Holos manage the platform for you.
+💸 Building a software development platform is **time consuming and expensive**.  Spend more time building features for your customers and less time managing your development platform.
 
-💥 Already delivering? Use the advanced functionality of Holos to manage your existing platform safer and easier.
+💥 Already have a platform?  Add new features and services to your platform easily with Holos.
 
 🧐 Holos is a platform builder. It builds a hollistic software development platform composed of best-of-breed cloud native open source projects.  Holos is also a tool to make it easier to manage cloud infrastructure by providing a typed alternative to yaml templates.
 
@@ -12,16 +12,16 @@
 
 Holos was built to solve two main problems:
 
- 1. Building a platform is **time consuming and expensive**, usually taking 3 engineers 6-9 months of effort.  Holos provides a reference platform that enables an individual to build and customize their platform quickly.
- 2. Configuration changes often lead to downtime.  Existing tools like Helm make it difficult to reason about the impact a configuration change will have.  Holos provides a unique, unified configuration model powered by CUE which makes it safer and easier to manage the platform.
+ 1. Building a platform usually takes 3 engineers 6-9 months of effort.  Holos provides a reference platform that enables you to deploy and customize your platform in a fraction of the time.
+ 2. Configuration changes often cause outages.  Existing tools like Helm make it difficult to understand the impact a configuration change will have.  Holos provides a unique, unified configuration model powered by CUE that makes it safer and easier to roll out configuration changes.
 
-In addition, a core principle of Holos is that Organizations gain value from owning the the platform they build on.  Avoid vendor lock-in, future price hikes, and licensing changes by building on a solid foundation of open source, cloud native computing foundation backed projects.
+A core principle of Holos is that organizations gain value from owning the the platform they build on.  Avoid vendor lock-in, future price hikes, and expensive licensing changes by building on a solid foundation of open source, cloud native computing foundation backed projects.
 
 The following features are built into the Holos reference platform.
 
 :::tip
 
-Prefer a different implementation for a feature, or want a feature not listed?  No problem, Holos is highly customizable and composable.
+Don't see your preferred technology in the stack?  Holos is designed to enable you to swap out components of the platform tech stack.
 
 :::
 
