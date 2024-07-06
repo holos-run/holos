@@ -10,7 +10,7 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Zero Trust IAM',
+    title: 'Zero Trust Authorization',
     Svg: require('@site/static/img/base00/undraw_security_on_re_e491.svg').default,
     description: (
       <>
@@ -36,7 +36,8 @@ const FeatureList: FeatureItem[] = [
     description: (
       <>
         Receive alerts before issues impact your customers.  Holos provides an
-        integrated observability platform and alerting dashboards.
+        integrated observability system complete with dashboards and
+        notification rules.
       </>
     ),
   },
