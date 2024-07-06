@@ -16,6 +16,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Tutorial',
+      collapsed: false,
       items: [
         'tutorial/start',
         'tutorial/register',

@@ -10,38 +10,39 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Easy to Use',
-    Svg: require('@site/static/img/undraw_docusaurus_mountain.svg').default,
+    title: 'Zero Trust IAM',
+    Svg: require('@site/static/img/base00/undraw_security_on_re_e491.svg').default,
     description: (
       <>
-        Docusaurus was designed from the ground up to be easily installed and
-        used to get your website up and running quickly.
+        Spend more time on your business features and less time rebuilding
+        authentication and authorization.  Holos provides zero trust security
+        with no code necessary.
       </>
     ),
   },
   {
-    title: 'Focus on What Matters',
-    Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
+    title: 'Multi-Cloud',
+    Svg: require('@site/static/img/base00/undraw_cloud_hosting_7xb1.svg').default,
     description: (
       <>
-        Docusaurus lets you focus on your docs, and we&apos;ll do the chores. Go
-        ahead and move your docs into the <code>docs</code> directory.
+        Avoid vendor lock in, downtime, and price hikes.  Holos is designed to
+        easily deploy workloads into multiple clouds and multiple regions.
       </>
     ),
   },
   {
-    title: 'Powered by React',
-    Svg: require('@site/static/img/undraw_docusaurus_react.svg').default,
+    title: 'Observability',
+    Svg: require('@site/static/img/base00/undraw_data_trends_re_2cdy.svg').default,
     description: (
       <>
-        Extend or customize your website layout by reusing React. Docusaurus can
-        be extended while reusing the same header and footer.
+        Receive alerts before issues impact your customers.  Holos provides an
+        integrated observability platform and alerting dashboards.
       </>
     ),
   },
 ];
 
-function Feature({title, Svg, description}: FeatureItem) {
+function Feature({ title, Svg, description }: FeatureItem) {
   return (
     <div className={clsx('col col--4')}>
       <div className="text--center">
