@@ -134,7 +134,6 @@ image: build ## Docker image build
 .PHONY: website
 website: ## Build website
 	./hack/build-website
-	
 
 .PHONY: help
 help:  ## Display this help menu.

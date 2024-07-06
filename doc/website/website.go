@@ -2,10 +2,10 @@
 // served at /docs similar to how the ui is served at /ui.
 package website
 
-//go:generate rm -rf build
-//go:generate mkdir build
-//go:generate npm run build
-//go:generate touch $GOFILE
+// DISABLED go:generate rm -rf build
+// DISABLED go:generate mkdir build
+// DISABLED go:generate npm run build
+// DISABLED go:generate touch $GOFILE
 
 import (
 	"embed"

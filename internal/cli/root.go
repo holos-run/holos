@@ -12,7 +12,6 @@ import (
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server"
-	"github.com/holos-run/holos/internal/server/website"
 
 	"github.com/holos-run/holos/internal/cli/build"
 	"github.com/holos-run/holos/internal/cli/command"
@@ -92,8 +91,6 @@ func New(cfg *holos.Config) *cobra.Command {
 
 	// Server
 	rootCmd.AddCommand(server.New(cfg))
-	// Website
-	rootCmd.AddCommand(website.New(cfg))
 
 	// Controller
 	rootCmd.AddCommand(controller.New(cfg))
