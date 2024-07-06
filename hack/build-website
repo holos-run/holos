@@ -1,0 +1,12 @@
+#! /bin/bash
+#
+set -euo pipefail
+
+PARENT="$(cd "$(dirname $0)" && pwd)"
+TOPLEVEL="$(cd "${PARENT}/.." && pwd)"
+
+cd "$TOPLEVEL/doc/website"
+npm run build
+
+echo "repo: ${TOPLEVEL}" >&2
+echo "build: ./doc/website/build" >&2
