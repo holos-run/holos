@@ -1,11 +1,15 @@
 #! /bin/bash
 #
+# This script is intended for execution in a Cloudflare Pages build context.
+
 set -euo pipefail
 
 PARENT="$(cd "$(dirname $0)" && pwd)"
 TOPLEVEL="$(cd "${PARENT}/.." && pwd)"
 
 cd "$TOPLEVEL/doc/website"
+
+npm install
 npm run build
 
 echo "repo: ${TOPLEVEL}" >&2
