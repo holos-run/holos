@@ -22,6 +22,14 @@ const sidebars: SidebarsConfig = {
         'tutorial/register',
       ],
     },
+    {
+      type: 'category',
+      label: 'Reference Platform',
+      collapsed: false,
+      items: [
+        'reference-platform/architecture',
+      ],
+    },
   ],
   api: [
     'cli',

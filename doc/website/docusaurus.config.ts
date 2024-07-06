@@ -29,6 +29,12 @@ const config: Config = {
     locales: ['en'],
   },
 
+  // https://docusaurus.io/docs/markdown-features/diagrams
+  markdown: {
+    mermaid: true
+  },
+  themes: ['@docusaurus/theme-mermaid'],
+
   presets: [
     [
       'classic',
@@ -158,6 +164,10 @@ const config: Config = {
           block: { start: 'highlight-info-start', end: 'highlight-info-end' },
         },
       ],
+    },
+    mermaid: {
+      // Refer to https://mermaid.js.org/config/theming.html
+      theme: { light: 'neutral', dark: 'forest' },
     },
   } satisfies Preset.ThemeConfig,
 };
