@@ -18,7 +18,8 @@ const sidebars: SidebarsConfig = {
       label: 'Tutorial',
       collapsed: false,
       items: [
-        'tutorial/start',
+        'tutorial/overview',
+        'tutorial/install',
         'tutorial/register',
       ],
     },
