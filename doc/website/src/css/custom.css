@@ -6,6 +6,9 @@
 
 /* You can override the default Infima variables here. */
 :root {
+  --ifm-link-color: #268bd2;
+  --docusaurus-highlighted-code-line-bg: #eee8d5;
+
   /* Solarized Base03 */
   --ifm-color-primary: #002b36;
   /* Solarized Base3 */
@@ -24,16 +27,13 @@
   /* Solarized Base2 */
   --ifm-color-primary-lightest: #eee8d5;
   --ifm-code-font-size: 95%;
-
-  --ifm-link-color: #268bd2;
-  --ifm-navbar-link-color: #268bd2;
-  --ifm-navbar-link-hover-color: #268bd2;
-
-  --docusaurus-highlighted-code-line-bg: #eee8d5;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme='dark'] {
+  --ifm-link-color: #268bd2;
+  --docusaurus-highlighted-code-line-bg: #073642;
+
   /* Solarized Base3 */
   --ifm-color-primary: #fdf6e3;
   /* Solarized Base03 */
@@ -52,10 +52,4 @@
   /* Solarized Base0 */
   --ifm-color-primary-lightest: #839496;
   --ifm-code-font-size: 95%;
-
-  --ifm-link-color: #268bd2;
-  --ifm-navbar-link-color: #268bd2;
-  --ifm-navbar-link-hover-color: #268bd2;
-
-  --docusaurus-highlighted-code-line-bg: #073642;
 }

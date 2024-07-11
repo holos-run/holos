@@ -13,7 +13,6 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   doc: [
     'intro',
-    'glossary',
     {
       type: 'category',
       label: 'Tutorial',
@@ -30,6 +29,7 @@ const sidebars: SidebarsConfig = {
         'reference-platform/architecture',
       ],
     },
+    'glossary',
   ],
   api: [
     'api/core/v1alpha2',
