@@ -26,7 +26,7 @@ let Objects = {
 	Resources: {
 		// echo '{"cookiesecret":"'$(LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom | head -c 32)'"}' \
 		//   | holos create secret -n istio-gateways --append-hash=false --data-stdin authproxy
-		ExternalSecret: (Name): #ExternalSecret & {metadata: ProxyMetadata}
+		// ExternalSecret: (Name): #ExternalSecret & {metadata: ProxyMetadata}
 		// Place the ID token in a header that does not conflict with the Authorization header.
 		// Refer to: https://github.com/oauth2-proxy/oauth2-proxy/issues/1877#issuecomment-1364033723
 		ConfigMap: (Name): {
@@ -174,31 +174,6 @@ let Objects = {
 					targetPort: port
 					protocol:   "TCP"
 					name:       "http"
-				},
-			]
-		}
-
-		HTTPRoute: (Name): {
-			metadata: namespace: Namespace
-			metadata: labels:    ProxyMetadata.labels
-			spec: parentRefs: [
-				{
-					name:      "default"
-					namespace: #IstioGatewaysNamespace
-				},
-			]
-			spec: hostnames: [
-				"httpbin.admin.\(_ClusterName).\(_Platform.Model.org.domain)",
-			]
-			spec: rules: [
-				{
-					matches: [{path: {type: "PathPrefix", value: AuthProxyPrefix}}]
-					backendRefs: [
-						{
-							name: Service.authproxy.metadata.name
-							port: Service.authproxy.spec.ports[0].port
-						},
-					]
 				},
 			]
 		}

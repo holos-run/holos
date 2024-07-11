@@ -101,6 +101,20 @@ _Platform: Components: {
 				path:    "components/istio/mesh/httpbin/routes"
 				cluster: Cluster.name
 			}
+
+			// Auth Proxy for platform services
+			"\(Cluster.name)/authproxy": {
+				path:    "components/istio/mesh/iap/authproxy"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/authroutes": {
+				path:    "components/istio/mesh/iap/authroutes"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/authpolicy": {
+				path:    "components/istio/mesh/iap/authpolicy"
+				cluster: Cluster.name
+			}
 		}
 	}
 }
@@ -137,15 +151,15 @@ _AuthProxy: {
 	servicePort: 4180
 
 	// issuerHost is the hostname portion of issuerURL
-	issuerHost: "login." + _Platform.Model.org.domain
+	issuerHost: "login.holos.run"
 	// issuerURL is the oidc id provider issuer, zitadel for this platform.
 	issuerURL: "https://" + issuerHost
 
 	// clientID is the client id of the authproxy in the id provider (zitadel).
-	clientID: _Platform.Model.authproxy.clientID
+	clientID: "275804490387516853@holos_quickstart"
 	// projectID is the zitadel project id of Holos Platform project in the id
 	// provider (zitadel).
-	projectID: _Platform.Model.authproxy.projectID
+	projectID: "275571128859132936"
 
 	// idTokenHeader is the header where the authproxy places the id token on
 	// successful authentication.  Useful for services in the mesh to validate and

@@ -352,9 +352,9 @@ k3d cluster create \
 
 Traefik is disabled because Istio provides the same functionality.
 
-## Apply the Platform Config
+## Apply the Platform Components
 
-Use `kubectl` to apply each component to the cluster.  In production, it's common to fully automate this process with ArgoCD, but we use `kubectl` in development and exploration contexts to the same effect.
+Use `kubectl` to apply each platform component.  In production, it's common to fully automate this process with ArgoCD, but we use `kubectl` in development and exploration contexts to the same effect.
 
 ### Namespaces
 
@@ -492,7 +492,7 @@ Resource accepted
 Resource programmed, assigned to service(s) default-istio.istio-gateways.svc.cluster.local:443
 ```
 
-## DNS Setup
+### DNS Setup
 
 Configure your localhost to resolve `*.holos.localhost` to your loopback
 interface.  This is necessary for your browser requests to reach the k3d
@@ -546,7 +546,7 @@ workload cluster.
 </Tabs>
 
 
-## httpbin
+### httpbin
 
 httpbin is a simple backend service useful to dump request headers.
 
@@ -554,7 +554,7 @@ httpbin is a simple backend service useful to dump request headers.
  kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-backend/httpbin-backend.gen.yaml
 ```
 
-## httpbin routes
+### httpbin routes
 
 Expose the httpbin service and make it accessible to the browser.
 
@@ -564,13 +564,13 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-
 
 :::important
 
-Visit [https://httpbin.holos.localhost/](https://httpbin.holos.localhost/) in your browser at this point to verify everything is working.
+Browse to [https://httpbin.holos.localhost/](https://httpbin.holos.localhost/) to verify end to end connectivity.
 
 :::
 
-The browser should not report any security warnings and you should get the httpbin welcome page.
+The browser should not report any security warnings and you should see the httpbin index page.
 
-Verify with curl as well:
+Verify curl gets an ok response from httpbin:
 
 ```bash
 curl https://httpbin.holos.localhost/dump/request
@@ -592,3 +592,103 @@ X-Forwarded-For: 10.42.0.1
 X-Forwarded-Proto: https
 X-Request-Id: 6141bd39-fb1d-437f-9d17-50767d75a332
 ```
+
+### Auth Proxy
+
+The auth proxy is responsible for authenticating web browser requests.  The auth proxy provides a standard oidc id token to all services integrated with the mesh.
+
+Create a Secret to store the cookie encrytion key.
+
+```bash
+LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom \
+  | head -c 32 \
+  | kubectl create secret generic "authproxy" \
+    --from-file=cookiesecret=/dev/stdin \
+    --dry-run=client -o yaml \
+  | kubectl apply -n istio-gateways -f-
+```
+
+:::tip
+
+The Holos reference platform uses an ExternalSecret to automatically sync this Secret from your SecretStore.
+
+:::
+
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/authproxy
+```
+
+### Auth Routes
+
+The auth routes holos component is responsible for handling requsts with a path
+prefix of `/holos/authproxy`.  These requests are redirected to the auth proxy
+which is responsible for authenticating the request and providing the standard
+oidc id token.
+
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/authroutes
+```
+
+:::important
+
+Verify authentication is working by visiting
+[https://httpbin.holos.localhost/holos/authproxy](https://httpbin.holos.localhost/holos/authproxy).
+Expect a simple `Authenticated` response.
+
+:::
+
+Once authenticated, visit [https://httpbin.holos.localhost/holos/authproxy/userinfo](https://httpbin.holos.localhost/holos/authproxy/userinfo) which returns a subset of claims from your id token:
+
+```json
+{
+  "user": "275552236589843464",
+  "email": "demo@holos.run",
+  "preferredUsername": "demo"
+}
+```
+
+### Auth Policy
+
+Configure authorization policies using the claims provided in the authenticated id token.
+
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/authpolicy
+```
+
+:::important
+
+Requests to https://httpbin.holos.localhost are protected by AuthorizationPolicy platform resources after applying this component.
+
+:::
+
+### Zero Trust
+
+A basic Zero Trust security model is now in place.  Verify authentication is working by browsing to [https://httpbin.holos.localhost/dump/request](https://httpbin.holos.localhost/dump/request).
+
+:::tip
+
+Note the `x-oidc-id-token` header is not sent by your browser but is received by the backend service.  This design reduces the risk of exposing id tokens.  Requests over the internet are also smaller and more reliable because large id tokens with may claims are confined to the cluster.
+
+:::
+
+Verify unauthenicated requests are blocked:
+
+```bash
+curl https://httpbin.holos.localhost/dump/request
+```
+
+Expect a response that redirects to the identity provider.
+
+Verify authenticated requests are allowed:
+
+```bash
+curl -H x-oidc-id-token:$(holos token) https://httpbin.holos.localhost/dump/request
+```
+
+Expect a response from the backend httpbin service with the id token header the platform authenticated and authorized.
+
+:::tip
+
+Note how the platform secures both web browser and command line api access to the backend httpbin service.  httpbin itself has no authentication or authorization functionality.
+
+:::
