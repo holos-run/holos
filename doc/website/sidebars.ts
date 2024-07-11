@@ -33,8 +33,8 @@ const sidebars: SidebarsConfig = {
     },
   ],
   api: [
+    'api/core/v1alpha2',
     'cli',
-    'api/core/v1alpha2'
   ],
 };
 

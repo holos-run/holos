@@ -115,6 +115,10 @@ const config: Config = {
               label: 'Tutorial',
               to: '/docs/intro',
             },
+            {
+              label: 'API Reference',
+              to: '/docs/api/core/v1alpha2',
+            },
           ],
         },
         {
