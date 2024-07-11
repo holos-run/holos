@@ -7,3 +7,7 @@ coverage.out
 /deploy/
 .vscode/
 tmp/
+
+# In case we run through the tutorial in this directory.
+/holos-k3d/
+/holos-infra/

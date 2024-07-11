@@ -59,6 +59,7 @@ func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, nam
 			rpcPlatform = p
 			break
 		}
+		log.DebugContext(ctx, "checking platform", "want", name, "have", p.GetName())
 	}
 	if rpcPlatform == nil {
 		return errors.Wrap(errors.New("cannot generate: platform not found in the holos server"))

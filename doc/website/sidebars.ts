@@ -13,6 +13,7 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   doc: [
     'intro',
+    'glossary',
     {
       type: 'category',
       label: 'Tutorial',
@@ -21,6 +22,7 @@ const sidebars: SidebarsConfig = {
         'tutorial/overview',
         'tutorial/install',
         'tutorial/register',
+        'tutorial/local/k3d',
       ],
     },
     {
