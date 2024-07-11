@@ -569,11 +569,17 @@ workload cluster.
 
 ### httpbin
 
-httpbin is a simple backend service useful to dump request headers.
+httpbin is a simple backend service useful for end-to-end testing.
 
 ```bash
 kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-backend
 ```
+
+:::note
+
+This guide uses httpbin to inspect request headers from the perspective of a backend service, specifically the `x-oidc-id-token` header injected by the authproxy to implement Zero Trust.
+
+:::
 
 ### httpbin routes
 
