@@ -120,8 +120,23 @@ You have complete control over the form fields and validation rules.
 
 ## Submit the Platform Model
 
-Fill out the form and submit the Platform Model.  The default values are
-sufficient.
+Fill out the form and submit the Platform Model.
+
+For the Role Based Access Control section, provide the value of the `sub`
+subject claim of your identity to ensure only you have administrative access to
+ArgoCD.
+
+```bash
+holos login --print-claims | jq -r .sub
+```
+
+For the ArgoCD Git repository URL, enter the url of a public repository where
+you will push your local `holos-k3d` repository.
+
+```bash
+git remote add origin https://github.com/example/holos-k3d
+git push origin HEAD:main
+```
 
 ## Pull the Platform Model
 
@@ -799,6 +814,102 @@ Login using the SSO button and verify you get to the Applications page.
 
 ![ArgoCD Applications](./argocd-apps.png)
 
+### ArgoCD Applications
+
+Apply the Application resources for all of the Holos components that compose the
+platform.  The Application resources provide drift detection and optional
+automic reconciliation of platform components.
+
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/gitops
+```
+
+Browse to or refresh [https://argocd.holos.localhost/applications](https://argocd.holos.localhost/applications).
+
+![ArgoCD Holos Components](./argocd-apps-2.png)
+
+:::important
+
+If you do not see any applications after refreshing the page ensure the `sub`
+value in the Platform Model (`platform.config.json`) is correct and matches
+`holos login --print-claims`.
+
+:::
+
+### Sync Applications
+
+Navigate to the [namespaces Application](https://argocd.holos.localhost/applications/argocd/namespaces).
+
+![ArogCD Out of Sync](./argocd-out-of-sync.png)
+
+Review the differences between the live platform and the git configuration.
+
+![ArogCD Diff](./argocd-diff.png)
+
+Sync the application to reconcile the differences.
+
+![ArogCD Sync](./argocd-sync.png)
+
+The Holos olos component should report Sync OK.
+
+![ArogCD Sync OK](./argocd-sync-ok.png)
+
+:::note
+
+Repeat this process for each component.
+
+:::
+
+:::tip
+
+Automatic reconciliation is turned off by default.
+
+:::
+
+Optionally enable automatic reconciliation by adding `spec.syncPolicy.automated:
+{}` to the `#Argo` definition.
+
+Add the following to `buildplan.site.cue` to avoid `holos generate platform k3d`
+writing over the customization.
+
+:::tip
+
+CUE merges definitions located in multiple files.  This feature is used to customize the platform.
+
+:::
+
+```bash
+cat <<EOF > buildplan.site.cue
+package holos
+// Enable automated sync of platform components.
+#Argo: Application: spec: syncPolicy: automated: {}
+EOF
+```
+
+Re-render the platform.
+
+```bash
+holos render platform ./platform
+```
+
+Add and commit the changes.
+
+```bash
+git add .
+git commit -m 'enable argocd automatic sync'
+git push origin HEAD
+```
+
+Apply the new changes.
+
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/gitops
+```
+
+Automatic reconciliation is enabled for all platform components.
+
+![ArgoCD Automatic Sync OK](./argocd-auto-sync-ok.png)
+
 ## Summary
 
 TODO
@@ -807,4 +918,3 @@ TODO
 2. Configured authentication and authorization.
 3. Protected a backend service without backend code changes.
 4. ArgoCD
-5. Backstage

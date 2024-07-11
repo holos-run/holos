@@ -64,6 +64,7 @@ let Chart = {
 			"g, prod-cluster-view, role:readonly",
 			"g, prod-cluster-edit, role:readonly",
 			"g, prod-cluster-admin, role:admin",
+			"g, \(_Platform.Model.rbac.sub), role:admin",
 		]
 
 		configs: rbac: "policy.csv": strings.Join(Policy, "\n")

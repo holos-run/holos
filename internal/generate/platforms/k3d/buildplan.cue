@@ -219,8 +219,8 @@ import (
 	}
 }
 
-// #ArgoApplication represents an argocd Application resource for each
-// component, written using the #HolosComponent.deployFiles field.
+// #Argo represents an argocd Application resource for each component, written
+// using the #HolosComponent.deployFiles field.
 #Argo: {
 	ComponentName: string
 

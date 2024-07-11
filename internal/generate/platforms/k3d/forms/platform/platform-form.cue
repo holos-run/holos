@@ -66,6 +66,31 @@ let FormBuilder = v1.#FormBuilder & {
 		}
 	}
 
+	Sections: rbac: {
+		displayName: "Role Based Access Control"
+		description: "Configure role based access control.  In the k3d platform the sub claim is used to limit access to one subject.  The Holos reference platform uses the groups and roles claims to limit access based on the role attribute."
+
+		fieldConfigs: {
+			sub: {
+				type: "input"
+				props: {
+					label:       "Subject"
+					description: "holos login --print-claims| jq -r .sub"
+					pattern:     "^[0-9]+$"
+					minLength:   1
+					maxLength:   30
+					required:    true
+				}
+				validation: messages: {
+					minLength: "Must be at least \(props.minLength) characters"
+					maxLength: "Must be at most \(props.maxLength) characters"
+					required:  props.description
+					pattern:   props.description
+				}
+			}
+		}
+	}
+
 	Sections: argocd: {
 		displayName: "ArgoCD"
 		description: "Configure ArgoCD platform settings."
@@ -108,15 +133,16 @@ let FormBuilder = v1.#FormBuilder & {
 
 			deployRoot: {
 				type:         "input"
-				defaultValue: ""
+				defaultValue: "."
 				props: {
 					label:       "Deploy Root"
 					description: "Path to the parent directory of the holos deploy directory."
-					pattern:     "^$"
-					required:    false
+					pattern:     "^\\.$"
+					required:    true
 				}
 				validation: messages: {
-					pattern: "Must be empty for local evaluation."
+					pattern:  "Must be a single period for local evaluation."
+					required: pattern
 				}
 			}
 
