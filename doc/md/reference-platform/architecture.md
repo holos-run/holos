@@ -47,7 +47,7 @@ The management cluster is designed to operate reliably on spot instances.  A hig
    - **ArgoCD** to manage resources within the management cluster via GitOps.
 2. Primary Workload Cluster
    - **ArgoCD** to continuously deploy your applications and services via GitOps.
-   - **Exsternal Secrets Operator** to synchronize namespace scoped secrets.
+   - **External Secrets Operator** to synchronize namespace scoped secrets.
    - **Istio** to provide a Gateway to expose services.
    - **ZITADEL** to provide SSO login for all other services (e.g. ArgoCD, Grafana, Backstage, etc...)
    - **PostgreSQL** for in-cluster databases.
@@ -63,9 +63,9 @@ The management cluster is designed to operate reliably on spot instances.  A hig
 
 ### Namespaces
 
-Namespaces are security boundaries in the reference platform.  A given namespace is treated as the same security context across multiple clusters following the [SIG Multicluster Position](https://github.com/kubernetes/community/blob/dd4c8b704ef1c9c3bfd928c6fa9234276d61ad18/sig-multicluster/namespace-sameness-position-statement.md).
+Namespaces are security boundaries in the reference platform.  A given namespace is treated as the same security context across multiple clusters following the [SIG Multi-cluster Position](https://github.com/kubernetes/community/blob/dd4c8b704ef1c9c3bfd928c6fa9234276d61ad18/sig-multicluster/namespace-sameness-position-statement.md).
 
-The namespace sameness principle makes role based access control straightfoward to manage and comprehend.  For example, granting a developer the ability to create secrets in namespace `example` means the developer has the ability to do so in the secret store in the management cluster and also syncronize the secret to the services they own in the workload clusters.
+The namespace sameness principle makes role based access control straightforward to manage and comprehend.  For example, granting a developer the ability to create secrets in namespace `example` means the developer has the ability to do so in the secret store in the management cluster and also synchronize the secret to the services they own in the workload clusters.
 
 ## Data Platform
 
@@ -78,4 +78,4 @@ Holos is designed to work with two distinct types of databases by default:
 To simplify maintenance the holos reference platform provisions databases from the most recent backup by default.
 :::
 
-In-cluster databases in the holos reference platform automatically save backups to an S3 or GCS bucket.  For regular maintenance and disaster recovery, the standby cluster automatically restores databases from the most recent backup in the bucket.  This capability makes  maintenance much simpler, most maintenance tasks are carried out on the standy cluster which is then promoted to the primary.  Software upgrades in particular are intended to be carried out against the standby, verified, then promoted to primary.  Once live traffic shifts to the upgraded services in the new primary the previous cluster can be spun down to save cost or upgraded safely in place.
+In-cluster databases in the holos reference platform automatically save backups to an S3 or GCS bucket.  For regular maintenance and disaster recovery, the standby cluster automatically restores databases from the most recent backup in the bucket.  This capability makes  maintenance much simpler, most maintenance tasks are carried out on the standby cluster which is then promoted to the primary.  Software upgrades in particular are intended to be carried out against the standby, verified, then promoted to primary.  Once live traffic shifts to the upgraded services in the new primary the previous cluster can be spun down to save cost or upgraded safely in place.

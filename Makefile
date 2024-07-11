@@ -89,6 +89,7 @@ lint: ## Run linters.
 	buf lint
 	cd internal/frontend/holos && ng lint
 	golangci-lint run
+	./hack/cspell
 
 .PHONY: coverage
 coverage: test  ## Test coverage profile.

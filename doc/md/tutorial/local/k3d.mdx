@@ -50,7 +50,7 @@ smoother on-ramp to learn about some of the value of Holos:
 
  1. Holos wraps unmodified Helm charts provided by software vendors.
  2. Holos eliminates the need to template yaml.
- 3. Holos is composeable, scaling down to local host and up to multi-cloud and multi-cluster.
+ 3. Holos is composable, scaling down to local host and up to multi-cloud and multi-cluster.
  4. The Zero Trust security model implemented by the reference platform.
  5. Configuration unification with CUE.
 
@@ -151,7 +151,7 @@ Pull the Platform Model to your local host to render the platform.
 holos pull platform model .
 ```
 
-The `platform.config.json` file is intended to be committed to version conrol.
+The `platform.config.json` file is intended to be committed to version control.
 
 ```bash
 git add platform.config.json
@@ -435,8 +435,6 @@ Verify all pods are READY before continuing.
 
 :::
 
-<!-- Note the istio-cni configuration is fiddly.  Refer to https://istio.io/latest/docs/ambient/install/platform-prerequisites/#k3d -->
-
 ```bash
 kubectl get pods -A
 ```
@@ -446,11 +444,11 @@ NAMESPACE      NAME                                      READY   STATUS    RESTA
 cert-manager   cert-manager-666cb4fb5f-hj64r             1/1     Running   0          24s
 cert-manager   cert-manager-cainjector-fd5479b67-fvv9j   1/1     Running   0          24s
 cert-manager   cert-manager-webhook-588b7d86c8-h9bq4     1/1     Running   0          24s
-istio-system   istio-cni-node-bwkrh                      1/1     Running   0          11s
+istio-system   istio-cni-node-12krh                      1/1     Running   0          11s
 istio-system   istiod-6b48fd8448-gfv7h                   1/1     Running   0          8s
 kube-system    coredns-6799fbcd5-97f9v                   1/1     Running   0          81s
 kube-system    local-path-provisioner-6f5d79df6-9dq6f    1/1     Running   0          81s
-kube-system    metrics-server-54fd9b65b-njrbk            1/1     Running   0          81s
+kube-system    metrics-server-54fd9b65b-34rbk            1/1     Running   0          81s
 ```
 
 ### Local CA
@@ -664,7 +662,7 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/authprox
 
 ### Auth Routes
 
-The auth routes holos component is responsible for handling requsts with a path
+The auth routes holos component is responsible for handling requests with a path
 prefix of `/holos/authproxy`.  These requests are redirected to the auth proxy
 which is responsible for authenticating the request and providing the standard
 oidc id token.
@@ -730,7 +728,7 @@ Note the `x-oidc-id-token` header is not sent by your browser but is received by
 
 :::
 
-Verify unauthenicated requests are blocked:
+Verify unauthenticated requests are blocked:
 
 ```bash
 curl https://httpbin.holos.localhost/dump/request
@@ -778,7 +776,7 @@ kubectl get pods -n argocd
 NAME                                                READY   STATUS      RESTARTS   AGE
 argocd-application-controller-0                     1/1     Running     0          10s
 argocd-applicationset-controller-578db65fcd-lnn76   1/1     Running     0          10s
-argocd-notifications-controller-67c856dbb7-rxstk    1/1     Running     0          10s
+argocd-notifications-controller-67c856dbb7-12stk    1/1     Running     0          10s
 argocd-redis-698f57d9b9-v4kqs                       1/1     Running     0          10s
 argocd-redis-secret-init-z5zg8                      0/1     Completed   0          10s
 argocd-repo-server-69f78dfb8-f6pb7                  1/1     Running     0          10s
@@ -818,7 +816,7 @@ Login using the SSO button and verify you get to the Applications page.
 
 Apply the Application resources for all of the Holos components that compose the
 platform.  The Application resources provide drift detection and optional
-automic reconciliation of platform components.
+automatic reconciliation of platform components.
 
 ```bash
 kubectl apply --server-side=true -f deploy/clusters/workload/gitops
@@ -840,25 +838,19 @@ value in the Platform Model (`platform.config.json`) is correct and matches
 
 Navigate to the [namespaces Application](https://argocd.holos.localhost/applications/argocd/namespaces).
 
-![ArogCD Out of Sync](./argocd-out-of-sync.png)
+![ArgoCD Out of Sync](./argocd-out-of-sync.png)
 
 Review the differences between the live platform and the git configuration.
 
-![ArogCD Diff](./argocd-diff.png)
+![ArgoCD Diff](./argocd-diff.png)
 
 Sync the application to reconcile the differences.
 
-![ArogCD Sync](./argocd-sync.png)
+![ArgoCD Sync](./argocd-sync.png)
 
-The Holos olos component should report Sync OK.
+The Holos components should report Sync OK.
 
-![ArogCD Sync OK](./argocd-sync-ok.png)
-
-:::note
-
-Repeat this process for each component.
-
-:::
+![ArgoCD Sync OK](./argocd-sync-ok.png)
 
 :::tip
 
