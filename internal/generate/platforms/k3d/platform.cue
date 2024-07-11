@@ -62,6 +62,29 @@ _Platform: Components: {
 				path:    "components/cert-manager"
 				cluster: Cluster.name
 			}
+
+			// We use HTTPRoute from the Kubernetes Gateway API v1 instead of
+			// VirtualService from the Istio Gateway API.
+			"\(Cluster.name)/gateway-api": {
+				path:    "components/gateway-api"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/istio-base": {
+				path:    "components/istio/base"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/istio-cni": {
+				path:    "components/istio/mesh/cni"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/istiod": {
+				path:    "components/istio/mesh/istiod"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/gateway": {
+				path:    "components/istio/mesh/gateway"
+				cluster: Cluster.name
+			}
 		}
 	}
 }

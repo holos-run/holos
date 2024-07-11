@@ -4,9 +4,8 @@ Learn how to configure and deploy the Holos reference platform to your local hos
 
 ---
 
-This guide assumes you are running the commands from your local host.
-Capitalized terms have specific definitions described in the
-[Glossary](/docs/glossary)
+This guide assumes commands are run from your local host.  Capitalized terms
+have specific definitions described in the [Glossary](/docs/glossary)
 
 ## Outcome
 
@@ -45,7 +44,7 @@ smoother on-ramp to learn about some of the value of Holos:
 You'll need the following tools installed on your local host to complete this guide.
 
  1. [k3d](https://k3d.io/#installation)
- 2. [Docker](https://docs.docker.com/get-docker/) to use `k3d`.
+ 2. [Docker](https://docs.docker.com/get-docker/) to use k3d.
  2. [holos](/docs/tutorial/install) to build the platform configuration.
  3. [kubectl](https://kubernetes.io/docs/tasks/tools/) to interact with the Kubernetes cluster.
  4. [helm](https://helm.sh/docs/intro/install/) to render Holos components that integrate vendor provided Helm charts.
@@ -113,7 +112,7 @@ You have complete control over the form fields and validation rules.
 
 :::
 
-## Provide the Platform Model
+## Submit the Platform Model
 
 Fill out the form and submit the Platform Model.
 
@@ -340,7 +339,10 @@ and Kubeadm clusters.
 :::
 
 ```bash
-k3d cluster create --k3s-arg "--disable=traefik@server:0" workload
+k3d cluster create \
+  --port "443:443@loadbalancer" \
+  --k3s-arg "--disable=traefik@server:0" \
+  workload
 ```
 
 Traefik is disabled because Istio provides the same functionality.
@@ -373,3 +375,75 @@ kube-system    coredns-6799fbcd5-ksc2k                   1/1     Running   0    
 kube-system    local-path-provisioner-6f5d79df6-b5js7    1/1     Running   0          94m
 kube-system    metrics-server-54fd9b65b-mmx2n            1/1     Running   0          94m
 ```
+
+### Gateway API
+
+We use `HTTPRoute` resources from the Gateway API to expose services in a standard way.
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway-api/gateway-api.gen.yaml
+```
+
+### Istio Base
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-base/istio-base.gen.yaml
+```
+
+### Istio CNI
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-cni/istio-cni.gen.yaml
+```
+
+### Istio Controller
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istiod/istiod.gen.yaml
+```
+
+Once the Istio components have been applied, two pods should be running in the `istio-system` namespace:
+
+```bash
+kubectl get pods -n istio-system
+```
+
+```txt
+NAME                      READY   STATUS    RESTARTS   AGE
+istio-cni-node-hnvjg      0/1     Running   0          3m23s
+istiod-6b48fd8448-lgmxd   1/1     Running   0          2m32s
+```
+
+### Istio Gateway
+
+The Gateway component configures the ingress gateway used to expose services running in the cluster.
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway/gateway.gen.yaml
+```
+
+Once applied, the default Gateway Deployemnt should be running in the `istio-gateways` namespace.
+
+```bash
+kubectl get pods -n istio-gateways
+```
+
+```txt
+NAME                             READY   STATUS    RESTARTS   AGE
+default-istio-54f7fbd4f8-cl4v6   1/1     Running   0          8m3s
+```
+
+
+## Local CA
+
+Create and install a local CA, necessary for secure https in your browser.
+
+```bash
+bash ./scripts/local-ca
+```
+
+:::note
+
+Admin access is necessary to install the local CA into the system trust store.
+
+:::
