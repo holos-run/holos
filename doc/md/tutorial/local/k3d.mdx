@@ -3,20 +3,21 @@ import TabItem from '@theme/TabItem';
 
 # Try Holos Locally
 
-Learn how to configure and deploy the Holos reference platform to your local host with k3d.
+Learn how to configure and deploy the Holos reference platform to your local
+host with k3d.
 
 ---
 
 This guide assumes commands are run from your local host.  Capitalized terms
-have specific definitions described in the [Glossary](/docs/glossary)
+have specific definitions described in the [Glossary](/docs/glossary).
 
 ## Requirements
 
 You'll need the following tools installed on your local host to complete this guide.
 
- 1. [k3d](https://k3d.io/#installation)
+ 1. [k3d](https://k3d.io/#installation) to provide an api server.
  2. [Docker](https://docs.docker.com/get-docker/) to use k3d.
- 2. [holos](/docs/tutorial/install) to build the platform configuration.
+ 2. [holos](/docs/tutorial/install) to build the platform.
  3. [kubectl](https://kubernetes.io/docs/tasks/tools/) to interact with the Kubernetes cluster.
  4. [helm](https://helm.sh/docs/intro/install/) to render Holos components that integrate vendor provided Helm charts.
  5. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) for local trusted certificates.
@@ -24,8 +25,8 @@ You'll need the following tools installed on your local host to complete this gu
 
 ## Outcome
 
-At the end of this guide you'll have built a development platform which
-integrates the following components together to implement Zero Trust security:
+At the end of this guide you'll have built a development platform that provides
+Zero Trust security by holistically integrating off-the-shelf components.
 
  1. ArgoCD to review and apply platform configuration changes.
  2. Istio service mesh with mTLS encryption.
@@ -38,15 +39,15 @@ ever reaches ArgoCD.
 :::tip
 
 With Holos, developers don't need to write authentication or authorization logic
-for many use cases.  Single sign-on and role based access control are provided
-by the platform itself for all service running in the platform using
-standardized policies.
+for many use cases.
 
 :::
 
-The `k3d` platform is intentionally less holistic than the Holos reference
-platform.  Larger, more holistic integrations are traded in for a shorter and
-smoother on-ramp to learn about some of the value of Holos:
+Single sign-on and role based access control are provided by the platform itself
+for all service running in the platform using standardized policies.
+
+The `k3d` platform is derived from the larger holos reference platform to
+provide a smooth on-ramp to evaluate the value Holos offers.
 
  1. Holos wraps unmodified Helm charts provided by software vendors.
  2. Holos eliminates the need to template yaml.
@@ -223,9 +224,6 @@ graph LR
 
     P --> Y --> C
     P --> G --> C
-
-    classDef box fill:#fff,stroke:#000,stroke-width:1px,color:#000;
-    class PS,BP,HC,H,K,O,P,Y,G,C box
 ```
 
 The `holos` cli can be thought of as executing a data pipeline.  The Platform Model is the top level input to the pipeline and specifies the ways your platform varies from other organizations.  The `holos` cli takes the Platform Model as input and executes a series of steps to produce the platform configuration.  The platform configuration output of `holos` are full Kubernetes API resources, suitable for application to a cluster with `kubectl apply -f`, or GitOps tools such as ArgoCD or Flux.

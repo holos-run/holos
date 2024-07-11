@@ -5,8 +5,6 @@
     "mdx"
   ],
   "words": [
-    "Parentspanid",
-    "Traceid",
     "applicationset",
     "argoproj",
     "authpolicy",
@@ -25,6 +23,7 @@
     "gitops",
     "holos",
     "httpbin",
+    "Infima",
     "istiod",
     "jetstack",
     "killall",
@@ -33,10 +32,12 @@
     "loadbalancer",
     "mxcl",
     "nameserver",
+    "Parentspanid",
     "quickstart",
     "spanid",
     "spiffe",
     "startupapicheck",
+    "Traceid",
     "traefik",
     "urandom",
     "zitadel"

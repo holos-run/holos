@@ -171,7 +171,7 @@ const config: Config = {
     },
     mermaid: {
       // Refer to https://mermaid.js.org/config/theming.html
-      theme: { light: 'neutral', dark: 'forest' },
+      theme: { light: 'neutral', dark: 'dark' },
     },
   } satisfies Preset.ThemeConfig,
 };

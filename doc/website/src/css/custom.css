@@ -11,20 +11,25 @@
   /* Solarized Base3 */
   --ifm-color-primary-light-background: #fdf6e3;
 
-  /* Solarized Base02 */
-  --ifm-color-primary-dark: #073642;
+  /* Solarized Base00 */
+  --ifm-color-primary-dark: #657b83;
   /* Solarized Base01 */
   --ifm-color-primary-darker: #586e75;
-  /* Solarized Base00 */
-  --ifm-color-primary-darkest: #657b83;
-  /* Solarized Base2 */
-  --ifm-color-primary-light: #eee8d5;
+  /* Solarized Base02 */
+  --ifm-color-primary-darkest: #073642;
+  /* Solarized Base0 */
+  --ifm-color-primary-light: #839496;
   /* Solarized Base1 */
   --ifm-color-primary-lighter: #93a1a1;
-  /* Solarized Base0 */
-  --ifm-color-primary-lightest: #839496;
+  /* Solarized Base2 */
+  --ifm-color-primary-lightest: #eee8d5;
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+
+  --ifm-link-color: #268bd2;
+  --ifm-navbar-link-color: #268bd2;
+  --ifm-navbar-link-hover-color: #268bd2;
+
+  --docusaurus-highlighted-code-line-bg: #eee8d5;
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -47,5 +52,10 @@
   /* Solarized Base0 */
   --ifm-color-primary-lightest: #839496;
   --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+
+  --ifm-link-color: #268bd2;
+  --ifm-navbar-link-color: #268bd2;
+  --ifm-navbar-link-hover-color: #268bd2;
+
+  --docusaurus-highlighted-code-line-bg: #073642;
 }
