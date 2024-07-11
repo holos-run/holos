@@ -1,7 +1,7 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Try Holos with k3d
+# Try Holos Locally
 
 Learn how to configure and deploy the Holos reference platform to your local host with k3d.
 
@@ -9,6 +9,18 @@ Learn how to configure and deploy the Holos reference platform to your local hos
 
 This guide assumes commands are run from your local host.  Capitalized terms
 have specific definitions described in the [Glossary](/docs/glossary)
+
+## Requirements
+
+You'll need the following tools installed on your local host to complete this guide.
+
+ 1. [k3d](https://k3d.io/#installation)
+ 2. [Docker](https://docs.docker.com/get-docker/) to use k3d.
+ 2. [holos](/docs/tutorial/install) to build the platform configuration.
+ 3. [kubectl](https://kubernetes.io/docs/tasks/tools/) to interact with the Kubernetes cluster.
+ 4. [helm](https://helm.sh/docs/intro/install/) to render Holos components that integrate vendor provided Helm charts.
+ 5. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) for local trusted certificates.
+ 6. [jq](https://jqlang.github.io/jq/download/) to manipulate json output.
 
 ## Outcome
 
@@ -42,22 +54,11 @@ smoother on-ramp to learn about some of the value of Holos:
  4. The Zero Trust security model implemented by the reference platform.
  5. Configuration unification with CUE.
 
-## Requirements
-
-You'll need the following tools installed on your local host to complete this guide.
-
- 1. [k3d](https://k3d.io/#installation)
- 2. [Docker](https://docs.docker.com/get-docker/) to use k3d.
- 2. [holos](/docs/tutorial/install) to build the platform configuration.
- 3. [kubectl](https://kubernetes.io/docs/tasks/tools/) to interact with the Kubernetes cluster.
- 4. [helm](https://helm.sh/docs/intro/install/) to render Holos components that integrate vendor provided Helm charts.
- 5. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) for local trusted certificates.
- 6. [jq](https://jqlang.github.io/jq/download/) to manipulate json output.
-
 ## Register with Holos
 
-Register an account with the Holos web service, which is necessary to save
-platform configuration values using a simple web form.
+Register an account with the Holos web service.  Registration is necessary to
+save platform configuration values using a simple web form and explore how Holos
+implements Zero Trust.
 
 ```bash
 holos register user
@@ -65,8 +66,8 @@ holos register user
 
 ## Create the Platform
 
-Create the platform in the Holos web service to store the Platform Form and the form
-values which represents the Platform Model.
+Create the platform in the Holos web service to store the Platform Form and the
+form values which represents the Platform Model.
 
 ```bash
 holos create platform --name k3d --display-name "Try Holos Locally"
@@ -149,11 +150,14 @@ git add platform.config.json
 git commit -m "Add platform model"
 ```
 
-:::warning
+:::danger
 
-Do not store secret data using the Platform Form.  Holos uses ExternalSecret resources to securely sync with a Secret Store and ensure Secrets are never stored in version control.
+Do not store secret data using the Platform Form.
 
 :::
+
+Holos uses ExternalSecret resources to securely sync with a SecretStore and
+ensure Secrets are never stored in version control.
 
 ## Render the Platform
 
@@ -172,28 +176,51 @@ Do not edit the files in the `deploy` as they will be written over.
 
 :::
 
-You should have a tree similar to the following structure:
-
-```txt
-deploy
-└── clusters
-    └── workload
-        ├── components
-        │   ├── cert-manager
-        │   │   └── cert-manager.gen.yaml
-        │   └── namespaces
-        │       └── namespaces.gen.yaml
-        └── gitops
-            ├── cert-manager.application.gen.yaml
-            └── namespaces.application.gen.yaml
-```
-
 Commit the rendered platform configuration for `git diff` later.
 
 ```bash
 git add deploy
 git commit -m "holos render platform ./platform"
 ```
+
+### Rendering
+
+Holos uses the kubernetes resource model to manage configuration.  The `holos` command line interface (cli) is the primary method you'll use to manage your platform.  Holos uses CUE to provide a unified configuration model of the platform which is built from components packaged with Helm, Kustomize, CUE, or any tool that can produce kubernetes resources as output.  This process can be thought of as a yaml **rendering pipeline**.
+
+Each component in a platform defines a rendering pipeline shown in Figure 2 to produce kubernetes api resources
+
+```mermaid
+---
+title: Figure 2 - Render Pipeline
+---
+graph LR
+    PS[<a href="/docs/api/core/v1alpha2#PlatformSpec">PlatformSpec</a>]
+    BP[<a href="/docs/api/core/v1alpha2#BuildPlan">BuildPlan</a>]
+    HC[<a href="/docs/api/core/v1alpha2#HolosComponent">HolosComponent</a>]
+
+    H[<a href="/docs/api/core/v1alpha2#HelmChart">HelmChart</a>]
+    K[<a href="/docs/api/core/v1alpha2#KustomizeBuild">KustomizeBuild</a>]
+    O[<a href="/docs/api/core/v1alpha2#KubernetesObjects">KubernetesObjects</a>]
+
+    P[<a href="/docs/api/core/v1alpha2#Kustomize">Kustomize</a>]
+    Y[Kubernetes <br>Resources]
+    G[GitOps <br>Resource]
+
+    C[Kube API Server]
+
+    PS --> BP --> HC
+    HC --> H --> P
+    HC --> K --> P
+    HC --> O --> P
+
+    P --> Y --> C
+    P --> G --> C
+
+    classDef box fill:#fff,stroke:#000,stroke-width:1px,color:#000;
+    class PS,BP,HC,H,K,O,P,Y,G,C box
+```
+
+The `holos` cli can be thought of as executing a data pipeline.  The Platform Model is the top level input to the pipeline and specifies the ways your platform varies from other organizations.  The `holos` cli takes the Platform Model as input and executes a series of steps to produce the platform configuration.  The platform configuration output of `holos` are full Kubernetes API resources, suitable for application to a cluster with `kubectl apply -f`, or GitOps tools such as ArgoCD or Flux.
 
 ## Review the Platform Config
 

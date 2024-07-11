@@ -19,9 +19,6 @@ const sidebars: SidebarsConfig = {
       label: 'Tutorial',
       collapsed: false,
       items: [
-        'tutorial/overview',
-        'tutorial/install',
-        'tutorial/register',
         'tutorial/local/k3d',
       ],
     },
