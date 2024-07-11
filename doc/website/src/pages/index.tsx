@@ -16,6 +16,11 @@ function HomepageHeader() {
           {siteConfig.title}
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
+        <p className="projectDesc">
+          Holos is a holistic software development platform built from the most
+          popular open source projects.<br /> Build your developer platform in
+          no time.
+        </p>
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"

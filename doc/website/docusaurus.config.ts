@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Holos',
-  tagline: 'The Cloud Native Platform Distribution',
+  tagline: 'The Platform Operating System',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here

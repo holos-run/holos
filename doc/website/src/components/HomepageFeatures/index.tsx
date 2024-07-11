@@ -10,13 +10,13 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Zero Trust Authorization',
+    title: 'Zero Trust Security',
     Svg: require('@site/static/img/base00/undraw_security_on_re_e491.svg').default,
     description: (
       <>
         Spend more time on your business features and less time rebuilding
         authentication and authorization.  Holos provides zero trust security
-        with no code necessary.
+        with no code needed to protect your services.
       </>
     ),
   },
@@ -31,13 +31,13 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Observability',
+    title: 'Developer Portal',
     Svg: require('@site/static/img/base00/undraw_data_trends_re_2cdy.svg').default,
     description: (
       <>
-        Receive alerts before issues impact your customers.  Holos provides an
-        integrated observability system complete with dashboards and
-        notification rules.
+        Ship high quality code quickly, provide a great developer experience,
+        and maintain control over your infrastructure with the integrated
+        Backstage developer portal.
       </>
     ),
   },
