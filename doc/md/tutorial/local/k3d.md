@@ -50,21 +50,6 @@ You'll need the following tools installed on your local host to complete this gu
  3. [kubectl](https://kubernetes.io/docs/tasks/tools/) to interact with the Kubernetes cluster.
  4. [helm](https://helm.sh/docs/intro/install/) to render Holos components that integrate vendor provided Helm charts.
 
-## Install k3d
-
-Refer to [k3d installation](https://k3d.io/#installation) to install `k3d`.
-
-## Create the Workload Cluster
-
-The Workload Cluster is where your applications and services will be deployed.
-In production this is usually an EKS, GKE, or AKS cluster.  Holos supports any
-compliant Kubernetes cluster and was developed and tested on GKE, EKS, Talos,
-and Kubeadm clusters.
-
-```bash
-k3d cluster create --k3s-arg "--disable=traefik@server:0" workload
-```
-
 ## Register with Holos
 
 Register an account with the Holos web service, which is necessary to save
@@ -215,9 +200,12 @@ and Helm to unify and render the platform configuration.
 
 :::
 
-Take a moment to review the platform config `holos` rendered.  Note the Git URL
-you entered into the Platform Form is used to derive the ArgoCD `Application`
-resource from the Platform Model.
+Take a moment to review the platform config `holos` rendered.
+
+### ArgoCD Application
+
+Note the Git URL you entered into the Platform Form is used to derive the ArgoCD
+`Application` resource from the Platform Model.
 
 ```yaml
 # deploy/clusters/workload/gitops/namespaces.application.gen.yaml
@@ -277,6 +265,111 @@ Note how CUE does not use error-prone text templates, the language is well speci
 }
 ```
 
+### Helm Chart
+
+Holos uses CUE to safely integrate the unmodified upstream `cert-manager` Helm
+chart.
+
+:::tip
+
+Holos fully supports your existing Helm charts.  Consider leveraging `holos` as
+an safer alternative to umbrella charts.
+
+:::
+
+```cue
+// components/cert-manager/cert-manager.cue
+package holos
+
+// Produce a helm chart build plan.
+(#Helm & Chart).Output
+
+let Chart = {
+	Name:      "cert-manager"
+	Version:   "1.14.5"
+	Namespace: "cert-manager"
+
+	Repo: name: "jetstack"
+	Repo: url:  "https://charts.jetstack.io"
+
+  // highlight-next-line
+	Values: {
+		installCRDs: true
+		startupapicheck: enabled: false
+		// Must not use kube-system on gke autopilot.  GKE Warden blocks access.
+    // highlight-next-line
+		global: leaderElection: namespace: Namespace
+
+		// https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests#min-max-requests
+		resources: requests: {
+			cpu:                 "250m"
+			memory:              "512Mi"
+			"ephemeral-storage": "100Mi"
+		}
+    // highlight-next-line
+		webhook: resources:        Values.resources
+    // highlight-next-line
+		cainjector: resources:     Values.resources
+    // highlight-next-line
+		startupapicheck: resource: Values.resources
+
+		// https://cloud.google.com/kubernetes-engine/docs/how-to/autopilot-spot-pods
+		nodeSelector: {
+			"kubernetes.io/os": "linux"
+			if _ClusterName == "management" {
+				"cloud.google.com/gke-spot": "true"
+			}
+		}
+		webhook: nodeSelector:         Values.nodeSelector
+		cainjector: nodeSelector:      Values.nodeSelector
+		startupapicheck: nodeSelector: Values.nodeSelector
+	}
+}
+```
+
+## Create the Workload Cluster
+
+The Workload Cluster is where your applications and services will be deployed.
+In production this is usually an EKS, GKE, or AKS cluster.
+
+:::tip
+
+Holos supports any compliant Kubernetes cluster and was developed and tested on GKE, EKS, Talos,
+and Kubeadm clusters.
+
+:::
+
+```bash
+k3d cluster create --k3s-arg "--disable=traefik@server:0" workload
+```
+
+Traefik is disabled because Istio provides the same functionality.
+
 ## Apply the Platform Config
 
-TODO
+Use `kubectl` to apply each component to the cluster.  In production, it's common to fully automate this process with ArgoCD, but we use `kubectl` in development and exploration contexts to the same effect.
+
+### Namespaces
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/namespaces/namespaces.gen.yaml
+```
+
+### Cert Manager
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/cert-manager/cert-manager.gen.yaml
+```
+
+The cert manager controller should start successfully:
+
+```txt
+❯ k get pods -A
+NAMESPACE      NAME                                      READY   STATUS    RESTARTS   AGE
+cert-manager   cert-manager-666cb4fb5f-dcp6x             1/1     Running   0          43s
+cert-manager   cert-manager-cainjector-fd5479b67-jwbdr   1/1     Running   0          43s
+cert-manager   cert-manager-webhook-588b7d86c8-rbcsm     1/1     Running   0          43s
+kube-system    coredns-6799fbcd5-ksc2k                   1/1     Running   0          94m
+kube-system    local-path-provisioner-6f5d79df6-b5js7    1/1     Running   0          94m
+kube-system    metrics-server-54fd9b65b-mmx2n            1/1     Running   0          94m
+```
