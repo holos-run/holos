@@ -115,6 +115,24 @@ _Platform: Components: {
 				path:    "components/istio/mesh/iap/authpolicy"
 				cluster: Cluster.name
 			}
+
+			// ArgoCD components
+			"\(Cluster.name)/argo-crds": {
+				path:    "components/argo/crds"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/argo-cd": {
+				path:    "components/argo/cd"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/argo-authpolicy": {
+				path:    "components/argo/authpolicy"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/argo-routes": {
+				path:    "components/argo/routes"
+				cluster: Cluster.name
+			}
 		}
 	}
 }

@@ -737,6 +737,68 @@ Note how the platform secures both web browser and command line api access to th
 
 :::
 
+### ArgoCD
+
+ArgoCD automatically applies resources defined in Git similar to how this guide uses `kubectl apply`.
+
+Apply the custom resource definitions.
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-crds
+```
+
+Apply controller deployments and supporting resources.
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-cd
+```
+
+Verify all Pods are running and all containers are ready.
+
+```bash
+kubectl get pods -n argocd
+```
+
+```txt
+NAME                                                READY   STATUS      RESTARTS   AGE
+argocd-application-controller-0                     1/1     Running     0          10s
+argocd-applicationset-controller-578db65fcd-lnn76   1/1     Running     0          10s
+argocd-notifications-controller-67c856dbb7-rxstk    1/1     Running     0          10s
+argocd-redis-698f57d9b9-v4kqs                       1/1     Running     0          10s
+argocd-redis-secret-init-z5zg8                      0/1     Completed   0          10s
+argocd-repo-server-69f78dfb8-f6pb7                  1/1     Running     0          10s
+argocd-server-58f7f4466d-db5fv                      2/2     Running     0          10s
+```
+
+Apply the AuthPolicy to secure ArgoCD with Zero Trust.
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-authpolicy
+```
+
+Apply the HTTPRoute to expose ArgoCD through the default Gateway.
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-routes
+```
+
+Browse to [https://argocd.holos.localhost/](https://argocd.holos.localhost/) and
+verify you get the ArgoCD login page.
+
+![ArgoCD Login Page](./argocd-login.png)
+
+:::note
+
+Both the platform layer and the ArgoCD application layer performs authentication
+and authorization using the same identity provider.  Note how the Zero Trust
+model provides an additional layer of security without friction.
+
+:::
+
+Login using the SSO button and verify you get to the Applications page.
+
+![ArgoCD Applications](./argocd-apps.png)
+
 ## Summary
 
 TODO

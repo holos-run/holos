@@ -114,43 +114,6 @@ let Objects = {
 			}
 		}
 
-		AuthorizationPolicy: "\(Name)-allow-argocd": {
-			_description: "Allow argocd access"
-
-			spec: {
-				action:   "ALLOW"
-				selector: Selector
-				rules: [
-					{
-						to: [{
-							// Refer to https://istio.io/latest/docs/ops/best-practices/security/#writing-host-match-policies
-							operation: hosts: [
-								"argocd.\(_Platform.Model.org.domain)",
-								"argocd.\(_Platform.Model.org.domain):*",
-							]
-						}]
-						when: [
-							// Must be issued by the platform identity provider.
-							{
-								key: "request.auth.principal"
-								values: [_AuthProxy.issuerURL + "/*"]
-							},
-							// Must be intended for an app within the Holos Platform ZITADEL project.
-							{
-								key: "request.auth.audiences"
-								values: [_AuthProxy.projectID]
-							},
-							// Must be presented by the istio ExtAuthz auth proxy.
-							{
-								key: "request.auth.presenter"
-								values: [_AuthProxy.clientID]
-							},
-						]
-					},
-				]
-			}
-		}
-
 		AuthorizationPolicy: "\(Name)-allow-httpbin": {
 			_description: "Allow httpbin authenticated access"
 
@@ -183,13 +146,22 @@ let Objects = {
 			}
 		}
 
-		AuthorizationPolicy: "\(Name)-allow-userinfo": {
+		AuthorizationPolicy: "\(Name)-allow-authproxy": {
 			_description: "Allow userinfo unauthenicated access"
 
 			spec: {
 				action:   "ALLOW"
 				selector: Selector
-				rules: [{to: [{operation: paths: ["/holos/authproxy/userinfo"]}]}]
+				// Refer to https://oauth2-proxy.github.io/oauth2-proxy/features/endpoints/
+				rules: [{to: [{operation: paths: [
+					"/holos/authproxy/sign_in",
+					"/holos/authproxy/sign_out",
+					"/holos/authproxy/start",
+					"/holos/authproxy/callback",
+					"/holos/authproxy/userinfo",
+					"/holos/authproxy/auth",
+					"/holos/authproxy/static/{**}",
+				]}]}]
 			}
 		}
 	}
