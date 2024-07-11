@@ -120,15 +120,8 @@ You have complete control over the form fields and validation rules.
 
 ## Submit the Platform Model
 
-Fill out the form and submit the Platform Model.
-
-:::tip
-
-The default values are sufficient, however please create a public GitHub
-repository to exercise ArgoCD functionality and update the Platform Model with
-your `https://github.com` URL.
-
-:::
+Fill out the form and submit the Platform Model.  The default values are
+sufficient.
 
 ## Pull the Platform Model
 
@@ -152,7 +145,7 @@ git commit -m "Add platform model"
 
 :::danger
 
-Do not store secret data using the Platform Form.
+Do not store secrets in the Platform Model.
 
 :::
 
@@ -386,13 +379,13 @@ Use `kubectl` to apply each platform component.  In production, it's common to f
 ### Namespaces
 
 ```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/namespaces/namespaces.gen.yaml
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/namespaces
 ```
 
 ### Cert Manager
 
 ```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/cert-manager/cert-manager.gen.yaml
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/cert-manager
 ```
 
 ### Gateway API
@@ -400,25 +393,25 @@ kubectl apply --server-side=true -f ./deploy/clusters/workload/components/cert-m
 We use `HTTPRoute` resources from the Gateway API to expose services in a standard way.
 
 ```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway-api/gateway-api.gen.yaml
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway-api
 ```
 
 ### Istio Base
 
 ```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-base/istio-base.gen.yaml
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-base
 ```
 
 ### Istio CNI
 
 ```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-cni/istio-cni.gen.yaml
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-cni
 ```
 
 ### Istio Controller
 
 ```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istiod/istiod.gen.yaml
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istiod
 ```
 
 :::warning
@@ -447,7 +440,8 @@ kube-system    metrics-server-54fd9b65b-njrbk            1/1     Running   0    
 
 ### Local CA
 
-Create and apply the `local-ca` Secret containing the ca private key.  This Secret is necessary to issue certificates trusted by your browser.
+Create and apply the `local-ca` Secret containing the ca private key.  This
+Secret is necessary to issue certificates trusted by your browser.
 
 ```bash
 bash ./scripts/local-ca
@@ -464,7 +458,7 @@ Admin access is necessary to install the local CA into the system trust store.
 Apply the ClusterIssuer which issues Certificate resources using the local ca.
 
 ```bash
-kubectl apply --server-side=true -f deploy/clusters/workload/components/local-ca/local-ca.gen.yaml
+kubectl apply --server-side=true -f deploy/clusters/workload/components/local-ca
 ```
 
 Verify the `ClusterIssuer` is ready:
@@ -483,7 +477,7 @@ local-ca   True    4s
 Apply the Certificates needed by the default Gateway to expose Services:
 
 ```bash
-kubectl apply --server-side=true -f deploy/clusters/workload/components/certificates/certificates.gen.yaml
+kubectl apply --server-side=true -f deploy/clusters/workload/components/certificates
 ```
 
 Verify the certs have been issued and are ready:
@@ -494,9 +488,9 @@ kubectl get cert -A
 
 ```txt
 NAMESPACE        NAME                        READY   SECRET                      AGE
-istio-gateways   argocd.holos.localhost      True    argocd.holos.localhost      45s
-istio-gateways   backstage.holos.localhost   True    backstage.holos.localhost   45s
-istio-gateways   httpbin.holos.localhost     True    httpbin.holos.localhost     45s
+istio-gateways   argocd.holos.localhost      True    argocd.holos.localhost      5s
+istio-gateways   backstage.holos.localhost   True    backstage.holos.localhost   5s
+istio-gateways   httpbin.holos.localhost     True    httpbin.holos.localhost     5s
 ```
 
 ### Istio Gateway
@@ -504,7 +498,7 @@ istio-gateways   httpbin.holos.localhost     True    httpbin.holos.localhost    
 The Gateway component configures the ingress gateway used to expose services running in the cluster.
 
 ```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway/gateway.gen.yaml
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway
 ```
 
 Verify the Gateway is programmed and the listeners have been accepted:
@@ -578,7 +572,7 @@ workload cluster.
 httpbin is a simple backend service useful to dump request headers.
 
 ```bash
- kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-backend/httpbin-backend.gen.yaml
+kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-backend
 ```
 
 ### httpbin routes
@@ -586,7 +580,7 @@ httpbin is a simple backend service useful to dump request headers.
 Expose the httpbin service and make it accessible to the browser.
 
 ```bash
-kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-routes/httpbin-routes.gen.yaml
+kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-routes
 ```
 
 :::important
@@ -622,9 +616,11 @@ X-Request-Id: 6141bd39-fb1d-437f-9d17-50767d75a332
 
 ### Auth Proxy
 
-The auth proxy is responsible for authenticating web browser requests.  The auth proxy provides a standard oidc id token to all services integrated with the mesh.
+The auth proxy is responsible for authenticating web browser requests.  The auth
+proxy provides a standard oidc id token to all services integrated with the
+mesh.
 
-Create a Secret to store the cookie encrytion key.
+Generate a random cookie encryption Secret and apply.
 
 ```bash
 LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom \
@@ -664,6 +660,12 @@ Expect a simple `Authenticated` response.
 
 :::
 
+:::note
+
+Istio will respond with `no healthy upstream` until the pod becomes ready.
+
+:::
+
 Once authenticated, visit [https://httpbin.holos.localhost/holos/authproxy/userinfo](https://httpbin.holos.localhost/holos/authproxy/userinfo) which returns a subset of claims from your id token:
 
 ```json
@@ -684,13 +686,22 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/authpoli
 
 :::important
 
-Requests to https://httpbin.holos.localhost are protected by AuthorizationPolicy platform resources after applying this component.
+Requests to https://httpbin.holos.localhost are protected by AuthorizationPolicy
+platform resources after applying this component.
 
 :::
 
 ### Zero Trust
 
-A basic Zero Trust security model is now in place.  Verify authentication is working by browsing to [https://httpbin.holos.localhost/dump/request](https://httpbin.holos.localhost/dump/request).
+A basic Zero Trust security model is now in place.  Verify authentication is
+working by browsing to
+[https://httpbin.holos.localhost/dump/request](https://httpbin.holos.localhost/dump/request).
+
+:::note
+
+Istio make take a few seconds to program the Gateway with the AuthorizationPolicy resources.
+
+:::
 
 :::tip
 
@@ -719,3 +730,13 @@ Expect a response from the backend httpbin service with the id token header the 
 Note how the platform secures both web browser and command line api access to the backend httpbin service.  httpbin itself has no authentication or authorization functionality.
 
 :::
+
+## Summary
+
+TODO
+
+1. Configured the Service Mesh with mTLS.
+2. Configured authentication and authorization.
+3. Protected a backend service without backend code changes.
+4. ArgoCD
+5. Backstage
