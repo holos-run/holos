@@ -49,12 +49,12 @@ let FormBuilder = v1.#FormBuilder & {
 
 			domain: {
 				type:         "input"
-				defaultValue: "try.holos"
+				defaultValue: "holos.localhost"
 				props: {
 					label:       "Domain Name"
 					placeholder: defaultValue
 					description: "Domain name, e.g. '\(defaultValue)'"
-					pattern:     "^try\\.holos$"
+					pattern:     "^\(defaultValue)$"
 					maxLength:   100
 					required:    true
 				}

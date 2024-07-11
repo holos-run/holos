@@ -13,5 +13,5 @@ let Chart = {
 	Repo: name: "istio"
 	Repo: url:  "https://istio-release.storage.googleapis.com/charts"
 
-	Values: #IstioValues
+	Values: #CNIValues
 }

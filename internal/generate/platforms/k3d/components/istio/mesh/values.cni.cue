@@ -24,8 +24,10 @@ package holos
 		// cniConfFileName: 10-calico.conflist
 		// CNI bin and conf dir override settings
 		// defaults:
-		cniBinDir:       "" // Auto-detected based on version; defaults to /opt/cni/bin.
-		cniConfDir:      "/etc/cni/net.d"
+
+		// Refer to https://istio.io/latest/docs/ambient/install/platform-prerequisites/#k3d
+		cniBinDir:       "/bin/" // Auto-detected based on version; defaults to /opt/cni/bin.
+		cniConfDir:      "/var/lib/rancher/k3s/agent/etc/cni/net.d"
 		cniConfFileName: ""
 		// This directory must exist on the node, if it does not, consult your container runtime
 		// documentation for the appropriate path.

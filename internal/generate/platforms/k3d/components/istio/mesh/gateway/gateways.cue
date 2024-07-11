@@ -23,10 +23,9 @@ let Objects = {
 			metadata: namespace: Namespace
 			spec: {
 				// Work with a struct of listeners instead of a list.
-				_listeners: (#WildcardListener & {Name: "admin", Selector: _Selector.GrantSubdomainAdmin, Cluster: true}).Output
-				_listeners: (#WildcardListener & {Name: "login", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
-				_listeners: (#WildcardListener & {Name: "app", Selector: _Selector.GrantSubdomainApp, Cluster: false}).Output
-				_listeners: (#WildcardListener & {Name: "app", Selector: _Selector.GrantSubdomainApp, Cluster: true}).Output
+				_listeners: (#WildcardListener & {Name: "httpbin", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
+				_listeners: (#WildcardListener & {Name: "argocd", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
+				_listeners: (#WildcardListener & {Name: "backstage", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
 				listeners: [for x in _listeners {x}]
 			}
 		}
@@ -59,19 +58,6 @@ let Objects = {
 				certificateRefs: [{
 					kind: "Secret"
 					name: _Hostname
-				}]
-			}
-			allowedRoutes: namespaces: from:     "Selector"
-			allowedRoutes: namespaces: selector: Selector
-		}
-		"\(_Prefix)-prefix": {
-			hostname: "*.\(_Hostname)"
-			port:     443
-			protocol: "HTTPS"
-			tls: {
-				certificateRefs: [{
-					kind: "Secret"
-					name: "any.\(_Hostname)"
 				}]
 			}
 			allowedRoutes: namespaces: from:     "Selector"

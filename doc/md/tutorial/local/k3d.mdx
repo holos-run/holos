@@ -1,3 +1,6 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Try Holos with k3d
 
 Learn how to configure and deploy the Holos reference platform to your local host with k3d.
@@ -48,6 +51,8 @@ You'll need the following tools installed on your local host to complete this gu
  2. [holos](/docs/tutorial/install) to build the platform configuration.
  3. [kubectl](https://kubernetes.io/docs/tasks/tools/) to interact with the Kubernetes cluster.
  4. [helm](https://helm.sh/docs/intro/install/) to render Holos components that integrate vendor provided Helm charts.
+ 5. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) for local trusted certificates.
+ 6. [jq](https://jqlang.github.io/jq/download/) to manipulate json output.
 
 ## Register with Holos
 
@@ -363,19 +368,6 @@ kubectl apply --server-side=true -f ./deploy/clusters/workload/components/namesp
 kubectl apply --server-side=true -f ./deploy/clusters/workload/components/cert-manager/cert-manager.gen.yaml
 ```
 
-The cert manager controller should start successfully:
-
-```txt
-❯ k get pods -A
-NAMESPACE      NAME                                      READY   STATUS    RESTARTS   AGE
-cert-manager   cert-manager-666cb4fb5f-dcp6x             1/1     Running   0          43s
-cert-manager   cert-manager-cainjector-fd5479b67-jwbdr   1/1     Running   0          43s
-cert-manager   cert-manager-webhook-588b7d86c8-rbcsm     1/1     Running   0          43s
-kube-system    coredns-6799fbcd5-ksc2k                   1/1     Running   0          94m
-kube-system    local-path-provisioner-6f5d79df6-b5js7    1/1     Running   0          94m
-kube-system    metrics-server-54fd9b65b-mmx2n            1/1     Running   0          94m
-```
-
 ### Gateway API
 
 We use `HTTPRoute` resources from the Gateway API to expose services in a standard way.
@@ -402,41 +394,33 @@ kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-
 kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istiod/istiod.gen.yaml
 ```
 
-Once the Istio components have been applied, two pods should be running in the `istio-system` namespace:
+:::warning
+
+Verify all pods are READY before continuing.
+
+:::
+
+<!-- Note the istio-cni configuration is fiddly.  Refer to https://istio.io/latest/docs/ambient/install/platform-prerequisites/#k3d -->
 
 ```bash
-kubectl get pods -n istio-system
+kubectl get pods -A
 ```
 
 ```txt
-NAME                      READY   STATUS    RESTARTS   AGE
-istio-cni-node-hnvjg      0/1     Running   0          3m23s
-istiod-6b48fd8448-lgmxd   1/1     Running   0          2m32s
+NAMESPACE      NAME                                      READY   STATUS    RESTARTS   AGE
+cert-manager   cert-manager-666cb4fb5f-hj64r             1/1     Running   0          24s
+cert-manager   cert-manager-cainjector-fd5479b67-fvv9j   1/1     Running   0          24s
+cert-manager   cert-manager-webhook-588b7d86c8-h9bq4     1/1     Running   0          24s
+istio-system   istio-cni-node-bwkrh                      1/1     Running   0          11s
+istio-system   istiod-6b48fd8448-gfv7h                   1/1     Running   0          8s
+kube-system    coredns-6799fbcd5-97f9v                   1/1     Running   0          81s
+kube-system    local-path-provisioner-6f5d79df6-9dq6f    1/1     Running   0          81s
+kube-system    metrics-server-54fd9b65b-njrbk            1/1     Running   0          81s
 ```
 
-### Istio Gateway
+### Local CA
 
-The Gateway component configures the ingress gateway used to expose services running in the cluster.
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway/gateway.gen.yaml
-```
-
-Once applied, the default Gateway Deployemnt should be running in the `istio-gateways` namespace.
-
-```bash
-kubectl get pods -n istio-gateways
-```
-
-```txt
-NAME                             READY   STATUS    RESTARTS   AGE
-default-istio-54f7fbd4f8-cl4v6   1/1     Running   0          8m3s
-```
-
-
-## Local CA
-
-Create and install a local CA, necessary for secure https in your browser.
+Create and apply the `local-ca` Secret containing the ca private key.  This Secret is necessary to issue certificates trusted by your browser.
 
 ```bash
 bash ./scripts/local-ca
@@ -447,3 +431,164 @@ bash ./scripts/local-ca
 Admin access is necessary to install the local CA into the system trust store.
 
 :::
+
+### ClusterIssuer
+
+Apply the ClusterIssuer which issues Certificate resources using the local ca.
+
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/local-ca/local-ca.gen.yaml
+```
+
+Verify the `ClusterIssuer` is ready:
+
+```bash
+kubectl get clusterissuer
+```
+
+```txt
+NAME       READY   AGE
+local-ca   True    4s
+```
+
+### Certificates
+
+Apply the Certificates needed by the default Gateway to expose Services:
+
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/certificates/certificates.gen.yaml
+```
+
+Verify the certs have been issued and are ready:
+
+```bash
+kubectl get cert -A
+```
+
+```txt
+NAMESPACE        NAME                        READY   SECRET                      AGE
+istio-gateways   argocd.holos.localhost      True    argocd.holos.localhost      45s
+istio-gateways   backstage.holos.localhost   True    backstage.holos.localhost   45s
+istio-gateways   httpbin.holos.localhost     True    httpbin.holos.localhost     45s
+```
+
+### Istio Gateway
+
+The Gateway component configures the ingress gateway used to expose services running in the cluster.
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway/gateway.gen.yaml
+```
+
+Verify the Gateway is programmed and the listeners have been accepted:
+
+```bash
+kubectl get -n istio-gateways gateway default -o json \
+  | jq -r '.status.conditions[].message'
+```
+
+```txt
+Resource accepted
+Resource programmed, assigned to service(s) default-istio.istio-gateways.svc.cluster.local:443
+```
+
+## DNS Setup
+
+Configure your localhost to resolve `*.holos.localhost` to your loopback
+interface.  This is necessary for your browser requests to reach the k3d
+workload cluster.
+
+<Tabs>
+  <TabItem value="macos" label="macOS" default>
+    ```bash
+    brew install dnsmasq
+    ```
+
+    ```bash
+    cat <<EOF >"$(brew --prefix)/etc/dnsmasq.d/holos.localhost.conf"
+    # Refer to https://holos.run/docs/tutorial/local/k3d/
+    address=/holos.localhost/127.0.0.1
+    EOF
+    ```
+
+    ```bash
+    if [[ -r /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist ]]; then
+      echo "dnsmasq already configured"
+    else
+      sudo cp "$(brew list dnsmasq | grep 'dnsmasq.plist$')" \
+        /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist
+      sudo launchctl unload /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist
+      sudo launchctl load /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist
+      dscacheutil -flushcache
+      echo "dnsmasq configured"
+    fi
+    ```
+
+    ```bash
+    sudo mkdir -p /etc/resolver
+    sudo tee /etc/resolver/holos.localhost <<EOF
+    domain holos.localhost
+    nameserver 127.0.0.1
+    EOF
+    sudo killall -HUP mDNSResponder
+    ```
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+		```
+		Please contribute.
+		```
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+		```
+		Please contribute.
+		```
+  </TabItem>
+</Tabs>
+
+
+## httpbin
+
+httpbin is a simple backend service useful to dump request headers.
+
+```bash
+ kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-backend/httpbin-backend.gen.yaml
+```
+
+## httpbin routes
+
+Expose the httpbin service and make it accessible to the browser.
+
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-routes/httpbin-routes.gen.yaml
+```
+
+:::important
+
+Visit [https://httpbin.holos.localhost/](https://httpbin.holos.localhost/) in your browser at this point to verify everything is working.
+
+:::
+
+The browser should not report any security warnings and you should get the httpbin welcome page.
+
+Verify with curl as well:
+
+```bash
+curl https://httpbin.holos.localhost/dump/request
+```
+
+```txt
+GET /dump/request HTTP/1.1
+Host: httpbin.holos.localhost
+Accept: */*
+User-Agent: curl/8.6.0
+X-B3-Parentspanid: 543b565fcac9425e
+X-B3-Sampled: 0
+X-B3-Spanid: 8ccc0d4d1488fd85
+X-B3-Traceid: e6f3f756ade6e4a0543b565fcac9425e
+X-Envoy-Attempt-Count: 1
+X-Envoy-Internal: true
+X-Forwarded-Client-Cert: By=spiffe://cluster.local/ns/holos-system/sa/default;Hash=8f561682a113fe7a1852b9488fe8fe497bc60da2d10761443c5f163eae92ef12;Subject="";URI=spiffe://cluster.local/ns/istio-gateways/sa/default-istio
+X-Forwarded-For: 10.42.0.1
+X-Forwarded-Proto: https
+X-Request-Id: 6141bd39-fb1d-437f-9d17-50767d75a332
+```

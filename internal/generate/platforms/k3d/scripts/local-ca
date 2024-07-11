@@ -20,8 +20,8 @@ CAROOT="$(mkcert -CAROOT)"
 cp -p "${CAROOT}/rootCA.pem" ca.crt
 cp -p "${CAROOT}/rootCA.pem" tls.crt
 cp -p "${CAROOT}/rootCA-key.pem" tls.key
-
 kubectl create secret generic --from-file=.  --dry-run=client -o yaml local-ca > ../local-ca.yaml
 cd ..
+
 echo 'type: kubernetes.io/tls' >> local-ca.yaml
 kubectl apply -n cert-manager --server-side=true -f local-ca.yaml
