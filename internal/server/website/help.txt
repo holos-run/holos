@@ -1,9 +1,0 @@
-serve the holos website
-
-The recommended way to serve the website is:
-
-  holos website --log-format=json --log-drop=source
-
-Enable completion with:
-
-  source <(holos-server completion ${SHELL##*/})
