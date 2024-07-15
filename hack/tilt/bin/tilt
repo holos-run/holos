@@ -3,7 +3,9 @@
 set -euo pipefail
 TOPLEVEL="$(cd $(dirname "$0")/.. && pwd)"
 export NAMESPACE="${USER}-holos"
+echo "Local development assumes a k3d-workload local cluster exists." >&2
+echo "Refer to https://holos.run/docs/tutorial/local/k3d" >&2
+kubectl config view --minify --context=k3d-workload --flatten > "${TOPLEVEL}/kubeconfig"
 export KUBECONFIG="${TOPLEVEL}/kubeconfig"
-envsubst < "${KUBECONFIG}.template" > "${KUBECONFIG}"
 export TILT_WRAPPER=1
 exec tilt "$@"

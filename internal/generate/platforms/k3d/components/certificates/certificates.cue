@@ -22,6 +22,7 @@ let Objects = {
 
 	Resources: Certificate: "httpbin.\(_Platform.Model.org.domain)":   _
 	Resources: Certificate: "argocd.\(_Platform.Model.org.domain)":    _
+	Resources: Certificate: "app.\(_Platform.Model.org.domain)":       _
 	Resources: Certificate: "backstage.\(_Platform.Model.org.domain)": _
 }
 

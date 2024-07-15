@@ -47,6 +47,16 @@ _Projects: {
 	// cert-manager primarily for the management cluster to manage tls certs but
 	// also used in workload clusters to generate mTLS certs.
 	certificates: spec: namespaces: "cert-manager": _
+
+	// Postgres Operator
+	pgo: spec: namespaces: "postgres-operator": _
+
+	// Holos local development
+	holosapp: spec: {
+		namespaces: "dev-holos": _
+		let Subdomain = "app.\(_Platform.Model.org.domain)"
+		certificates: "\(Subdomain)": #IngressCertificate
+	}
 }
 
 // Platform components to manage.
@@ -131,6 +141,15 @@ _Platform: Components: {
 			}
 			"\(Cluster.name)/argo-routes": {
 				path:    "components/argo/routes"
+				cluster: Cluster.name
+			}
+
+			"\(Cluster.name)/postgres-crds": {
+				path:    "components/pgo/crds"
+				cluster: Cluster.name
+			}
+			"\(Cluster.name)/postgres-operator": {
+				path:    "components/pgo/controller"
 				cluster: Cluster.name
 			}
 		}

@@ -1,0 +1,74 @@
+---
+# Source: CUE apiObjects.Deployment.holos
+metadata:
+  name: holos
+  namespace: dev-holos
+  labels:
+    app.holos.run/environment: dev
+    app.holos.run/name: holos
+    app.holos.run/component: app
+    app.kubernetes.io/component: server
+    render.holos.run/component: dev-holos-app
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: server
+  template:
+    metadata:
+      labels:
+        app.holos.run/environment: dev
+        app.holos.run/name: holos
+        app.holos.run/component: app
+        app.kubernetes.io/component: server
+        sidecar.istio.io/inject: "true"
+        render.holos.run/component: dev-holos-app
+    spec:
+      serviceAccountName: holos
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: holos
+          image: k3d-registry.holos.localhost:5100/holos:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /app/bin/holos
+            - server
+            - --log-format=json
+            - --oidc-issuer=https://login.holos.run
+            - --oidc-audience=275571128859132936
+          env:
+            - name: TZ
+              value: '{tz}'
+            - name: GOMAXPROCS
+              value: '1'
+            - name: SHUTDOWN_DELAY
+              value: '0'
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: uri
+                  name: holos-pguser-holos
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: 512Mi
+            requests:
+              cpu: "0.5"
+              memory: 512Mi
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+kind: Deployment
+apiVersion: apps/v1

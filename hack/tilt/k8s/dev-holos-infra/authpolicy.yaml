@@ -1,0 +1,27 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  labels:
+    app.kubernetes.io/name: authpolicy-allow-app
+    app.kubernetes.io/part-of: default-gateway
+  name: authpolicy-allow-app
+  namespace: istio-gateways
+spec:
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        hosts:
+        - app.holos.localhost
+        - app.holos.localhost:*
+    when:
+    - key: request.auth.principal
+      values:
+      - https://login.holos.run/*
+    - key: request.auth.audiences
+      values:
+      - 270319630705329162@holos_platform
+      - "275571128859132936"
+  selector:
+    matchLabels:
+      istio.io/gateway-name: default

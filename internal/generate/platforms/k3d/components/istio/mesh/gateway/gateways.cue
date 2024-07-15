@@ -23,9 +23,10 @@ let Objects = {
 			metadata: namespace: Namespace
 			spec: {
 				// Work with a struct of listeners instead of a list.
-				_listeners: (#WildcardListener & {Name: "httpbin", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
-				_listeners: (#WildcardListener & {Name: "argocd", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
-				_listeners: (#WildcardListener & {Name: "backstage", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
+				_listeners: (#WildcardListener & {Name: "httpbin", Cluster: false}).Output
+				_listeners: (#WildcardListener & {Name: "argocd", Cluster: false}).Output
+				_listeners: (#WildcardListener & {Name: "backstage", Cluster: false}).Output
+				_listeners: (#WildcardListener & {Name: "app", Cluster: false}).Output
 				listeners: [for x in _listeners {x}]
 			}
 		}

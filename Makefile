@@ -72,6 +72,11 @@ build: ## Build holos executable.
 	@echo "GOPATH=${GOPATH}"
 	go build -trimpath -o bin/$(BIN_NAME) -ldflags $(LD_FLAGS) $(REPO_PATH)/cmd/$(BIN_NAME)
 
+linux: ## Build holos executable for tilt.
+	@echo "building ${BIN_NAME}.linux ${VERSION}"
+	@echo "GOPATH=${GOPATH}"
+	GOOS=linux go build -trimpath -o bin/$(BIN_NAME).linux -ldflags $(LD_FLAGS) $(REPO_PATH)/cmd/$(BIN_NAME)
+
 .PHONY: install
 install: build ## Install holos to GOPATH/bin
 	install bin/$(BIN_NAME) $(shell go env GOPATH)/bin/$(BIN_NAME)

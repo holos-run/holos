@@ -24,4 +24,15 @@ kubectl create secret generic --from-file=.  --dry-run=client -o yaml local-ca >
 cd ..
 
 echo 'type: kubernetes.io/tls' >> local-ca.yaml
+kubectl apply --server-side=true -f- <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: cert-manager
+  name: cert-manager
+spec:
+  finalizers:
+  - kubernetes
+EOF
 kubectl apply -n cert-manager --server-side=true -f local-ca.yaml

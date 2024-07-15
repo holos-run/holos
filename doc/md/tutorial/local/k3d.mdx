@@ -393,86 +393,39 @@ GKE, EKS, Talos, and Kubeadm clusters.
 
 :::
 
-```bash
-k3d cluster create \
-  --port "443:443@loadbalancer" \
-  --k3s-arg "--disable=traefik@server:0" \
-  workload
-```
+<Tabs>
+  <TabItem value="evaluate" label="Evaluate" default>
+  Use this command when evaluating Holos.
+
+  ```bash
+  k3d cluster create workload \
+    --port "443:443@loadbalancer" \
+    --k3s-arg "--disable=traefik@server:0"
+  ```
+  </TabItem>
+  <TabItem value="develop" label="Develop" default>
+  Use this command when developing Holos.
+
+  ```bash
+  k3d registry create registry.holos.localhost --port 5100
+  ```
+
+  ```bash
+  k3d cluster create workload \
+    --registry-use k3d-registry.holos.localhost:5100 \
+    --port "443:443@loadbalancer" \
+    --k3s-arg "--disable=traefik@server:0"
+  ```
+  </TabItem>
+</Tabs>
 
 Traefik is disabled because Istio provides the same functionality.
 
-## Apply the Platform Components
-
-Use `kubectl` to apply each platform component.  In production, it's common to
-fully automate this process with ArgoCD, but we use `kubectl` in development
-and exploration contexts to the same effect.
-
-### Namespaces
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/namespaces
-```
-
-### Cert Manager
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/cert-manager
-```
-
-### Gateway API
-
-Services are exposed with standard `HTTPRoute` resources from the Gateway API.
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway-api
-```
-
-### Istio Base
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-base
-```
-
-### Istio CNI
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-cni
-```
-
-### Istio Controller
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istiod
-```
-
-:::warning
-
-Verify all pods are READY before continuing.
-
-:::
-
-```bash
-kubectl get pods -A
-```
-
-```txt
-NAMESPACE      NAME                                      READY   STATUS    RESTARTS   AGE
-cert-manager   cert-manager-666cb4fb5f-hj64r             1/1     Running   0          24s
-cert-manager   cert-manager-cainjector-fd5479b67-fvv9j   1/1     Running   0          24s
-cert-manager   cert-manager-webhook-588b7d86c8-h9bq4     1/1     Running   0          24s
-istio-system   istio-cni-node-12krh                      1/1     Running   0          11s
-istio-system   istiod-6b48fd8448-gfv7h                   1/1     Running   0          8s
-kube-system    coredns-6799fbcd5-97f9v                   1/1     Running   0          81s
-kube-system    local-path-provisioner-6f5d79df6-9dq6f    1/1     Running   0          81s
-kube-system    metrics-server-54fd9b65b-34rbk            1/1     Running   0          81s
-```
-
-### Local CA
+## Local CA
 
 Create and apply the `local-ca` Secret containing the CA private key. This
-Secret is necessary to issue certificates trusted by your browser when using
-the local k3d platform.
+Secret is necessary to issue certificates trusted by your browser when using the
+local k3d platform.
 
 ```bash
 bash ./scripts/local-ca
@@ -485,68 +438,7 @@ into your local host's trust store.
 
 :::
 
-### ClusterIssuer
-
-Apply the ClusterIssuer which issues Certificate resources using the local ca.
-
-```bash
-kubectl apply --server-side=true -f deploy/clusters/workload/components/local-ca
-```
-
-Verify the `ClusterIssuer` is ready:
-
-```bash
-kubectl get clusterissuer
-```
-
-```txt
-NAME       READY   AGE
-local-ca   True    4s
-```
-
-### Certificates
-
-Apply the Certificates needed by the default Gateway to expose Services:
-
-```bash
-kubectl apply --server-side=true -f deploy/clusters/workload/components/certificates
-```
-
-Verify the certs have been issued and are ready:
-
-```bash
-kubectl get cert -A
-```
-
-```txt
-NAMESPACE        NAME                        READY   SECRET                      AGE
-istio-gateways   argocd.holos.localhost      True    argocd.holos.localhost      5s
-istio-gateways   backstage.holos.localhost   True    backstage.holos.localhost   5s
-istio-gateways   httpbin.holos.localhost     True    httpbin.holos.localhost     5s
-```
-
-### Istio Gateway
-
-The Gateway component configures the ingress gateway used to expose services
-running in the cluster.
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway
-```
-
-Verify the Gateway is programmed and the listeners have been accepted:
-
-```bash
-kubectl get -n istio-gateways gateway default -o json \
-  | jq -r '.status.conditions[].message'
-```
-
-```txt
-Resource accepted
-Resource programmed, assigned to service(s) default-istio.istio-gateways.svc.cluster.local:443
-```
-
-### DNS Setup
+## DNS Setup
 
 Configure your localhost to resolve `*.holos.localhost` to your loopback
 interface.  This is necessary for your browser requests to reach the k3d
@@ -588,16 +480,76 @@ workload cluster.
     ```
   </TabItem>
   <TabItem value="linux" label="Linux">
-		```
-		Please contribute.
-		```
+    [NSS-myhostname](http://man7.org/linux/man-pages/man8/nss-myhostname.8.html)
+    ships with many Linux distributions and should resolve *.localhost
+    automatically to 127.0.0.1.
+
+    Otherwise it is installable with:
+
+    ```bash
+    sudo apt install libnss-myhostname
+    ```
   </TabItem>
   <TabItem value="windows" label="Windows">
+    Ensure the loopback interface has at least the following names in `C:\windows\system32\drivers\etc\hosts`
+
 		```
-		Please contribute.
+    127.0.0.1 httpbin.holos.localhost argocd.holos.localhost app.holos.localhost
 		```
   </TabItem>
 </Tabs>
+
+## Apply the Platform Components
+
+Use `kubectl` to apply each platform component.  In production, it's common to
+fully automate this process with ArgoCD, but we use `kubectl` in development
+and exploration contexts to the same effect.
+
+### Namespaces
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/namespaces
+```
+
+### Custom Resource Definitions
+
+Services are exposed with standard `HTTPRoute` resources from the Gateway API.
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway-api
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-base
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-crds
+```
+
+### Cert Manager
+
+Apply the ClusterIssuer which issues Certificate resources using the local ca.
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/cert-manager
+kubectl apply --server-side=true -f deploy/clusters/workload/components/local-ca
+kubectl apply --server-side=true -f deploy/clusters/workload/components/certificates
+```
+
+### Istio
+
+```bash
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-cni
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istiod
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/gateway
+```
+
+Verify the Gateway is programmed and the listeners have been accepted:
+
+```bash
+kubectl get -n istio-gateways gateway default -o json \
+  | jq -r '.status.conditions[].message'
+```
+
+```txt
+Resource accepted
+Resource programmed, assigned to service(s) default-istio.istio-gateways.svc.cluster.local:443
+```
 
 ### httpbin
 
@@ -605,21 +557,6 @@ httpbin is a simple backend service useful for end-to-end testing.
 
 ```bash
 kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-backend
-```
-
-:::note
-
-This guide uses httpbin to inspect request headers from the perspective of a
-backend service, specifically the `x-oidc-id-token` header injected by the
-authproxy to implement Zero Trust.
-
-:::
-
-### httpbin routes
-
-Expose the httpbin service and make it accessible to the browser.
-
-```bash
 kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-routes
 ```
 
@@ -630,37 +567,7 @@ to verify end to end connectivity.
 
 :::
 
-The browser should not report any security warnings and you should see the
-httpbin index page.
-
-Verify curl gets an ok response from httpbin:
-
-```bash
-curl https://httpbin.holos.localhost/dump/request
-```
-
-```txt
-GET /dump/request HTTP/1.1
-Host: httpbin.holos.localhost
-Accept: */*
-User-Agent: curl/8.6.0
-X-B3-Parentspanid: 543b565fcac9425e
-X-B3-Sampled: 0
-X-B3-Spanid: 8ccc0d4d1488fd85
-X-B3-Traceid: e6f3f756ade6e4a0543b565fcac9425e
-X-Envoy-Attempt-Count: 1
-X-Envoy-Internal: true
-X-Forwarded-Client-Cert: By=spiffe://cluster.local/ns/holos-system/sa/default;Hash=8f561682a113fe7a1852b9488fe8fe497bc60da2d10761443c5f163eae92ef12;Subject="";URI=spiffe://cluster.local/ns/istio-gateways/sa/default-istio
-X-Forwarded-For: 10.42.0.1
-X-Forwarded-Proto: https
-X-Request-Id: 6141bd39-fb1d-437f-9d17-50767d75a332
-```
-
-### Auth Proxy
-
-The auth proxy is responsible for authenticating web browser requests.  The auth
-proxy provides a standard oidc id token to all services integrated with the
-mesh.
+### Cookie Secret
 
 Generate a random cookie encryption Secret and apply.
 
@@ -672,7 +579,6 @@ LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom \
     --dry-run=client -o yaml \
   | kubectl apply -n istio-gateways -f-
 ```
-
 :::tip
 
 The Holos reference platform uses an ExternalSecret to automatically sync this
@@ -680,18 +586,15 @@ Secret from your SecretStore.
 
 :::
 
+
+### Auth Proxy
+
+The auth proxy is responsible for authenticating web browser requests.  The auth
+proxy provides a standard oidc id token to all services integrated with the
+mesh.
+
 ```bash
 kubectl apply --server-side=true -f deploy/clusters/workload/components/authproxy
-```
-
-### Auth Routes
-
-The auth routes holos component is responsible for handling requests with a path
-prefix of `/holos/authproxy`.  These requests are redirected to the auth proxy
-which is responsible for authenticating the request and providing the standard
-oidc id token.
-
-```bash
 kubectl apply --server-side=true -f deploy/clusters/workload/components/authroutes
 ```
 
@@ -789,16 +692,12 @@ authorization functionality.
 ArgoCD automatically applies resources defined in Git similar to how this guide
 uses `kubectl apply`.
 
-Apply the custom resource definitions.
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-crds
-```
-
 Apply controller deployments and supporting resources.
 
 ```bash
 kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-cd
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-authpolicy
+kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-routes
 ```
 
 Verify all Pods are running and all containers are ready.
@@ -816,18 +715,6 @@ argocd-redis-698f57d9b9-v4kqs                       1/1     Running     0       
 argocd-redis-secret-init-z5zg8                      0/1     Completed   0          10s
 argocd-repo-server-69f78dfb8-f6pb7                  1/1     Running     0          10s
 argocd-server-58f7f4466d-db5fv                      2/2     Running     0          10s
-```
-
-Apply the AuthPolicy to secure ArgoCD with Zero Trust.
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-authpolicy
-```
-
-Apply the HTTPRoute to expose ArgoCD through the default Gateway.
-
-```bash
-kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-routes
 ```
 
 Browse to [https://argocd.holos.localhost/](https://argocd.holos.localhost/) and
