@@ -38,6 +38,7 @@
     "Parentspanid",
     "putenv",
     "quickstart",
+    "retryable",
     "spanid",
     "spiffe",
     "startupapicheck",

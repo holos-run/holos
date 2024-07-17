@@ -195,3 +195,15 @@ _Selector: #Selector
 
 	status: component: string
 }
+
+// Customize the istio sidecar proxy.  The default resource limit is 2 cpu and
+// 1Gi ram, which quickly exhausts an EKS cluster node pool.
+#IstioProxy: corev1.#Container & {
+	name:  "istio-proxy"
+	image: "auto"
+	resources: limits: {
+		cpu:    "100m"
+		memory: "128Mi"
+	}
+	resources: requests: resources.limits
+}

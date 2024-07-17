@@ -64,24 +64,18 @@ func New(cfg *holos.Config) *cobra.Command {
 			backoff = retry.WithMaxDuration(30*time.Second, backoff)
 			// Ping the database
 			ping := func(ctx context.Context) error {
-				plog := slog.With("database", conn.Driver.Dialect(), "check", "network")
-				plog.DebugContext(ctx, "ping")
+				pingLog := slog.With("database", conn.Driver.Dialect(), "check", "network")
+				pingLog.DebugContext(ctx, "ping")
 				if pingErr := conn.DB.PingContext(ctx); pingErr != nil {
-					plog.DebugContext(ctx, "retryable: could not ping", "ok", false, "err", pingErr)
+					pingLog.DebugContext(ctx, "retryable: could not ping", "ok", false, "err", pingErr)
 					return retry.RetryableError(errors.Wrap(pingErr))
 				}
-				plog.DebugContext(ctx, "pong", "ok", true)
+				pingLog.DebugContext(ctx, "pong", "ok", true)
 				return nil
 			}
 			if err = retry.Do(ctx, backoff, ping); err != nil {
 				return errors.Wrap(err)
 			}
-
-			// Automatic migration
-			if err = conn.Client.Schema.Create(ctx); err != nil {
-				return errors.Wrap(err)
-			}
-			log.InfoContext(ctx, "schema created", "database", conn.Driver.Dialect())
 
 			// Authentication (Identity Verifier)
 			// We may pass an instrumented *http.Client via ctx in the future.
@@ -113,6 +107,61 @@ func New(cfg *holos.Config) *cobra.Command {
 
 	// Add debug commands
 	cmd.AddCommand(frontendCmd())
+	cmd.AddCommand(initCmd(cfg))
+
+	return cmd
+}
+
+func initCmd(cfg *holos.Config) *cobra.Command {
+	cmd := command.New("init")
+	cmd.Short = "initialize database"
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx := cmd.Context()
+		if ctx == nil {
+			ctx = context.Background()
+		}
+
+		log := cfg.Logger()
+		log.DebugContext(ctx, "hello", "lifecycle", "init")
+
+		// Connect to the database
+		conn, err := db.Client(cfg)
+		if err != nil {
+			return errors.Wrap(fmt.Errorf("could not create db client: %w", err))
+		}
+		defer func() {
+			if closeError := conn.Client.Close(); closeError != nil {
+				log.ErrorContext(ctx, "could not close database", "err", closeError)
+			}
+		}()
+
+		// Retry until network is online or limit reached
+		backoff := retry.NewFibonacci(1 * time.Second)
+		backoff = retry.WithCappedDuration(5*time.Second, backoff)
+		backoff = retry.WithMaxDuration(30*time.Second, backoff)
+		// Ping the database
+		ping := func(ctx context.Context) error {
+			pingLog := slog.With("database", conn.Driver.Dialect(), "check", "network")
+			pingLog.DebugContext(ctx, "ping")
+			if pingErr := conn.DB.PingContext(ctx); pingErr != nil {
+				pingLog.DebugContext(ctx, "retryable: could not ping", "ok", false, "err", pingErr)
+				return retry.RetryableError(errors.Wrap(pingErr))
+			}
+			pingLog.DebugContext(ctx, "pong", "ok", true)
+			return nil
+		}
+		if err = retry.Do(ctx, backoff, ping); err != nil {
+			return errors.Wrap(err)
+		}
+
+		// Automatic migration
+		if err = conn.Client.Schema.Create(ctx); err != nil {
+			return errors.Wrap(err)
+		}
+		log.InfoContext(ctx, "schema created", "database", conn.Driver.Dialect())
+
+		return nil
+	}
 
 	return cmd
 }
