@@ -104,6 +104,13 @@ git commit -m "holos generate platform k3d - $(holos --version)"
 
 ## Push the Platform Form
 
+TODO: Describe what the Platform Form is.  Why is it needed?  To get a value
+that varies which ArgoCD needs to make you an admin user.
+
+GREAT IDEA: Add a --open to open the URL in the default browser when pushing so it's an obvious call to action.
+
+Gary wasn't sure what to do with the SUB value...  More call to action.
+
 Push the Platform Form to the web service to provide top-level configuration
 values from which the platform components derive their final configuration.
 
@@ -111,7 +118,13 @@ values from which the platform components derive their final configuration.
 holos push platform form .
 ```
 
+:::important
+
 Visit the printed URL to view the Platform Form.
+
+:::
+
+![Platform Form](./platform-form.png)
 
 :::tip
 
@@ -133,6 +146,8 @@ holos login --print-claims | jq -r .sub
 
 For the ArgoCD Git repository URL, enter the url of a public repository where
 you will push your local `holos-k3d` repository.
+
+TODO: Make it clear the repo needs to be created.
 
 ```bash
 git remote add origin https://github.com/example/holos-k3d
@@ -159,14 +174,11 @@ git add platform.config.json
 git commit -m "Add platform model"
 ```
 
-:::danger
+TODO: Do not warn people about storing secrets until the advanced doc about customizing the platform form.jj
 
-Do not store secrets in the Platform Model.
+TODO: Pull out commentary about the reference platform.  Only mention the reference platform at the beginning and end.
 
-:::
-
-Holos uses ExternalSecret resources to securely sync with a SecretStore and
-ensure Secrets are never stored in version control.
+NATE: Secret Sauce is going from minimal input into a fully rendered platform.  Not Zero Trust, not external secrets.  Mention the value of deriving the entire unified platform from a simple customizable input form at the beginning and the end.
 
 ## Render the Platform
 
