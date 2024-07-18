@@ -44,9 +44,14 @@ func (h *PlatformHandler) CreatePlatform(ctx context.Context, req *connect.Reque
 
 	m := req.Msg.GetCreate()
 
+	tryCreateID, err := uuid.NewV7()
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.Wrap(err))
+	}
 	now := time.Now()
 
 	platformID, err := h.db.Platform.Create().
+		SetID(tryCreateID).
 		SetOrgID(dbOrg.ID).
 		SetCreatorID(dbUser.ID).
 		SetCreatedAt(now).
@@ -58,12 +63,7 @@ func (h *PlatformHandler) CreatePlatform(ctx context.Context, req *connect.Reque
 		SetModel(&storage.Model{Model: m.GetModel()}).
 		OnConflict(
 			sql.ConflictColumns(entplatform.FieldOrgID, entplatform.FieldName),
-			sql.ResolveWithNewValues(),
-			sql.ResolveWith(func(u *sql.UpdateSet) {
-				u.SetIgnore(entplatform.FieldID)
-				u.SetIgnore(entplatform.FieldCreatedByID)
-				u.SetIgnore(entplatform.FieldCreatedAt)
-			}),
+			sql.ResolveWithIgnore(),
 		).
 		ID(ctx)
 	if err != nil {
@@ -76,15 +76,15 @@ func (h *PlatformHandler) CreatePlatform(ctx context.Context, req *connect.Reque
 	}
 
 	var already_exists bool
-	verb := "created"
+	action := "created"
 
-	if entPlatform.CreatedAt != entPlatform.UpdatedAt {
+	if tryCreateID != platformID {
 		already_exists = true
-		verb = "updated"
+		action = "already exists"
 	}
 
 	log := logger.FromContext(ctx)
-	log.InfoContext(ctx, fmt.Sprintf("%s platform %s in org %s", verb, platformID, dbOrg.ID))
+	log.InfoContext(ctx, fmt.Sprintf("platform %s %s in org %s", entPlatform.Name, action, dbOrg.ID))
 
 	resp := &platform.CreatePlatformResponse{
 		Platform:      PlatformToRPC(entPlatform),

@@ -1,6 +1,8 @@
 package create
 
 import (
+	"fmt"
+
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/cli/secret"
 	"github.com/holos-run/holos/internal/client"
@@ -46,14 +48,14 @@ func NewPlatform(cfg *client.Config) *cobra.Command {
 			return err
 		}
 		log := logger.FromContext(ctx)
-		verb := "created"
+		action := "created"
 		if resp.GetAlreadyExists() {
-			verb = "updated"
+			action = "already exists"
 		}
 
 		pf := resp.GetPlatform()
 		name := pf.GetName()
-		log.InfoContext(ctx, verb+" platform "+name, "name", name, "id", pf.GetId(), "org", pf.GetOwner().GetOrgId(), "exists", resp.GetAlreadyExists())
+		log.InfoContext(ctx, fmt.Sprintf("platform %s %s", name, action), "name", name, "id", pf.GetId(), "org", pf.GetOwner().GetOrgId(), "exists", resp.GetAlreadyExists())
 		return nil
 	}
 
