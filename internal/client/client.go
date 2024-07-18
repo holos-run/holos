@@ -123,7 +123,7 @@ func (c *Client) PlatformModel(ctx context.Context, platformID string) (*structp
 	return pf.Msg.GetPlatform().GetSpec().GetModel(), nil
 }
 
-func (c *Client) CreatePlatform(ctx context.Context, pm PlatformMutation) (*platform.Platform, error) {
+func (c *Client) CreatePlatform(ctx context.Context, pm PlatformMutation) (*platform.CreatePlatformResponse, error) {
 	log := logger.FromContext(ctx).With("platform", pm.Name)
 	start := time.Now()
 	req := &platform.CreatePlatformRequest{
@@ -139,5 +139,5 @@ func (c *Client) CreatePlatform(ctx context.Context, pm PlatformMutation) (*plat
 	}
 	log = log.With("platform_id", pf.Msg.GetPlatform().GetId())
 	log.DebugContext(ctx, "create platform", "duration", time.Since(start))
-	return pf.Msg.GetPlatform(), nil
+	return pf.Msg, nil
 }

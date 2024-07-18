@@ -60,6 +60,11 @@ export class CreatePlatformResponse extends Message<CreatePlatformResponse> {
    */
   platform?: Platform;
 
+  /**
+   * @generated from field: bool already_exists = 2;
+   */
+  alreadyExists = false;
+
   constructor(data?: PartialMessage<CreatePlatformResponse>) {
     super();
     proto3.util.initPartial(data, this);
@@ -69,6 +74,7 @@ export class CreatePlatformResponse extends Message<CreatePlatformResponse> {
   static readonly typeName = "holos.platform.v1alpha1.CreatePlatformResponse";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "platform", kind: "message", T: Platform },
+    { no: 2, name: "already_exists", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreatePlatformResponse {

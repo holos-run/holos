@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"connectrpc.com/connect"
+	"entgo.io/ent/dialect/sql"
 	"github.com/gofrs/uuid"
 	"github.com/holos-run/holos/internal/ent"
 	"github.com/holos-run/holos/internal/ent/organization"
@@ -42,21 +44,51 @@ func (h *PlatformHandler) CreatePlatform(ctx context.Context, req *connect.Reque
 
 	m := req.Msg.GetCreate()
 
-	builder := h.db.Platform.Create().
+	now := time.Now()
+
+	platformID, err := h.db.Platform.Create().
 		SetOrgID(dbOrg.ID).
 		SetCreatorID(dbUser.ID).
+		SetCreatedAt(now).
 		SetUpdatedByID(dbUser.ID).
+		SetUpdatedAt(now).
 		SetName(m.GetName()).
 		SetDisplayName(m.GetDisplayName()).
 		SetForm(&storage.Form{FieldConfigs: m.GetForm().GetFieldConfigs()}).
-		SetModel(&storage.Model{Model: m.GetModel()})
-	entPlatform, err := builder.Save(ctx)
+		SetModel(&storage.Model{Model: m.GetModel()}).
+		OnConflict(
+			sql.ConflictColumns(entplatform.FieldOrgID, entplatform.FieldName),
+			sql.ResolveWithNewValues(),
+			sql.ResolveWith(func(u *sql.UpdateSet) {
+				u.SetIgnore(entplatform.FieldID)
+				u.SetIgnore(entplatform.FieldCreatedByID)
+				u.SetIgnore(entplatform.FieldCreatedAt)
+			}),
+		).
+		ID(ctx)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
 	}
 
+	entPlatform, err := h.db.Platform.Get(ctx, platformID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+	}
+
+	var already_exists bool
+	verb := "created"
+
+	if entPlatform.CreatedAt != entPlatform.UpdatedAt {
+		already_exists = true
+		verb = "updated"
+	}
+
+	log := logger.FromContext(ctx)
+	log.InfoContext(ctx, fmt.Sprintf("%s platform %s in org %s", verb, platformID, dbOrg.ID))
+
 	resp := &platform.CreatePlatformResponse{
-		Platform: PlatformToRPC(entPlatform),
+		Platform:      PlatformToRPC(entPlatform),
+		AlreadyExists: already_exists,
 	}
 
 	return connect.NewResponse(resp), nil

@@ -16,6 +16,7 @@ message CreatePlatformRequest {
 
 message CreatePlatformResponse {
   Platform platform = 1;
+  bool already_exists = 2;
 }
 
 message GetPlatformRequest {

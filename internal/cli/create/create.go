@@ -41,12 +41,19 @@ func NewPlatform(cfg *client.Config) *cobra.Command {
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
 		client := client.New(cfg)
-		pf, err := client.CreatePlatform(ctx, pm)
+		resp, err := client.CreatePlatform(ctx, pm)
 		if err != nil {
 			return err
 		}
 		log := logger.FromContext(ctx)
-		log.InfoContext(ctx, "created platform", "name", pf.GetName(), "id", pf.GetId(), "org", pf.GetOwner().GetOrgId())
+		verb := "created"
+		if resp.GetAlreadyExists() {
+			verb = "updated"
+		}
+
+		pf := resp.GetPlatform()
+		name := pf.GetName()
+		log.InfoContext(ctx, verb+" platform "+name, "name", name, "id", pf.GetId(), "org", pf.GetOwner().GetOrgId(), "exists", resp.GetAlreadyExists())
 		return nil
 	}
 
