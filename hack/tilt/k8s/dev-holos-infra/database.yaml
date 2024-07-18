@@ -1,0 +1,15 @@
+---
+# Source: CUE apiObjects.Cluster.holos
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: holos
+  namespace: dev-holos
+  labels:
+    app.holos.run/environment: dev
+    app.holos.run/name: holos
+    app.holos.run/component: database
+spec:
+  instances: 1
+  storage:
+    size: 1Gi

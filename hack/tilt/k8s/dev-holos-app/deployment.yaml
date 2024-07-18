@@ -48,7 +48,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: uri
-                  name: holos-pguser-holos
+                  name: holos-app
           ports:
             - containerPort: 3000
               name: http

@@ -9,7 +9,7 @@ if os.getenv('TILT_WRAPPER') != '1':
     fail("could not run, ./hack/tilt/bin/tilt was not used to start tilt")
 
 # Resource ids
-holos_backend = 'Holos Backend'
+holos_backend = 'Holos Server'
 compile_id = 'Go Build'
 
 # Default Registry.
@@ -62,7 +62,8 @@ docker_build_with_restart(
         '/app/bin/holos.linux',
         'server',
         '--oidc-issuer=https://login.holos.run',
-        '--oidc-audience=275571128859132936',
+        '--oidc-audience=275804490387516853@holos_quickstart', # auth proxy
+        '--oidc-audience=270319630705329162@holos_platform', # holos cli
     ],
     dockerfile='./Dockerfile',
     only=['./bin'],
