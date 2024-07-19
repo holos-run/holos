@@ -141,3 +141,16 @@ func (c *Client) CreatePlatform(ctx context.Context, pm PlatformMutation) (*plat
 	log.DebugContext(ctx, "create platform", "duration", time.Since(start))
 	return pf.Msg, nil
 }
+
+func (c *Client) DeletePlatform(ctx context.Context, platformID string) (*platform.DeletePlatformResponse, error) {
+	log := logger.FromContext(ctx).With("platform_id", platformID)
+	start := time.Now()
+	req := &platform.DeletePlatformRequest{PlatformId: platformID}
+	resp, err := c.pltSvc.DeletePlatform(ctx, connect.NewRequest(req))
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	name := resp.Msg.GetPlatform().GetName()
+	log.DebugContext(ctx, "deleted platform "+name, "name", name, "duration", time.Since(start))
+	return resp.Msg, nil
+}

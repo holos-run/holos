@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreatePlatformRequest, CreatePlatformResponse, GetPlatformRequest, GetPlatformResponse, ListPlatformsRequest, ListPlatformsResponse, UpdatePlatformRequest, UpdatePlatformResponse } from "./platform_service_pb.js";
+import { CreatePlatformRequest, CreatePlatformResponse, DeletePlatformRequest, DeletePlatformResponse, GetPlatformRequest, GetPlatformResponse, ListPlatformsRequest, ListPlatformsResponse, UpdatePlatformRequest, UpdatePlatformResponse } from "./platform_service_pb.js";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -46,6 +46,15 @@ export const PlatformService = {
       name: "ListPlatforms",
       I: ListPlatformsRequest,
       O: ListPlatformsResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc holos.platform.v1alpha1.PlatformService.DeletePlatform
+     */
+    deletePlatform: {
+      name: "DeletePlatform",
+      I: DeletePlatformRequest,
+      O: DeletePlatformResponse,
       kind: MethodKind.Unary,
     },
   }

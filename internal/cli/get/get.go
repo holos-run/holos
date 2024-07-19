@@ -41,16 +41,16 @@ func NewPlatform(hc *holos.Config) *cobra.Command {
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
 		clientContext := holos.NewClientContext(ctx)
-		client := client.New(client.NewConfig(hc))
+		rpc := client.New(client.NewConfig(hc))
 
-		messages, err := client.Platforms(ctx, clientContext.OrgID)
+		msgs, err := rpc.Platforms(ctx, clientContext.OrgID)
 		if err != nil {
 			return err
 		}
 
 		now := time.Now()
-		rows := make([][]string, 0, len(messages))
-		for _, msg := range messages {
+		rows := make([][]string, 0, len(msgs))
+		for _, msg := range msgs {
 			name := msg.GetName()
 			if len(args) > 0 && !slice.ContainsString(args, name, nil) {
 				continue

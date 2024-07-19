@@ -17,6 +17,7 @@ import (
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/cli/controller"
 	"github.com/holos-run/holos/internal/cli/create"
+	"github.com/holos-run/holos/internal/cli/destroy"
 	"github.com/holos-run/holos/internal/cli/generate"
 	"github.com/holos-run/holos/internal/cli/get"
 	"github.com/holos-run/holos/internal/cli/kv"
@@ -72,6 +73,7 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(render.New(cfg))
 	rootCmd.AddCommand(get.New(cfg))
 	rootCmd.AddCommand(create.New(cfg))
+	rootCmd.AddCommand(destroy.New(cfg))
 	rootCmd.AddCommand(preflight.New(cfg))
 	rootCmd.AddCommand(login.New(cfg))
 	rootCmd.AddCommand(logout.New(cfg))

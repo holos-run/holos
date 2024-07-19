@@ -143,33 +143,6 @@ func (h *PlatformHandler) ListPlatforms(ctx context.Context, req *connect.Reques
 	return connect.NewResponse(resp), nil
 }
 
-// getEditor ensures the user identity stored in the context is a member of the
-// organization.  Useful to get the editor uuid for mutations.  orgID must be a
-// valid uuid string.
-func getEditor(ctx context.Context, db *ent.Client, authnID authn.Identity, orgID string) (*ent.User, error) {
-	orgUUID, err := uuid.FromString(orgID)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
-	}
-
-	editor, err := db.User.Query().
-		Where(
-			user.And(
-				user.Iss(authnID.Issuer()),
-				user.Sub(authnID.Subject()),
-				user.HasOrganizationsWith(organization.ID(orgUUID)),
-			),
-		).Only(ctx)
-	if err != nil {
-		if ent.MaskNotFound(err) == nil {
-			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
-		} else {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
-		}
-	}
-	return editor, nil
-}
-
 func (h *PlatformHandler) UpdatePlatform(
 	ctx context.Context,
 	req *connect.Request[platform.UpdatePlatformRequest],
@@ -256,6 +229,29 @@ func (h *PlatformHandler) UpdatePlatform(
 	return connect.NewResponse(&resp), nil
 }
 
+func (h *PlatformHandler) DeletePlatform(ctx context.Context, req *connect.Request[platform.DeletePlatformRequest]) (*connect.Response[platform.DeletePlatformResponse], error) {
+	authnID, err := authn.FromContext(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodePermissionDenied, errors.Wrap(err))
+	}
+
+	pl, err := h.getPlatform(ctx, req.Msg.GetPlatformId(), authnID)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	err = h.db.Platform.DeleteOne(pl).Exec(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+	}
+
+	resp := platform.DeletePlatformResponse{
+		Platform: PlatformToRPC(pl),
+	}
+
+	return connect.NewResponse(&resp), nil
+}
+
 // getPlatform returns a platform by id ensuring the request comes from an
 // identity that is a member of the organization owning the platform.
 func (h *PlatformHandler) getPlatform(ctx context.Context, id string, uid authn.Identity) (*ent.Platform, error) {
@@ -281,6 +277,33 @@ func (h *PlatformHandler) getPlatform(ctx context.Context, id string, uid authn.
 	}
 
 	return p, nil
+}
+
+// getEditor ensures the user identity stored in the context is a member of the
+// organization.  Useful to get the editor uuid for mutations.  orgID must be a
+// valid uuid string.
+func getEditor(ctx context.Context, db *ent.Client, authnID authn.Identity, orgID string) (*ent.User, error) {
+	orgUUID, err := uuid.FromString(orgID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.Wrap(err))
+	}
+
+	editor, err := db.User.Query().
+		Where(
+			user.And(
+				user.Iss(authnID.Issuer()),
+				user.Sub(authnID.Subject()),
+				user.HasOrganizationsWith(organization.ID(orgUUID)),
+			),
+		).Only(ctx)
+	if err != nil {
+		if ent.MaskNotFound(err) == nil {
+			return nil, connect.NewError(connect.CodeNotFound, errors.Wrap(err))
+		} else {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, errors.Wrap(err))
+		}
+	}
+	return editor, nil
 }
 
 func PlatformToRPC(entity *ent.Platform) *platform.Platform {

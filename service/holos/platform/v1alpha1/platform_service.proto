@@ -111,9 +111,18 @@ message PlatformMutation {
   optional holos.object.v1alpha1.Form form = 5;
 }
 
+message DeletePlatformRequest {
+  string platform_id = 1 [(buf.validate.field).string.uuid = true];
+}
+
+message DeletePlatformResponse {
+  Platform platform = 1;
+}
+
 service PlatformService {
   rpc CreatePlatform(CreatePlatformRequest) returns (CreatePlatformResponse) {}
   rpc GetPlatform(GetPlatformRequest) returns (GetPlatformResponse) {}
   rpc UpdatePlatform(UpdatePlatformRequest) returns (UpdatePlatformResponse) {}
   rpc ListPlatforms(ListPlatformsRequest) returns (ListPlatformsResponse) {}
+  rpc DeletePlatform(DeletePlatformRequest) returns (DeletePlatformResponse) {}
 }

@@ -418,3 +418,77 @@ export class PlatformMutation extends Message<PlatformMutation> {
   }
 }
 
+/**
+ * @generated from message holos.platform.v1alpha1.DeletePlatformRequest
+ */
+export class DeletePlatformRequest extends Message<DeletePlatformRequest> {
+  /**
+   * @generated from field: string platform_id = 1;
+   */
+  platformId = "";
+
+  constructor(data?: PartialMessage<DeletePlatformRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.platform.v1alpha1.DeletePlatformRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DeletePlatformRequest {
+    return new DeletePlatformRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DeletePlatformRequest {
+    return new DeletePlatformRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DeletePlatformRequest {
+    return new DeletePlatformRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DeletePlatformRequest | PlainMessage<DeletePlatformRequest> | undefined, b: DeletePlatformRequest | PlainMessage<DeletePlatformRequest> | undefined): boolean {
+    return proto3.util.equals(DeletePlatformRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message holos.platform.v1alpha1.DeletePlatformResponse
+ */
+export class DeletePlatformResponse extends Message<DeletePlatformResponse> {
+  /**
+   * @generated from field: holos.platform.v1alpha1.Platform platform = 1;
+   */
+  platform?: Platform;
+
+  constructor(data?: PartialMessage<DeletePlatformResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "holos.platform.v1alpha1.DeletePlatformResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "platform", kind: "message", T: Platform },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): DeletePlatformResponse {
+    return new DeletePlatformResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): DeletePlatformResponse {
+    return new DeletePlatformResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): DeletePlatformResponse {
+    return new DeletePlatformResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: DeletePlatformResponse | PlainMessage<DeletePlatformResponse> | undefined, b: DeletePlatformResponse | PlainMessage<DeletePlatformResponse> | undefined): boolean {
+    return proto3.util.equals(DeletePlatformResponse, a, b);
+  }
+}
+

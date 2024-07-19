@@ -45,6 +45,9 @@ const (
 	// PlatformServiceListPlatformsProcedure is the fully-qualified name of the PlatformService's
 	// ListPlatforms RPC.
 	PlatformServiceListPlatformsProcedure = "/holos.platform.v1alpha1.PlatformService/ListPlatforms"
+	// PlatformServiceDeletePlatformProcedure is the fully-qualified name of the PlatformService's
+	// DeletePlatform RPC.
+	PlatformServiceDeletePlatformProcedure = "/holos.platform.v1alpha1.PlatformService/DeletePlatform"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
@@ -54,6 +57,7 @@ var (
 	platformServiceGetPlatformMethodDescriptor    = platformServiceServiceDescriptor.Methods().ByName("GetPlatform")
 	platformServiceUpdatePlatformMethodDescriptor = platformServiceServiceDescriptor.Methods().ByName("UpdatePlatform")
 	platformServiceListPlatformsMethodDescriptor  = platformServiceServiceDescriptor.Methods().ByName("ListPlatforms")
+	platformServiceDeletePlatformMethodDescriptor = platformServiceServiceDescriptor.Methods().ByName("DeletePlatform")
 )
 
 // PlatformServiceClient is a client for the holos.platform.v1alpha1.PlatformService service.
@@ -62,6 +66,7 @@ type PlatformServiceClient interface {
 	GetPlatform(context.Context, *connect.Request[v1alpha1.GetPlatformRequest]) (*connect.Response[v1alpha1.GetPlatformResponse], error)
 	UpdatePlatform(context.Context, *connect.Request[v1alpha1.UpdatePlatformRequest]) (*connect.Response[v1alpha1.UpdatePlatformResponse], error)
 	ListPlatforms(context.Context, *connect.Request[v1alpha1.ListPlatformsRequest]) (*connect.Response[v1alpha1.ListPlatformsResponse], error)
+	DeletePlatform(context.Context, *connect.Request[v1alpha1.DeletePlatformRequest]) (*connect.Response[v1alpha1.DeletePlatformResponse], error)
 }
 
 // NewPlatformServiceClient constructs a client for the holos.platform.v1alpha1.PlatformService
@@ -98,6 +103,12 @@ func NewPlatformServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(platformServiceListPlatformsMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		deletePlatform: connect.NewClient[v1alpha1.DeletePlatformRequest, v1alpha1.DeletePlatformResponse](
+			httpClient,
+			baseURL+PlatformServiceDeletePlatformProcedure,
+			connect.WithSchema(platformServiceDeletePlatformMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -107,6 +118,7 @@ type platformServiceClient struct {
 	getPlatform    *connect.Client[v1alpha1.GetPlatformRequest, v1alpha1.GetPlatformResponse]
 	updatePlatform *connect.Client[v1alpha1.UpdatePlatformRequest, v1alpha1.UpdatePlatformResponse]
 	listPlatforms  *connect.Client[v1alpha1.ListPlatformsRequest, v1alpha1.ListPlatformsResponse]
+	deletePlatform *connect.Client[v1alpha1.DeletePlatformRequest, v1alpha1.DeletePlatformResponse]
 }
 
 // CreatePlatform calls holos.platform.v1alpha1.PlatformService.CreatePlatform.
@@ -129,6 +141,11 @@ func (c *platformServiceClient) ListPlatforms(ctx context.Context, req *connect.
 	return c.listPlatforms.CallUnary(ctx, req)
 }
 
+// DeletePlatform calls holos.platform.v1alpha1.PlatformService.DeletePlatform.
+func (c *platformServiceClient) DeletePlatform(ctx context.Context, req *connect.Request[v1alpha1.DeletePlatformRequest]) (*connect.Response[v1alpha1.DeletePlatformResponse], error) {
+	return c.deletePlatform.CallUnary(ctx, req)
+}
+
 // PlatformServiceHandler is an implementation of the holos.platform.v1alpha1.PlatformService
 // service.
 type PlatformServiceHandler interface {
@@ -136,6 +153,7 @@ type PlatformServiceHandler interface {
 	GetPlatform(context.Context, *connect.Request[v1alpha1.GetPlatformRequest]) (*connect.Response[v1alpha1.GetPlatformResponse], error)
 	UpdatePlatform(context.Context, *connect.Request[v1alpha1.UpdatePlatformRequest]) (*connect.Response[v1alpha1.UpdatePlatformResponse], error)
 	ListPlatforms(context.Context, *connect.Request[v1alpha1.ListPlatformsRequest]) (*connect.Response[v1alpha1.ListPlatformsResponse], error)
+	DeletePlatform(context.Context, *connect.Request[v1alpha1.DeletePlatformRequest]) (*connect.Response[v1alpha1.DeletePlatformResponse], error)
 }
 
 // NewPlatformServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -168,6 +186,12 @@ func NewPlatformServiceHandler(svc PlatformServiceHandler, opts ...connect.Handl
 		connect.WithSchema(platformServiceListPlatformsMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	platformServiceDeletePlatformHandler := connect.NewUnaryHandler(
+		PlatformServiceDeletePlatformProcedure,
+		svc.DeletePlatform,
+		connect.WithSchema(platformServiceDeletePlatformMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/holos.platform.v1alpha1.PlatformService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PlatformServiceCreatePlatformProcedure:
@@ -178,6 +202,8 @@ func NewPlatformServiceHandler(svc PlatformServiceHandler, opts ...connect.Handl
 			platformServiceUpdatePlatformHandler.ServeHTTP(w, r)
 		case PlatformServiceListPlatformsProcedure:
 			platformServiceListPlatformsHandler.ServeHTTP(w, r)
+		case PlatformServiceDeletePlatformProcedure:
+			platformServiceDeletePlatformHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -201,4 +227,8 @@ func (UnimplementedPlatformServiceHandler) UpdatePlatform(context.Context, *conn
 
 func (UnimplementedPlatformServiceHandler) ListPlatforms(context.Context, *connect.Request[v1alpha1.ListPlatformsRequest]) (*connect.Response[v1alpha1.ListPlatformsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("holos.platform.v1alpha1.PlatformService.ListPlatforms is not implemented"))
+}
+
+func (UnimplementedPlatformServiceHandler) DeletePlatform(context.Context, *connect.Request[v1alpha1.DeletePlatformRequest]) (*connect.Response[v1alpha1.DeletePlatformResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("holos.platform.v1alpha1.PlatformService.DeletePlatform is not implemented"))
 }
