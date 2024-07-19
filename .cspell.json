@@ -48,6 +48,7 @@
     "spiffe",
     "startupapicheck",
     "systemconnect",
+    "tablewriter",
     "Tiltfile",
     "Traceid",
     "traefik",

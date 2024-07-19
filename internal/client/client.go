@@ -65,7 +65,7 @@ func (c *Client) Platforms(ctx context.Context, orgID string) ([]*platform.Platf
 	req := &platform.ListPlatformsRequest{
 		OrgId: orgID,
 		FieldMask: &fieldmaskpb.FieldMask{
-			Paths: []string{"id", "name", "displayName"},
+			Paths: []string{"id", "name", "displayName", "detail"},
 		},
 	}
 	resp, err := c.pltSvc.ListPlatforms(ctx, connect.NewRequest(req))

@@ -12,6 +12,7 @@ type RunFunc func(c *cobra.Command, args []string) error
 func New(name string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     name,
+		Short:   name,
 		Version: version.Version,
 		Args:    cobra.NoArgs,
 		CompletionOptions: cobra.CompletionOptions{
