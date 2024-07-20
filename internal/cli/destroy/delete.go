@@ -31,6 +31,8 @@ func New(cfg *holos.Config) *cobra.Command {
 func NewPlatform(cfg *client.Config) *cobra.Command {
 	cmd := command.New("platform")
 	cmd.Args = cobra.MinimumNArgs(1)
+	cmd.Use = "platform [flags] PLATFORM_ID [PLATFORM_ID ...]"
+	cmd.Short = "Delete one or more platforms by ID"
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
@@ -41,7 +43,8 @@ func NewPlatform(cfg *client.Config) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), "deleted platform", msg.GetPlatform().GetName())
+			platform := msg.GetPlatform()
+			fmt.Fprintf(cmd.OutOrStdout(), "deleted platform %s (%s)\n", platform.GetName(), platform.GetId())
 		}
 
 		return nil
