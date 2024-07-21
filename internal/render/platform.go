@@ -49,7 +49,8 @@ func Platform(ctx context.Context, concurrency int, pf *core.Platform, stderr io
 						}
 
 						duration := time.Since(start)
-						log.InfoContext(ctx, "ok render component", "duration", duration)
+						msg := fmt.Sprintf("rendered %s for cluster %s in %s", component.Path, component.Cluster, duration)
+						log.InfoContext(ctx, msg, "duration", duration)
 						return nil
 					}
 				})

@@ -12,7 +12,7 @@ package v1alpha1
 	Sections: {[NAME=string]: #FormSection & {name: NAME}}
 
 	Output: #Form & {
-		spec: form: field_configs: [for s in Sections {s.wrapper}]
+		spec: form: fieldConfigs: [for s in Sections {s.wrapper}]
 	}
 }
 

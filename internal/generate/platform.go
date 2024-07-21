@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -14,6 +13,7 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
 	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 //go:embed all:platforms
@@ -66,7 +66,8 @@ func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, nam
 	}
 
 	// Write the platform data.
-	data, err := json.MarshalIndent(rpcPlatform, "", "  ")
+	encoder := protojson.MarshalOptions{Indent: "  "}
+	data, err := encoder.Marshal(rpcPlatform)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -77,7 +78,7 @@ func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, nam
 	if err := os.WriteFile(client.PlatformMetadataFile, data, 0644); err != nil {
 		return errors.Wrap(fmt.Errorf("could not write platform metadata: %w", err))
 	}
-	log.InfoContext(ctx, "wrote "+client.PlatformMetadataFile, "path", filepath.Join(getCwd(ctx), client.PlatformMetadataFile))
+	log.DebugContext(ctx, "wrote "+client.PlatformMetadataFile, "path", filepath.Join(getCwd(ctx), client.PlatformMetadataFile))
 
 	// Copy the cue.mod directory
 	if err := copyEmbedFS(ctx, platforms, filepath.Join(platformsRoot, "cue.mod"), "cue.mod", bytes.NewBuffer); err != nil {
@@ -89,7 +90,7 @@ func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, nam
 		return errors.Wrap(err)
 	}
 
-	log.InfoContext(ctx, "generated platform "+name, "path", getCwd(ctx))
+	log.DebugContext(ctx, "generated platform "+name, "path", getCwd(ctx))
 
 	return nil
 }

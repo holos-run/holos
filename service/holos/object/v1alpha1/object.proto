@@ -8,6 +8,7 @@ import "google/protobuf/timestamp.proto";
 import "google/protobuf/struct.proto";
 import "buf/validate/validate.proto";
 
+
 // For validation, see the [Standard constraints](https://github.com/bufbuild/protovalidate/blob/main/docs/standard-constraints.md)
 
 message Detail {
@@ -83,16 +84,19 @@ message ResourceOwner {
 
 // Form represents a Formly json powered form.
 message Form {
-  // fields represents FormlyFieldConfig[] encoded as an array of JSON objects
-  // organized by section.
+  // field_configs represents FormlyFieldConfig[] encoded as an array of JSON
+  // objects organized by section.
   repeated google.protobuf.Struct field_configs = 1;
 }
 
 // PlatformConfig represents the data passed from the holos cli to CUE when
-// rendering configuration.
+// rendering configuration.  At present it contains only the platform model from
+// the PlatformService, but it is expected to carry additional fields from
+// additional data sources.  For this reason, there is a distinction in domain
+// language between the "Platform Config" and the "Platform Model"  The config
+// is a data transfer object that carries at least the model.  The model
+// represents the form values from the PlatformService.
 message PlatformConfig {
-  // Platform UUID.
-  string platform_id = 1 [(buf.validate.field).string.uuid = true];
-  // Platform Model.
-  google.protobuf.Struct platform_model = 2;
+  // platform_model represents the form values from the PlatformService.
+  google.protobuf.Struct platform_model = 1;
 }

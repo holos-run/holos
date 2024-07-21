@@ -332,8 +332,8 @@ export class ResourceOwner extends Message<ResourceOwner> {
  */
 export class Form extends Message<Form> {
   /**
-   * fields represents FormlyFieldConfig[] encoded as an array of JSON objects
-   * organized by section.
+   * field_configs represents FormlyFieldConfig[] encoded as an array of JSON
+   * objects organized by section.
    *
    * @generated from field: repeated google.protobuf.Struct field_configs = 1;
    */
@@ -369,22 +369,20 @@ export class Form extends Message<Form> {
 
 /**
  * PlatformConfig represents the data passed from the holos cli to CUE when
- * rendering configuration.
+ * rendering configuration.  At present it contains only the platform model from
+ * the PlatformService, but it is expected to carry additional fields from
+ * additional data sources.  For this reason, there is a distinction in domain
+ * language between the "Platform Config" and the "Platform Model"  The config
+ * is a data transfer object that carries at least the model.  The model
+ * represents the form values from the PlatformService.
  *
  * @generated from message holos.object.v1alpha1.PlatformConfig
  */
 export class PlatformConfig extends Message<PlatformConfig> {
   /**
-   * Platform UUID.
+   * platform_model represents the form values from the PlatformService.
    *
-   * @generated from field: string platform_id = 1;
-   */
-  platformId = "";
-
-  /**
-   * Platform Model.
-   *
-   * @generated from field: google.protobuf.Struct platform_model = 2;
+   * @generated from field: google.protobuf.Struct platform_model = 1;
    */
   platformModel?: Struct;
 
@@ -396,8 +394,7 @@ export class PlatformConfig extends Message<PlatformConfig> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "holos.object.v1alpha1.PlatformConfig";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "platform_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
-    { no: 2, name: "platform_model", kind: "message", T: Struct },
+    { no: 1, name: "platform_model", kind: "message", T: Struct },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): PlatformConfig {

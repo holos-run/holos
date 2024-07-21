@@ -3,6 +3,8 @@
 package pull
 
 import (
+	"fmt"
+
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
@@ -52,28 +54,25 @@ func NewPlatformConfig(cfg *client.Config) *cobra.Command {
 		rpc := client.New(cfg)
 		for _, name := range args {
 			// Get the platform metadata for the platform id.
-			pmd, err := client.LoadPlatform(ctx, name)
+			pmd, err := client.LoadPlatformMetadata(ctx, name)
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			log := logger.FromContext(ctx).With("platform_id", pmd.GetId())
+			log := logger.FromContext(ctx).With("platform_name", pmd.GetName(), "platform_id", pmd.GetId())
 			// Get the platform model
 			model, err := rpc.PlatformModel(ctx, pmd.GetId())
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			log.Info("pulled platform model")
+			log.DebugContext(ctx, "pulled platform "+pmd.GetName()+" model")
 			// Build the PlatformConfig
-			pc := &object.PlatformConfig{
-				PlatformId:    pmd.GetId(),
-				PlatformModel: model,
-			}
+			pc := &object.PlatformConfig{PlatformModel: model}
 			// Save the PlatformConfig
 			path, err := client.SavePlatformConfig(ctx, name, pc)
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			log.Info("saved platform config", "path", path)
+			log.DebugContext(ctx, fmt.Sprintf("wrote: %s for platform %s", path, pmd.GetName()), "path", path)
 		}
 		return nil
 	}

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/holos-run/holos/internal/console"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/tint"
 	"github.com/holos-run/holos/version"
@@ -23,7 +24,7 @@ import (
 const ErrKey = "err"
 
 var validLogLevels = []string{"debug", "info", "warn", "error"}
-var validLogFormats = []string{"text", "json"}
+var validLogFormats = []string{"text", "json", "console"}
 
 // stringSlice is a comma separated list of string values
 type stringSlice []string
@@ -42,7 +43,7 @@ func (s *stringSlice) Set(value string) error {
 type key int
 
 // https://cs.opensource.google/go/go/+/refs/tags/go1.21.1:src/context/context.go;l=140-158
-// loggerKey is the key for *slog.Logs values in Contexts. It us unexported;
+// loggerKey is the key for *slog.Logs values in Contexts. It is not exported;
 // clients use NewContext and FromContext instead of this key directly.
 var loggerKey key
 
@@ -159,7 +160,9 @@ func (c *Config) NewTopLevelLogger(w io.Writer) *slog.Logger {
 func (c *Config) NewLogger(w io.Writer) *slog.Logger {
 	level := c.GetLogLevel()
 	var handler slog.Handler
-	if c.format == "text" {
+
+	switch c.format {
+	case "text":
 		noColor := true
 		if file, ok := w.(*os.File); ok {
 			noColor = !isatty.IsTerminal(file.Fd())
@@ -171,7 +174,9 @@ func (c *Config) NewLogger(w io.Writer) *slog.Logger {
 			ReplaceAttr: c.ReplaceAttr,
 			NoColor:     noColor,
 		})
-	} else {
+	case "console":
+		handler = console.NewHandler(w, &console.Options{Level: level})
+	default:
 		handler = slog.NewJSONHandler(w, &slog.HandlerOptions{
 			Level:       level,
 			AddSource:   true,
@@ -187,7 +192,7 @@ func NewConfig() *Config {
 	f := flag.NewFlagSet("", flag.ContinueOnError)
 	c := &Config{flagSet: f}
 	f.StringVar(&c.level, "log-level", getenv("HOLOS_LOG_LEVEL", "info"), fmt.Sprintf("log level (%s)", strings.Join(validLogLevels, "|")))
-	f.StringVar(&c.format, "log-format", getenv("HOLOS_LOG_FORMAT", "text"), fmt.Sprintf("log format (%s)", strings.Join(validLogFormats, "|")))
+	f.StringVar(&c.format, "log-format", getenv("HOLOS_LOG_FORMAT", "console"), fmt.Sprintf("log format (%s)", strings.Join(validLogFormats, "|")))
 	f.Var(&c.dropAttrs, "log-drop", "log attributes to drop (example \"user-agent,version\")")
 	return c
 }

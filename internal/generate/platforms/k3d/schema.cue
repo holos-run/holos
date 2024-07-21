@@ -43,7 +43,7 @@ _Fleets: #Fleets
 // _Platform represents and provides a platform to holos for rendering.
 _Platform: #Platform & {
 	Name:  string @tag(platform_name, type=string)
-	Model: _PlatformConfig.platform_model
+	Model: _PlatformConfig.platformModel
 }
 // #Platform defines the shape of _Platform.
 #Platform: {
@@ -53,7 +53,7 @@ _Platform: #Platform & {
 	Components: [string]: core.#PlatformSpecComponent
 
 	// Model represents the platform model from the web app form.
-	Model: dto.#PlatformConfig.platform_model
+	Model: dto.#PlatformConfig.platformModel
 
 	Output: core.#Platform & {
 		metadata: name: Name

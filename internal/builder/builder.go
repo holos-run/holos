@@ -17,6 +17,7 @@ import (
 	"cuelang.org/go/cue/load"
 	"github.com/holos-run/holos/api/core/v1alpha2"
 	"github.com/holos-run/holos/api/v1alpha1"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/internal/client"
@@ -123,12 +124,15 @@ func (b *Builder) Instances(ctx context.Context, cfg *client.Config) ([]*build.I
 
 	cueConfig := load.Config{Dir: dir}
 
-	// Get the platform model from the PlatformConfig
+	// Get the platform model.
 	pc, err := client.LoadPlatformConfig(ctx, dir)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	data, err := json.Marshal(pc)
+	// Note proto format json relies on importing the proto file into CUE using
+	// cue import object.proto.  Refer to internal/generate/platform/generate.go
+	// Importing the go generated from the proto gives incorrect field names.
+	data, err := protojson.Marshal(pc)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}

@@ -12,18 +12,19 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-// PlatformMetadataFile is the platform metadata json file name located in the root
-// of a platform directory.
+// PlatformMetadataFile is the platform metadata json file name located in the
+// root of a platform directory.  This file is the authoritative source of truth
+// for the PlatformID used in rpc calls to the PlatformService.
 const PlatformMetadataFile = "platform.metadata.json"
 
-// PlatformConfigFile is the marshaled json representation of the PlatformConfig
-// DTO used to cache the data holos passes from the PlatformService to CUE when
-// rendering platform components.
+// PlatformConfigFile represents the marshaled json representation of the
+// PlatformConfig DTO used to persist the inputs to the CUE platform code.
 const PlatformConfigFile = "platform.config.json"
 
-// LoadPlatform loads the platform.metadata.json file from a named path.  Useful
-// to obtain a platform id for PlatformService rpc methods.
-func LoadPlatform(ctx context.Context, name string) (*platform.Platform, error) {
+// LoadPlatformMetadata loads the platform.metadata.json file from a named path.
+// Used as the authoritative source of truth to obtain a platform id for
+// PlatformService rpc methods.
+func LoadPlatformMetadata(ctx context.Context, name string) (*platform.Platform, error) {
 	data, err := os.ReadFile(filepath.Join(name, PlatformMetadataFile))
 	if err != nil {
 		return nil, fmt.Errorf("could not load platform metadata: %w", err)
@@ -32,6 +33,8 @@ func LoadPlatform(ctx context.Context, name string) (*platform.Platform, error) 
 	if err := protojson.Unmarshal(data, p); err != nil {
 		return nil, fmt.Errorf("could not load platform metadata: %w", err)
 	}
+	log := logger.FromContext(ctx)
+	log.DebugContext(ctx, "loaded: "+p.GetName(), "path", PlatformMetadataFile, "name", p.GetName(), "display_name", p.GetDisplayName(), "id", p.GetId())
 	return p, nil
 }
 
@@ -41,13 +44,13 @@ func LoadPlatform(ctx context.Context, name string) (*platform.Platform, error) 
 func LoadPlatformConfig(ctx context.Context, name string) (*object.PlatformConfig, error) {
 	data, err := os.ReadFile(filepath.Join(name, PlatformConfigFile))
 	if err != nil {
-		return nil, fmt.Errorf("could not load platform config: %w", err)
+		return nil, fmt.Errorf("could not load platform model: %w", err)
 	}
-	pc := &object.PlatformConfig{}
-	if err := protojson.Unmarshal(data, pc); err != nil {
-		return nil, fmt.Errorf("could not load platform config: %w", err)
+	p := &object.PlatformConfig{}
+	if err := protojson.Unmarshal(data, p); err != nil {
+		return nil, fmt.Errorf("could not load platform model: %w", err)
 	}
-	return pc, nil
+	return p, nil
 }
 
 // SavePlatformConfig writes pc to the platform root directory path identified by name.

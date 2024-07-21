@@ -61,6 +61,7 @@ docker_build_with_restart(
     entrypoint=[
         '/app/bin/holos.linux',
         'server',
+        '--log-format=text',
         '--oidc-issuer=https://login.holos.run',
         '--oidc-audience=275804490387516853@holos_quickstart', # auth proxy
         '--oidc-audience=270319630705329162@holos_platform', # holos cli

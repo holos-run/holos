@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
 	"github.com/holos-run/holos"
@@ -31,9 +32,7 @@ type Instance struct {
 	mod  holos.PathCueMod
 }
 
-// Export builds the cue instance into a JSON byte slice.  Equivalent of cue
-// export.
-func (i *Instance) Export(ctx context.Context) ([]byte, error) {
+func (i *Instance) Value(ctx context.Context) (*cue.Value, error) {
 	// CUE Loader
 	cfg := load.Config{Dir: string(i.mod)}
 
@@ -64,9 +63,20 @@ func (i *Instance) Export(ctx context.Context) ([]byte, error) {
 		return nil, errors.Wrap(fmt.Errorf("could not validate: %w", err))
 	}
 
+	return &value, nil
+}
+
+// Export builds the cue instance into a JSON byte slice.  Equivalent of cue
+// export.
+func (i *Instance) Export(ctx context.Context) ([]byte, error) {
+	value, err := i.Value(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
 	b, err := value.MarshalJSON()
 	if err != nil {
-		return nil, errors.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", instance.Dir, err))
+		return nil, errors.Wrap(fmt.Errorf("could not marshal cue instance: %w", err))
 	}
 
 	return b, nil

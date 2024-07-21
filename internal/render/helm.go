@@ -9,7 +9,6 @@ import (
 	"syscall"
 
 	"github.com/holos-run/holos"
-	"github.com/holos-run/holos/api/core/v1alpha2"
 	core "github.com/holos-run/holos/api/core/v1alpha2"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
@@ -44,7 +43,7 @@ func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.InstancePat
 		return nil
 	}
 
-	cachedChartPath := filepath.Join(string(path), v1alpha2.ChartDir, filepath.Base(hc.Component.Chart.Name))
+	cachedChartPath := filepath.Join(string(path), core.ChartDir, filepath.Base(hc.Component.Chart.Name))
 	if isNotExist(cachedChartPath) {
 		// Add repositories
 		repo := hc.Component.Chart.Repository
@@ -65,7 +64,7 @@ func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.InstancePat
 		}
 
 		// Cache the chart
-		if err := cacheChart(ctx, path, v1alpha2.ChartDir, hc.Component.Chart); err != nil {
+		if err := cacheChart(ctx, path, core.ChartDir, hc.Component.Chart); err != nil {
 			return fmt.Errorf("could not cache chart: %w", err)
 		}
 	}
@@ -117,7 +116,7 @@ func (hc *HelmChart) helm(ctx context.Context, r *Result, path holos.InstancePat
 // the same filesystem via os.Rename. If a syscall.EEXIST error occurs during
 // renaming, it indicates that the cached chart already exists, which is an
 // expected scenario when this function is called concurrently.
-func cacheChart(ctx context.Context, path holos.InstancePath, chartDir string, chart v1alpha2.Chart) error {
+func cacheChart(ctx context.Context, path holos.InstancePath, chartDir string, chart core.Chart) error {
 	log := logger.FromContext(ctx)
 
 	cacheTemp, err := os.MkdirTemp(string(path), chartDir)

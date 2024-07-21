@@ -54,7 +54,7 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 		rpc := client.New(cfg)
 		for _, name := range args {
 			// Get the platform metadata for the platform id.
-			p, err := client.LoadPlatform(ctx, name)
+			p, err := client.LoadPlatformMetadata(ctx, name)
 			if err != nil {
 				return errors.Wrap(err)
 			}
@@ -67,7 +67,7 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 			if err := rpc.UpdateForm(ctx, p.GetId(), form); err != nil {
 				return errors.Wrap(err)
 			}
-			slog.Default().InfoContext(ctx, fmt.Sprintf("pushed: %s/ui/platform/%s", cfg.Client().Server(), p.GetId()))
+			slog.Default().InfoContext(ctx, fmt.Sprintf("browse to form url: %s/ui/platform/%s", cfg.Client().Server(), p.GetId()))
 		}
 		return nil
 	}
@@ -88,17 +88,23 @@ func NewPlatformModel(cfg *client.Config) *cobra.Command {
 		ctx = logger.NewContext(ctx, logger.FromContext(ctx).With("server", cfg.Client().Server()))
 		rpc := client.New(cfg)
 		for _, name := range args {
-			// Get the platform config for the platform id.
-			p, err := client.LoadPlatformConfig(ctx, name)
+			// Get the platform metadata for the platform id.
+			pl, err := client.LoadPlatformMetadata(ctx, name)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+
+			// Get the platform model
+			pm, err := client.LoadPlatformConfig(ctx, name)
 			if err != nil {
 				return errors.Wrap(err)
 			}
 
 			// Make the rpc call to update the platform form.
-			if err := rpc.UpdatePlatformModel(ctx, p.PlatformId, p.PlatformModel); err != nil {
+			if err := rpc.UpdatePlatformModel(ctx, pl.GetId(), pm.GetPlatformModel()); err != nil {
 				return errors.Wrap(err)
 			}
-			slog.Default().InfoContext(ctx, fmt.Sprintf("pushed: %s/ui/platform/%s", cfg.Client().Server(), p.PlatformId))
+			slog.Default().InfoContext(ctx, fmt.Sprintf("pushed: %s/ui/platform/%s", cfg.Client().Server(), pl.GetId()))
 		}
 		return nil
 	}
