@@ -3,7 +3,6 @@ package render
 import (
 	"context"
 	"flag"
-	"fmt"
 	"runtime"
 
 	"github.com/holos-run/holos/internal/builder"
@@ -37,25 +36,12 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 	cmd.PersistentFlags().AddGoFlagSet(config.ClientFlagSet())
 	cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
 
-	var printInstances bool
 	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
-	flagSet.BoolVar(&printInstances, "print-instances", false, "expand /... paths for xargs")
 	cmd.Flags().AddGoFlagSet(flagSet)
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
-
-		if printInstances {
-			instances, err := build.Instances(ctx, config)
-			if err != nil {
-				return errors.Wrap(err)
-			}
-			for _, instance := range instances {
-				fmt.Fprintln(cmd.OutOrStdout(), instance.Dir)
-			}
-			return nil
-		}
 
 		results, err := build.Run(ctx, config)
 		if err != nil {

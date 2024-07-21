@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cuelang.org/go/cue/build"
-	"cuelang.org/go/cue/cuecontext"
 	"github.com/holos-run/holos"
 	core "github.com/holos-run/holos/api/core/v1alpha2"
 	meta "github.com/holos-run/holos/api/meta/v1alpha2"
@@ -20,37 +18,22 @@ import (
 func (b *Builder) Platform(ctx context.Context, cfg *client.Config) (*core.Platform, error) {
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "cue: building platform instance")
-	instances, err := b.Instances(ctx, cfg)
+	bd, err := b.Unify(ctx, cfg)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-
-	if len(instances) != 1 {
-		return nil, errors.Wrap(errors.New(fmt.Sprintf("instances length %d must be exactly 1", len(instances))))
-	}
-
-	// We only process the first instance, assume the render platform subcommand enforces this.
-	instance := instances[0]
-	log.DebugContext(ctx, "cue: building instance", "dir", instance.Dir)
-	p, err := b.runPlatform(ctx, instance)
-	if err != nil {
-		return nil, errors.Wrap(fmt.Errorf("could not build platform: %w", err))
-	}
-	return p, nil
+	return b.runPlatform(ctx, bd)
 }
 
-func (b Builder) runPlatform(ctx context.Context, instance *build.Instance) (*core.Platform, error) {
-	path := holos.InstancePath(instance.Dir)
+func (b Builder) runPlatform(ctx context.Context, bd BuildData) (*core.Platform, error) {
+	path := holos.InstancePath(bd.Dir)
 	log := logger.FromContext(ctx).With("dir", path)
 
-	if err := instance.Err; err != nil {
+	value := bd.Value
+	if err := bd.Value.Err(); err != nil {
 		return nil, errors.Wrap(fmt.Errorf("could not load: %w", err))
 	}
-	cueCtx := cuecontext.New()
-	value := cueCtx.BuildInstance(instance)
-	if err := value.Err(); err != nil {
-		return nil, errors.Wrap(fmt.Errorf("could not build %s: %w", instance.Dir, err))
-	}
+
 	log.DebugContext(ctx, "cue: validating instance")
 	if err := value.Validate(); err != nil {
 		return nil, errors.Wrap(fmt.Errorf("could not validate: %w", err))
@@ -59,7 +42,7 @@ func (b Builder) runPlatform(ctx context.Context, instance *build.Instance) (*co
 	log.DebugContext(ctx, "cue: decoding holos platform")
 	jsonBytes, err := value.MarshalJSON()
 	if err != nil {
-		return nil, errors.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", instance.Dir, err))
+		return nil, errors.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", bd.Dir, err))
 	}
 
 	decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
@@ -67,7 +50,7 @@ func (b Builder) runPlatform(ctx context.Context, instance *build.Instance) (*co
 	tm := &meta.TypeMeta{}
 	err = decoder.Decode(tm)
 	if err != nil {
-		return nil, errors.Wrap(fmt.Errorf("invalid platform: %s: %w", instance.Dir, err))
+		return nil, errors.Wrap(fmt.Errorf("invalid platform: %s: %w", bd.Dir, err))
 	}
 
 	log.DebugContext(ctx, "cue: discriminated build kind: "+tm.GetKind(), "kind", tm.GetKind(), "apiVersion", tm.GetAPIVersion())
@@ -80,7 +63,7 @@ func (b Builder) runPlatform(ctx context.Context, instance *build.Instance) (*co
 	switch tm.GetKind() {
 	case "Platform":
 		if err = decoder.Decode(&pf); err != nil {
-			err = errors.Wrap(fmt.Errorf("could not decode platform %s: %w", instance.Dir, err))
+			err = errors.Wrap(fmt.Errorf("could not decode platform %s: %w", bd.Dir, err))
 			return nil, err
 		}
 		return &pf, nil

@@ -137,9 +137,13 @@ frontend-deps: ## Install Angular deps for go generate
 website-deps: ## Install Docusaurus deps for go generate
 	cd doc/website && npm install
 
-.PHONY: image
+.PHONY: image # refer to .ko.yaml as well
 image:  ## Container image build
-	KO_DOCKER_REPO=$(DOCKER_REPO) ko build --platform=all --bare ./cmd/holos --tags $(shell git describe --tags) --tags latest
+	KO_DOCKER_REPO=$(DOCKER_REPO) GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) ko build --platform=all --bare ./cmd/holos --tags $(GIT_DETAIL)$(GIT_SUFFIX)
+
+.PHONY: deploy
+deploy: image  ## DEPLOY TO PROD
+	GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) bash ./hack/deploy
 
 .PHONY: website
 website: ## Build website

@@ -12,12 +12,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"cuelang.org/go/cue/build"
+	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
 	"github.com/holos-run/holos/api/core/v1alpha2"
 	"github.com/holos-run/holos/api/v1alpha1"
-	"google.golang.org/protobuf/encoding/protojson"
 
 	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/internal/client"
@@ -48,6 +47,16 @@ type config struct {
 
 type Builder struct {
 	cfg config
+	ctx *cue.Context
+}
+
+// BuildData represents the data necessary to produce a build plan.  It is a
+// convenience wrapper to store relevant fields to inform the user.
+type BuildData struct {
+	Value        cue.Value
+	ModuleRoot   string
+	InstancePath holos.InstancePath
+	Dir          string
 }
 
 type buildPlanWrapper struct {
@@ -93,7 +102,10 @@ func New(opts ...Option) *Builder {
 	for _, f := range opts {
 		f(&cfg)
 	}
-	b := &Builder{cfg: cfg}
+	b := &Builder{
+		cfg: cfg,
+		ctx: cuecontext.New(),
+	}
 	return b
 }
 
@@ -112,100 +124,122 @@ func (b *Builder) Cluster() string {
 	return b.cfg.cluster
 }
 
-// Instances returns the cue build instances being built.
-func (b *Builder) Instances(ctx context.Context, cfg *client.Config) ([]*build.Instance, error) {
-	log := logger.FromContext(ctx)
-
-	mod, err := b.findCueMod()
+// Unify returns a cue.Value representing the kind of build holos is meant to
+// execute. This function unifies a cue package entrypoint with
+// platform.config.json and user data json files located recursively within the
+// userdata directory at the cue module root.
+func (b *Builder) Unify(ctx context.Context, cfg *client.Config) (bd BuildData, err error) {
+	cueModDir, err := b.findCueMod()
 	if err != nil {
-		return nil, errors.Wrap(err)
+		err = errors.Wrap(err)
+		return
 	}
-	dir := string(mod)
+	bd.ModuleRoot = string(cueModDir)
 
-	cueConfig := load.Config{Dir: dir}
-
-	// Get the platform model.
-	pc, err := client.LoadPlatformConfig(ctx, dir)
+	platformConfigData, err := os.ReadFile(filepath.Join(bd.ModuleRoot, client.PlatformConfigFile))
 	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	// Note proto format json relies on importing the proto file into CUE using
-	// cue import object.proto.  Refer to internal/generate/platform/generate.go
-	// Importing the go generated from the proto gives incorrect field names.
-	data, err := protojson.Marshal(pc)
-	if err != nil {
-		return nil, errors.Wrap(err)
+		return bd, errors.Wrap(fmt.Errorf("could not load platform model: %w", err))
 	}
 
-	// Refer to https://github.com/cue-lang/cue/blob/v0.7.0/cmd/cue/cmd/common.go#L429
-	cueConfig.Tags = append(cueConfig.Tags, "platform_config="+string(data))
-	if b.Cluster() != "" {
-		cueConfig.Tags = append(cueConfig.Tags, "cluster="+b.Cluster())
-	}
-	log.DebugContext(ctx, fmt.Sprintf("cue: tags %v", cueConfig.Tags))
-
-	prefix := []string{"cue", "export", "--out", "yaml"}
-	for _, tag := range cueConfig.Tags {
-		prefix = append(prefix, "-t", fmt.Sprintf("'%s'", tag))
+	cueConfig := load.Config{
+		Dir:        bd.ModuleRoot,
+		ModuleRoot: bd.ModuleRoot,
+		// TODO: Use instance.FillPath to fill the platform config.
+		// Refer to https://pkg.go.dev/cuelang.org/go/cue#Value.FillPath
+		Tags: []string{
+			"cluster=" + cfg.Holos().ClusterName(),
+			"platform_config=" + string(platformConfigData),
+		},
 	}
 
 	// Make args relative to the module directory
-	args := make([]string, len(b.cfg.args))
-	for idx, path := range b.cfg.args {
+	args := make([]string, 0, len(b.cfg.args)+2)
+	for _, path := range b.cfg.args {
 		target, err := filepath.Abs(path)
 		if err != nil {
-			return nil, errors.Wrap(fmt.Errorf("could not find absolute path: %w", err))
+			return bd, errors.Wrap(fmt.Errorf("could not find absolute path: %w", err))
 		}
-		relPath, err := filepath.Rel(dir, target)
+		relPath, err := filepath.Rel(bd.ModuleRoot, target)
 		if err != nil {
-			return nil, errors.Wrap(fmt.Errorf("invalid argument, must be relative to cue.mod: %w", err))
+			return bd, errors.Wrap(fmt.Errorf("invalid argument, must be relative to cue.mod: %w", err))
 		}
-		relPath = "./" + relPath
-		args[idx] = relPath
 
-		equiv := make([]string, len(prefix), 1+len(prefix))
-		copy(equiv, prefix)
-		equiv = append(equiv, relPath)
-		log.Debug(strings.Join(equiv, " "), "comment", "cue equivalent command")
+		// WATCH OUT: Assumes only one instance path is provided via args, which is
+		// true when I added this, but may be a poor assumption by the time you read
+		// this.
+		bd.InstancePath = holos.InstancePath(target)
+		bd.Dir = relPath
+
+		relPath = "./" + relPath
+		args = append(args, relPath)
 	}
 
-	return load.Instances(args, &cueConfig), nil
+	instances := load.Instances(args, &cueConfig)
+
+	values, err := b.ctx.BuildInstances(instances)
+	if err != nil {
+		err = errors.Wrap(err)
+		return
+	}
+
+	// Unify into a single Value
+	for _, v := range values {
+		bd.Value = bd.Value.Unify(v)
+	}
+
+	// Fill in #UserData
+	userData, err := loadUserData(b.ctx, bd.ModuleRoot)
+	if err != nil {
+		return
+	}
+	bd.Value = bd.Value.FillPath(cue.ParsePath("#UserData"), userData)
+
+	return
 }
 
+// loadUserData recursively unifies userdata/**/*.json files into cue.Value val.
+func loadUserData(ctx *cue.Context, moduleRoot string) (val cue.Value, err error) {
+	err = filepath.Walk(filepath.Join(moduleRoot, "userdata"), func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(info.Name()) == ".json" {
+			userData, err := os.ReadFile(path)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			val = val.Unify(ctx.CompileBytes(userData, cue.Filename(path)))
+		}
+		return nil
+	})
+
+	return
+}
+
+// Run builds the cue entrypoint into zero or more Results.  Exactly one CUE
+// package entrypoint is expected in the args slice.  The platform config is
+// provided to the entrypoint through a json encoded string tag named
+// platform_config.  The resulting cue.Value is unified with all user data files
+// at the path "#UserData".
 func (b *Builder) Run(ctx context.Context, cfg *client.Config) (results []*render.Result, err error) {
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "cue: building instances")
-	instances, err := b.Instances(ctx, cfg)
+
+	bd, err := b.Unify(ctx, cfg)
 	if err != nil {
 		return nil, err
 	}
-	results = make([]*render.Result, 0, len(instances)*8)
-
-	// Each CUE instance provides a BuildPlan
-	for idx, instance := range instances {
-		log.DebugContext(ctx, "cue: building instance", "idx", idx, "dir", instance.Dir)
-		r, err := b.runInstance(ctx, instance)
-		if err != nil {
-			return nil, errors.Wrap(fmt.Errorf("could not run: %w", err))
-		}
-		results = append(results, r...)
-	}
-
-	return results, nil
+	return b.build(ctx, bd)
 }
 
-func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (results []*render.Result, err error) {
-	path := holos.InstancePath(instance.Dir)
-	log := logger.FromContext(ctx).With("dir", path)
+func (b Builder) build(ctx context.Context, bd BuildData) (results []*render.Result, err error) {
+	log := logger.FromContext(ctx).With("dir", bd.InstancePath)
+	value := bd.Value
 
-	if err := instance.Err; err != nil {
-		return nil, errors.Wrap(fmt.Errorf("could not load: %w", err))
-	}
-	cueCtx := cuecontext.New()
-	value := cueCtx.BuildInstance(instance)
 	if err := value.Err(); err != nil {
-		return nil, errors.Wrap(fmt.Errorf("could not build %s: %w", instance.Dir, err))
+		return nil, errors.Wrap(fmt.Errorf("could not build %s: %w", bd.InstancePath, err))
 	}
+
 	log.DebugContext(ctx, "cue: validating instance")
 	if err := value.Validate(); err != nil {
 		return nil, errors.Wrap(fmt.Errorf("could not validate: %w", err))
@@ -214,14 +248,15 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 	log.DebugContext(ctx, "cue: decoding holos build plan")
 	jsonBytes, err := value.MarshalJSON()
 	if err != nil {
-		return nil, errors.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", instance.Dir, err))
+		return nil, errors.Wrap(fmt.Errorf("could not marshal cue instance %s: %w", bd.Dir, err))
 	}
 	decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
+
 	// Discriminate the type of build plan.
 	tm := &v1alpha1.TypeMeta{}
 	err = decoder.Decode(tm)
 	if err != nil {
-		return nil, errors.Wrap(fmt.Errorf("invalid BuildPlan: %s: %w", instance.Dir, err))
+		return nil, errors.Wrap(fmt.Errorf("invalid BuildPlan: %s: %w", bd.Dir, err))
 	}
 
 	log.DebugContext(ctx, "cue: discriminated build kind: "+tm.Kind, "kind", tm.Kind, "apiVersion", tm.APIVersion)
@@ -238,10 +273,10 @@ func (b Builder) runInstance(ctx context.Context, instance *build.Instance) (res
 	case "BuildPlan":
 		var bp v1alpha2.BuildPlan
 		if err = decoder.Decode(&bp); err != nil {
-			err = errors.Wrap(fmt.Errorf("could not decode BuildPlan %s: %w", instance.Dir, err))
+			err = errors.Wrap(fmt.Errorf("could not decode BuildPlan %s: %w", bd.Dir, err))
 			return
 		}
-		results, err = b.buildPlan(ctx, &bp, path)
+		results, err = b.buildPlan(ctx, &bp, bd.InstancePath)
 		if err != nil {
 			return results, err
 		}

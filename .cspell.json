@@ -36,7 +36,9 @@
     "killall",
     "kubeadm",
     "kubeconfig",
+    "Kustomization",
     "kustomize",
+    "ldflags",
     "libnss",
     "loadbalancer",
     "mattn",
@@ -67,6 +69,7 @@
     "Upsert",
     "urandom",
     "userconnect",
+    "userdata",
     "zerolog",
     "zitadel"
   ]
