@@ -121,6 +121,7 @@ go-deps: ## tool versions pinned in tools.go
 	go install honnef.co/go/tools/cmd/staticcheck
 	go install golang.org/x/tools/cmd/godoc
 	go install github.com/princjef/gomarkdoc/cmd/gomarkdoc
+	go install github.com/google/ko
 	# curl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash
 
 .PHONY: frontend-deps
@@ -137,9 +138,8 @@ website-deps: ## Install Docusaurus deps for go generate
 	cd doc/website && npm install
 
 .PHONY: image
-image: build ## Docker image build
-	docker build . -t ${DOCKER_REPO}:v$(shell ./bin/holos --version)
-	docker push ${DOCKER_REPO}:v$(shell ./bin/holos --version)
+image:  ## Container image build
+	KO_DOCKER_REPO=$(DOCKER_REPO) ko build --platform=all --bare ./cmd/holos --tags $(shell git describe --tags) --tags latest
 
 .PHONY: website
 website: ## Build website
