@@ -48,6 +48,10 @@ bumpmajor: ## Bump the major version.
 show-version: ## Print the full version.
 	@echo $(VERSION)
 
+.PHONY: tag
+tag: ## Tag a release
+	git tag v$(VERSION)
+
 .PHONY: tidy
 tidy: ## Tidy go module.
 	go mod tidy
