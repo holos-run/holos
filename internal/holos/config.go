@@ -194,7 +194,7 @@ func (c *Config) Logger() *slog.Logger {
 // NewTopLevelLogger returns a *slog.Logger with a handler that filters source
 // attributes. Useful as a top level error logger in main().
 func (c *Config) NewTopLevelLogger() *slog.Logger {
-	return c.logConfig.NewTopLevelLogger(c.options.stderr)
+	return c.logConfig.NewLogger(c.options.stderr)
 }
 
 // Stdin should be used instead of os.Stdin to capture input from tests.

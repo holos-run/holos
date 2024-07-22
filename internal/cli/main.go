@@ -31,11 +31,12 @@ func HandleError(ctx context.Context, err error, hc *holos.Config) (exitCode int
 	log := hc.NewTopLevelLogger().With("code", connect.CodeOf(err))
 	var cueErr cue.Error
 	var errAt *errors.ErrorAt
-	const msg = "could not execute"
 	if errors.As(err, &errAt) {
-		log.ErrorContext(ctx, msg, "err", errAt.Unwrap(), "loc", errAt.Source.Loc())
+		loc := errAt.Source.Loc()
+		err2 := errAt.Unwrap()
+		log.ErrorContext(ctx, fmt.Sprintf("could not run: %s at %s", err2, loc), "err", err2, "loc", loc)
 	} else {
-		log.ErrorContext(ctx, msg, "err", err)
+		log.ErrorContext(ctx, fmt.Sprintf("could not run: %s", err), "err", err)
 	}
 	// cue errors are bundled up as a list and refer to multiple files / lines.
 	if errors.As(err, &cueErr) {

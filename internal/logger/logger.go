@@ -127,47 +127,15 @@ func (c *Config) ReplaceAttr(groups []string, a slog.Attr) slog.Attr {
 	return a
 }
 
-// NewTopLevelLogger returns a *slog.Logs configured by c *Config which writes
-// to w without source information. Useful as a top level logger where the
-// source is know and the error is wrapped with a location attribute.
-func (c *Config) NewTopLevelLogger(w io.Writer) *slog.Logger {
+func (c *Config) handler(w io.Writer) (h slog.Handler) {
 	level := c.GetLogLevel()
-	var handler slog.Handler
-	if c.format == "text" {
-		noColor := true
-		if file, ok := w.(*os.File); ok {
-			noColor = !isatty.IsTerminal(file.Fd())
-		}
-		handler = tint.NewHandler(w, &tint.Options{
-			Level:       level,
-			TimeFormat:  time.Kitchen,
-			AddSource:   false,
-			ReplaceAttr: c.ReplaceAttr,
-			NoColor:     noColor,
-		})
-	} else {
-		handler = slog.NewJSONHandler(w, &slog.HandlerOptions{
-			Level:       level,
-			AddSource:   false,
-			ReplaceAttr: c.ReplaceAttr,
-		})
-	}
-
-	return slog.New(handler).With("version", version.Version)
-}
-
-// NewLogger returns a *slog.Logs configured by c *Config which writes to w
-func (c *Config) NewLogger(w io.Writer) *slog.Logger {
-	level := c.GetLogLevel()
-	var handler slog.Handler
-
 	switch c.format {
 	case "text":
 		noColor := true
 		if file, ok := w.(*os.File); ok {
 			noColor = !isatty.IsTerminal(file.Fd())
 		}
-		handler = tint.NewHandler(w, &tint.Options{
+		h = tint.NewHandler(w, &tint.Options{
 			Level:       level,
 			TimeFormat:  time.Kitchen,
 			AddSource:   true,
@@ -175,16 +143,21 @@ func (c *Config) NewLogger(w io.Writer) *slog.Logger {
 			NoColor:     noColor,
 		})
 	case "console":
-		handler = console.NewHandler(w, &console.Options{Level: level})
+		h = console.NewHandler(w, &console.Options{Level: level})
 	default:
-		handler = slog.NewJSONHandler(w, &slog.HandlerOptions{
+		h = slog.NewJSONHandler(w, &slog.HandlerOptions{
 			Level:       level,
 			AddSource:   true,
 			ReplaceAttr: c.ReplaceAttr,
 		})
 	}
 
-	return slog.New(handler).With("version", version.Version)
+	return
+}
+
+// NewLogger returns a *slog.Logs configured by c *Config which writes to w
+func (c *Config) NewLogger(w io.Writer) *slog.Logger {
+	return slog.New(c.handler(w)).With("version", version.Version)
 }
 
 // NewConfig returns a new logging Config struct

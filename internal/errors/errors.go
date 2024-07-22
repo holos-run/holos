@@ -45,7 +45,9 @@ type Source struct {
 }
 
 func (s *Source) Loc() string {
-	return fmt.Sprintf("%s:%d", filepath.Base(s.File), s.Line)
+	gp := filepath.Base(filepath.Dir(filepath.Dir(s.File)))
+	p := filepath.Base(filepath.Dir(s.File))
+	return fmt.Sprintf("%s/%s/%s:%d", gp, p, filepath.Base(s.File), s.Line)
 }
 
 // ErrorAt wraps an error with the Source location the error was encountered at

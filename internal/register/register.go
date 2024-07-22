@@ -56,7 +56,8 @@ func User(ctx context.Context, cfg *client.Config) error {
 	// server hostname instead of replacing it.  For now, it's easy enough to
 	// re-run the registration command to get the current context.
 	if cc.UserID != u.GetId() {
-		log.WarnContext(ctx, "context changed", "server", server, "prevUserID", cc.UserID, "currentUserID", u.GetId())
+		msg := fmt.Sprintf("context changed: from user id %s to id %s on server %s", cc.UserID, u.GetId(), server)
+		log.DebugContext(ctx, msg, "server", server, "prevUserID", cc.UserID, "currentUserID", u.GetId())
 		cc.UserID = u.GetId()
 		cc.OrgID = ""
 	}
