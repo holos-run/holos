@@ -154,7 +154,7 @@ Before we build the platform we need to configure role based access control to
 only allow our own identity to access protected services.  In the local k3d
 platform, this is accomplished by validating the OIDC id token subject claim.
 
-### RBAC
+### Role Based Access Control {#RBAC}
 
 Provide the value of the `sub` subject claim of your identity to ensure only you
 have administrative access to ArgoCD.
@@ -162,18 +162,19 @@ have administrative access to ArgoCD.
 Obtain the value using:
 
 ```bash
-holos login --print-claims | jq -r .sub
+holos login --print-claims --log-level=error | jq -r .sub
 ```
 
-The last line printed should be a positive whole number like `99999999999999`.
-Copy this in to the form field and submit the form.
+Expect to see a large whole number like `215559239589843464`.  Copy and paste
+this value into the Subject field of the Role Based Access Control section and
+then submit the form.
 
-### GitOps
+### GitOps {#GitOps}
 
 For the ArgoCD Git repository URL form field, enter the url of your Github fork
-where you pushed your local `holos-k3d` repository.
+where you pushed your local `holos-k3d` repository and then submit the form.
 
-## Pull the Platform Model
+## Pull the Platform Model {#Pull-the-Platform-Model}
 
 Once the form values have been submitted, the data needs to be pulled into the
 Git repository so `holos` can operate locally.
@@ -195,7 +196,7 @@ git add platform.config.json
 git commit -m "Add platform model"
 ```
 
-## Render the Platform
+## Render the Platform {#Render-the-Platform}
 
 With the `platform.config.json` file and generated files in place, `holos` has
 everything necessary to build the complete platform.
@@ -220,15 +221,23 @@ git commit -m "holos render platform ./platform"
 
 ### Rendering {#Rendering}
 
-Holos uses the Kubernetes resource model to manage configuration.  The `holos`
-command line interface (cli) is the primary method you'll use to manage your
-platform.  Holos uses CUE to provide a unified configuration model of the
-platform which is built from components packaged with Helm, Kustomize, CUE, or
-any tool that can produce Kubernetes resources as output.  This process can be
-thought of as a yaml **rendering pipeline**.
+:::tip
 
-Each component in a platform defines a rendering pipeline shown in Figure 2 to
-produce Kubernetes api resources
+This section provides a brief overview of the rendering process, a core design
+principle in Holos.
+
+:::
+
+Holos uses the Kubernetes resource model to manage configuration.  The `holos`
+command line interface is the primary method you'll use to manage your platform.
+Holos uses CUE to provide a unified configuration model of the platform.  This
+unified configuration is built up from components packaged with Helm, Kustomize,
+CUE, or any other tool that can produce Kubernetes resource manifests as output.
+
+This process can be thought of as a data **rendering pipeline**.  The key
+concept is that `holos` will always produce fully rendered output, but delegates
+the _application_ of the configuration to other tools like `kubectl apply`,
+ArgoCD, or Flux.
 
 ```mermaid
 ---
@@ -258,14 +267,6 @@ graph LR
     P --> G --> C
 ```
 
-The `holos` cli can be thought of as executing a data pipeline.  The Platform
-Model is the top level input to the pipeline and specifies the ways your
-platform varies from other organizations.  The `holos` cli takes the Platform
-Model as input and executes a series of steps to produce the platform
-configuration.  The platform configuration output of `holos` are full
-Kubernetes API resources, suitable for application to a cluster with `kubectl
-apply -f`, or GitOps tools such as ArgoCD or Flux.
-
 ## Create the Workload Cluster
 
 The Workload Cluster is where your applications and services will be deployed.
@@ -273,8 +274,9 @@ In production this is usually an EKS, GKE, or AKS cluster.
 
 :::tip
 
-Holos supports any compliant Kubernetes cluster and was developed and tested on
-GKE, EKS, Talos, and Kubeadm clusters.
+Holos supports all compliant Kubernetes clusters. Holos was developed and tested
+on GKE, EKS, Talos, k3s, and Kubeadm clusters.  The Holos server currently runs
+on a Holos platform on EKS and GKE in multiple regions.
 
 :::
 
@@ -306,7 +308,7 @@ GKE, EKS, Talos, and Kubeadm clusters.
 
 Traefik is disabled because Istio provides the same functionality.
 
-## Local CA
+## Local CA {#Local-CA}
 
 Create and apply the `local-ca` Secret containing the CA private key. This
 Secret is necessary to issue certificates trusted by your browser when using the
@@ -323,7 +325,7 @@ into your local host's trust store.
 
 :::
 
-## DNS Setup
+## DNS Setup {#DNS}
 
 Configure your localhost to resolve `*.holos.localhost` to your loopback
 interface.  This is necessary for your browser requests to reach the k3d
@@ -406,7 +408,7 @@ kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-
 kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-crds
 ```
 
-### Cert Manager
+### Cert Manager {#cert-manager}
 
 Apply the cert-manager controller:
 
@@ -431,7 +433,7 @@ starting up.
 :::
 
 
-### Istio
+### Istio {#Istio}
 
 ```bash
 kubectl apply --server-side=true -f ./deploy/clusters/workload/components/istio-cni
@@ -461,7 +463,7 @@ Resource accepted
 Failed to assign to any requested addresses: no instances found for hostname "default-istio.istio-gateways.svc.cluster.local"
 ```
 
-### httpbin
+### httpbin {#httpbin}
 
 httpbin is a simple backend service useful for end-to-end testing.
 
