@@ -67,7 +67,7 @@ func NewPlatformForm(cfg *client.Config) *cobra.Command {
 			if err := rpc.UpdateForm(ctx, p.GetId(), form); err != nil {
 				return errors.Wrap(err)
 			}
-			slog.Default().InfoContext(ctx, fmt.Sprintf("browse to form url: %s/ui/platform/%s", cfg.Client().Server(), p.GetId()))
+			slog.Default().InfoContext(ctx, fmt.Sprintf("pushed platform form to: %s/ui/platform/%s", cfg.Client().Server(), p.GetId()))
 		}
 		return nil
 	}

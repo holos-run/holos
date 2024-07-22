@@ -129,6 +129,9 @@ func (b *Builder) Cluster() string {
 // platform.config.json and user data json files located recursively within the
 // userdata directory at the cue module root.
 func (b *Builder) Unify(ctx context.Context, cfg *client.Config) (bd BuildData, err error) {
+	// Ensure the value is from the same runtime, otherwise cue panics.
+	bd.Value = b.ctx.CompileString("")
+
 	cueModDir, err := b.findCueMod()
 	if err != nil {
 		err = errors.Wrap(err)
@@ -190,6 +193,7 @@ func (b *Builder) Unify(ctx context.Context, cfg *client.Config) (bd BuildData, 
 	// Fill in #UserData
 	userData, err := loadUserData(b.ctx, bd.ModuleRoot)
 	if err != nil {
+		err = errors.Wrap(err)
 		return
 	}
 	bd.Value = bd.Value.FillPath(cue.ParsePath("#UserData"), userData)
@@ -199,9 +203,16 @@ func (b *Builder) Unify(ctx context.Context, cfg *client.Config) (bd BuildData, 
 
 // loadUserData recursively unifies userdata/**/*.json files into cue.Value val.
 func loadUserData(ctx *cue.Context, moduleRoot string) (val cue.Value, err error) {
-	err = filepath.Walk(filepath.Join(moduleRoot, "userdata"), func(path string, info os.FileInfo, err error) error {
+	// Ensure the value is from the same runtime, otherwise cue panics.
+	val = ctx.CompileString("")
+
+	userdataPath := filepath.Join(moduleRoot, "userdata")
+	if err = os.MkdirAll(userdataPath, 0755); err != nil {
+		return val, errors.Wrap(err)
+	}
+	err = filepath.Walk(userdataPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			return errors.Wrap(err)
 		}
 		if !info.IsDir() && filepath.Ext(info.Name()) == ".json" {
 			userData, err := os.ReadFile(path)
@@ -213,7 +224,7 @@ func loadUserData(ctx *cue.Context, moduleRoot string) (val cue.Value, err error
 		return nil
 	})
 
-	return
+	return val, errors.Wrap(err)
 }
 
 // Run builds the cue entrypoint into zero or more Results.  Exactly one CUE

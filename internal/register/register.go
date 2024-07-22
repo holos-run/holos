@@ -2,6 +2,7 @@ package register
 
 import (
 	"context"
+	"fmt"
 
 	"connectrpc.com/connect"
 	"github.com/holos-run/holos/internal/client"
@@ -74,7 +75,8 @@ func User(ctx context.Context, cfg *client.Config) error {
 		return errors.Wrap(err)
 	}
 
-	log.InfoContext(ctx, "user", "email", u.GetEmail(), "server", server, "user_id", cc.UserID, "org_id", cc.OrgID)
+	msg := fmt.Sprintf("registered with %s as %s", server, u.GetEmail())
+	log.InfoContext(ctx, msg, "email", u.GetEmail(), "server", server, "user_id", cc.UserID, "org_id", cc.OrgID)
 	return nil
 }
 

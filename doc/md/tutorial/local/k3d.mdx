@@ -523,13 +523,28 @@ kubectl apply --server-side=true -f ./deploy/clusters/workload/components/argo-c
 
 ### Cert Manager
 
-Apply the ClusterIssuer which issues Certificate resources using the local ca.
+Apply the cert-manager controller:
 
 ```bash
 kubectl apply --server-side=true -f ./deploy/clusters/workload/components/cert-manager
+```
+
+Apply the ClusterIssuer which issues Certificate resources using the local
+certificate authority.
+
+```bash
 kubectl apply --server-side=true -f deploy/clusters/workload/components/local-ca
 kubectl apply --server-side=true -f deploy/clusters/workload/components/certificates
 ```
+
+:::note
+
+If you get a `no endpoints available for service "cert-manager-webhook"` Error
+from server, retry this command.  The `cert-manager` Deployment may still be
+starting up.
+
+:::
+
 
 ### Istio
 
@@ -546,9 +561,19 @@ kubectl get -n istio-gateways gateway default -o json \
   | jq -r '.status.conditions[].message'
 ```
 
+Resource programmed indicates the Gateway is ready.
+
 ```txt
 Resource accepted
 Resource programmed, assigned to service(s) default-istio.istio-gateways.svc.cluster.local:443
+```
+
+If you see `Failed to assign` then the Gateway pods are likely still starting
+up.  Check them with `kubectl get pods -n istio-gateways`.
+
+```
+Resource accepted
+Failed to assign to any requested addresses: no instances found for hostname "default-istio.istio-gateways.svc.cluster.local"
 ```
 
 ### httpbin
@@ -609,6 +634,8 @@ Expect a simple `Authenticated` response.
 :::note
 
 Istio will respond with `no healthy upstream` until the pod becomes ready.
+Check on the progress with `kubectl describe pod --namespace holos-system
+--selector app.kubernetes.io/instance=httpbin`.
 
 :::
 
@@ -665,10 +692,11 @@ tokens with may claims are confined to the cluster.
 Verify unauthenticated requests are blocked:
 
 ```bash
-curl https://httpbin.holos.localhost/dump/request
+curl -I https://httpbin.holos.localhost/dump/request
 ```
 
-Expect a response that redirects to the identity provider.
+You should get back a 302 response that redirects the request to the identity
+provider to authenticate.
 
 Verify authenticated requests are allowed:
 
