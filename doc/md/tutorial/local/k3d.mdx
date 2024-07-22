@@ -11,13 +11,13 @@ host with k3d.
 This guide assumes commands are run from your local host.  Capitalized terms
 have specific definitions described in the [Glossary](/docs/glossary).
 
-## Requirements
+## What you'll need {#Requirements}
 
 You'll need the following tools installed on your local host to complete this guide.
 
- 1. [k3d](https://k3d.io/#installation) - to provide an api server.
- 2. [Docker](https://docs.docker.com/get-docker/) - to use k3d.
- 3. [holos](/docs/tutorial/install) - to build the platform.
+ 1. [holos](/docs/tutorial/install) - to build the platform.
+ 2. [k3d](https://k3d.io/#installation) - to provide an api server.
+ 3. [Docker](https://docs.docker.com/get-docker/) - to use k3d.
  4. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to interact with the Kubernetes cluster.
  5. [helm](https://helm.sh/docs/intro/install/) - to render Holos components that integrate vendor provided Helm charts.
  6. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) - for local trusted certificates.
@@ -39,57 +39,70 @@ ever reaches ArgoCD.
 :::tip
 
 With Holos, developers don't need to write authentication or authorization logic
-for many use cases.
+for many common use cases.
 
 :::
 
-Single sign-on and role based access control are provided by the platform itself
-for all service running in the platform using standardized policies.
+The platform provides single sign-on and role based access control for all
+services running on the platform.
 
-The `k3d` platform is derived from the larger holos reference platform to
-provide a smooth on-ramp to evaluate the value Holos offers.
+The `k3d` platform is derived from the Holos reference platform.  THe `k3d`
+platform is intended to provide a smooth on-ramp to evaluate Holos.
 
- 1. Holos wraps unmodified Helm charts provided by software vendors.
- 2. Holos eliminates the need to template yaml.
- 3. Holos is composable, scaling down to local host and up to multi-cloud and multi-cluster.
- 4. The Zero Trust security model implemented by the reference platform.
- 5. Configuration unification with CUE.
+ 1. Holos provides a unified configuration model purpose built to integrate
+ unmodified Helm charts, Kustomize bases, or any manifest provided by a software
+ vendor.
+ 2. Holos eliminates the need to template yaml, a common source of errors.
+ 3. Holos platforms are composable, scaling down to your laptop and up to
+ multiple clusters across multiple regions.
+ 4. The unified configuration model is well suited to provide a Zero Trust
+ security model.
+
+# Get Started
+
+Let's get started building a Holos platform locally.
 
 ## Register with Holos
 
-Register an account with the Holos web service. This registration is required
-to save platform configuration values via a simple web form and to explore how
-Holos implements Zero Trust.
+The first step is to register an account with the Holos web service.
+Registration is necessary to save platform configuration values using a simple
+web form and to explore how Holos implements Zero Trust and single sign on.
 
 ```bash
 holos register user
 ```
 
-## Create the Platform
+## Create the Platform {#Create-Platform}
 
-Create the platform, which stores the Platform Form and its values in the Holos
-web service. The Platform Form represents the Platform Model.
+A platform resource in the Holos web service is necessary to store the web form
+used to submit top level configuration values.
+
+Create the platform resource using the command line tool which makes an rpc call
+to the web service.
 
 ```bash
 holos create platform --name k3d --display-name "Try Holos Locally"
 ```
 
-## Generate the Platform
+## Generate the Platform {#Generate-Platform}
 
-Holos builds the platform by building each component of the platform into fully
-rendered Kubernetes configuration resources.  Generate the source code for the
-platform in a blank local directory.  This directory is named `holos-infra` by
-convention because it represents the Holos managed platform infrastructure.
+Holos operates almost exclusively against local files stored in version control.
+The Holos web service is used primarily to store the Platform Model, but is not
+used day-to-day when making configuration changes or deploying applications.
 
-Create a new Git repository to store the platform code:
+In an empty `holos-k3d` directory, generate the local files necessary to build
+the platform.
+
+First, [fork the holos-k3d](https://github.com/holos-run/holos-k3d/fork)
+repository to get started.  Once forked, clone it locally.  Replace the URL with
+your fork.
 
 ```bash
-mkdir holos-k3d
+git clone https://github.com/holos-run/holos-k3d.git
 cd holos-k3d
-git init .
 ```
 
-Generate the platform code in the current directory:
+Then generate the platform code in root of the new repository:
 
 ```bash
 holos generate platform k3d
@@ -102,49 +115,71 @@ git add .
 git commit -m "holos generate platform k3d - $(holos --version)"
 ```
 
+## Push the Git repository
+
+This tutorial deploys ArgoCD, which needs to sync configuration from a Git
+repository.  Push the repository you created to a new blank repository.  Note
+that holos is designed to never store secrets in version control.
+
+```bash
+git push origin HEAD:main
+```
+
 ## Push the Platform Form
 
-Push the Platform Form to the web service to provide top-level configuration
-values from which the platform components derive their final configuration.
+Each Holos platform has a Platform Form used to submit top level, platform-wide
+configuration values.  The purpose of the form is to validate configuration
+values and simplify complicated configurations and integrations.
+
+Push the Platform Form to the web service to publish it and make it accessible
+through a web browser.
 
 ```bash
 holos push platform form .
 ```
 
-Visit the printed URL to view the Platform Form.
+:::important
 
-:::tip
-
-You have complete control over the form fields and validation rules.
+Once pushed, visit the URL that is printed back to see the form on the web.
 
 :::
 
+You should see a form with default values filled in that looks like:
+
+![Platform Form Default Values](./form-pushed.png)
+
 ## Submit the Platform Model
 
-Fill out the form and submit the Platform Model.
+Before we build the platform we need to configure role based access control to
+only allow our own identity to access protected services.  In the local k3d
+platform, this is accomplished by validating the OIDC id token subject claim.
 
-For the Role Based Access Control section, provide the value of the `sub`
-subject claim of your identity to ensure only you have administrative access to
-ArgoCD.
+### RBAC
+
+Provide the value of the `sub` subject claim of your identity to ensure only you
+have administrative access to ArgoCD.
+
+Obtain the value using:
 
 ```bash
 holos login --print-claims | jq -r .sub
 ```
 
-For the ArgoCD Git repository URL, enter the url of a public repository where
-you will push your local `holos-k3d` repository.
+The last line printed should be a positive whole number like `99999999999999`.
+Copy this in to the form field and submit the form.
 
-```bash
-git remote add origin https://github.com/example/holos-k3d
-git push origin HEAD:main
-```
+### GitOps
+
+For the ArgoCD Git repository URL form field, enter the url of your Github fork
+where you pushed your local `holos-k3d` repository.
 
 ## Pull the Platform Model
 
+Once the form values have been submitted, the data needs to be pulled into the
+Git repository so `holos` can operate locally.
+
 The Platform Model is the JSON representation of the Platform Form values.
-Holos provides the Platform Model to CUE to render the platform configuration to
-plain YAML. Configuration that varies is derived from the Platform Model using
-CUE.
+Holos provides the Platform Model to CUE to render the platform into plain YAML.
 
 Pull the Platform Model to your local host to render the platform.
 
@@ -152,47 +187,38 @@ Pull the Platform Model to your local host to render the platform.
 holos pull platform model .
 ```
 
-The `platform.config.json` file is intended to be committed to version control.
+The `platform.config.json` contains the Platform Model and is intended to be
+committed to version control.
 
 ```bash
 git add platform.config.json
 git commit -m "Add platform model"
 ```
 
-:::danger
-
-Do not store secrets in the Platform Model.
-
-:::
-
-Holos uses ExternalSecret resources to securely sync with a SecretStore and
-ensure Secrets are never stored in version control.
-
 ## Render the Platform
 
-Rendering the platform iterates over each platform component and renders the
-component into the final Kubernetes resources that will be sent to the API Server.
+With the `platform.config.json` file and generated files in place, `holos` has
+everything necessary to build the complete platform.
+
+Rendering a platform is a process of iterating over each platform component and
+rendering the component into plain YAML manifests to be sent directly to the API
+server.
 
 ```bash
 holos render platform ./platform
 ```
 
-This command writes fully rendered Kubernetes resource yaml to the `deploy/` directory.
+This command writes fully rendered manifest files to the `deploy/` directory.
 
-:::warning
-
-Do not edit the files in the `deploy` as they will be written over.
-
-:::
-
-Commit the rendered platform configuration for `git diff` later.
+Commit the rendered platform manifests so they can be applied via GitOps later
+on.
 
 ```bash
 git add deploy
 git commit -m "holos render platform ./platform"
 ```
 
-### Rendering
+### Rendering {#Rendering}
 
 Holos uses the Kubernetes resource model to manage configuration.  The `holos`
 command line interface (cli) is the primary method you'll use to manage your
@@ -239,147 +265,6 @@ Model as input and executes a series of steps to produce the platform
 configuration.  The platform configuration output of `holos` are full
 Kubernetes API resources, suitable for application to a cluster with `kubectl
 apply -f`, or GitOps tools such as ArgoCD or Flux.
-
-## Review the Platform Config
-
-:::tip
-
-This section is optional, included to provide insight into how Holos uses CUE
-and Helm to unify and render the platform configuration.
-
-:::
-
-Take a moment to review the platform config `holos` rendered.
-
-### ArgoCD Application
-
-Note the Git URL you entered into the Platform Form is used to derive the ArgoCD
-`Application` resource from the Platform Model.
-
-```yaml
-# deploy/clusters/workload/gitops/namespaces.application.gen.yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: namespaces
-  namespace: argocd
-spec:
-  destination:
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    # highlight-next-line
-    path: /deploy/clusters/workload/components/namespaces
-    # highlight-next-line
-    repoURL: https://github.com/holos-run/holos-k3d
-    # highlight-next-line
-    targetRevision: HEAD
-```
-
-One ArgoCD `Application` resource is produced for each Holos component by
-default.  Note the `cert-manger` component renders the output using Helm.
-Holos unifies the Application resource using CUE.  The CUE definition which
-produces the rendered output is defined in `buildplan.cue` around line 222.
-
-:::tip
-
-Note how CUE does not use error-prone text templates, the language is well
-specified and typed which reduces errors when unifying the configuration with
-the Platform Model in the following `#Argo` definition.
-
-:::
-
-```cue
-// buildplan.cue
-
-// #Argo represents an argocd Application resource for each component, written
-// using the #HolosComponent.deployFiles field.
-#Argo: {
-	ComponentName: string
-
-	Application: app.#Application & {
-		metadata: name:      ComponentName
-		metadata: namespace: "argocd"
-		spec: {
-			destination: server: "https://kubernetes.default.svc"
-			project: "default"
-			source: {
-        // highlight-next-line
-				path:           "\(_Platform.Model.argocd.deployRoot)/deploy/clusters/\(_ClusterName)/components/\(ComponentName)"
-        // highlight-next-line
-				repoURL:        _Platform.Model.argocd.repoURL
-        // highlight-next-line
-				targetRevision: _Platform.Model.argocd.targetRevision
-			}
-		}
-	}
-
-	// deployFiles represents the output files to write along side the component.
-	deployFiles: "clusters/\(_ClusterName)/gitops/\(ComponentName).application.gen.yaml": yaml.Marshal(Application)
-}
-```
-
-### Helm Chart
-
-Holos uses CUE to safely integrate the unmodified upstream `cert-manager` Helm
-chart.
-
-:::tip
-
-Holos fully supports your existing Helm charts.  Consider leveraging `holos` as
-an safer alternative to umbrella charts.
-
-:::
-
-```cue
-// components/cert-manager/cert-manager.cue
-package holos
-
-// Produce a helm chart build plan.
-(#Helm & Chart).Output
-
-let Chart = {
-	Name:      "cert-manager"
-	Version:   "1.14.5"
-	Namespace: "cert-manager"
-
-	Repo: name: "jetstack"
-	Repo: url:  "https://charts.jetstack.io"
-
-  // highlight-next-line
-	Values: {
-		installCRDs: true
-		startupapicheck: enabled: false
-		// Must not use kube-system on gke autopilot.  GKE Warden blocks access.
-    // highlight-next-line
-		global: leaderElection: namespace: Namespace
-
-		// https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests#min-max-requests
-		resources: requests: {
-			cpu:                 "250m"
-			memory:              "512Mi"
-			"ephemeral-storage": "100Mi"
-		}
-    // highlight-next-line
-		webhook: resources:        Values.resources
-    // highlight-next-line
-		cainjector: resources:     Values.resources
-    // highlight-next-line
-		startupapicheck: resource: Values.resources
-
-		// https://cloud.google.com/kubernetes-engine/docs/how-to/autopilot-spot-pods
-		nodeSelector: {
-			"kubernetes.io/os": "linux"
-			if _ClusterName == "management" {
-				"cloud.google.com/gke-spot": "true"
-			}
-		}
-		webhook: nodeSelector:         Values.nodeSelector
-		cainjector: nodeSelector:      Values.nodeSelector
-		startupapicheck: nodeSelector: Values.nodeSelector
-	}
-}
-```
 
 ## Create the Workload Cluster
 
@@ -853,11 +738,152 @@ Automatic reconciliation is enabled for all platform components.
 
 ![ArgoCD Automatic Sync OK](./argocd-auto-sync-ok.png)
 
+## Review the Platform Manifests {#Review}
+
+:::tip
+
+This section is optional, included to provide insight into how Holos uses CUE
+and Helm to unify and render the platform configuration.
+
+:::
+
+Take a moment to review the manifests `holos` rendered to build the platform.
+
+### ArgoCD Application
+
+Note the Git URL you entered into the Platform Form is used to derive the ArgoCD
+`Application` resource from the Platform Model.
+
+```yaml
+# deploy/clusters/workload/gitops/namespaces.application.gen.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: namespaces
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    # highlight-next-line
+    path: /deploy/clusters/workload/components/namespaces
+    # highlight-next-line
+    repoURL: https://github.com/holos-run/holos-k3d
+    # highlight-next-line
+    targetRevision: HEAD
+```
+
+One ArgoCD `Application` resource is produced for each Holos component by
+default.  Note the `cert-manger` component renders the output using Helm.
+Holos unifies the Application resource using CUE.  The CUE definition which
+produces the rendered output is defined in `buildplan.cue` around line 222.
+
+:::tip
+
+Note how CUE does not use error-prone text templates, the language is well
+specified and typed which reduces errors when unifying the configuration with
+the Platform Model in the following `#Argo` definition.
+
+:::
+
+```cue
+// buildplan.cue
+
+// #Argo represents an argocd Application resource for each component, written
+// using the #HolosComponent.deployFiles field.
+#Argo: {
+	ComponentName: string
+
+	Application: app.#Application & {
+		metadata: name:      ComponentName
+		metadata: namespace: "argocd"
+		spec: {
+			destination: server: "https://kubernetes.default.svc"
+			project: "default"
+			source: {
+        // highlight-next-line
+				path:           "\(_Platform.Model.argocd.deployRoot)/deploy/clusters/\(_ClusterName)/components/\(ComponentName)"
+        // highlight-next-line
+				repoURL:        _Platform.Model.argocd.repoURL
+        // highlight-next-line
+				targetRevision: _Platform.Model.argocd.targetRevision
+			}
+		}
+	}
+
+	// deployFiles represents the output files to write along side the component.
+	deployFiles: "clusters/\(_ClusterName)/gitops/\(ComponentName).application.gen.yaml": yaml.Marshal(Application)
+}
+```
+
+### Helm Chart
+
+Holos uses CUE to safely integrate the unmodified upstream `cert-manager` Helm
+chart.
+
+:::tip
+
+Holos fully supports your existing Helm charts.  Consider leveraging `holos` as
+an safer alternative to umbrella charts.
+
+:::
+
+```cue
+// components/cert-manager/cert-manager.cue
+package holos
+
+// Produce a helm chart build plan.
+(#Helm & Chart).Output
+
+let Chart = {
+	Name:      "cert-manager"
+	Version:   "1.14.5"
+	Namespace: "cert-manager"
+
+	Repo: name: "jetstack"
+	Repo: url:  "https://charts.jetstack.io"
+
+  // highlight-next-line
+	Values: {
+		installCRDs: true
+		startupapicheck: enabled: false
+		// Must not use kube-system on gke autopilot.  GKE Warden blocks access.
+    // highlight-next-line
+		global: leaderElection: namespace: Namespace
+
+		// https://cloud.google.com/kubernetes-engine/docs/concepts/autopilot-resource-requests#min-max-requests
+		resources: requests: {
+			cpu:                 "250m"
+			memory:              "512Mi"
+			"ephemeral-storage": "100Mi"
+		}
+    // highlight-next-line
+		webhook: resources:        Values.resources
+    // highlight-next-line
+		cainjector: resources:     Values.resources
+    // highlight-next-line
+		startupapicheck: resource: Values.resources
+
+		// https://cloud.google.com/kubernetes-engine/docs/how-to/autopilot-spot-pods
+		nodeSelector: {
+			"kubernetes.io/os": "linux"
+			if _ClusterName == "management" {
+				"cloud.google.com/gke-spot": "true"
+			}
+		}
+		webhook: nodeSelector:         Values.nodeSelector
+		cainjector: nodeSelector:      Values.nodeSelector
+		startupapicheck: nodeSelector: Values.nodeSelector
+	}
+}
+```
+
 ## Summary
 
-TODO
+In this guide, you built a software development platform which:
 
-1. Configured the Service Mesh with mTLS.
-2. Configured authentication and authorization.
-3. Protected a backend service without backend code changes.
-4. ArgoCD
+1. Configures a Service Mesh with mTLS encryption between services.
+2. Configures authentication and authorization of users and developers.
+3. Protects a backend service (httpbin) without making any backend code changes.
+4. Leverages ArgoCD to automatically deploy configuration and applications.
