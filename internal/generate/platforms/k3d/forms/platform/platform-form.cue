@@ -71,6 +71,19 @@ let FormBuilder = v1.#FormBuilder & {
 		description: "Configure role based access control.  In the k3d platform the sub claim is used to limit access to one subject.  The Holos reference platform uses the groups and roles claims to limit access based on the role attribute."
 
 		fieldConfigs: {
+			mode: {
+				type:         "select"
+				defaultValue: "real"
+				props: {
+					label:       "Select Mode"
+					description: "Select Real if you signed up, Fake otherwise."
+					multiple:    false
+					options: [
+						{value: "real", label: "Real"},
+						{value: "fake", label: "Fake"},
+					]
+				}
+			}
 			sub: {
 				type: "input"
 				props: {

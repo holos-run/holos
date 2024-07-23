@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/holos-run/holos/internal/errors"
-	hlogger "github.com/holos-run/holos/internal/logger"
+	holoslogger "github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server/middleware/authn"
 	"github.com/holos-run/holos/version"
 	"github.com/int128/kubelogin/pkg/infrastructure/browser"
@@ -115,7 +115,10 @@ type customTransport struct {
 
 func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	ctx := req.Context()
-	log := hlogger.FromContext(ctx)
+	log := holoslogger.FromContext(ctx)
+	if req != nil && req.URL != nil {
+		log.DebugContext(ctx, fmt.Sprintf("start roundtrip to: %s", req.URL.Path))
+	}
 	token, err := Get(ctx, log, t.config)
 	if err != nil {
 		return nil, errors.Wrap(fmt.Errorf("could not get token: %w", err))

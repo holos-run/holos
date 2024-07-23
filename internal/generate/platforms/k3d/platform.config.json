@@ -1,0 +1,19 @@
+{
+  "platformModel": {
+    "argocd": {
+      "clientID": "275571279971577269@holos_quickstart",
+      "deployRoot": ".",
+      "repoURL": "https://github.com/holos-run/holos-k3d",
+      "targetRevision": "HEAD"
+    },
+    "org": {
+      "displayName": "Demo Organization",
+      "domain": "holos.localhost",
+      "name": "demo"
+    },
+    "rbac": {
+      "mode": "fake",
+      "sub": "999999999999999999"
+    }
+  }
+}

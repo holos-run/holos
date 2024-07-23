@@ -13,28 +13,35 @@ have specific definitions described in the [Glossary](/docs/glossary).
 
 ## What you'll need {#Requirements}
 
+:::tip
+
+Registering an account **is recommended** to see how authorization works in
+Holos, but **you can complete this guide without signing up.**
+
+:::
+
 You'll need the following tools installed on your local host to complete this guide.
 
  1. [holos](/docs/tutorial/install) - to build the platform.
  2. [k3d](https://k3d.io/#installation) - to provide an api server.
- 3. [Docker](https://docs.docker.com/get-docker/) - to use k3d.
+ 3. [Orb](https://docs.orbstack.dev/install) or [Docker](https://docs.docker.com/get-docker/) - to use k3d.
  4. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to interact with the Kubernetes cluster.
  5. [helm](https://helm.sh/docs/intro/install/) - to render Holos components that integrate vendor provided Helm charts.
  6. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) - for local trusted certificates.
  7. [jq](https://jqlang.github.io/jq/download/) - to manipulate json output.
 
-## Outcome
+## Goal {#Goal}
 
-At the end of this guide you'll have built a development platform that provides
-Zero Trust security by holistically integrating off-the-shelf components.
+At the end of this guide you'll have built a software development platform that
+provides Zero Trust security by holistically integrating off-the-shelf
+components.
 
  1. ArgoCD to review and apply platform configuration changes.
  2. Istio service mesh with mTLS encryption.
  3. ZITADEL to provide single sign-on identity tokens with multi factor authentication.
 
-The platform running on your local host will configure Istio to authenticate and
-authorize requests using an oidc id token issued by ZITADEL _before_ the request
-ever reaches ArgoCD.
+Istio will be configured to authenticate and authorize requests using an OIDC
+ID-Token issued by ZITADEL _before_ requests reach backend services.
 
 :::tip
 
@@ -58,29 +65,58 @@ platform is intended to provide a smooth on-ramp to evaluate Holos.
  4. The unified configuration model is well suited to provide a Zero Trust
  security model.
 
-# Get Started
+### Clean Up {#Clean-Up}
 
-Let's get started building a Holos platform locally.
-
-## Clean Up
-
-This guide strives to keep things neat and tidy.  All of the resources it
-creates on your machine are located in k3d or in the `holos-k3d` directory.
+It's nice to know what kind of mess we're going to make before we make it.
+This guide strives to keep things neat and tidy.  All of the resources are
+located in k3d and the `holos-k3d` directory.  If you want to clean up at any
+point, do so with:
 
 ```bash
 k3d cluster delete workload
 rm -rf holos-k3d
 ```
 
-## Register with Holos
+# Get Started {#Get-Started}
 
-The first step is to register an account with the Holos web service.
-Registration is necessary to save platform configuration values using a simple
-web form and to explore how Holos implements Zero Trust and single sign on.
+Let's get started building a Holos platform.
+
+## Repository
+
+Holos uses a Git repository to store all configuration code and data necessary
+to build the platform.
+
+[Fork the holos-k3d](https://github.com/holos-run/holos-k3d/fork) repository and
+clone it locally.  Replace the URL with your fork.
 
 ```bash
-holos register user
+git clone https://github.com/holos-run/holos-k3d.git
+cd holos-k3d
 ```
+
+## Sign In or Out {#Sign-In}
+
+Holos provides integrated authentication and authorization which we'll use in
+this guide to protect a service.  It is recommended to register an account to
+see the technical details of how this works.  Registration also allows you to
+see how Holos empowers you to expose top-level configuration data using a simple
+web form.
+
+You may complete the guide without signing up.  If you opt-out the guide will
+use fake authentication headers in place of real oidc id tokens.
+
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Sign In">
+    ```bash
+    holos register user
+    ```
+  </TabItem>
+  <TabItem value="unregistered" label="Sign Out">
+    ```bash
+    holos logout
+    ```
+  </TabItem>
+</Tabs>
 
 ## Create the Platform {#Create-Platform}
 
@@ -90,29 +126,23 @@ used to submit top level configuration values.
 Create the platform resource using the command line tool which makes an rpc call
 to the web service.
 
-```bash
-holos create platform --name k3d --display-name "Try Holos Locally"
-```
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Signed In">
+
+    ```bash
+    holos create platform --name k3d --display-name "Try Holos Locally"
+    ```
+  </TabItem>
+  <TabItem value="unregistered" label="Signed Out">
+    ```bash
+    touch platform.metadata.json
+    ```
+  </TabItem>
+</Tabs>
 
 ## Generate the Platform {#Generate-Platform}
 
-Holos operates almost exclusively against local files stored in version control.
-The Holos web service is used primarily to store the Platform Model, but is not
-used day-to-day when making configuration changes or deploying applications.
-
-In an empty `holos-k3d` directory, generate the local files necessary to build
-the platform.
-
-First, [fork the holos-k3d](https://github.com/holos-run/holos-k3d/fork)
-repository to get started.  Once forked, clone it locally.  Replace the URL with
-your fork.
-
-```bash
-git clone https://github.com/holos-run/holos-k3d.git
-cd holos-k3d
-```
-
-Then generate the platform code in root of the new repository:
+Generate the platform code in root of the new repository:
 
 ```bash
 holos generate platform k3d
@@ -141,65 +171,134 @@ Each Holos platform has a Platform Form used to submit top level, platform-wide
 configuration values.  The purpose of the form is to validate configuration
 values and simplify complicated configurations and integrations.
 
-Push the Platform Form to the web service to publish it and make it accessible
-through a web browser.
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Signed In">
+    **Push the Platform Form** to the web service to publish it and make it
+    accessible through a web browser.
 
-```bash
-holos push platform form .
-```
+    ```bash
+    holos push platform form .
+    ```
 
-:::important
+    **Browse to the URL printed back** to view the form.
+  </TabItem>
+  <TabItem value="unregistered" label="Signed Out">
+    **No action needed.**
 
-Once pushed, visit the URL that is printed back to see the form on the web.
+    ```bash
+    # holos push platform form .
+    ```
+  </TabItem>
+</Tabs>
 
-:::
 
-You should see a form with default values filled in that looks like:
+The Platform Form looks like:
 
 ![Platform Form Default Values](./form-pushed.png)
 
 ## Submit the Platform Model
 
-Before we build the platform we need to configure role based access control to
-only allow our own identity to access protected services.  In the local k3d
-platform, this is accomplished by validating the OIDC id token subject claim.
+Holos needs initial values to render the platform.  The Platform Model is the
+holos term used for these initial, top level configuration values.  The Platform
+Form is a web browser UI to provide these values.
+
+Holos platforms configure role based access control to only allow access
+protected services.  In the k3d platform used for this guide, role based access
+control is accomplished by validating the OIDC id token subject claim.
 
 ### Role Based Access Control {#RBAC}
 
 Provide the value of the `sub` subject claim of your identity to ensure only you
-have administrative access to ArgoCD.
+have administrative access to the platform.
 
-Obtain the value using:
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Signed In">
+    **Copy and paste the `sub` value into the Subject field.**
 
-```bash
-holos login --print-claims --log-level=error | jq -r .sub
-```
+    ```bash
+    holos login --print-claims --log-level=error | jq -r .sub
+    ```
 
-Expect to see a large whole number like `215559239589843464`.  Copy and paste
-this value into the Subject field of the Role Based Access Control section and
-then submit the form.
+    The command should print a large whole number, for example
+    `215559239589843464`.
+
+    Don't forget to submit the form.
+  </TabItem>
+  <TabItem value="unregistered" label="Signed Out">
+    **No action needed.**
+
+    ```bash
+    # holos login --print-claims --log-level=error | jq -r .sub
+    ```
+
+    The platform will use a fake `sub` claim value of `"999999999999999999"`
+    when signed out.
+  </TabItem>
+</Tabs>
+
 
 ### GitOps {#GitOps}
 
-For the ArgoCD Git repository URL form field, enter the url of your Github fork
-where you pushed your local `holos-k3d` repository and then submit the form.
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Signed In">
+    **Enter the url of your `holos-k3d` GitHub fork** into the ArgoCD GIt repository URL field.
+
+    Don't forget to submit the form.
+  </TabItem>
+  <TabItem value="unregistered" label="Signed Out">
+    Configure the ArgoCD repoURL in the next section.
+  </TabItem>
+</Tabs>
 
 ## Pull the Platform Model {#Pull-the-Platform-Model}
 
-Once the form values have been submitted, the data needs to be pulled into the
-Git repository so `holos` can operate locally.
+Once the form has been submitted, the model needs to be pulled into the Git
+repository so `holos` can operate locally.
 
-The Platform Model is the JSON representation of the Platform Form values.
-Holos provides the Platform Model to CUE to render the platform into plain YAML.
+Holos stores the Platform Model in the `platform.config.json` file. Holos
+provides this file as input to CUE when rendering the platform.  The file is
+intended to be added to version control.
 
-Pull the Platform Model to your local host to render the platform.
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Signed In">
+    **Pull the Platform Model** into the repository.
 
-```bash
-holos pull platform model .
-```
+    ```bash
+    holos pull platform model .
+    ```
+  </TabItem>
+  <TabItem value="unregistered" label="Signed Out">
+    **Manually create the `platform.config.json` file.**
+    Update the `repoURL` field to refer to your fork url.
 
-The `platform.config.json` contains the Platform Model and is intended to be
-committed to version control.
+    Beware modifying field values other than `repoURL`, you may run into trouble
+    accessing the platform services later.
+
+    ```bash
+    cat <<EOF >platform.config.json
+    {
+      "platformModel": {
+        "argocd": {
+          "clientID": "275571279971577269@holos_quickstart",
+          "deployRoot": ".",
+          "repoURL": "$(git config --get remote.origin.url)",
+          "targetRevision": "HEAD"
+        },
+        "org": {
+          "displayName": "Demo Organization",
+          "domain": "holos.localhost",
+          "name": "demo"
+        },
+        "rbac": {
+          "mode": "fake",
+          "sub": "999999999999999999"
+        }
+      }
+    }
+    EOF
+    ```
+  </TabItem>
+</Tabs>
 
 ```bash
 git add platform.config.json
@@ -208,12 +307,11 @@ git commit -m "Add platform model"
 
 ## Render the Platform {#Render-the-Platform}
 
-With the `platform.config.json` file and generated files in place, `holos` has
-everything necessary to build the complete platform.
+With the `platform.config.json` file and the generated platform code in place,
+`holos` has everything necessary to render the platform.
 
 Rendering a platform is a process of iterating over each platform component and
-rendering the component into plain YAML manifests to be sent directly to the API
-server.
+rendering the component into plain YAML manifests to be sent to the API server.
 
 ```bash
 holos render platform ./platform
@@ -291,7 +389,7 @@ on a Holos platform on EKS and GKE in multiple regions.
 :::
 
 <Tabs>
-  <TabItem value="evaluate" label="Evaluate" default>
+  <TabItem value="evaluate" label="Try Holos" default>
   Use this command when evaluating Holos.
 
   ```bash
@@ -300,8 +398,8 @@ on a Holos platform on EKS and GKE in multiple regions.
     --k3s-arg "--disable=traefik@server:0"
   ```
   </TabItem>
-  <TabItem value="develop" label="Develop" default>
-  Use this command when developing Holos.
+  <TabItem value="develop" label="Develop Holos" default>
+  Use this command when developing Holos locally.
 
   ```bash
   k3d registry create registry.holos.localhost --port 5100
@@ -352,6 +450,12 @@ workload cluster.
     # Refer to https://holos.run/docs/tutorial/local/k3d/
     address=/holos.localhost/127.0.0.1
     EOF
+    ```
+
+    Cache sudo credentials to avoid copy paste issues.
+
+    ```bash
+    sudo -v
     ```
 
     ```bash
@@ -430,18 +534,10 @@ Apply the ClusterIssuer which issues Certificate resources using the local
 certificate authority.
 
 ```bash
+kubectl -n cert-manager wait pod -l app.kubernetes.io/component=webhook --for=condition=Ready
 kubectl apply --server-side=true -f deploy/clusters/workload/components/local-ca
 kubectl apply --server-side=true -f deploy/clusters/workload/components/certificates
 ```
-
-:::note
-
-If you get a `no endpoints available for service "cert-manager-webhook"` Error
-from server, retry this command.  The `cert-manager` Deployment may still be
-starting up.
-
-:::
-
 
 ### Istio {#Istio}
 
@@ -491,7 +587,8 @@ to verify end to end connectivity.
 
 ### Cookie Secret
 
-Generate a random cookie encryption Secret and apply.
+The auth proxy stores session information in an encrypted cookie.  Generate a
+random cookie encryption Secret and apply.
 
 ```bash
 LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom \
@@ -501,52 +598,55 @@ LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom \
     --dry-run=client -o yaml \
   | kubectl apply -n istio-gateways -f-
 ```
-:::tip
-
-The Holos reference platform uses an ExternalSecret to automatically sync this
-Secret from your SecretStore.
-
-:::
-
 
 ### Auth Proxy
 
 The auth proxy is responsible for authenticating web browser requests.  The auth
-proxy provides a standard oidc id token to all services integrated with the
-mesh.
+proxy provides a standard oidc id token to all backend services integrated with
+the mesh.
 
 ```bash
 kubectl apply --server-side=true -f deploy/clusters/workload/components/authproxy
 kubectl apply --server-side=true -f deploy/clusters/workload/components/authroutes
 ```
 
-:::important
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Signed In">
+    Verify authentication is working by visiting
+    [https://httpbin.holos.localhost/holos/authproxy](https://httpbin.holos.localhost/holos/authproxy).
+    The auth proxy should respond with a simple `Authenticated` response.
 
-Verify authentication is working by visiting
-[https://httpbin.holos.localhost/holos/authproxy](https://httpbin.holos.localhost/holos/authproxy).
-Expect a simple `Authenticated` response.
+    Istio will respond with `no healthy upstream` until the pod becomes ready.
+    Wait for the pod to become ready with:
 
-:::
+    ```bash
+    kubectl -n holos-system wait pod -l app.kubernetes.io/instance=httpbin --for=condition=Ready
+    ```
 
-:::note
+    Once authenticated, visit
+    [https://httpbin.holos.localhost/holos/authproxy/userinfo](https://httpbin.holos.localhost/holos/authproxy/userinfo)
+    which returns a subset of claims from your id token:
 
-Istio will respond with `no healthy upstream` until the pod becomes ready.
-Check on the progress with `kubectl describe pod --namespace holos-system
---selector app.kubernetes.io/instance=httpbin`.
+    ```json
+    {
+      "user": "275552236589843464",
+      "email": "demo@holos.run",
+      "preferredUsername": "demo"
+    }
+    ```
 
-:::
+  </TabItem>
+  <TabItem value="unregistered" label="Signed Out">
+    For simplicity, the `k3d` platform relies upon `https://login.holos.run` to
+    issue id tokens.  You cannot authenticate unless you sign in.
 
-Once authenticated, visit
-[https://httpbin.holos.localhost/holos/authproxy/userinfo](https://httpbin.holos.localhost/holos/authproxy/userinfo)
-which returns a subset of claims from your id token:
+    Authorization has been configured against fake authentication headers
+    instead of the real `x-oidc-id-token` header.
 
-```json
-{
-  "user": "275552236589843464",
-  "email": "demo@holos.run",
-  "preferredUsername": "demo"
-}
-```
+    Note the Holos reference platform supports self-hosting your own identity
+    provider.
+  </TabItem>
+</Tabs>
 
 ### Auth Policy
 
@@ -557,36 +657,59 @@ id token.
 kubectl apply --server-side=true -f deploy/clusters/workload/components/authpolicy
 ```
 
-:::important
-
-Requests to `https://httpbin.holos.localhost` are protected by
-AuthorizationPolicy platform resources after applying this component.
-
-:::
+Istio make take a few seconds to program the Gateway with the AuthorizationPolicy resources.
 
 ### Zero Trust
 
-A basic Zero Trust security model is now in place.  Verify authentication is
-working by browsing to
-[https://httpbin.holos.localhost/dump/request](https://httpbin.holos.localhost/dump/request).
+A basic Zero Trust security model is now in place.  The platform authenticates
+and authorizes requests before the reach the backend service.
 
-:::note
+#### Browser
 
-Istio make take a few seconds to program the Gateway with the
-AuthorizationPolicy resources.
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Signed In">
+    Verify authentication is working by browsing to [https://httpbin.holos.localhost/dump/request](https://httpbin.holos.localhost/dump/request).
 
-:::
+    Refresh the page a few times.  The `httpbin` backend pods should echo back
+    the `x-oidc-id-token` header the auth proxy injected into the request after
+    authenticating you.
 
-:::tip
+    Note the `x-oidc-id-token` header is not sent by your browser but is received
+    by the backend service.  This design reduces the risk of exposing id tokens
+    in the browser.  In addition, browser request size remains constant as more
+    claim values are added to id tokens.  This improves reliability because id
+    tokens often overflow request header buffers when they pass through middle
+    boxes across the internet.
+  </TabItem>
+  <TabItem value="unregistered" label="Signed Out">
+    The platform has been configured to authorize requests with a `User-Agent: anonymous` header.
 
-Note the `x-oidc-id-token` header is not sent by your browser but is received
-by the backend service.  This design reduces the risk of exposing id tokens.
-Requests over the internet are also smaller and more reliable because large id
-tokens with may claims are confined to the cluster.
+    1. Open an incognito window to verify the platform is enforcing this
+    authorization policy.
+    2. Browse to
+    [https://httpbin.holos.localhost/dump/request](https://httpbin.holos.localhost/dump/request)
+    and expect to be redirected to the sign in page by the auth proxy.
+        - You **do not** need to register or sign in.
+        - This step verifies the platform is redirecting unauthenticated
+        requests to the identity provider.
+        - Close this window and open a new incognito window.
+    3. Set your `User-Agent` header to `anonymous` using your browser developer tools.
+        - For Chrome the process is described
+        [here](https://developer.chrome.com/docs/devtools/device-mode/override-user-agent#override_the_user_agent_string).
+        - The purpose is to fake an authenticated request.
+    4. Browse to
+    [https://httpbin.holos.localhost/dump/request](https://httpbin.holos.localhost/dump/request).
+        - The platform should allow the request through to the backend pod.
+        - `httpbin` should echo back your request which should contain `User-Agent: anonymous`.
+  </TabItem>
+</Tabs>
 
-:::
+This section verifies authorization of browser requests.  In the next section
+requests from command line tools and api clients are authorized.
 
-Verify unauthenticated requests are blocked:
+#### Command Line
+
+Verify unauthenticated requests are blocked outside the browser:
 
 ```bash
 curl -I https://httpbin.holos.localhost/dump/request
@@ -595,14 +718,29 @@ curl -I https://httpbin.holos.localhost/dump/request
 You should get back a 302 response that redirects the request to the identity
 provider to authenticate.
 
-Verify authenticated requests are allowed:
+Next, verify authorization policy is taking effect.
 
-```bash
-curl -H x-oidc-id-token:$(holos token) https://httpbin.holos.localhost/dump/request
-```
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Signed In">
+    The platform is configured to validate the id token present in the
+    `x-oidc-id-token` header.
 
-Expect a response from the backend httpbin service with the id token header the
-platform authenticated and authorized.
+    ```bash
+    curl -H x-oidc-id-token:$(holos token) https://httpbin.holos.localhost/dump/request
+    ```
+  </TabItem>
+  <TabItem value="unregistered" label="Signed Out">
+    The platform is configured to authorize any request with `User-Agent:
+    anonymous` in place of validating the oidc id token.
+
+    ```bash
+    curl -A anonymous https://httpbin.holos.localhost/dump/request
+    ```
+  </TabItem>
+</Tabs>
+
+You will receive a response from the backend httpbin service that echos back
+your request if the AuthorizationPolicy resources are working as expected .
 
 :::tip
 

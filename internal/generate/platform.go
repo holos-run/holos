@@ -37,15 +37,8 @@ func Platforms() []string {
 	return dirs
 }
 
-// GeneratePlatform writes the cue code for a platform to the local working
-// directory.
-func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, name string) error {
+func writePlatformMetadata(ctx context.Context, rpc *client.Client, orgID string, name string) error {
 	log := logger.FromContext(ctx)
-	// Check for a valid platform
-	platformPath := filepath.Join(platformsRoot, name)
-	if !dirExists(platforms, platformPath) {
-		return errors.Wrap(fmt.Errorf("cannot generate: have: [%s] want: %+v", name, Platforms()))
-	}
 
 	// Link the local platform the SaaS platform ID.
 	rpcPlatforms, err := rpc.Platforms(ctx, orgID)
@@ -79,6 +72,31 @@ func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, nam
 		return errors.Wrap(fmt.Errorf("could not write platform metadata: %w", err))
 	}
 	log.DebugContext(ctx, "wrote "+client.PlatformMetadataFile, "path", filepath.Join(getCwd(ctx), client.PlatformMetadataFile))
+
+	return nil
+}
+
+// GeneratePlatform writes the cue code for a platform to the local working
+// directory.
+func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, name string) error {
+	log := logger.FromContext(ctx)
+	// Check for a valid platform
+	platformPath := filepath.Join(platformsRoot, name)
+	if !dirExists(platforms, platformPath) {
+		return errors.Wrap(fmt.Errorf("cannot generate: have: [%s] want: %+v", name, Platforms()))
+	}
+
+	if _, err := os.Stat(client.PlatformMetadataFile); err == nil {
+		log.DebugContext(ctx, fmt.Sprintf("skipped write %s: already exists", client.PlatformConfigFile))
+	} else {
+		if os.IsNotExist(err) {
+			if err := writePlatformMetadata(ctx, rpc, orgID, name); err != nil {
+				return errors.Wrap(err)
+			}
+		} else {
+			return errors.Wrap(err)
+		}
+	}
 
 	// Copy the cue.mod directory
 	if err := copyEmbedFS(ctx, platforms, filepath.Join(platformsRoot, "cue.mod"), "cue.mod", bytes.NewBuffer); err != nil {
