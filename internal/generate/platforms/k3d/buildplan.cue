@@ -242,6 +242,24 @@ import (
 	deployFiles: "clusters/\(_ClusterName)/gitops/\(ComponentName).application.gen.yaml": yaml.Marshal(Application)
 }
 
+// #ArgoDefaultSyncPolicy represents the default argo sync policy.
+#ArgoDefaultSyncPolicy: {
+	automated: {
+		prune:    bool | *true
+		selfHeal: bool | *true
+	}
+	syncOptions: [
+		"RespectIgnoreDifferences=true",
+		"ServerSideApply=true",
+	]
+	retry: limit: number | *2
+	retry: backoff: {
+		duration:    string | *"5s"
+		factor:      number | *2
+		maxDuration: string | *"3m0s"
+	}
+}
+
 // #APIObjects defines the output format for kubernetes api objects.  The holos
 // cli expects the yaml representation of each api object in the apiObjectMap
 // field.

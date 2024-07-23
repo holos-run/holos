@@ -859,24 +859,20 @@ Automatic reconciliation is turned off by default.
 
 :::
 
-Optionally enable automatic reconciliation by adding `spec.syncPolicy.automated:
-{}` to the `#Argo` definition.
+Enable automatic reconciliation for all `Application` resources holos produces
+by adjusting the `#Argo` definition.
 
-Add the following to `buildplan.site.cue` to avoid `holos generate platform k3d`
-writing over the customization.
+Add the following to `buildplan.site.cue`.  The new file avoids over-writes in
+case you run `holos generate platform k3d` again.
 
-:::tip
-
-CUE merges definitions located in multiple files.  This feature is used to
-customize the platform.
-
-:::
+CUE merges definitions located in multiple files.  Holos uses this feature to
+customize the platform without conflicts at the file level.
 
 ```bash
 cat <<EOF > buildplan.site.cue
 package holos
-// Enable automated sync of platform components.
-#Argo: Application: spec: syncPolicy: automated: {}
+
+#Argo: Application: spec: syncPolicy: #ArgoDefaultSyncPolicy
 EOF
 ```
 
