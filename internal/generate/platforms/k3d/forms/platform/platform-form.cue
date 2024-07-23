@@ -54,12 +54,12 @@ let FormBuilder = v1.#FormBuilder & {
 					label:       "Domain Name"
 					placeholder: defaultValue
 					description: "Domain name, e.g. '\(defaultValue)'"
-					pattern:     "^\(defaultValue)$"
+					pattern:     "^\(defaultValue)|\\.local$"
 					maxLength:   100
 					required:    true
 				}
 				validation: messages: {
-					required: "Must be '\(defaultValue)' for local evaluation."
+					required: "Must be '\(defaultValue)' or end in .local for local evaluation."
 					pattern:  required
 				}
 			}
