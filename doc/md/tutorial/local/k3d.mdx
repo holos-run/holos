@@ -62,6 +62,16 @@ platform is intended to provide a smooth on-ramp to evaluate Holos.
 
 Let's get started building a Holos platform locally.
 
+## Clean Up
+
+This guide strives to keep things neat and tidy.  All of the resources it
+creates on your machine are located in k3d or in the `holos-k3d` directory.
+
+```bash
+k3d cluster delete workload
+rm -rf holos-k3d
+```
+
 ## Register with Holos
 
 The first step is to register an account with the Holos web service.
