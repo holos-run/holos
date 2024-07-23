@@ -71,7 +71,7 @@ let Objects = {
 								{
 									// bypass the external authorizer when the user did not sign up
 									key: "request.headers[user-agent]"
-									notValues: ["anonymous"]
+									notValues: [_AuthorizedUserAgent]
 								},
 							]
 						}
@@ -201,7 +201,7 @@ let Objects = {
 								{
 									// bypass the external authorizer when the user did not sign up
 									key: "request.headers[user-agent]"
-									values: ["anonymous"]
+									values: [_AuthorizedUserAgent]
 								},
 							]
 						},

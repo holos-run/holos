@@ -199,7 +199,8 @@ package holos
 			//# Ref: https://argo-cd.readthedocs.io/en/stable/user-guide/status-badge/
 			"statusbadge.enabled": false
 
-			"oidc.config": string
+			"oidc.config":             string
+			"users.anonymous.enabled": string
 		}
 
 		// Dex configuration
@@ -308,7 +309,7 @@ package holos
 
 			// -- The name of the default role which Argo CD will falls back to, when authorizing API requests (optional).
 			// If omitted or empty, users may be still be able to login, but will see no apps, projects, etc...
-			"policy.default": ""
+			"policy.default": string | *""
 
 			// -- File containing user-defined policies and role definitions.
 			// @default -- `''` (See [values.yaml])

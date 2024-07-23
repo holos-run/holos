@@ -34,23 +34,35 @@ let Objects = {
 								"argocd.\(_Platform.Model.org.domain):*",
 							]
 						}]
-						when: [
-							// Must be issued by the platform identity provider.
-							{
-								key: "request.auth.principal"
-								values: [_AuthProxy.issuerURL + "/*"]
-							},
-							// Must be intended for an app within the Holos Platform ZITADEL project.
-							{
-								key: "request.auth.audiences"
-								values: [_AuthProxy.projectID]
-							},
-							// Must be presented by the istio ExtAuthz auth proxy.
-							{
-								key: "request.auth.presenter"
-								values: [_AuthProxy.clientID]
-							},
-						]
+						if _Platform.Model.rbac.mode == "real" {
+							when: [
+								// Must be issued by the platform identity provider.
+								{
+									key: "request.auth.principal"
+									values: [_AuthProxy.issuerURL + "/*"]
+								},
+								// Must be intended for an app within the Holos Platform ZITADEL project.
+								{
+									key: "request.auth.audiences"
+									values: [_AuthProxy.projectID]
+								},
+								// Must be presented by the istio ExtAuthz auth proxy.
+								{
+									key: "request.auth.presenter"
+									values: [_AuthProxy.clientID]
+								},
+							]
+
+						}
+						if _Platform.Model.rbac.mode == "fake" {
+							when: [
+								{
+									// bypass the external authorizer when the user did not sign up
+									key: "request.headers[user-agent]"
+									values: [_AuthorizedUserAgent]
+								},
+							]
+						}
 					},
 				]
 			}

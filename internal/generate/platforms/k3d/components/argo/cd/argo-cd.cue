@@ -55,7 +55,14 @@ let Chart = {
 		configs: params: "server.insecure": true
 		configs: cm: {
 			"admin.enabled": false
-			"oidc.config":   yaml.Marshal(OIDCConfig)
+			if _Platform.Model.rbac.mode == "real" {
+				"oidc.config":             yaml.Marshal(OIDCConfig)
+				"users.anonymous.enabled": "false"
+			}
+			if _Platform.Model.rbac.mode == "fake" {
+				"oidc.config":             "{}"
+				"users.anonymous.enabled": "true"
+			}
 		}
 
 		// Refer to https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/
@@ -68,6 +75,10 @@ let Chart = {
 		]
 
 		configs: rbac: "policy.csv": strings.Join(Policy, "\n")
+
+		if _Platform.Model.rbac.mode == "fake" {
+			configs: rbac: "policy.default": "role:admin"
+		}
 	}
 }
 

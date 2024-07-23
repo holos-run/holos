@@ -780,22 +780,38 @@ argocd-repo-server-69f78dfb8-f6pb7                  1/1     Running     0       
 argocd-server-58f7f4466d-db5fv                      2/2     Running     0          10s
 ```
 
-Browse to [https://argocd.holos.localhost/](https://argocd.holos.localhost/) and
-verify you get the ArgoCD login page.
+:::important
 
-![ArgoCD Login Page](./argocd-login.png)
-
-:::note
-
-Both the platform layer and the ArgoCD application layer performs authentication
-and authorization using the same identity provider.  Note how the Zero Trust
-model provides an additional layer of security without friction.
+Browse to [https://argocd.holos.localhost/](https://argocd.holos.localhost/) to access ArgoCD.
 
 :::
 
-Login using the SSO button and verify you get to the Applications page.
+<Tabs groupId="registration">
+  <TabItem value="registered" label="Signed In">
+    ArgoCD is configured to authenticate using the Holos identity provider.
 
-![ArgoCD Applications](./argocd-apps.png)
+    ![ArgoCD Login Page](./argocd-login.png)
+
+    Login using the SSO button and verify you get to the Applications page.
+
+    ![ArgoCD Applications](./argocd-apps.png)
+  </TabItem>
+  <TabItem value="unregistered" label="Signed Out">
+    ArgoCD is configured to allow anonymous users.  Note, the platform
+    authorization policy allows requests only if the `User-Agent: anonymous`
+    header is set.
+
+    ![ArgoCD Applications](./argocd-login-signedout.png)
+  </TabItem>
+</Tabs>
+
+:::note
+
+Both the platform layer and the ArgoCD application layer perform authentication
+and authorization using the same identity provider.  The Zero Trust model
+provides additional layers of security.
+
+:::
 
 ### ArgoCD Applications
 
