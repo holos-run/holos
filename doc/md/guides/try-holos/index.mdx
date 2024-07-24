@@ -102,7 +102,7 @@ git init
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
-    Then, use `holos` to make the rpc call to create the server-side platform
+    Use `holos` to make the rpc call to create the server-side platform
     resource.
 
 
@@ -143,8 +143,8 @@ values and simplify complicated configurations and integrations.
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
-    **Push the Platform Form** to publish it.  Browse to the printed URL to view
-    the form.
+    Push the Platform Form to publish it.  Browse to the printed URL to view the
+    form.
 
     ```bash
     holos push platform form .
@@ -167,17 +167,17 @@ the web it looks like:
 #### Submit the Platform Model
 
 Holos needs initial values to render the platform.  The Platform Model is the
-term we use for these initial, top level configuration values.  The Platform
-Form is the web interface for this model.
+term we use for these broad, top level configuration values.  The Platform Form
+is the web interface to this model.
 
 #### Role Based Access Control {#RBAC}
 
 Holos platforms configure role based access control to protect services at the
-platform layer.  In the k3d platform you're building with this guide, role based
-access control is implemented by validating your oidc id token subject claim.
+platform layer.  In the k3d platform you're building now, role based access
+control is implemented by asserting against your oidc id token subject claim.
 
-Provide the value of the `sub` subject claim of your identity to ensure only you
-have administrative access to the platform.
+Provide the value of the `sub` claim of your identity to ensure only you have
+administrative access to the platform.
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
@@ -207,8 +207,9 @@ have administrative access to the platform.
 
 #### Pull the Platform Model {#Pull-the-Platform-Model}
 
-Once the form has been submitted, the model needs to be pulled into the local
-Git repository.  The `holos` command line operates locally when possible.
+The Platform Model needs to be pulled into the local Git repository, after the
+form has been submitted.  The `holos render` command we'll execute next operates
+on local files exclusively.
 
 Holos stores the Platform Model in the `platform.config.json` file. Holos
 provides this file as input to CUE when rendering the platform.  This file is
@@ -268,7 +269,7 @@ current directory.
 
 Rendering a platform is the process of iterating over each platform component
 and rendering it into plain yaml. Holos does not apply the resulting manifests.
-Other tools like `kubectl`, ArgoCD, or Flux are responsible for applying the
+Other tools like kubectl, ArgoCD, or Flux are responsible for applying the
 manifests.
 
 ```bash
@@ -293,9 +294,9 @@ yaml.  In contrast, roughly 80K lines are produced by this slimmed down k3d
 platform.
 
 We mention this because the scale doesn't matter as much as it does with other
-tools and techniques.  Manage millions of lines of configuration the same way
-this guide manages thousands.  This is made possible by the unique way CUE
-unifies all configuration into one single model.
+tools.  Manage millions of lines of configuration with Holos the same way this
+guide manages thousands.  This is made possible by the unique way CUE unifies
+all configuration into one single model.
 
 :::
 
