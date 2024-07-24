@@ -164,43 +164,37 @@ the web it looks like:
 
 ![Platform Form Default Values](./form-pushed.png)
 
-#### Submit the Platform Model
+#### Update the Platform Model {#Platform-Model}
 
-Holos needs initial values to render the platform.  The Platform Model is the
-term we use for these broad, top level configuration values.  The Platform Form
-is the web interface to this model.
+Holos needs initial, top level configuration values to render the platform.  The
+Platform Model is the term we use for these values.  In this section you will
+configure role based access control by way of updating the Platform Model.
 
-#### Role Based Access Control {#RBAC}
-
-Holos platforms configure role based access control to protect services at the
-platform layer.  In the k3d platform you're building now, role based access
-control is implemented by asserting against your oidc id token subject claim.
-
-Provide the value of the `sub` claim of your identity to ensure only you have
-administrative access to the platform.
+In the k3d platform you're building now, role based access control is
+implemented by asserting against your oidc id token subject claim.  Update the
+form with the `sub` claim value from your id token.  This will ensure only you
+have access to platform services.
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
-    **Copy and paste the `sub` value into the Subject field.**
+    Copy and paste the `sub` value into the Subject field.
 
     ```bash
     holos login --print-claims --log-level=error | jq -r .sub
     ```
 
-    The command should print a large whole number, for example
-    `215559239589843464`.
-
     Don't forget to submit the form.
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
-    **No action needed.**
+    You don't have an id token when you're signed out, so there's nothing for
+    you to do in this step.
 
     ```bash
     # holos login --print-claims --log-level=error | jq -r .sub
     ```
 
-    The platform will use a fake `sub` claim value of `"999999999999999999"`
-    when signed out.
+    The platform will be configured to assert against the User-Agent header
+    instead.
   </TabItem>
 </Tabs>
 
