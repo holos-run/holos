@@ -3,9 +3,9 @@ import TabItem from '@theme/TabItem';
 
 # Try Holos Locally
 
-Learn how to configure and deploy a platform managed by Holos host with the
-Holos k3d platform.  The k3d platform is a slimmed down subset of the the
-larger, more holistic, Holos reference platform.
+This guide walks through the process of building and managing a software
+development platform with Holos.  The k3d platform built in this guide is a
+slimmed down version of the the larger, more holistic, Holos reference platform.
 
 Holos is different from existing tools in a few important ways.
 
@@ -23,8 +23,8 @@ Holos is different from existing tools in a few important ways.
 
 ---
 
-This guide assumes commands are run from your local host.  Capitalized terms
-have specific definitions described in the [Glossary](/docs/glossary).
+This guide assumes commands are run locally.  Capitalized terms have specific
+definitions described in the [Glossary](/docs/glossary).
 
 ## What you'll need {#Requirements}
 
@@ -65,20 +65,15 @@ k3d cluster delete workload
 rm -rf holos-k3d
 ```
 
-# Get Started {#Get-Started}
-
-Let's get started building a Holos platform.
-
 ## Sign In or Out {#Sign-In}
 
 Holos provides integrated authentication and authorization which we'll use in
-this guide to protect a service.  It is recommended to register an account to
-see the technical details of how this works.  Registration also allows you to
-see how Holos empowers you to expose top-level configuration data using a simple
-web form.
+this guide to protect a service.  We recommend registering an account to see the
+how this works.  Registration also enables you to explore the customizable web
+form Holos provides to simplify complex configuration.
 
-You may complete the guide without signing up.  If you opt-out the guide will
-use fake authentication headers in place of real oidc id tokens.
+If you opt-out the guide will use fake authentication headers in place of real
+identity tokens.
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Sign In">
@@ -86,7 +81,7 @@ use fake authentication headers in place of real oidc id tokens.
     holos register user
     ```
   </TabItem>
-  <TabItem value="unregistered" label="Sign Out">
+  <TabItem value="unregistered" label="Opt Out">
     ```bash
     holos logout
     ```
@@ -98,9 +93,6 @@ use fake authentication headers in place of real oidc id tokens.
 A platform resource in the Holos web service is necessary to store the web form
 used to submit top level configuration values.
 
-Create the platform resource using the command line tool which makes an rpc call
-to the web service.
-
 First, initialize an empty Git repository:
 
 ```bash
@@ -111,15 +103,17 @@ git init
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
-    Create the platform resource in the Holos server for the web form.
+    Then, use `holos` to make the rpc call to create the server-side platform
+    resource.
+
 
     ```bash
     holos create platform --name k3d --display-name "Try Holos Locally"
     ```
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
-    Create a blank `platform.metadata.json` file so the `holos generate` command
-    skips the rpc call to link the generated platform with the Holos server.
+    Create a blank `platform.metadata.json` file so subsequent holos commands
+    skip rpc calls.
 
     ```bash
     touch platform.metadata.json
@@ -150,17 +144,15 @@ values and simplify complicated configurations and integrations.
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
-    **Push the Platform Form** to the web service to publish it and make it
-    accessible through a web browser.
+    **Push the Platform Form** to publish it.  Browse to the printed URL to view
+    the form.
 
     ```bash
     holos push platform form .
     ```
-
-    **Browse to the URL printed back** to view the form.
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
-    **No action needed.**
+    You need to sign in to push the platform form.
 
     ```bash
     # holos push platform form .
@@ -271,26 +263,44 @@ git commit -m "Add platform model"
 
 ## Render the Platform {#Render-the-Platform}
 
-With the `platform.config.json` file and the generated platform code in place,
-`holos` has everything necessary to render the platform.
+Holos has everything necessary to render the platform once the
+`platform.config.json` file and the code from `holos generate` are in the
+current directory.
 
 Rendering a platform is a process of iterating over each platform component and
-rendering it into plain YAML. The resulting manifests are sent to the API server
-by another tool such as kubectl apply or ArgoCD.
+rendering it into plain YAML. Holos does not apply the resulting manifests.
+Other tools like `kubectl`, ArgoCD, or Flux are responsible for applying the
+manifests.
 
 ```bash
 holos render platform ./platform
 ```
 
-The render command writes fully rendered manifest files to the `deploy/`
-directory.  Commit the files so they can be applied via GitOps later.
+The render command writes the manifest files to the `deploy/` directory.  Commit
+the files so they can be applied via GitOps later.
 
 ```bash
 git add deploy
 git commit -m "holos render platform ./platform"
 ```
 
-## Create the k3d Cluster {#Create-Cluster}
+:::important
+
+⚡ Try not to blink, this is the step where Holos actually builds the platform.  It
+usually takes a few seconds.
+
+Rendering the holos reference platform currently results in about half a million
+lines of yaml.  Roughly 80,000 lines are produced by this slimmed down k3d
+platform.
+
+We mention this because the scale doesn't matter as much as it does with other
+tools and techniques.  Manage millions of lines of configuration in the same way
+this guide manages thousands.  This is made possible by the unique way CUE
+unifies all configuration into one model.
+
+:::
+
+## Create the Cluster {#Create-Cluster}
 
 The Workload Cluster is where your applications and services will be deployed.
 In production this is usually an EKS, GKE, or AKS cluster.
@@ -298,14 +308,13 @@ In production this is usually an EKS, GKE, or AKS cluster.
 :::tip
 
 Holos supports all compliant Kubernetes clusters. Holos was developed and tested
-on GKE, EKS, Talos, k3s, and Kubeadm clusters.  The Holos server currently runs
-on a Holos platform on EKS and GKE in multiple regions.
+on GKE, EKS, Talos, k3s, and Kubeadm clusters.
 
 :::
 
 <Tabs>
   <TabItem value="evaluate" label="Try Holos" default>
-  Use this command when evaluating Holos.
+  Use this command when exploring Holos.
 
   ```bash
   k3d cluster create workload \
@@ -313,8 +322,8 @@ on a Holos platform on EKS and GKE in multiple regions.
     --k3s-arg "--disable=traefik@server:0"
   ```
   </TabItem>
-  <TabItem value="develop" label="Develop Holos" default>
-  Use this command when developing Holos locally.
+  <TabItem value="develop" label="Develop Holos">
+  Use this command when developing Holos.
 
   ```bash
   k3d registry create registry.holos.localhost --port 5100
@@ -333,26 +342,26 @@ Traefik is disabled because Istio provides the same functionality.
 
 #### Local CA {#Local-CA}
 
-Create and apply the `local-ca` Secret containing the CA private key. This
-Secret is necessary to issue certificates trusted by your browser when using the
-local k3d platform.
+Holos platforms use cert manager to issue tls certificates.  The browser and
+tools we're using need to trust these certificates otherwise they won't talk to
+each other.  In this section we'll create a local certificate authority that all
+of the tools on your system trust.
+
+Admin is access is necessary for `mkcert` to install the certificate into the
+system trust store.
+
+```bash
+sudo -v
+```
 
 ```bash
 bash ./scripts/local-ca
 ```
 
-:::note
-
-Admin access is necessary for `mkcert` to install the newly generated CA cert
-into your local host's trust store.
-
-:::
-
 #### DNS Setup {#DNS}
 
-Configure your localhost to resolve `*.holos.localhost` to your loopback
-interface.  This is necessary for your browser requests to reach the k3d
-workload cluster.
+Configure your machine to resolve `*.holos.localhost` to your loopback
+interface.  This is necessary for requests to reach the workload cluster.
 
 <Tabs>
   <TabItem value="macos" label="macOS" default>
@@ -480,7 +489,7 @@ LC_ALL=C tr -dc A-Za-z0-9 </dev/urandom \
 
 #### Deployment
 
-The deployment receives requests from web browsers and provides an
+The auth proxy Deployment receives requests from web browsers and provides an
 authentication decision to the service mesh.
 
 ```bash
@@ -515,21 +524,20 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/authrout
 
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
-    For simplicity, the `k3d` platform relies upon `https://login.holos.run` to
-    issue id tokens.  You cannot authenticate unless you sign in.
+    The auth proxy will always try to sign you in when you are signed out, so
+    there isn't much to do here.  Please do take a moment to glance at the
+    Signed In tab to see how this would work if you were signed in.
 
-    Authorization has been configured against fake authentication headers
-    instead of the real `x-oidc-id-token` header.
-
-    Note the Holos reference platform supports self-hosting your own identity
-    provider.
+    The `k3d` platform relies on `https://login.holos.run` to issue id tokens.
+    Authorization has been configured against fake request headers instead of
+    the real `x-oidc-id-token` header.
   </TabItem>
 </Tabs>
 
 ### Authorization Policy
 
-Configure authorization policies using the claims provided in the authenticated
-id token.  Authorization policies route web requests through the auth proxy and
+Configure authorization policies using attributes of the authenticated request.
+Authorization policies route web requests through the auth proxy and then
 validate all requests against the `x-oidc-id-token` header.
 
 ```bash
@@ -542,7 +550,7 @@ AuthorizationPolicy resources.
 ## Try out Zero Trust
 
 A basic Zero Trust security model is now in place.  The platform authenticates
-and authorizes requests before the reach the backend service.
+and authorizes requests before they reach the backend service.
 
 #### Browser
 
@@ -564,19 +572,19 @@ and authorizes requests before the reach the backend service.
   <TabItem value="unregistered" label="Signed Out">
     The platform has been configured to authorize requests with a `User-Agent: anonymous` header.
 
-    1. Open an incognito window to verify the platform is enforcing this
-    authorization policy.
+    1. Open an incognito window (Cmd+Shift+N) to verify the platform is
+    enforcing the authorization policy.
     2. Browse to
     [https://httpbin.holos.localhost/dump/request](https://httpbin.holos.localhost/dump/request)
-    and expect to be redirected to the sign in page by the auth proxy.
+    you should be redirected to the sign in page by the auth proxy.
         - You **do not** need to register or sign in.
         - This step verifies the platform is redirecting unauthenticated
         requests to the identity provider.
-        - Close this window and open a new incognito window.
+        - Navigate back or close and re-open an incognito window.
     3. Set your `User-Agent` header to `anonymous` using your browser developer tools.
         - For Chrome the process is described
         [here](https://developer.chrome.com/docs/devtools/device-mode/override-user-agent#override_the_user_agent_string).
-        - The purpose is to fake an authenticated request.
+        - The purpose is to simulate an authenticated request.
     4. Browse to
     [https://httpbin.holos.localhost/dump/request](https://httpbin.holos.localhost/dump/request).
         - The platform should allow the request through to the backend pod.
@@ -592,8 +600,8 @@ Verify unauthenticated requests are blocked by default outside the browser:
 curl -I https://httpbin.holos.localhost/dump/request
 ```
 
-You should get back a 302 response that redirects to the identity provider to
-start the authentication flow.
+You should receive a `HTTP/2 302` response that redirects to `location:
+https://login.holos.run` to start the auth flow.
 
 Next, verify authorization policy allows authenticated requests.
 
@@ -613,7 +621,7 @@ Next, verify authorization policy allows authenticated requests.
     anonymous` in place of validating the oidc id token.
 
     💡 Take a moment to click the Signed In tab, I don't want you to miss how
-    cool `$(holos token)` is.  It also works with `grpcurl`.
+    cool `$(holos token)` is.
 
     ```bash
     curl -A anonymous https://httpbin.holos.localhost/dump/request
@@ -621,8 +629,8 @@ Next, verify authorization policy allows authenticated requests.
   </TabItem>
 </Tabs>
 
-You will receive a response from the backend httpbin service that echos back
-your request if the AuthorizationPolicy resources are working as expected .
+You should receive a response from the backend httpbin service that echos back
+your request.
 
 :::tip
 
@@ -634,11 +642,11 @@ authorization functionality.
 
 ## Summary
 
-In this guide, you built the foundation of a software development platform
-which:
+Thank you for taking the time to try out Holos.  In this guide, you built the
+foundation of a software development platform that:
 
  1. Provides a unified configuration model with CUE that
-    - Supports unmodified Helm Charts, Kustomizations, plain YAML.
+    - Supports unmodified Helm Charts, Kustomize Kustomizations, plain YAML.
     - Provides a web form to pass top level parameters.
  2. Reduces errors by eliminating the need to template unstructured text.
  3. Is composable and scales down to a local machine.
@@ -647,8 +655,7 @@ which:
 
 ## Next Steps
 
-Dive deeper with the following resources that add on to the foundation built in
-this guide.
+Dive deeper with the following resources that build on the foundation you have now.
 
  1. Explore the [Rendering Process](/docs/design/rendering) in Holos.
  2. Dive deeper into the [Platform Manifests](./platform-manifests) rendered in this guide.
@@ -657,7 +664,8 @@ this guide.
 
 ## Clean-Up
 
-If you'd like to clean up the resources you created in this guide, remove them with:
+If you'd like to clean up the resources you created in this guide, remove them
+with:
 
 ```bash
 k3d cluster delete workload
