@@ -82,7 +82,7 @@ const config: Config = {
       items: [
         {
           type: 'doc',
-          docId: 'tutorial/local/k3d',
+          docId: 'guides/try-holos/index',
           position: 'left',
           label: 'Try Holos',
         },
@@ -120,7 +120,7 @@ const config: Config = {
           items: [
             {
               label: 'Try Holos Locally',
-              to: '/docs/tutorial/local/k3d',
+              to: '/docs/guides/try-holos',
             },
             {
               label: 'Documentation',

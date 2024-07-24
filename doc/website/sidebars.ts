@@ -15,10 +15,23 @@ const sidebars: SidebarsConfig = {
     'intro',
     {
       type: 'category',
-      label: 'Tutorial',
+      label: 'Guides',
       collapsed: false,
       items: [
-        'tutorial/local/k3d',
+        'guides/install',
+        'guides/try-holos/index',
+        'guides/try-holos/platform-manifests',
+        'guides/argocd/index',
+        'guides/backstage/index',
+        'guides/observability/index',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Design',
+      collapsed: false,
+      items: [
+        'design/rendering',
       ],
     },
     {

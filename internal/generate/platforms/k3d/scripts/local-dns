@@ -1,0 +1,38 @@
+#! /bin/bash
+#
+
+set -euo pipefail
+
+tmpdir="$(mktemp -d)"
+finish() {
+  [[ -d "$tmpdir" ]] && rm -rf "$tmpdir"
+}
+trap finish EXIT
+cd "$tmpdir"
+
+brew install dnsmasq
+
+cat <<EOF >"$(brew --prefix)/etc/dnsmasq.d/holos.localhost.conf"
+# Refer to https://holos.run/docs/tutorial/local/k3d/
+address=/holos.localhost/127.0.0.1
+EOF
+
+if [[ -r /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist ]]; then
+  echo "dnsmasq already configured"
+else
+  sudo cp "$(brew list dnsmasq | grep 'dnsmasq.plist$')" \
+    /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist
+  sudo launchctl unload /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist
+  sudo launchctl load /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist
+  dscacheutil -flushcache
+  echo "dnsmasq configured"
+fi
+
+sudo mkdir -p /etc/resolver
+sudo tee /etc/resolver/holos.localhost <<EOF
+domain holos.localhost
+nameserver 127.0.0.1
+EOF
+sudo killall -HUP mDNSResponder
+
+echo "all done."
