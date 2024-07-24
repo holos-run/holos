@@ -27,16 +27,15 @@ definitions described in the [Glossary](/docs/glossary).
 
 ## What you'll need {#Requirements}
 
-Ensure you have the following tools installed to complete this guide.
+You'll need the following tools installed to complete this guide.
 
 1. [holos](/docs/guides/install) - to build the platform.
-1. [helm](https://helm.sh/docs/intro/install/) - to render Holos components that wrap upstream Helm charts.
-1. [k3d](https://k3d.io/#installation) - to provide a k8s api server.
-1. [OrbStack](https://docs.orbstack.dev/install) or [Docker](https://docs.docker.com/get-docker/) - to use k3d.
-1. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to interact with the k8s api server.
-1. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) - to make trusted TLS certificates.
-1. [jq](https://jqlang.github.io/jq/download/) - to fiddle with JSON output.
-1. [git](https://git-scm.com) - to interact with a GitOps repository.
+2. [helm](https://helm.sh/docs/intro/install/) - to render Holos components that wrap upstream Helm charts.
+3. [k3d](https://k3d.io/#installation) - to provide a k8s api server.
+4. [OrbStack](https://docs.orbstack.dev/install) or [Docker](https://docs.docker.com/get-docker/) - to use k3d.
+5. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to interact with the k8s api server.
+6. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) - to make trusted TLS certificates.
+7. [jq](https://jqlang.github.io/jq/download/) - to fiddle with JSON output.
 
 :::note
 
@@ -151,9 +150,9 @@ values and simplify complicated configurations and integrations.
     ```
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
-    Only registered and signed-in users can push a Platform Form to the Holos
-    web server. And this guide will have you update the Platform Model locally,
-    so there's nothing to do for this step.
+    You will update the Platform Model locally in a later step so there's
+    nothing to do in this step.  Only signed-in users can push a Platform Form
+    to the Holos web server.
 
     ```bash
     # holos push platform form .
@@ -173,9 +172,9 @@ Platform Model is the term we use for these values.  In this section you will
 configure role based access control by way of updating the Platform Model.
 
 In the k3d platform you're building now, role based access control is
-implemented by asserting against your oidc id token's subject claim.  Update
-the form with the `sub` claim value from your id token.  This will ensure only
-you have access to platform services.
+implemented by asserting against the oidc id token subject.  Update the form
+with the `sub` claim value from your id token.  This will ensure only you have
+access to platform services.
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
@@ -203,8 +202,8 @@ you have access to platform services.
 ### Pull the Platform Model {#Pull-the-Platform-Model}
 
 The Platform Model needs to be pulled into the local Git repository after the
-form has been submitted. The `holos render` command, which we will execute next,
-operates exclusively on local files.
+form has been submitted. Next, we'll run `holos render` which operates
+exclusively on local files.
 
 Holos stores the Platform Model in the `platform.config.json` file. Holos
 provides this file as input to CUE when rendering the platform.  This file is
@@ -219,8 +218,9 @@ intended to be added to version control.
     ```
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
-    There is nothing to pull when signed out as there isn't an OIDC token sub
-    value to add to the Platform Model.
+    The `holos generate platform k3d` command should have created a default Platform
+    Model in `platform.config.json`.  As a result there's nothing to do in this
+    step.
 
     ```bash
     # holos pull platform model .
@@ -321,7 +321,7 @@ tools we're using need to trust these certificates to work together.  In this
 section we'll create a local trusted certificate authority.
 
 Admin access is necessary for `mkcert` to install the certificate into your
-system's trust store.
+trust stores.
 
 ```bash
 sudo -v
