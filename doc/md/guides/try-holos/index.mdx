@@ -5,7 +5,7 @@ import TabItem from '@theme/TabItem';
 
 This guide walks through the process of building and managing a software
 development platform with Holos.  The k3d platform built in this guide is a
-slimmed down version of the the larger, more holistic, Holos reference platform.
+slimmed down version of the larger, more holistic, Holos reference platform.
 
 Holos is different from existing tools in a few important ways.
 
@@ -27,15 +27,16 @@ definitions described in the [Glossary](/docs/glossary).
 
 ## What you'll need {#Requirements}
 
-You'll need the following tools installed to complete this guide.
+Ensure you have the following tools installed to complete this guide.
 
- 1. [holos](/docs/guides/install) - to build the platform.
- 2. [k3d](https://k3d.io/#installation) - to provide an api server.
- 3. [Orb](https://docs.orbstack.dev/install) or [Docker](https://docs.docker.com/get-docker/) - to use k3d.
- 4. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to interact with the api server.
- 5. [helm](https://helm.sh/docs/intro/install/) - to render Holos components that wrap upstream Helm charts.
- 6. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) - to make trusted tls certificates.
- 7. [jq](https://jqlang.github.io/jq/download/) - to fiddle with json output.
+1. [holos](/docs/guides/install) - to build the platform.
+1. [helm](https://helm.sh/docs/intro/install/) - to render Holos components that wrap upstream Helm charts.
+1. [k3d](https://k3d.io/#installation) - to provide a k8s api server.
+1. [OrbStack](https://docs.orbstack.dev/install) or [Docker](https://docs.docker.com/get-docker/) - to use k3d.
+1. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to interact with the k8s api server.
+1. [mkcert](https://github.com/FiloSottile/mkcert?tab=readme-ov-file#installation) - to make trusted TLS certificates.
+1. [jq](https://jqlang.github.io/jq/download/) - to fiddle with JSON output.
+1. [git](https://git-scm.com) - to interact with a GitOps repository.
 
 :::note
 
@@ -46,7 +47,7 @@ authorization in Holos, but you can complete this guide without signing up.
 
 ## Goal {#Goal}
 
-At the end of this guide you'll have built the foundation of a software
+By the end of this guide you'll have built the foundation of a software
 development platform.  The foundation provides Zero Trust security by
 holistically integrating off-the-shelf open source software.
 
@@ -71,7 +72,7 @@ this guide to protect a service.  We recommend registering an account to see
 this in action.  Registration also enables you to explore the customizable web
 form that simplifies complex configuration.
 
-If you opt-out the platform will be configured to use a fake identity in place
+If you opt-out, the platform will be configured to use a fake identity in place
 of real id tokens.
 
 <Tabs groupId="registration">
@@ -105,7 +106,6 @@ git init
     Use `holos` to make the rpc call to create the server-side platform
     resource.
 
-
     ```bash
     holos create platform --name k3d --display-name "Try Holos Locally"
     ```
@@ -120,7 +120,7 @@ git init
   </TabItem>
 </Tabs>
 
-#### Generate the Platform {#Generate-Platform}
+### Generate the Platform {#Generate-Platform}
 
 Generate the platform code in the repository root.
 
@@ -135,7 +135,7 @@ git add .
 git commit -m "holos generate platform k3d - $(holos --version)"
 ```
 
-#### Push the Platform Form
+### Push the Platform Form
 
 Each Holos platform has a Platform Form used to submit top level, platform-wide
 configuration values.  The purpose of the form is to validate configuration
@@ -151,7 +151,9 @@ values and simplify complicated configurations and integrations.
     ```
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
-    You need to sign in to push the platform form.
+    Only registered and signed-in users can push a Platform Form to the Holos
+    web server. And this guide will have you update the Platform Model locally,
+    so there's nothing to do for this step.
 
     ```bash
     # holos push platform form .
@@ -159,31 +161,31 @@ values and simplify complicated configurations and integrations.
   </TabItem>
 </Tabs>
 
-The Platform Form is defined locally in `forms/platform/platform-form.cue`.  On
-the web it looks like:
+The Platform Form is defined locally in `forms/platform/platform-form.cue`.
 
+On the web it looks like:
 ![Platform Form Default Values](./form-pushed.png)
 
-#### Update the Platform Model {#Platform-Model}
+### Update the Platform Model {#Platform-Model}
 
 Holos needs initial, top level configuration values to render the platform.  The
 Platform Model is the term we use for these values.  In this section you will
 configure role based access control by way of updating the Platform Model.
 
 In the k3d platform you're building now, role based access control is
-implemented by asserting against your oidc id token subject claim.  Update the
-form with the `sub` claim value from your id token.  This will ensure only you
-have access to platform services.
+implemented by asserting against your oidc id token's subject claim.  Update
+the form with the `sub` claim value from your id token.  This will ensure only
+you have access to platform services.
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
-    Copy and paste the `sub` value into the Subject field.
+    Copy and paste the `sub` value into your Platform Form's Subject field.
 
     ```bash
     holos login --print-claims --log-level=error | jq -r .sub
     ```
 
-    Don't forget to submit the form.
+    After pasting the `sub` value, click Submit on the form.
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
     You don't have an id token when you're signed out, so there's nothing for
@@ -198,12 +200,11 @@ have access to platform services.
   </TabItem>
 </Tabs>
 
+### Pull the Platform Model {#Pull-the-Platform-Model}
 
-#### Pull the Platform Model {#Pull-the-Platform-Model}
-
-The Platform Model needs to be pulled into the local Git repository, after the
-form has been submitted.  The `holos render` command we'll execute next operates
-on local files exclusively.
+The Platform Model needs to be pulled into the local Git repository after the
+form has been submitted. The `holos render` command, which we will execute next,
+operates exclusively on local files.
 
 Holos stores the Platform Model in the `platform.config.json` file. Holos
 provides this file as input to CUE when rendering the platform.  This file is
@@ -211,41 +212,18 @@ intended to be added to version control.
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
-    **Pull the Platform Model** into the repository.
+    Pull the updated Platform Model into the local repository.
 
     ```bash
     holos pull platform model .
     ```
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
-    **Manually create the `platform.config.json` file.**
-    Update the `repoURL` field to refer to your fork url.
-
-    Beware modifying field values other than `repoURL`, you may run into trouble
-    accessing the platform services later.
+    There is nothing to pull when signed out as there isn't an OIDC token sub
+    value to add to the Platform Model.
 
     ```bash
-    cat <<EOF >platform.config.json
-    {
-      "platformModel": {
-        "argocd": {
-          "clientID": "275571279971577269@holos_quickstart",
-          "deployRoot": ".",
-          "repoURL": "git@github.com:holos-run/holos-k3d.git",
-          "targetRevision": "HEAD"
-        },
-        "org": {
-          "displayName": "Demo Organization",
-          "domain": "holos.localhost",
-          "name": "demo"
-        },
-        "rbac": {
-          "mode": "fake",
-          "sub": "999999999999999999"
-        }
-      }
-    }
-    EOF
+    # holos pull platform model .
     ```
   </TabItem>
 </Tabs>
@@ -315,6 +293,7 @@ on GKE, EKS, Talos, k3s, and Kubeadm clusters.
     --port "443:443@loadbalancer" \
     --k3s-arg "--disable=traefik@server:0"
   ```
+
   </TabItem>
   <TabItem value="develop" label="Develop Holos">
   Use this command when developing Holos.
@@ -329,19 +308,20 @@ on GKE, EKS, Talos, k3s, and Kubeadm clusters.
     --port "443:443@loadbalancer" \
     --k3s-arg "--disable=traefik@server:0"
   ```
+
   </TabItem>
 </Tabs>
 
 Traefik is disabled because Istio provides the same functionality.
 
-#### Local CA {#Local-CA}
+### Local CA {#Local-CA}
 
 Holos platforms use cert manager to issue tls certificates.  The browser and
 tools we're using need to trust these certificates to work together.  In this
 section we'll create a local trusted certificate authority.
 
-Admin is access is necessary for `mkcert` to install the certificate into the
-system trust store.
+Admin access is necessary for `mkcert` to install the certificate into your
+system's trust store.
 
 ```bash
 sudo -v
@@ -351,7 +331,7 @@ sudo -v
 bash ./scripts/local-ca
 ```
 
-#### DNS Setup {#DNS}
+### DNS Setup {#DNS}
 
 Configure your machine to resolve `*.holos.localhost` to your loopback
 interface.  This is necessary for requests to reach the workload cluster.
@@ -359,13 +339,20 @@ interface.  This is necessary for requests to reach the workload cluster.
 <Tabs>
   <TabItem value="macos" label="macOS" default>
   Cache sudo credentials.
+
+  Admin access is necessary to setup a local dnsmasq instance and configure
+  macOS's DNS resolver.
+
   ```bash
   sudo -v
   ```
-  Resolve *.localhost DNS queries to 127.0.0.1.
+
+  Resolve *.holos.localhost DNS queries to 127.0.0.1.
+
   ```bash
-  bash scripts/local-dns
+  bash ./scripts/local-dns
   ```
+
   </TabItem>
   <TabItem value="linux" label="Linux">
     [NSS-myhostname](http://man7.org/linux/man-pages/man8/nss-myhostname.8.html)
@@ -381,9 +368,9 @@ interface.  This is necessary for requests to reach the workload cluster.
   <TabItem value="windows" label="Windows">
     Ensure the loopback interface has at least the following names in `C:\windows\system32\drivers\etc\hosts`
 
-		```
+    ```
     127.0.0.1 httpbin.holos.localhost app.holos.localhost
-		```
+    ```
   </TabItem>
 </Tabs>
 
@@ -454,6 +441,7 @@ httpbin is a simple backend service useful for end-to-end testing.
 ```bash
 kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-backend
 kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-routes
+kubectl -n holos-system wait pod -l app.kubernetes.io/instance=httpbin --for=condition=Ready
 ```
 
 :::important
@@ -548,7 +536,7 @@ AuthorizationPolicy resources.
 A basic Zero Trust security model is now in place.  The platform authenticates
 and authorizes requests before they reach the backend service.
 
-#### Browser
+### Browser
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
@@ -589,7 +577,7 @@ and authorizes requests before they reach the backend service.
   </TabItem>
 </Tabs>
 
-#### Command Line
+### Command Line
 
 Verify unauthenticated requests are blocked by default outside the browser.
 
