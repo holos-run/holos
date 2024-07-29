@@ -20,11 +20,11 @@
 // The standard Go "encoding/json" package has functionality to serialize
 // arbitrary types to a large degree. The Value.AsInterface, Struct.AsMap, and
 // ListValue.AsSlice methods can convert the protobuf message representation into
-// a form represented by interface{}, map[string]interface{}, and []interface{}.
+// a form represented by any, map[string]any, and []any.
 // This form can be used with other packages that operate on such data structures
 // and also directly with the standard json package.
 //
-// In order to convert the interface{}, map[string]interface{}, and []interface{}
+// In order to convert the any, map[string]any, and []any
 // forms back as Value, Struct, and ListValue messages, use the NewStruct,
 // NewList, and NewValue constructor functions.
 //
@@ -59,28 +59,28 @@
 //
 // To construct a Value message representing the above JSON object:
 //
-//	m, err := structpb.NewValue(map[string]interface{}{
+//	m, err := structpb.NewValue(map[string]any{
 //		"firstName": "John",
 //		"lastName":  "Smith",
 //		"isAlive":   true,
 //		"age":       27,
-//		"address": map[string]interface{}{
+//		"address": map[string]any{
 //			"streetAddress": "21 2nd Street",
 //			"city":          "New York",
 //			"state":         "NY",
 //			"postalCode":    "10021-3100",
 //		},
-//		"phoneNumbers": []interface{}{
-//			map[string]interface{}{
+//		"phoneNumbers": []any{
+//			map[string]any{
 //				"type":   "home",
 //				"number": "212 555-1234",
 //			},
-//			map[string]interface{}{
+//			map[string]any{
 //				"type":   "office",
 //				"number": "646 555-4567",
 //			},
 //		},
-//		"children": []interface{}{},
+//		"children": []any{},
 //		"spouse":   nil,
 //	})
 //	if err != nil {

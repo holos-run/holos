@@ -127,11 +127,6 @@ go-deps: ## tool versions pinned in tools.go
 .PHONY: frontend-deps
 frontend-deps: ## Install Angular deps for go generate
 	cd internal/frontend/holos && npm install
-	cd internal/frontend/holos && npm install --save-dev @bufbuild/buf @connectrpc/protoc-gen-connect-es
-	cd internal/frontend/holos && npm install @connectrpc/connect @connectrpc/connect-web @bufbuild/protobuf
-	# https://github.com/connectrpc/connect-query-es/blob/1350b6f07b6aead81793917954bdb1cc3ce09df9/packages/protoc-gen-connect-query/README.md?plain=1#L23
-	cd internal/frontend/holos && npm install --save-dev @connectrpc/protoc-gen-connect-query @bufbuild/protoc-gen-es
-	cd internal/frontend/holos && npm install @connectrpc/connect-query @bufbuild/protobuf
 
 .PHONY: website-deps
 website-deps: ## Install Docusaurus deps for go generate
