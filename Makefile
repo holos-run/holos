@@ -133,8 +133,8 @@ website-deps: ## Install Docusaurus deps for go generate
 	cd doc/website && npm install
 
 .PHONY: image # refer to .ko.yaml as well
-image:  ## Container image build
-	KO_DOCKER_REPO=$(DOCKER_REPO) GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) ko build --platform=all --bare ./cmd/holos --tags $(GIT_DETAIL)$(GIT_SUFFIX)
+image:  ## Container image build for workflows/publish.yaml
+	KO_DOCKER_REPO=$(DOCKER_REPO) GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) ko build --platform=all --bare ./cmd/holos --tags $(GIT_DETAIL)$(GIT_SUFFIX) --tags latest
 
 .PHONY: deploy
 deploy: image  ## DEPLOY TO PROD
