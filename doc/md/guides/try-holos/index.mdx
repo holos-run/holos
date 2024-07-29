@@ -495,7 +495,14 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/authrout
 
     Once authenticated, visit
     [https://httpbin.holos.localhost/holos/authproxy/userinfo](https://httpbin.holos.localhost/holos/authproxy/userinfo)
-    which returns a subset of claims from your id token:
+    which returns a subset of claims from your id token.
+
+    :::tip
+
+    If you get `Unauthorized` instead of a json response body, make sure you
+    [authenticated](https://httpbin.holos.localhost/holos/authproxy) first.
+
+    :::
 
     ```json
     {
