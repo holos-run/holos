@@ -215,23 +215,22 @@ intended to be added to version control.
 
     ```bash
     holos pull platform model .
+    git add platform.config.json
+    git commit -m "Add platform model"
     ```
+
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
-    The `holos generate platform k3d` command should have created a default Platform
-    Model in `platform.config.json`.  As a result there's nothing to do in this
-    step.
+    The holos generate platform k3d command created an initial Platform Model in
+    `platform.config.json`.  As a result there's nothing to do in this step.
 
     ```bash
     # holos pull platform model .
+    # git add platform.config.json
+    # git commit -m "Add platform model"
     ```
   </TabItem>
 </Tabs>
-
-```bash
-git add platform.config.json
-git commit -m "Add platform model"
-```
 
 ## Render the Platform {#Render-the-Platform}
 
