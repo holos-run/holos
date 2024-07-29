@@ -29,6 +29,7 @@
     "flushcache",
     "gitops",
     "grpcreflect",
+    "grpcurl",
     "holos",
     "holoslogger",
     "httpbin",

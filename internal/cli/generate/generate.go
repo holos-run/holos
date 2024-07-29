@@ -28,10 +28,10 @@ func New(cfg *holos.Config) *cobra.Command {
 }
 
 func NewPlatform(cfg *holos.Config) *cobra.Command {
-	cmd := command.New("platform")
-	cmd.Use = "platform [flags] PLATFORM"
+	cmd := command.New("platform [flags] PLATFORM")
 	cmd.Short = "generate a platform from an embedded schematic"
 	cmd.Long = fmt.Sprintf("Embedded platforms available to generate:\n\n  %s", strings.Join(generate.Platforms(), "\n  "))
+	cmd.Example = "  holos generate platform k3d"
 	cmd.Args = cobra.ExactArgs(1)
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()

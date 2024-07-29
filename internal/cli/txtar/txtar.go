@@ -2,6 +2,7 @@ package txtar
 
 import (
 	"bytes"
+	_ "embed"
 	"fmt"
 	"io"
 	"log/slog"
@@ -16,11 +17,15 @@ import (
 	"golang.org/x/tools/txtar"
 )
 
+//go:embed long.txt
+var longHelp string
+
 // New returns a new txtar command.
 func New(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("txtar")
-	cmd.Short = "trivial text-based file archives"
-	cmd.Long = "writes arguments to stdout otherwise extracts"
+	cmd.Use = "txtar [flags] [FILES...]"
+	cmd.Short = "create and extract trivial text-based file archives"
+	cmd.Long = longHelp
 	cmd.Args = cobra.MinimumNArgs(0)
 	cmd.RunE = makeRunFunc(cfg)
 	cmd.Flags().SortFlags = false
@@ -50,6 +55,7 @@ func makeRunFunc(cfg *holos.Config) command.RunFunc {
 
 // extract files from the configured Stdin to Stdout or the filesystem.
 func extract(cfg *holos.Config) error {
+	slog.Debug("extracting from stdin...")
 	input, err := io.ReadAll(cfg.Stdin())
 	if err != nil {
 		return errors.Wrap(fmt.Errorf("could not read stdin: %w", err))

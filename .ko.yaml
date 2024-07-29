@@ -9,4 +9,5 @@ builds:
   - -s
   - -w
   - -X
+  # Makefile provides GIT_DETAIL and GIT_SUFFIX.
   - github.com/holos-run/holos/version.GitDescribe={{.Env.GIT_DETAIL}}{{.Env.GIT_SUFFIX}}

@@ -23,7 +23,7 @@ func NewGetCmd(hc *holos.Config) *cobra.Command {
 	cmd := command.New("secrets NAME [--to-file=destination]")
 	cmd.Aliases = []string{"secret"}
 	cmd.Args = cobra.MinimumNArgs(0)
-	cmd.Short = "Get holos secrets from the provisioner cluster"
+	cmd.Short = "get secrets stored in the management cluster"
 
 	cfg, flagSet := newConfig()
 	flagSet.Var(&cfg.files, "to-file", "extract files from the secret")

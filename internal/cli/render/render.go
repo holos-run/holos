@@ -18,7 +18,7 @@ import (
 func New(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("render")
 	cmd.Args = cobra.NoArgs
-	cmd.Short = "render platform configuration"
+	cmd.Short = "render platforms and components into the deploy/ directory"
 	cmd.AddCommand(NewComponent(cfg))
 	cmd.AddCommand(NewPlatform(cfg))
 	return cmd
@@ -26,9 +26,10 @@ func New(cfg *holos.Config) *cobra.Command {
 
 // New returns the component subcommand for the render command
 func NewComponent(cfg *holos.Config) *cobra.Command {
-	cmd := command.New("component [directory...]")
+	cmd := command.New("component DIRECTORY [DIRECTORY...]")
 	cmd.Args = cobra.MinimumNArgs(1)
-	cmd.Short = "write kubernetes api objects to the filesystem"
+	cmd.Short = "render specific components"
+	cmd.Example = "  holos render component --cluster-name=aws2 ./components/monitoring/kube-prometheus-stack"
 	cmd.Flags().AddGoFlagSet(cfg.WriteFlagSet())
 	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
 
@@ -83,16 +84,17 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 }
 
 func NewPlatform(cfg *holos.Config) *cobra.Command {
-	cmd := command.New("platform [directory]")
+	cmd := command.New("platform DIRECTORY")
 	cmd.Args = cobra.ExactArgs(1)
-	cmd.Short = "render all platform components"
+	cmd.Example = "  holos render platform ./platform"
+	cmd.Short = "render an entire platform"
 
 	config := client.NewConfig(cfg)
 	cmd.PersistentFlags().AddGoFlagSet(config.ClientFlagSet())
 	cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
 
 	var concurrency int
-	cmd.Flags().IntVar(&concurrency, "concurrency", min(runtime.NumCPU(), 8), "Number of concurrent components to render")
+	cmd.Flags().IntVar(&concurrency, "concurrency", min(runtime.NumCPU(), 8), "number of components to render concurrently")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()

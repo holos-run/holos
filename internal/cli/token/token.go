@@ -23,6 +23,9 @@ func New(cfg *holos.Config) *cobra.Command {
 
 	fs := &flag.FlagSet{}
 	cmd.Flags().AddGoFlagSet(fs)
+	var printClaims bool
+	fs.BoolVar(&printClaims, "print-claims", false, "print id token claims")
+	cmd.Flags().AddGoFlagSet(fs)
 
 	cmd.RunE = func(c *cobra.Command, args []string) error {
 		ctx := c.Context()
@@ -35,7 +38,11 @@ func New(cfg *holos.Config) *cobra.Command {
 			return fmt.Errorf("could not get token: %w", err)
 		}
 
-		fmt.Fprintf(cmd.OutOrStdout(), token.Bearer)
+		if printClaims {
+			fmt.Fprintln(cmd.OutOrStdout(), token.Pretty)
+		} else {
+			fmt.Fprintf(cmd.OutOrStdout(), token.Bearer)
+		}
 
 		return nil
 	}

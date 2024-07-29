@@ -29,7 +29,7 @@ var helpLong string
 func New(cfg *holos.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
-		Short: "server",
+		Short: "run the holos server",
 		Long:  helpLong,
 		// We handle our own errors.
 		SilenceUsage:  true,

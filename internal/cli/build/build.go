@@ -43,9 +43,10 @@ func makeBuildRunFunc(cfg *client.Config) command.RunFunc {
 
 // New returns the build subcommand for the root command
 func New(cfg *holos.Config) *cobra.Command {
-	cmd := command.New("build [directory]")
+	cmd := command.New("build DIRECTORY")
 	cmd.Args = cobra.ExactArgs(1)
-	cmd.Short = "build kubernetes api objects from a directory"
+	cmd.Short = "write kubernetes manifests to standard output"
+	cmd.Example = "  holos build components/argo/crds"
 
 	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
 	config := client.NewConfig(cfg)

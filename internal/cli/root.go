@@ -15,7 +15,6 @@ import (
 
 	"github.com/holos-run/holos/internal/cli/build"
 	"github.com/holos-run/holos/internal/cli/command"
-	"github.com/holos-run/holos/internal/cli/controller"
 	"github.com/holos-run/holos/internal/cli/create"
 	"github.com/holos-run/holos/internal/cli/destroy"
 	"github.com/holos-run/holos/internal/cli/generate"
@@ -28,7 +27,6 @@ import (
 	"github.com/holos-run/holos/internal/cli/push"
 	"github.com/holos-run/holos/internal/cli/register"
 	"github.com/holos-run/holos/internal/cli/render"
-	"github.com/holos-run/holos/internal/cli/rpc"
 	"github.com/holos-run/holos/internal/cli/token"
 	"github.com/holos-run/holos/internal/cli/txtar"
 )
@@ -78,7 +76,6 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.AddCommand(login.New(cfg))
 	rootCmd.AddCommand(logout.New(cfg))
 	rootCmd.AddCommand(token.New(cfg))
-	rootCmd.AddCommand(rpc.New(cfg))
 	rootCmd.AddCommand(generate.New(cfg))
 	rootCmd.AddCommand(register.New(cfg))
 	rootCmd.AddCommand(pull.New(cfg))
@@ -93,9 +90,6 @@ func New(cfg *holos.Config) *cobra.Command {
 
 	// Server
 	rootCmd.AddCommand(server.New(cfg))
-
-	// Controller
-	rootCmd.AddCommand(controller.New(cfg))
 
 	return rootCmd
 }

@@ -34,7 +34,8 @@ func New(cfg *holos.Config) *cobra.Command {
 func NewPlatform(cfg *client.Config) *cobra.Command {
 	cmd := command.New("platform")
 
-	cmd.Short = "create a platform"
+	cmd.Short = "rpc PlatformService.CreatePlatform"
+	cmd.Long = "Create a platform resource in Holos Server."
 	cmd.Args = cobra.NoArgs
 
 	pm := client.PlatformMutation{}

@@ -1,0 +1,7 @@
+Archives FILES to standard output recursively.
+Extracts from standard input when FILES are absent.
+
+This subcommand is intended to help communicate reproduction steps for issues in
+a simple and clear way.
+
+Refer to https://pkg.go.dev/golang.org/x/tools/txtar

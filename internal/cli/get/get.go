@@ -36,6 +36,8 @@ func New(hc *holos.Config) *cobra.Command {
 func NewPlatform(hc *holos.Config) *cobra.Command {
 	cmd := command.New("platform")
 	cmd.Aliases = []string{"platforms"}
+	cmd.Short = "rpc PlatformService.ListPlatforms"
+	cmd.Long = "List platforms stored in Holos Server."
 	cmd.Args = cobra.MinimumNArgs(0)
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {

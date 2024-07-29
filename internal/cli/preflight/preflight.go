@@ -29,7 +29,7 @@ func New(hc *holos.Config) *cobra.Command {
 	cfg, flagSet := newConfig()
 
 	cmd := command.New("preflight")
-	cmd.Short = "Run preflight checks to ensure you're ready to use Holos"
+	cmd.Short = "run holos preflight checks"
 	cmd.Flags().AddGoFlagSet(flagSet)
 	cmd.RunE = makePreflightRunFunc(hc, cfg)
 

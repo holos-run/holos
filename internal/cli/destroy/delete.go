@@ -31,8 +31,8 @@ func New(cfg *holos.Config) *cobra.Command {
 func NewPlatform(cfg *client.Config) *cobra.Command {
 	cmd := command.New("platform")
 	cmd.Args = cobra.MinimumNArgs(1)
-	cmd.Use = "platform [flags] PLATFORM_ID [PLATFORM_ID ...]"
-	cmd.Short = "Delete one or more platforms by ID"
+	cmd.Use = "platform [flags] PLATFORM_ID [PLATFORM_ID...]"
+	cmd.Short = "rpc PlatformService.DeletePlatform"
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
