@@ -1,0 +1,30 @@
+#! /bin/bash
+#
+
+set -euo pipefail
+
+tmpdir="$(mktemp -d)"
+finish() {
+  rm -rf "$tmpdir"
+}
+trap finish EXIT
+
+set -euo pipefail
+
+: ${GIT_DETAIL:=$(git describe --tags HEAD)}
+: ${GIT_SUFFIX:=$(test -n "`git status --porcelain`" && echo "-dirty" || echo "")}
+
+cd "$tmpdir"
+git clone --depth 1 git@github.com:holos-run/holos-infra.git
+cd holos-infra/saas
+git config user.name "github-actions[bot]"
+git config user.email "github-actions[bot]@users.noreply.github.com"
+
+echo '{"components":{"dev-holos-app":{"stages":{"dev":{"images":{"quay.io/holos-run/holos":{"newTag":"'"${GIT_DETAIL}"'"}}}}}}}' > userdata/components/dev-holos-app/images.json
+holos render platform ./platform
+git add .
+git commit -m "dev-holos-app: deploy ${GIT_DETAIL}${GIT_SUFFIX} [auto]"
+git --no-pager show --stat
+git push origin HEAD
+echo
+echo "https://argocd.admin.aws2.holos.run/applications/dev-holos-app"

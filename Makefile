@@ -136,9 +136,13 @@ website-deps: ## Install Docusaurus deps for go generate
 image:  ## Container image build for workflows/publish.yaml
 	KO_DOCKER_REPO=$(DOCKER_REPO) GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) ko build --platform=all --bare ./cmd/holos --tags $(GIT_DETAIL)$(GIT_SUFFIX) --tags latest
 
-.PHONY: deploy
-deploy: image  ## DEPLOY TO PROD
+.PHONY: prod-deploy
+prod-deploy: install image  ## deploy to PROD
 	GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) bash ./hack/deploy
+
+.PHONY: dev-deploy
+dev-deploy: install image  ## deploy to dev
+	GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) bash ./hack/deploy-dev
 
 .PHONY: website
 website: ## Build website

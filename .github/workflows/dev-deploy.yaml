@@ -1,0 +1,55 @@
+name: Dev Deploy
+
+on:
+  push:
+    branches: ['main', 'dev-deploy']
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: gha-rs
+    steps:
+      - name: Provide GPG and Git
+        run: sudo apt update && sudo apt -qq -y install gnupg git curl zip unzip tar bzip2 make jq
+
+      - name: Provide Holos Dependencies
+        run: |
+          sudo mkdir -p -m 755 /etc/apt/keyrings
+          curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+          sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+          echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+          sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
+          sudo apt update
+          sudo apt install -qq -y kubectl
+          curl -fsSL -o-  https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      # Must come after git executable is provided
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+
+      - uses: ko-build/setup-ko@v0.7
+        env:
+          KO_DOCKER_REPO: quay.io/holos-run/holos
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: make dev-deploy
+        env:
+          auth_user: holos-run+pusher
+          auth_token: ${{ secrets.QUAY_TOKEN }}
+        run: |
+          echo "${auth_token}" | ko login quay.io --username "${auth_user}" --password-stdin
+          make dev-deploy
