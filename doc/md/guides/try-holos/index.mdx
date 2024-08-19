@@ -1,5 +1,6 @@
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import Admonition from '@theme/Admonition';
 
 # Try Holos Locally
 
@@ -255,10 +256,9 @@ git add deploy
 git commit -m "holos render platform ./platform"
 ```
 
-:::important
+:::info[Don't blink, this is where Holos builds the platform]
 
-⚡ Don't blink, this is where Holos actually builds the platform.  It usually
-takes no more than a few seconds.
+It usually takes no more than a few seconds.
 
 Rendering the holos reference platform currently results in about 500K lines of
 yaml.  In contrast, roughly 80K lines are produced by this slimmed down k3d
@@ -270,6 +270,50 @@ guide manages thousands.  This is made possible by the unique way CUE unifies
 all configuration into one single model.
 
 :::
+
+## Configure DNS {#DNS}
+
+Configure your machine to resolve `*.holos.localhost` to your loopback
+interface.  This is necessary for requests to reach the workload cluster.
+
+<Tabs>
+  <TabItem value="macos" label="macOS" default>
+  Cache sudo credentials.
+
+  Admin access is necessary to setup a local dnsmasq instance and configure
+  macOS's DNS resolver.
+
+  ```bash
+  sudo -v
+  ```
+
+  Resolve *.holos.localhost DNS queries to 127.0.0.1.
+
+  ```bash
+  bash ./scripts/local-dns
+  ```
+
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+    [NSS-myhostname](http://man7.org/linux/man-pages/man8/nss-myhostname.8.html)
+    ships with many Linux distributions and should resolve *.localhost
+    automatically to 127.0.0.1.
+
+    Otherwise it is installable with:
+
+    ```bash
+    sudo apt install libnss-myhostname
+    ```
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+    Ensure the loopback interface has at least the following names in `C:\windows\system32\drivers\etc\hosts`
+
+    ```
+    127.0.0.1 httpbin.holos.localhost app.holos.localhost
+    ```
+  </TabItem>
+</Tabs>
+
 
 ## Create the Cluster {#Create-Cluster}
 
@@ -313,71 +357,38 @@ on GKE, EKS, Talos, k3s, and Kubeadm clusters.
 
 Traefik is disabled because Istio provides the same functionality.
 
-### Local CA {#Local-CA}
-
-Holos platforms use cert manager to issue tls certificates.  The browser and
-tools we're using need to trust these certificates to work together.  In this
-section we'll create a local trusted certificate authority.
-
-Admin access is necessary for `mkcert` to install the certificate into your
-trust stores.
-
-```bash
-sudo -v
-```
-
-```bash
-bash ./scripts/local-ca
-```
-
-### DNS Setup {#DNS}
-
-Configure your machine to resolve `*.holos.localhost` to your loopback
-interface.  This is necessary for requests to reach the workload cluster.
-
-<Tabs>
-  <TabItem value="macos" label="macOS" default>
-  Cache sudo credentials.
-
-  Admin access is necessary to setup a local dnsmasq instance and configure
-  macOS's DNS resolver.
-
-  ```bash
-  sudo -v
-  ```
-
-  Resolve *.holos.localhost DNS queries to 127.0.0.1.
-
-  ```bash
-  bash ./scripts/local-dns
-  ```
-
-  </TabItem>
-  <TabItem value="linux" label="Linux">
-    [NSS-myhostname](http://man7.org/linux/man-pages/man8/nss-myhostname.8.html)
-    ships with many Linux distributions and should resolve *.localhost
-    automatically to 127.0.0.1.
-
-    Otherwise it is installable with:
-
-    ```bash
-    sudo apt install libnss-myhostname
-    ```
-  </TabItem>
-  <TabItem value="windows" label="Windows">
-    Ensure the loopback interface has at least the following names in `C:\windows\system32\drivers\etc\hosts`
-
-    ```
-    127.0.0.1 httpbin.holos.localhost app.holos.localhost
-    ```
-  </TabItem>
-</Tabs>
-
 ## Apply the Platform Components {#Apply-Platform-Components}
 
 Use `kubectl` to apply each platform component.  In production, it's common to
 fully automate this process with ArgoCD, but we use `kubectl` to the same
 effect.
+
+### Local CA {#Local-CA}
+
+Holos platforms use cert manager to issue tls certificates.  The browser and
+tools we're using need to trust these certificates to work together.
+
+Admin access is necessary for `mkcert` to manage the certificate into your trust
+stores.
+
+```bash
+sudo -v
+```
+
+Manage the local CA and copy the CA key to the workload cluster so that cert
+manager can manage trusted certificates.
+
+```bash
+bash ./scripts/local-ca
+```
+
+:::warning
+
+Take care to run the local-ca script each time you create the workload cluster
+so that Certificates are issued correctly.
+
+:::
+
 
 ### Service Mesh
 
@@ -415,7 +426,15 @@ certificate authority.
 kubectl -n cert-manager wait pod -l app.kubernetes.io/component=webhook --for=condition=Ready
 kubectl apply --server-side=true -f deploy/clusters/workload/components/local-ca
 kubectl apply --server-side=true -f deploy/clusters/workload/components/certificates
+kubectl -n istio-gateways wait certificate httpbin.holos.localhost --for=condition=Ready
 ```
+
+:::warning
+
+The certificate will time out before becoming ready if the [local-ca](#Local-CA)
+script was not run after the cluster was created.
+
+:::
 
 #### Istio {#Istio}
 
@@ -443,7 +462,7 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-
 kubectl -n holos-system wait pod -l app.kubernetes.io/instance=httpbin --for=condition=Ready
 ```
 
-:::important
+:::info
 
 Browse to [https://httpbin.holos.localhost/](https://httpbin.holos.localhost/)
 to verify end to end connectivity.  You should see the httpbin index page.
@@ -482,9 +501,17 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/authrout
 
 <Tabs groupId="registration">
   <TabItem value="registered" label="Signed In">
-    Verify authentication is working by visiting
+    <Admonition type="info">
+    Verify authentication is working by browsing to
     [https://httpbin.holos.localhost/holos/authproxy](https://httpbin.holos.localhost/holos/authproxy).
-    The auth proxy should respond with a simple `Authenticated` response.
+
+    We want a simple `Authenticated` response.
+
+      <Admonition type="tip">
+      You may need to refresh the page a few times while the platform configures
+      itself.
+      </Admonition>
+    </Admonition>
 
     Istio will respond with `no healthy upstream` until the pod becomes ready.
     Wait for the pod to become ready with:
@@ -497,12 +524,10 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/authrout
     [https://httpbin.holos.localhost/holos/authproxy/userinfo](https://httpbin.holos.localhost/holos/authproxy/userinfo)
     which returns a subset of claims from your id token.
 
-    :::tip
-
-    If you get `Unauthorized` instead of a json response body, make sure you
-    [authenticated](https://httpbin.holos.localhost/holos/authproxy) first.
-
-    :::
+    <Admonition type="warning">
+      If you get `Unauthorized` instead of a json response body, make sure you
+      [authenticated](https://httpbin.holos.localhost/holos/authproxy) first.
+    </Admonition>
 
     ```json
     {
@@ -511,7 +536,6 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/authrout
       "preferredUsername": "demo"
     }
     ```
-
   </TabItem>
   <TabItem value="unregistered" label="Signed Out">
     The auth proxy will always try to sign you in when you are signed out, so
