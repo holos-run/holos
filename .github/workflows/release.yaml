@@ -12,11 +12,12 @@ permissions:
 
 jobs:
   goreleaser:
-    runs-on: gha-rs
+    runs-on: ubuntu-latest
     steps:
+      ## Not needed on ubuntu-latest
       # Must come before Checkout, otherwise goreleaser fails
-      - name: Provide GPG and Git
-        run: sudo apt update && sudo apt -qq -y install gnupg git curl zip unzip tar bzip2 make
+      # - name: Provide GPG and Git
+      #   run: sudo apt update && sudo apt -qq -y install gnupg git curl zip unzip tar bzip2 make
 
       # Must come after git executable is provided
       - name: Checkout

@@ -7,21 +7,23 @@ on:
 jobs:
   deploy:
     name: Deploy
-    runs-on: gha-rs
+    runs-on: ubuntu-latest
     steps:
-      - name: Provide GPG and Git
-        run: sudo apt update && sudo apt -qq -y install gnupg git curl zip unzip tar bzip2 make jq
+      ## Not needed on ubuntu-latest
+      # - name: Provide GPG and Git
+      #   run: sudo apt update && sudo apt -qq -y install gnupg git curl zip unzip tar bzip2 make jq
 
-      - name: Provide Holos Dependencies
-        run: |
-          sudo mkdir -p -m 755 /etc/apt/keyrings
-          curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-          sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-          echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
-          sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
-          sudo apt update
-          sudo apt install -qq -y kubectl
-          curl -fsSL -o-  https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+      ## Not needed on ubuntu-latest
+      # - name: Provide Holos Dependencies
+      #   run: |
+      #     sudo mkdir -p -m 755 /etc/apt/keyrings
+      #     curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      #     sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      #     echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+      #     sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
+      #     sudo apt update
+      #     sudo apt install -qq -y kubectl
+      #     curl -fsSL -o-  https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
       # Must come after git executable is provided
       - name: Checkout

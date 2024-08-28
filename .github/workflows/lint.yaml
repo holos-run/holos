@@ -15,7 +15,7 @@ permissions:
 jobs:
   golangci:
     name: lint
-    runs-on: gha-rs
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,8 +30,9 @@ jobs:
         with:
           go-version: stable
 
-      - name: Install Packages
-        run: sudo apt update && sudo apt -qq -y install git curl zip unzip tar bzip2 make
+      ## Not needed on ubuntu-latest
+      # - name: Install Packages
+      #   run: sudo apt update && sudo apt -qq -y install git curl zip unzip tar bzip2 make
 
       - name: Install Tools
         run: |
