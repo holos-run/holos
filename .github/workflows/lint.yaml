@@ -39,8 +39,7 @@ jobs:
           set -x
           make tools
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: latest
-          skip-pkg-cache: true
+      - name: Lint
+        run: |
+          set -x
+          make lint
