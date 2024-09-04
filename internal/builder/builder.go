@@ -79,7 +79,7 @@ func (b *buildPlanWrapper) validate() error {
 		errs = append(errs, fmt.Sprintf("apiVersion invalid: want: %s have: %s", v1alpha2.APIVersion, bp.APIVersion))
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("invalid BuildPlan: " + strings.Join(errs, ", "))
+		return errors.New("invalid BuildPlan: " + strings.Join(errs, ", "))
 	}
 	return nil
 }

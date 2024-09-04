@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -38,7 +39,7 @@ func (bp *BuildPlan) Validate() error {
 		errs = append(errs, fmt.Sprintf("apiVersion invalid: want: %s have: %s", APIVersion, bp.APIVersion))
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("invalid BuildPlan: " + strings.Join(errs, ", "))
+		return errors.New("invalid BuildPlan: " + strings.Join(errs, ", "))
 	}
 	return nil
 }

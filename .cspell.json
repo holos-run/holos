@@ -32,6 +32,7 @@
     "ghaction",
     "gitops",
     "godoc",
+    "golangci",
     "goreleaser",
     "grpcreflect",
     "grpcurl",

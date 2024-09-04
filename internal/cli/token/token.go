@@ -41,7 +41,7 @@ func New(cfg *holos.Config) *cobra.Command {
 		if printClaims {
 			fmt.Fprintln(cmd.OutOrStdout(), token.Pretty)
 		} else {
-			fmt.Fprintf(cmd.OutOrStdout(), token.Bearer)
+			fmt.Fprintln(cmd.OutOrStdout(), token.Bearer)
 		}
 
 		return nil

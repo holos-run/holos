@@ -58,7 +58,6 @@ tidy: ## Tidy go module.
 
 .PHONY: fmt
 fmt: ## Format code.
-	cd docs/examples && cue fmt ./...
 	cd internal/generate/platforms && cue fmt ./...
 	go fmt ./...
 
@@ -93,11 +92,14 @@ clean: ## Clean executables.
 test: ## Run tests.
 	scripts/test
 
+.PHONY: golangci-lint
+golangci-lint:
+	golangci-lint run
+
 .PHONY: lint
-lint: ## Run linters.
+lint: golangci-lint ## Run linters.
 	buf lint
 	cd internal/frontend/holos && ng lint
-	golangci-lint run
 	./hack/cspell
 
 .PHONY: coverage

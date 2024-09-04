@@ -118,7 +118,7 @@ func (c *Config) ReplaceAttr(groups []string, a slog.Attr) slog.Attr {
 			return tint.Err(err)
 		}
 		if err, ok := a.Value.Any().(string); ok {
-			return tint.Err(fmt.Errorf(err))
+			return tint.Err(errors.New(err))
 		}
 	} else if a.Key == slog.SourceKey {
 		source := a.Value.Any().(*slog.Source)

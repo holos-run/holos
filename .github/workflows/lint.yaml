@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 jobs:
-  golangci:
+  lint:
     name: lint
     runs-on: ubuntu-latest
     steps:
@@ -35,11 +35,8 @@ jobs:
       #   run: sudo apt update && sudo apt -qq -y install git curl zip unzip tar bzip2 make
 
       - name: Install Tools
-        run: |
-          set -x
-          make tools
+        run: make tools
 
       - name: Lint
-        run: |
-          set -x
-          make lint
+        # golangci-lint runs in a separate workflow.
+        run: make lint -o golangci-lint
