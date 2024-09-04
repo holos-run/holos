@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Holos',
-  tagline: 'The Platform Operating System',
+  tagline: 'The Holistic Package Manager for Cloud Native Applications',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -133,8 +133,12 @@ const config: Config = {
           title: 'Docs',
           items: [
             {
-              label: 'Try Holos Locally',
-              to: '/docs/guides/try-holos',
+              label: 'Get Started',
+              to: '/docs/quickstart',
+            },
+            {
+              label: 'Concepts',
+              to: '/docs/concepts',
             },
             {
               label: 'Documentation',
@@ -151,7 +155,7 @@ const config: Config = {
           items: [
             {
               label: 'Discuss',
-              href: 'https://github.com/orgs/holos-run/discussions',
+              href: 'https://github.com/holos-run/holos/discussions',
             },
           ],
         },

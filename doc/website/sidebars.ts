@@ -12,13 +12,15 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
  */
 const sidebars: SidebarsConfig = {
   doc: [
-    'intro',
+    'quickstart',
+    'concepts',
+    'install',
+    'comparison',
     {
       type: 'category',
       label: 'Guides',
       collapsed: false,
       items: [
-        'guides/install',
         'guides/try-holos/index',
         'guides/try-holos/platform-manifests',
         'guides/argocd/index',

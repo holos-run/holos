@@ -10,34 +10,38 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Zero Trust Security',
-    Svg: require('@site/static/img/base00/undraw_security_on_re_e491.svg').default,
+    title: 'Kustomize Helm',
+    Svg: require('@site/static/img/base00/undraw_together_re_a8x4.svg').default,
     description: (
       <>
-        Spend more time on your business features and less time rebuilding
-        authentication and authorization.  Holos provides zero trust security
-        with no code needed to protect your services.
+        Super charge your existing Helm charts by providing well defined,
+        validated input values, post-processing the output with Kustomize,
+        and mixing in your own custom resources.  All without modifying upstream
+        charts to alleviate the pain of upgrades.
       </>
     ),
   },
   {
-    title: 'Multi-Cloud',
-    Svg: require('@site/static/img/base00/undraw_cloud_hosting_7xb1.svg').default,
+    title: 'Unified Data Model',
+    Svg: require('@site/static/img/base00/undraw_fitting_pieces_re_nss7.svg').default,
     description: (
       <>
-        Avoid vendor lock in, downtime, and price hikes.  Holos is designed to
-        easily deploy workloads into multiple clouds and multiple regions.
+        Unify all of your platform components into one well-defined, strongly
+        typed data model with CUE.  Holos makes it easier and safer to integrate
+        seamlessly with software distributed with current and future tools that
+        produce Kubernetes resource manifests.
       </>
     ),
   },
   {
-    title: 'Developer Portal',
-    Svg: require('@site/static/img/base00/undraw_data_trends_re_2cdy.svg').default,
+    title: 'Built for GitOps',
+    Svg: require('@site/static/img/base00/undraw_version_control_re_mg66.svg').default,
     description: (
       <>
-        Ship high quality code quickly, provide a great developer experience,
-        and maintain control over your infrastructure with the integrated
-        Backstage developer portal.
+        Alleviate the pain and uncertainty of changes by reviewing fully
+        rendered manifests before applying them.  Holos produces fully rendered
+        manifests but does not apply them.  Holos is designed to integrate with
+        ArgoCD, Flux, or kubectl to apply.
       </>
     ),
   },

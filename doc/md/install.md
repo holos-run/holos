@@ -1,4 +1,4 @@
-# Install Holos
+# Installation
 
 Holos is distributed as a single file executable.
 
@@ -18,4 +18,3 @@ go install github.com/holos-run/holos/cmd/holos@latest
 
 - [helm](https://github.com/helm/helm/releases) to fetch and render Helm chart components.
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) to [kustomize](https://kustomize.io/) components.
-

@@ -17,19 +17,26 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <p className="projectDesc">
-          Holos is a holistic software development platform built from the most
-          popular open source projects.<br /> Build your developer platform in
-          no time.
+          Holos adds CUE's type safety, unified structure, and strong validation
+          features to your current software packages, including Helm and
+          Kustomize.  These features make the experience of integrating software
+          packages into a holistic platform a pleasant journey.
         </p>
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/intro">
+            to="docs/quickstart">
             Get Started
+          </Link>
+          <span className={styles.divider}></span>
+          <Link
+            className="button button--primary button--lg"
+            to="docs/concepts">
+            Learn More
           </Link>
         </div>
       </div>
-    </header>
+    </header >
   );
 }
 
@@ -37,8 +44,8 @@ export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Holos provides a software development platform that holistically integrates the most popular cloud native projects.">
+      title={`${siteConfig.title} Package Manager`}
+      description="Holos adds CUE's type safety, unified structure, and strong validation features to your current software packages, including Helm and Kustomize.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
