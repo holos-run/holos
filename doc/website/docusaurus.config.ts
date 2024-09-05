@@ -98,13 +98,13 @@ const config: Config = {
       items: [
         {
           type: 'doc',
-          docId: 'guides/try-holos/index',
+          docId: 'quickstart',
           position: 'left',
           label: 'Try Holos',
         },
         {
           type: 'doc',
-          docId: 'intro',
+          docId: 'concepts',
           position: 'left',
           label: 'Docs',
         },

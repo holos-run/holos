@@ -16,39 +16,16 @@ const sidebars: SidebarsConfig = {
     'concepts',
     'install',
     'comparison',
-    {
-      type: 'category',
-      label: 'Guides',
-      collapsed: false,
-      items: [
-        'guides/try-holos/index',
-        'guides/try-holos/platform-manifests',
-        'guides/argocd/index',
-        'guides/backstage/index',
-        'guides/observability/index',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Design',
-      collapsed: false,
-      items: [
-        'design/rendering',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Reference Platform',
-      collapsed: false,
-      items: [
-        'reference-platform/architecture',
-      ],
-    },
-    'glossary',
   ],
   api: [
-    'api/core/index',
-    'api/core/v1alpha2',
+    {
+      label: 'Core API',
+      type: 'category',
+      collapsed: true,
+      items: [
+        'api/core/v1alpha2',
+      ],
+    },
     'cli',
   ],
 };
