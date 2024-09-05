@@ -47,6 +47,7 @@ const sidebars: SidebarsConfig = {
     'glossary',
   ],
   api: [
+    'api/core/index',
     'api/core/v1alpha2',
     'cli',
   ],

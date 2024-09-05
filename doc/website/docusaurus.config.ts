@@ -35,15 +35,17 @@ const config: Config = {
     mermaid: true
   },
 
+  // TODO: These redirects don't seem to be working, at least with the `npm run
+  // start` dev server.
   plugins: [
     [
       '@docusaurus/plugin-client-redirects',
       {
         redirects: [
           {
+            from: "/docs/tutorial/local/k3d/",
             to: "/docs/guides/try-holos/",
-            from: "/docs/tutorial/local/k3d/"
-          }
+          },
         ],
       },
     ],
