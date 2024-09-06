@@ -1,0 +1,69 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Admonition from '@theme/Admonition';
+
+# Quickstart Guide
+
+This guide shows you the basics of how Holos.  You'll deploy a Helm chart to
+Kubernetes using a Component to see how Holos makes the process safer, easier,
+and more consistent.
+
+## What you'll need {#Requirements}
+
+You'll need the following tools installed to complete this guide.
+
+1. [holos](/docs/install) - to build the platform.
+2. [helm](https://helm.sh/docs/intro/install/) - to render Holos components that wrap upstream Helm charts.
+3. [k3d](https://k3d.io/#installation) - to provide a Kubernetes API server.
+4. [OrbStack](https://docs.orbstack.dev/install) or [Docker](https://docs.docker.com/get-docker/) - to use k3d.
+5. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to interact with the k8s api server.
+
+## Install Holos
+
+Install Holos with the following command or other methods listed on the
+[Installation](/docs/install/) page.
+
+```bash
+go install github.com/holos-run/holos/cmd/holos@latest
+```
+
+## Git repository
+
+Start by initializing an empty Git repository.  Holos is designed to operate
+against local files in a Git repository.
+
+<Tabs groupId="init">
+  <TabItem value="command" label="Command">
+    ```bash
+    mkdir holos-quickstart
+    cd holos-quickstart
+    git init
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    Initialized empty Git repository in /holos-quickstart/.git/
+    ```
+  </TabItem>
+</Tabs>
+
+This guide assumes commands are run from the root directory of this Git
+repository unless otherwise stated.
+
+## Generate the Platform {#Generate-Platform}
+
+Generate the Platform code in the repository root.  A Platform refers to all of
+the software and services integrated together to provide your organization's
+software development platform.  In this guide the platform will contain a single
+Component to demonstrate how the concepts fit together.
+
+```bash
+holos generate platform quickstart
+```
+
+Commit the generated platform config to the repository.
+
+```bash
+git add .
+git commit -m "holos generate platform quickstart - $(holos --version)"
+```

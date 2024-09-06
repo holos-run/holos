@@ -8,17 +8,17 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/holos-run/holos/api/core/v1alpha2"
+	core "github.com/holos-run/holos/api/core/v1alpha3"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/util"
 )
 
 // NewResult returns a new Result with the given holos component.
-func NewResult(component v1alpha2.HolosComponent) *Result {
+func NewResult(component core.Component) *Result {
 	return &Result{
 		Kind:              "Result",
-		APIVersion:        "v1alpha2",
+		APIVersion:        component.APIVersion,
 		Component:         component,
 		accumulatedOutput: "",
 	}
@@ -28,12 +28,12 @@ func NewResult(component v1alpha2.HolosComponent) *Result {
 // the Result as a data pipeline.
 type Result struct {
 	// Kind is a string value representing the resource this object represents.
-	Kind string `json:"kind" yaml:"kind" cue:"string | *\"Result\""`
+	Kind string `json:"kind"`
 	// APIVersion represents the versioned schema of this representation of an object.
-	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha2\""`
+	APIVersion string `json:"apiVersion"`
 
 	// Component represents the common fields of all holos component kinds.
-	Component v1alpha2.HolosComponent
+	Component core.Component
 
 	// accumulatedOutput accumulates rendered api objects.
 	accumulatedOutput string
@@ -92,13 +92,13 @@ func (r *Result) AccumulatedOutput() string {
 }
 
 // addObjectMap renders the provided APIObjectMap into the accumulated output.
-func (r *Result) addObjectMap(ctx context.Context, objectMap v1alpha2.APIObjectMap) {
+func (r *Result) addObjectMap(ctx context.Context, objectMap core.APIObjectMap) {
 	if r == nil {
 		return
 	}
 	log := logger.FromContext(ctx)
 	b := []byte(r.AccumulatedOutput())
-	kinds := make([]v1alpha2.Kind, 0, len(objectMap))
+	kinds := make([]core.Kind, 0, len(objectMap))
 	// Sort the keys
 	for kind := range objectMap {
 		kinds = append(kinds, kind)
@@ -108,7 +108,7 @@ func (r *Result) addObjectMap(ctx context.Context, objectMap v1alpha2.APIObjectM
 	for _, kind := range kinds {
 		v := objectMap[kind]
 		// Sort the keys
-		names := make([]v1alpha2.Label, 0, len(v))
+		names := make([]core.InternalLabel, 0, len(v))
 		for name := range v {
 			names = append(names, name)
 		}

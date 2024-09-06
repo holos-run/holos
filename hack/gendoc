@@ -2,15 +2,16 @@
 #
 set -euo pipefail
 
-prefix="$(git rev-parse --show-prefix)"
+# Generate the documentation for the package the calls go:generate
+package="$(git rev-parse --show-prefix)"
 cd "$(git rev-parse --show-toplevel)"
-mkdir -p "doc/md/$(dirname "${prefix}")"
-gomarkdoc --output "doc/md/${prefix%/}.md" "./${prefix}"
+mkdir -p "doc/md/$(dirname "${package}")"
+gomarkdoc --output "doc/md/${package%/}.md" "./${package}"
 
 # Fix heading anchors by making them explicit
 # Refer to https://docusaurus.io/docs/markdown-features/toc#heading-ids
 stamp=$RANDOM
-# sed 's/^## type /## /' "doc/md/${prefix%/}.md" > "doc/md/${prefix%/}.md.${stamp}"
+# sed 's/^## type /## /' "doc/md/${package%/}.md" > "doc/md/${package%/}.md.${stamp}"
 
-sed -E 's/## type ([A-Za-z0-9_]+)/## type \1 {#\1}/' "doc/md/${prefix%/}.md" > "doc/md/${prefix%/}.md.${stamp}"
-mv "doc/md/${prefix%/}.md.${stamp}" "doc/md/${prefix%/}.md"
+sed -E 's/## type ([A-Za-z0-9_]+)/## type \1 {#\1}/' "doc/md/${package%/}.md" > "doc/md/${package%/}.md.${stamp}"
+mv "doc/md/${package%/}.md.${stamp}" "doc/md/${package%/}.md"

@@ -9,7 +9,7 @@ import (
 	"syscall"
 
 	"github.com/holos-run/holos"
-	core "github.com/holos-run/holos/api/core/v1alpha2"
+	core "github.com/holos-run/holos/api/core/v1alpha3"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/holos-run/holos/internal/util"
@@ -23,7 +23,7 @@ func (hc *HelmChart) Render(ctx context.Context, path holos.InstancePath) (*Resu
 	if hc == nil {
 		return nil, nil
 	}
-	result := NewResult(hc.Component.HolosComponent)
+	result := NewResult(hc.Component.Component)
 	if err := hc.helm(ctx, result, path); err != nil {
 		return nil, err
 	}

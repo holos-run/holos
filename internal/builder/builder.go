@@ -15,7 +15,7 @@ import (
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
-	"github.com/holos-run/holos/api/core/v1alpha2"
+	v1 "github.com/holos-run/holos/api/core/v1alpha3"
 	"github.com/holos-run/holos/api/v1alpha1"
 
 	"github.com/holos-run/holos"
@@ -26,10 +26,10 @@ import (
 )
 
 const (
-	KubernetesObjects = v1alpha2.KubernetesObjectsKind
+	KubernetesObjects = v1.KubernetesObjectsKind
 	// Helm is the value of the kind field of holos build output indicating helm
 	// values and helm command information.
-	Helm = v1alpha2.HelmChartKind
+	Helm = v1.HelmChartKind
 	// Skip is the value when the instance should be skipped
 	Skip = "Skip"
 	// KustomizeBuild is the value of the kind field of cue output indicating
@@ -60,7 +60,7 @@ type BuildData struct {
 }
 
 type buildPlanWrapper struct {
-	buildPlan *v1alpha2.BuildPlan
+	buildPlan *v1.BuildPlan
 }
 
 func (b *buildPlanWrapper) validate() error {
@@ -72,11 +72,11 @@ func (b *buildPlanWrapper) validate() error {
 		return fmt.Errorf("invalid BuildPlan: is nil")
 	}
 	errs := make([]string, 0, 2)
-	if bp.Kind != v1alpha2.BuildPlanKind {
+	if bp.Kind != v1.BuildPlanKind {
 		errs = append(errs, fmt.Sprintf("kind invalid: want: %s have: %s", v1alpha1.BuildPlanKind, bp.Kind))
 	}
-	if bp.APIVersion != v1alpha2.APIVersion {
-		errs = append(errs, fmt.Sprintf("apiVersion invalid: want: %s have: %s", v1alpha2.APIVersion, bp.APIVersion))
+	if bp.APIVersion != v1.APIVersion {
+		errs = append(errs, fmt.Sprintf("apiVersion invalid: want: %s have: %s", v1.APIVersion, bp.APIVersion))
 	}
 	if len(errs) > 0 {
 		return errors.New("invalid BuildPlan: " + strings.Join(errs, ", "))
@@ -282,7 +282,7 @@ func (b Builder) build(ctx context.Context, bd BuildData) (results []*render.Res
 
 	switch tm.Kind {
 	case "BuildPlan":
-		var bp v1alpha2.BuildPlan
+		var bp v1.BuildPlan
 		if err = decoder.Decode(&bp); err != nil {
 			err = errors.Wrap(fmt.Errorf("could not decode BuildPlan %s: %w", bd.Dir, err))
 			return
@@ -298,7 +298,7 @@ func (b Builder) build(ctx context.Context, bd BuildData) (results []*render.Res
 	return results, err
 }
 
-func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1alpha2.BuildPlan, path holos.InstancePath) (results []*render.Result, err error) {
+func (b *Builder) buildPlan(ctx context.Context, buildPlan *v1.BuildPlan, path holos.InstancePath) (results []*render.Result, err error) {
 	log := logger.FromContext(ctx)
 
 	bpw := buildPlanWrapper{buildPlan: buildPlan}

@@ -12,7 +12,7 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
  */
 const sidebars: SidebarsConfig = {
   doc: [
-    'quickstart',
+    'quickstart/index',
     'concepts',
     'install',
     'comparison',
@@ -23,6 +23,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       collapsed: true,
       items: [
+        'api/core/v1alpha3',
         'api/core/v1alpha2',
       ],
     },
