@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/holos-run/holos/internal/cli/command"
-	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/generate"
 	"github.com/holos-run/holos/internal/holos"
@@ -35,11 +34,9 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 	cmd.Args = cobra.ExactArgs(1)
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
-		clientContext := holos.NewClientContext(ctx)
-		client := client.New(client.NewConfig(cfg))
 
 		for _, name := range args {
-			if err := generate.GeneratePlatform(ctx, client, clientContext.OrgID, name); err != nil {
+			if err := generate.GeneratePlatform(ctx, name); err != nil {
 				return errors.Wrap(err)
 			}
 		}

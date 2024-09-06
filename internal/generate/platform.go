@@ -37,27 +37,9 @@ func Platforms() []string {
 	return dirs
 }
 
-func writePlatformMetadata(ctx context.Context, rpc *client.Client, orgID string, name string) error {
+func initPlatformMetadata(ctx context.Context, name string) error {
 	log := logger.FromContext(ctx)
-
-	// Link the local platform the SaaS platform ID.
-	rpcPlatforms, err := rpc.Platforms(ctx, orgID)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-
-	var rpcPlatform *platform.Platform
-	for _, p := range rpcPlatforms {
-		if p.GetName() == name {
-			rpcPlatform = p
-			break
-		}
-		log.DebugContext(ctx, "checking platform", "want", name, "have", p.GetName())
-	}
-	if rpcPlatform == nil {
-		return errors.Wrap(errors.New("cannot generate: platform not found in the holos server"))
-	}
-
+	rpcPlatform := &platform.Platform{Name: name}
 	// Write the platform data.
 	encoder := protojson.MarshalOptions{Indent: "  "}
 	data, err := encoder.Marshal(rpcPlatform)
@@ -67,7 +49,7 @@ func writePlatformMetadata(ctx context.Context, rpc *client.Client, orgID string
 	if len(data) > 0 {
 		data = append(data, '\n')
 	}
-	log = log.With("platform_id", rpcPlatform.GetId())
+
 	if err := os.WriteFile(client.PlatformMetadataFile, data, 0644); err != nil {
 		return errors.Wrap(fmt.Errorf("could not write platform metadata: %w", err))
 	}
@@ -78,7 +60,7 @@ func writePlatformMetadata(ctx context.Context, rpc *client.Client, orgID string
 
 // GeneratePlatform writes the cue code for a platform to the local working
 // directory.
-func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, name string) error {
+func GeneratePlatform(ctx context.Context, name string) error {
 	log := logger.FromContext(ctx)
 	// Check for a valid platform
 	platformPath := filepath.Join(platformsRoot, name)
@@ -90,7 +72,7 @@ func GeneratePlatform(ctx context.Context, rpc *client.Client, orgID string, nam
 		log.DebugContext(ctx, fmt.Sprintf("skipped write %s: already exists", client.PlatformConfigFile))
 	} else {
 		if os.IsNotExist(err) {
-			if err := writePlatformMetadata(ctx, rpc, orgID, name); err != nil {
+			if err := initPlatformMetadata(ctx, name); err != nil {
 				return errors.Wrap(err)
 			}
 		} else {
