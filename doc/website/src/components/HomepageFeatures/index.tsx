@@ -8,6 +8,7 @@ type FeatureItem = {
   description: JSX.Element;
 };
 
+// TODO: Consider focusing on the three pillars of Safe, Easy, Consistent.
 const FeatureList: FeatureItem[] = [
   {
     title: 'Kustomize Helm',
@@ -34,14 +35,23 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    title: 'Built for GitOps',
+    title: 'Deep Insights',
+    Svg: require('@site/static/img/base00/undraw_code_review_re_woeb.svg').default,
+    description: (
+      <>
+        Reduce risk and increase confidence in your configuration changes.
+        Holos offers clear visibility into complete resource configuration
+        <i>before</i> being applied.
+      </>
+    ),
+  },
+  {
+    title: 'Interoperable',
     Svg: require('@site/static/img/base00/undraw_version_control_re_mg66.svg').default,
     description: (
       <>
-        Alleviate the pain and uncertainty of changes by reviewing fully
-        rendered manifests before applying them.  Holos produces fully rendered
-        manifests but does not apply them.  Holos is designed to integrate with
-        ArgoCD, Flux, or kubectl to apply.
+        Holos is designed for compatibility with your preferred tools and
+        processes, for example git diff and code reviews.
       </>
     ),
   },
