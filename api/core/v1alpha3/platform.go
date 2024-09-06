@@ -2,11 +2,6 @@ package v1alpha3
 
 import "google.golang.org/protobuf/types/known/structpb"
 
-type PlatformMetadata struct {
-	// Name represents the Platform name.
-	Name string `json:"name"`
-}
-
 // Platform represents a platform to manage.  A Platform resource informs holos
 // which components to build.  The platform resource also acts as a container
 // for the platform model form values provided by the PlatformService.  The
@@ -24,13 +19,18 @@ type Platform struct {
 	Spec PlatformSpec `json:"spec"`
 }
 
+type PlatformMetadata struct {
+	// Name represents the Platform name.
+	Name string `json:"name"`
+}
+
 // PlatformSpec represents the specification of a Platform.  Think of a platform
 // specification as a list of platform components to apply to a list of
 // kubernetes clusters combined with the user-specified Platform Model.
 type PlatformSpec struct {
 	// Model represents the platform model holos gets from from the
 	// PlatformService.GetPlatform rpc method and provides to CUE using a tag.
-	Model structpb.Struct `json:"model"`
+	Model structpb.Struct `json:"model" cue:"{...}"`
 	// Components represents a list of holos components to manage.
 	Components []PlatformSpecComponent `json:"components"`
 }

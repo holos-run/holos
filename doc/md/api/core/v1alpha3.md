@@ -368,7 +368,7 @@ PlatformSpec represents the specification of a Platform. Think of a platform spe
 type PlatformSpec struct {
     // Model represents the platform model holos gets from from the
     // PlatformService.GetPlatform rpc method and provides to CUE using a tag.
-    Model structpb.Struct `json:"model"`
+    Model structpb.Struct `json:"model" cue:"{...}"`
     // Components represents a list of holos components to manage.
     Components []PlatformSpecComponent `json:"components"`
 }
