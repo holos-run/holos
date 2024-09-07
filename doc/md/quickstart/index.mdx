@@ -67,3 +67,77 @@ Commit the generated platform config to the repository.
 git add .
 git commit -m "holos generate platform quickstart - $(holos --version)"
 ```
+
+## Create a Component
+
+The platform you generated is empty.  Rendering the platform succeeds, but does
+nothing because there are no Components listed in the Platform spec:
+
+```cue
+package holos
+
+import core "github.com/holos-run/holos/api/core/v1alpha3"
+
+core.#Platform & {
+	metadata: name: "quickstart"
+}
+```
+
+<Tabs groupId="render">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos render platform ./platform
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```bash
+    # No output is produced, the Platform contains no Components.
+    ```
+  </TabItem>
+</Tabs>
+
+Generate the CUE code definition for a Component that wraps the podinfo Helm
+chart.
+
+<Tabs groupId="gen-podinfo">
+  <TabItem value="command" label="Command">
+    ```bash
+    mkdir components
+    (cd components && holos generate component helm podinfo)
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    generated component
+    ```
+  </TabItem>
+</Tabs>
+
+The HelmChart Component is defined in the `components/podinfo/podinfo.cue` file, for example:
+
+```cue
+package holos
+
+let Chart = {
+	Name:      "podinfo"
+	Version:   "6.6.2"
+	Namespace: "default"
+
+	Repo: name: "podinfo"
+	Repo: url:  "https://stefanprodan.github.io/podinfo"
+
+	Values: {}
+}
+
+// Produce a helm chart build plan.
+(#Helm & Chart).Output
+```
+
+## Render the Component
+
+Individual components can be rendered without needing to be included in a
+Platform spec, useful when developing a new component.
+
+
+
+## Add the Component

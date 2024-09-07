@@ -68,6 +68,7 @@
     "pflag",
     "PKCE",
     "platformconnect",
+    "podinfo",
     "promhttp",
     "protobuf",
     "protojson",
