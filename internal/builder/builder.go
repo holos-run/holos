@@ -75,9 +75,6 @@ func (b *buildPlanWrapper) validate() error {
 	if bp.Kind != v1.BuildPlanKind {
 		errs = append(errs, fmt.Sprintf("kind invalid: want: %s have: %s", v1alpha1.BuildPlanKind, bp.Kind))
 	}
-	if bp.APIVersion != v1.APIVersion {
-		errs = append(errs, fmt.Sprintf("apiVersion invalid: want: %s have: %s", v1.APIVersion, bp.APIVersion))
-	}
 	if len(errs) > 0 {
 		return errors.New("invalid BuildPlan: " + strings.Join(errs, ", "))
 	}
