@@ -30,6 +30,7 @@
     "errgroup",
     "fieldmaskpb",
     "flushcache",
+    "gendoc",
     "ghaction",
     "gitops",
     "godoc",

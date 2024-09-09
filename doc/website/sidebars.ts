@@ -19,6 +19,14 @@ const sidebars: SidebarsConfig = {
   ],
   api: [
     {
+      label: 'Schema',
+      type: 'category',
+      collapsed: false,
+      items: [
+        'api/schema/v1alpha3',
+      ],
+    },
+    {
       label: 'Core API',
       type: 'category',
       collapsed: true,
