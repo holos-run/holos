@@ -8,7 +8,10 @@
 // plate code and generating component build plans in a consistent manner.
 package v1alpha3
 
-import core "github.com/holos-run/holos/api/core/v1alpha3"
+import (
+	core "github.com/holos-run/holos/api/core/v1alpha3"
+	"google.golang.org/protobuf/types/known/structpb"
+)
 
 // Helm provides a BuildPlan via the Output field which contains one HelmChart
 // from package core.  Useful as a convenience wrapper to render a HelmChart
@@ -91,4 +94,58 @@ import core "github.com/holos-run/holos/api/core/v1alpha3"
 	// Application.spec.source.targetRevision field.  Defaults to the branch named
 	// main.
 	TargetRevision: string & (string | *"main")
+}
+
+// Cluster represents a cluster managed by the Platform.
+#Cluster: {
+	// Name represents the cluster name, for example "east1", "west1", or
+	// "management".
+	name: string @go(Name)
+
+	// Primary represents if the cluster is marked as the primary among a set of
+	// candidate clusters.  Useful for promotion of database leaders.
+	primary: bool & (true | *false) @go(Primary)
+}
+
+// Fleet represents a named collection of similarly configured Clusters.  Useful
+// to segregate workload clusters from their management cluster.
+#Fleet: {
+	name: string @go(Name)
+
+	// Clusters represents a mapping of Clusters by their name.
+	clusters: {[string]: #Cluster} & {[Name=_]: name: Name} @go(Clusters,map[string]Cluster)
+}
+
+// StandardFleets represents the standard set of Clusters in a Platform
+// segmented into Fleets by their purpose.  The management Fleet contains a
+// single Cluster, for example a GKE autopilot cluster with no workloads
+// deployed for reliability and cost efficiency.  The workload Fleet contains
+// all other Clusters which contain workloads and sync Secrets from the
+// management cluster.
+#StandardFleets: {
+	// Workload represents a Fleet of zero or more workload Clusters.
+	workload: #Fleet & {name: "workload"} @go(Workload)
+
+	// Management represents a Fleet with one Cluster named management.
+	management: #Fleet & {name: "management", clusters: management: _} @go(Management)
+}
+
+// Platform is a convenience structure to produce a core Platform specification
+// value in the Output field.  Useful to collect components at the root of the
+// Platform configuration tree as a struct, which are automatically converted
+// into a list for the core Platform spec output.
+#Platform: {
+	// Name represents the Platform name.
+	Name: string & (string | *"holos")
+
+	// Components is a structured map of components to manage by their name.
+	Components: {[string]: core.#PlatformSpecComponent} @go(,map[string]core.PlatformSpecComponent)
+
+	// Model represents the Platform model holos gets from from the
+	// PlatformService.GetPlatform rpc method and provides to CUE using a tag.
+	Model: structpb.#Struct & {...}
+
+	// Output represents the core Platform spec for the holos cli to iterate over
+	// and render each listed Component, injecting the Model.
+	Output: core.#Platform
 }

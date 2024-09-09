@@ -131,8 +131,8 @@ func makeRenderFunc[T any](log *slog.Logger, path string, cfg T) func([]byte) *b
 func GenerateComponent(ctx context.Context, kind string, name string, cfg *Schematic) error {
 	// use name from args to build the source path
 	path := filepath.Join(componentsRoot, kind, name)
-	// use cfg.Name from flags to build the destination path
-	dstPath := filepath.Join(getCwd(ctx), cfg.Name)
+	// write to the current directory.
+	dstPath := filepath.Join(getCwd(ctx))
 	log := logger.FromContext(ctx).With("name", cfg.Name, "path", dstPath)
 	log.DebugContext(ctx, "mkdir")
 	if err := os.MkdirAll(dstPath, os.ModePerm); err != nil {

@@ -199,3 +199,12 @@ import (
 		}
 	}
 }
+
+#Platform: {
+	Name:  _
+	Model: _
+	Components: [string]: _
+	Output: metadata: name: Name
+	Output: spec: model:    Model
+	Output: spec: components: [for c in Components {c}]
+}

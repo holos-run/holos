@@ -4,7 +4,10 @@
 // plate code and generating component build plans in a consistent manner.
 package v1alpha3
 
-import core "github.com/holos-run/holos/api/core/v1alpha3"
+import (
+	core "github.com/holos-run/holos/api/core/v1alpha3"
+	"google.golang.org/protobuf/types/known/structpb"
+)
 
 //go:generate ../../../hack/gendoc
 
@@ -96,4 +99,52 @@ type ArgoConfig struct {
 	// Application.spec.source.targetRevision field.  Defaults to the branch named
 	// main.
 	TargetRevision string `cue:"string | *\"main\""`
+}
+
+// Cluster represents a cluster managed by the Platform.
+type Cluster struct {
+	// Name represents the cluster name, for example "east1", "west1", or
+	// "management".
+	Name string `json:"name"`
+	// Primary represents if the cluster is marked as the primary among a set of
+	// candidate clusters.  Useful for promotion of database leaders.
+	Primary bool `json:"primary" cue:"true | *false"`
+}
+
+// Fleet represents a named collection of similarly configured Clusters.  Useful
+// to segregate workload clusters from their management cluster.
+type Fleet struct {
+	Name string `json:"name"`
+	// Clusters represents a mapping of Clusters by their name.
+	Clusters map[string]Cluster `json:"clusters" cue:"{[Name=_]: name: Name}"`
+}
+
+// StandardFleets represents the standard set of Clusters in a Platform
+// segmented into Fleets by their purpose.  The management Fleet contains a
+// single Cluster, for example a GKE autopilot cluster with no workloads
+// deployed for reliability and cost efficiency.  The workload Fleet contains
+// all other Clusters which contain workloads and sync Secrets from the
+// management cluster.
+type StandardFleets struct {
+	// Workload represents a Fleet of zero or more workload Clusters.
+	Workload Fleet `json:"workload" cue:"{name: \"workload\"}"`
+	// Management represents a Fleet with one Cluster named management.
+	Management Fleet `json:"management" cue:"{name: \"management\", clusters: management: _}"`
+}
+
+// Platform is a convenience structure to produce a core Platform specification
+// value in the Output field.  Useful to collect components at the root of the
+// Platform configuration tree as a struct, which are automatically converted
+// into a list for the core Platform spec output.
+type Platform struct {
+	// Name represents the Platform name.
+	Name string `cue:"string | *\"holos\""`
+	// Components is a structured map of components to manage by their name.
+	Components map[string]core.PlatformSpecComponent
+	// Model represents the Platform model holos gets from from the
+	// PlatformService.GetPlatform rpc method and provides to CUE using a tag.
+	Model structpb.Struct `cue:"{...}"`
+	// Output represents the core Platform spec for the holos cli to iterate over
+	// and render each listed Component, injecting the Model.
+	Output core.Platform
 }
