@@ -4,9 +4,12 @@ import Admonition from '@theme/Admonition';
 
 # Quickstart Guide
 
-This guide shows you the basics of how Holos.  You'll deploy a Helm chart to
-Kubernetes using a Component to see how Holos makes the process safer, easier,
-and more consistent.
+In this guide you'll experience how Holos makes the process of operating a
+platform safer, easier, and more consistent. We'll use Holos to manage a vendor
+provided Helm chart as a Component.  Next, we'll mix-in our own custom resources
+to manage the component with GitOps.  Finally, we'll see how Holos makes it
+safer and easier to maintain software over time by surfacing the exact changes
+that will be made when upgrading the vendor's chart to a new version.
 
 ## What you'll need {#Requirements}
 
@@ -88,8 +91,8 @@ Commit the generated platform config to the repository.
 
 ## Generate a Component {#generate-component}
 
-The platform you generated is empty.  Generate the CUE code definition for a
-Component that wraps the podinfo Helm chart.
+The platform you generated is empty.  Generate the CUE code that defines a
+Helm Component with the following command.
 
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
@@ -118,7 +121,7 @@ directory.
 <Tabs groupId="podinfo-files">
   <TabItem value="components/podinfo/podinfo.gen.cue" label="Leaf">
     `components/podinfo/podinfo.gen.cue`
-    ```cue
+    ```cue showLineNumbers
     package holos
 
     // Produce a helm chart build plan.
@@ -138,7 +141,7 @@ directory.
   </TabItem>
   <TabItem value="podinfo.gen.cue" label="Root">
     `podinfo.gen.cue`
-    ```cue
+    ```cue showLineNumbers
     package holos
 
     // Manage podinfo on workload clusters only
@@ -238,20 +241,22 @@ consistent across multiple charts.
 
 ## Mix in an ArgoCD Application
 
-So far we've seen how Holos is a convenient wrapper around Helm, but we haven't
-yet seen how it makes it easier to consistently and safely manage all of the
-software that goes into a platform.  We'll mix in an ArgoCD
-[Application][application] resource to manage the podinfo Component with GitOps.
-We'll define this configuration in a way that is automatically and consistently
-re-used across all Components added to the Platform in the future, including
-Components which are not Helm charts.
+We've seen how Holos works with Helm, but we haven't seen how Holos makes it
+easier to consistently and safely manage all of the software that goes into a
+Platform.
+
+Holos offers the ability to easily mix-in resources that differentiate your
+Platform.  We'll use this feature to mix-in an ArgoCD [Application][application]
+to manage the podinfo Component with GitOps.  We'll define this configuration in
+a way that is automatically and consistently re-used across all Components added
+to the Platform in the future.
 
 Create a new file named `argocd.cue` in the root of your git repository with the
 following contents:
 
 <Tabs groupId="argocd-config">
   <TabItem value="command" label="argocd.cue">
-    ```cue
+    ```cue showLineNumbers
     package holos
 
     #ArgoConfig: {
@@ -260,13 +265,14 @@ following contents:
     }
     ```
   </TabItem>
-  <TabItem value="note" label="Note">
-    If you plan to apply the rendered output to a real cluster, change the RepoURL
-    to the url of the git repository you created in this guide.  It is sufficient to
-    keep the example URL if you're getting a feel for Holos and inspecting the
-    rendered output without applying it to a live cluster.
-  </TabItem>
 </Tabs>
+
+:::tip
+If you plan to apply the rendered output to a real cluster, change the
+example.com RepoURL to the url of the git repository you created in this guide.
+You don't need to change the example if you're getting a feel for Holos by
+inspecting the rendered output without applying it to a live cluster.
+:::
 
 With this file in place, render the component again.
 
@@ -298,9 +304,9 @@ irrelevant](https://cuelang.org/docs/tour/basics/order-irrelevance/) in CUE.
 
 :::
 
-Defining the configuration at the root causes all of the leaf Components to take
-on the ArgoCD configuration and render an Application resource for the
-Component.
+Defining the configuration at the root causes all future leaf Components to take
+on the ArgoCD configuration and render an Application manifest to manage the
+component with GitOps.
 
 <Tabs groupId="tree-podinfo-argocd">
   <TabItem value="command" label="Command">
@@ -330,7 +336,7 @@ following.
 
 <Tabs groupId="podinfo-application">
   <TabItem value="file" label="podinfo.application.gen.yaml">
-    ```yaml
+    ```yaml showLineNumbers
     apiVersion: argoproj.io/v1alpha1
     kind: Application
     metadata:
@@ -375,29 +381,29 @@ Finally, add and commit the results to your platform Git repository.
   </TabItem>
 </Tabs>
 
-In this section we learned how Holos provides a simple way to add an ArgoCD
-Application resource for the podinfo Component which wraps a Helm chart.  Holos
-provides consistency by managing an Application resource for every Component
-added to the platform, all by defining the configuration of ArgoCD in the
-`argocd.cue` file in the root of the Git repository.
+In this section we learned how Holos provides a simple way to mix resources into
+Components, like an ArgoCD Application.  Holos provides consistency by managing
+an Application resource for every Component added to the platform, all by
+defining the configuration in `argocd.cue` at the root of the repository.
 
 ## Workload Clusters
 
-So far, we've generated a Platform and a registered podinfo Component with the
-Platform, but we have not yet defined a workload cluster.  Rendering the
-Platform has no effect because the podinfo Component applies only to workload
-Clusters.
+We've generated a Component to manage podinfo and integrated it with our
+Platform, but rendering the Platform does not render podinfo.  Podinfo isn't
+rendered because we haven't assigned any Clusters to the workload Fleet.
 
+Define two new clusters, east and west, and assign them to the workload Fleet.
 Create a new file named `clusters.cue` in the root of your git repository with
-the following content:
+the following contents:
 
 <Tabs groupId="clusters">
   <TabItem value="clusters.cue" label="clusters.cue">
-    ```cue
+    ```cue showLineNumbers
     package holos
 
     // Define two workload clusters for disaster recovery.
     #Fleets: workload: clusters: {
+      // In CUE _ indicates values are defined elsewhere.
       east: _
       west: _
     }
@@ -405,25 +411,26 @@ the following content:
   </TabItem>
 </Tabs>
 
-In this file we're defining two Clusters named `east` and `west`.  This example
-demonstrates how Holos simplifies the process of configuring multiple clusters
-with nearly identical configuration, useful for assigning one cluster among a
-set as the primary.  Clusters which are not primary can then be configured to
-automatically follow the leader.  The primary can be configured to automatically
-restore persistent data from backups stored in buckets.
+This example demonstrates how Holos simplifies the process of configuring
+multiple clusters with similar configuration by grouping them into a Fleet.
 
 :::tip
+Fleets are useful to segment a group of Clusters into one leader and multiple
+followers by marking one cluster as the primary.  Holos makes the process
+of reconfiguring which cluster is the primary safer, easier, and more
+consistent.  The primary can be configured to automatically restore persistent
+data from backups stored in buckets.  Non-primary clusters can be configured to
+automatically follow the primary.
 
-Automatic database backup and restore is an advanced topic made possible by
-Cloud Native PG.  Check back for a guide on this topic and additional Day 2
-operations topics.
-
+Automatic database backup, restore, and streaming replication is an advanced
+topic made possible by Cloud Native PG and CUE.  Check back for a guide on this
+topic and additional Day 2 operations topics.
 :::
 
 ## Render the Platform {#render-platform}
 
-With workload clusters defined render the platform to render the podinfo
-Component for each cluster.
+Render the platform to render the podinfo Component for each of the workload
+clusters.
 
 <Tabs groupId="render-platform">
   <TabItem value="command" label="Command">
@@ -439,9 +446,9 @@ Component for each cluster.
   </TabItem>
 </Tabs>
 
-The render platform command iterates over every Cluster and renders each
-Component integrated into the Platform.  Note how two additional sub-trees have
-been created under the deploy directory, one for each cluster `east` and `west`.
+The render platform command iterates over every Cluster in the Fleet and then
+renders each assigned Component.  Note the two additional subdirectories created
+under the deploy directory, one for each cluster `east` and `west`.
 
 <Tabs groupId="tree-platform">
   <TabItem value="command" label="Command">
@@ -459,12 +466,14 @@ been created under the deploy directory, one for each cluster `east` and `west`.
         │   │       └── podinfo.gen.yaml
         │   └── gitops
         │       └── podinfo.application.gen.yaml
+        # highlight-next-line
         ├── east
         │   ├── components
         │   │   └── podinfo
         │   │       └── podinfo.gen.yaml
         │   └── gitops
         │       └── podinfo.application.gen.yaml
+        # highlight-next-line
         └── west
             ├── components
             │   └── podinfo
@@ -477,14 +486,16 @@ been created under the deploy directory, one for each cluster `east` and `west`.
   </TabItem>
 </Tabs>
 
-Holos provides consistency and safety to these changes by ensuring the ArgoCD
-Application is defined in a manner unified with the configuration we placed at
-the root.  Note how the Application resource is generated for each cluster.
+Holos provides consistency and safety by ensuring the ArgoCD Application is
+defined once, with strong type checking, at the configuration root.
+
+New Application resources are automatically generated for the `east` and `west`
+workload Clusters.
 
 <Tabs groupId="applications">
   <TabItem value="east" label="east">
   `deploy/clusters/east/gitops/podinfo.application.gen.yaml`
-```yaml
+```yaml showLineNumbers
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -503,7 +514,7 @@ spec:
   </TabItem>
   <TabItem value="west" label="west">
   `deploy/clusters/west/gitops/podinfo.application.gen.yaml`
-```yaml
+```yaml showLineNumbers
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -522,7 +533,7 @@ spec:
   </TabItem>
   <TabItem value="default" label="default">
   `deploy/clusters/default/gitops/podinfo.application.gen.yaml`
-```yaml
+```yaml showLineNumbers
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -541,7 +552,7 @@ spec:
   </TabItem>
 </Tabs>
 
-Add and commit the rendered platform with east and west workload clusters.
+Add and commit the rendered platform along with the workload Clusters.
 
 <Tabs groupId="commit-render-platform">
   <TabItem value="command" label="Command">
@@ -565,13 +576,12 @@ Add and commit the rendered platform with east and west workload clusters.
 
 ## Upgrade a Helm Chart
 
-Holos is designed to ease the burden of day 2 operations: upgrading software,
-integrating new software, and making platform-wide configuration changes safely
-with confidence.
+Holos is designed to ease the burden of day 2 operations.  Upgrading software,
+integrating new software, and making safe platform-wide configuration changes
+are easier to accomplish with Holos.
 
-Let's upgrade our Podinfo component to see how this looks in practice.  First,
-update the Component version field to the latest upstream Helm chart version
-available at the time of writing.
+Let's upgrade the podinfo Component to see how this works in practice.  First,
+update the Component version field to the latest upstream Helm chart version.
 
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
@@ -638,7 +648,7 @@ can limit the potential blast radius of a problematic change.
     ```
   </TabItem>
   <TabItem value="output" label="Output">
-```diff
+```diff showLineNumbers
 diff --git a/deploy/clusters/east/components/podinfo/podinfo.gen.yaml b/deploy/clusters/east/components/podinfo/podinfo.gen.yaml
 index 7cc3332..8c1647d 100644
 --- a/deploy/clusters/east/components/podinfo/podinfo.gen.yaml

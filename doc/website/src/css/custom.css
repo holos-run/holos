@@ -4,6 +4,12 @@
  * work well for content-centric websites.
  */
 
+/* Enable wrapping by default for mobile */
+pre code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* You can override the default Infima variables here. */
 :root {
   --ifm-link-color: #268bd2;
