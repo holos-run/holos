@@ -23,20 +23,33 @@ platform engineers.
 - [Platform](<#platform>) - A collection of Components integrated into a software development platform.
 - [Model](<#model>) - Structured data included in the Platform specification, available to all Components.  For example, your organization's domain name.
 - [Rendering](<#rendering>) - Holos is a tool that makes the process of rendering Kubernetes manifests safer, easier, and consistent.
+- [Cluster](<#cluter>) - A Kubernetes cluster.  Components are rendered for and applied to a Cluster.
+- [Fleet](<#fleet>) - A collection of Clusters with a similar purpose.  A Platform is typically composed of two Fleets, one for management the second for workloads.
 
 ```mermaid
-graph BT
+graph TB
     Platform[<a href="#platform">Platform</a>]
-    Component[<a href="#component">Components</a>]
+    Cluster[<a href="#cluster">Cluster</a>]
+    Fleet[<a href="#fleet">Fleet</a>]
+    Component[<a href="#component">Component</a>]
     Helm[<a href="#component">Helm</a>]
     Kustomize[<a href="#component">Kustomize</a>]
     CUE[<a href="#component">CUE</a>]
 
-    Component --> Platform
+    Cluster --> Platform
+    Fleet --> Cluster
+    Component --> Fleet
     Helm --> Component
     Kustomize --> Component
     CUE --> Component
 ```
+
+:::tip
+This graph is organized as a tree.  We often say configuration at the root
+defines the broad Platform.  Configuration at a leaf defines a Component of the
+Platform.  The concept of a tree also reflects the filesystem organization of
+the configuration.
+:::
 
 <!--
 
@@ -335,6 +348,16 @@ graph LR
     FS --> Flux --> C
     FS --> kubectl --> C
 ```
+
+## Cluster
+
+A Cluster represents a Kubernetes cluster.  One component may be reused across
+multiple different Clusters.
+
+## Fleet
+
+A Fleet represents a group of Clusters that share a similar purpose.  A Platform
+typically has two Fleets, one for management and one for workloads.
 
 [krm]: https://docs.google.com/document/d/1RmHXdLhNbyOWPW_AtnnowaRfGejw-qlKQIuLKQWlwzs/view#heading=h.sa6p0aye4ide
 [Platform]: /docs/api/core/v1alpha2/#Platform
