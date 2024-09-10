@@ -1,0 +1,38 @@
+#! /bin/bash
+#
+
+set -euo pipefail
+
+mkcert --install
+
+tmpdir="$(mktemp -d)"
+finish() {
+  [[ -d "$tmpdir" ]] && rm -rf "$tmpdir"
+}
+trap finish EXIT
+cd "$tmpdir"
+
+# Create the local CA Secret with ca.crt, tls.crt, tls.key
+
+mkdir local-ca
+cd local-ca
+CAROOT="$(mkcert -CAROOT)"
+cp -p "${CAROOT}/rootCA.pem" ca.crt
+cp -p "${CAROOT}/rootCA.pem" tls.crt
+cp -p "${CAROOT}/rootCA-key.pem" tls.key
+kubectl create secret generic --from-file=.  --dry-run=client -o yaml local-ca > ../local-ca.yaml
+cd ..
+
+echo 'type: kubernetes.io/tls' >> local-ca.yaml
+kubectl apply --server-side=true -f- <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: cert-manager
+  name: cert-manager
+spec:
+  finalizers:
+  - kubernetes
+EOF
+kubectl apply -n cert-manager --server-side=true -f local-ca.yaml

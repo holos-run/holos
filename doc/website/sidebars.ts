@@ -16,6 +16,7 @@ const sidebars: SidebarsConfig = {
     'concepts',
     'install',
     'comparison',
+    'localhost/index',
   ],
   api: [
     {

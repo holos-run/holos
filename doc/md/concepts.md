@@ -23,7 +23,7 @@ platform engineers.
 - [Platform](<#platform>) - A collection of Components integrated into a software development platform.
 - [Model](<#model>) - Structured data included in the Platform specification, available to all Components.  For example, your organization's domain name.
 - [Rendering](<#rendering>) - Holos is a tool that makes the process of rendering Kubernetes manifests safer, easier, and consistent.
-- [Cluster](<#cluter>) - A Kubernetes cluster.  Components are rendered for and applied to a Cluster.
+- [Cluster](<#cluster>) - A Kubernetes cluster.  Components are rendered for and applied to a Cluster.
 - [Fleet](<#fleet>) - A collection of Clusters with a similar purpose.  A Platform is typically composed of two Fleets, one for management the second for workloads.
 
 ```mermaid
