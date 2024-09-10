@@ -94,7 +94,7 @@ Component that wraps the podinfo Helm chart.
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
     ```bash
-    holos generate component helm podinfo
+    holos generate component helm podinfo --component-version 6.6.1
     ```
   </TabItem>
   <TabItem value="output" label="Output">
@@ -104,15 +104,16 @@ Component that wraps the podinfo Helm chart.
   </TabItem>
 </Tabs>
 
-This command produces two files.  A leaf `components/podinfo/podinfo.gen.cue`
-file, and a root `podinfo.gen.cue` file.  Holos takes advantage of the fact that
-[order is irrelevant](https://cuelang.org/docs/tour/basics/order-irrelevance/)
-in CUE to register the component with the Platform specification by adding a
-file to the root of the Git repository in addition to defining the component
-itself in the leaf component directory.
+The `--component-version 6.6.1` flag intentionally installs an older release.
+We'll see how Holos helps with software upgrades later in this guide.
 
-The Helm chart Component is defined in the `components/podinfo/podinfo.cue`
-file, for example:
+The generate component command produces two files.  A leaf
+`components/podinfo/podinfo.gen.cue` file, and a root `podinfo.gen.cue` file.
+Holos takes advantage of the fact that [order is
+irrelevant](https://cuelang.org/docs/tour/basics/order-irrelevance/) in CUE to
+register the component with the Platform by adding a file to the root of the Git
+repository.  The second file defines the component itself in the leaf component
+directory.
 
 <Tabs groupId="podinfo-files">
   <TabItem value="components/podinfo/podinfo.gen.cue" label="Leaf">
@@ -157,7 +158,7 @@ chart repository location.
 
 This chart deploys cleanly with no values provided, but we include an empty
 Values struct to illustrate how Holos improves the consistency and safety of
-Helm by taking advantage the strong type checking in CUE.  Shared values,
+Helm by taking advantage of the strong type checking in CUE.  Shared values,
 such as the organization domain name, can safely be passed to all Components
 across all clusters in the Platform by defining them at the root of the
 configuration.
@@ -562,14 +563,165 @@ Add and commit the rendered platform with east and west workload clusters.
   </TabItem>
 </Tabs>
 
-## Quickstart Recap {#quickstart-recap}
+## Upgrade a Helm Chart
 
-In this guide we learned how to:
+Holos is designed to ease the burden of day 2 operations: upgrading software,
+integrating new software, and making platform-wide configuration changes safely
+with confidence.
 
-1. Install Holos.
-2. Generate a Git repository for the Platform config.
-3. Create a Component that wraps the upstream podinfo Helm Chart without modifications.
-4. Render individual components.
-5. Mix in an ArgoCD Application resource to every Component in the Platform.
+Let's upgrade our Podinfo component to see how this looks in practice.  First,
+update the Component version field to the latest upstream Helm chart version
+available at the time of writing.
+
+<Tabs groupId="gen-podinfo">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos generate component helm podinfo --component-version 6.6.2
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    generated component
+    ```
+  </TabItem>
+</Tabs>
+
+Remove the cached chart version:
+
+<Tabs groupId="gen-podinfo">
+  <TabItem value="command" label="Command">
+    ```bash
+    rm -rf components/podinfo/vendor
+    ```
+  </TabItem>
+</Tabs>
+
+Now re-render the whole Platform:
+
+<Tabs groupId="render-platform2">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos render platform ./platform
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    rendered components/podinfo for cluster east in 327.10475ms
+    rendered components/podinfo for cluster west in 327.796541ms
+    ```
+  </TabItem>
+</Tabs>
+
+Note, we're still using the upstream chart without modifying it.  The Holos
+component wraps around the chart to mix in the additional resources and
+integrate the component with the broader Platform.
+
+## Visualize the Changes
+
+Holos makes it easier to see exactly what changes are made and what resources
+will be applied to the API server.  On principle, holos operates against local
+files.  The task of applying the files is left to ecosystem tools such as
+kubectl and ArgoCD.  This makes it easier for platform operators to inspect
+changes before merging them into the main branch, or committing them at all.
+
+For example, using `git diff` we can see the only functional change when
+upgrading this helm chart is deploying a new container image tag to each
+cluster.  Labels are modified as well, which we can classify as non-functional
+changes in this case.  Furthermore, we can slowly roll out this change by
+applying it first to the east cluster, then to the west cluster. In this way we
+can limit the potential blast radius of a problematic change.
+
+<Tabs groupId="git-diff">
+  <TabItem value="command" label="Command">
+    ```bash
+    git diff deploy/clusters/east
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```diff
+diff --git a/deploy/clusters/east/components/podinfo/podinfo.gen.yaml b/deploy/clusters/east/components/podinfo/podinfo.gen.yaml
+index 7cc3332..8c1647d 100644
+--- a/deploy/clusters/east/components/podinfo/podinfo.gen.yaml
++++ b/deploy/clusters/east/components/podinfo/podinfo.gen.yaml
+@@ -5,9 +5,9 @@ kind: Service
+ metadata:
+   name: podinfo
+   labels:
+-    helm.sh/chart: podinfo-6.6.1
++    helm.sh/chart: podinfo-6.6.2
+     app.kubernetes.io/name: podinfo
+-    app.kubernetes.io/version: "6.6.1"
++    app.kubernetes.io/version: "6.6.2"
+     app.kubernetes.io/managed-by: Helm
+ spec:
+   type: ClusterIP
+@@ -29,9 +29,9 @@ kind: Deployment
+ metadata:
+   name: podinfo
+   labels:
+-    helm.sh/chart: podinfo-6.6.1
++    helm.sh/chart: podinfo-6.6.2
+     app.kubernetes.io/name: podinfo
+-    app.kubernetes.io/version: "6.6.1"
++    app.kubernetes.io/version: "6.6.2"
+     app.kubernetes.io/managed-by: Helm
+ spec:
+   replicas: 1
+@@ -53,7 +53,7 @@ spec:
+       terminationGracePeriodSeconds: 30
+       containers:
+         - name: podinfo
+         # highlight-next-line
+-          image: "ghcr.io/stefanprodan/podinfo:6.6.1"
+         # highlight-next-line
++          image: "ghcr.io/stefanprodan/podinfo:6.6.2"
+           imagePullPolicy: IfNotPresent
+           command:
+             - ./podinfo
+```
+  </TabItem>
+</Tabs>
+
+:::tip
+
+Holos is designed to surface the _fully rendered_ manifests intended for the
+Kubernetes API server to make it easier to see and reason about platform wide
+configuration changes.
+
+:::
+
+## Recap {#recap}
+
+In this quickstart guide we learned how Holos makes it easier, safer, and more
+consistent to manage a Platform composed of multiple clusters and existing Helm
+charts.
+
+We learned how to:
+
+1. Generate a Git repository for the Platform config.
+2. Create a Component that wraps the unmodified upstream podinfo Helm chart.
+3. Render an individual component.
+4. Define root level configuration that mixes in an ArgoCD Application resource
+to every Component in the Platform.
+5. Define multiple workload clusters which share a _nearly_ identical
+configuration, but which can vary when necessary, for example assigning a leader
+and followers.
+6. Render the manifests for the entire Platform with the `holos render platform`
+command.
+7. Upgrade a helm chart to the latest version as an important Day 2 task.
+8. Visualize the exact changes which _will be_, but have not yet been applied to
+each cluster in the Platform.
+
+## Dive Deeper
+
+If you'd like to dive deeper, please take a look at the [Schema API][schema] and
+[Core API][core] reference docs.  The main difference between the schema package
+and the core package is that the schema is for users to write refined CUE with,
+while the core package what the schema produces for `holos` to execute.  Users
+rarely need to interact with the core API if they're on the happy path, but can
+easily use the core package as an escape hatch when the happy path doesn't lead
+to the desired destination.
 
 [application]: https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
+[schema]: /docs/api/schema/v1alpha3/
+[core]: /docs/api/core/v1alpha3/
