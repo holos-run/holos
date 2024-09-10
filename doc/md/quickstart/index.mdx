@@ -249,7 +249,7 @@ Create a new file named `argocd.cue` in the root of your git repository with the
 following contents:
 
 <Tabs groupId="argocd-config">
-  <TabItem value="command" label="File: argocd.cue">
+  <TabItem value="command" label="argocd.cue">
     ```cue
     package holos
 
@@ -379,6 +379,188 @@ Application resource for the podinfo Component which wraps a Helm chart.  Holos
 provides consistency by managing an Application resource for every Component
 added to the platform, all by defining the configuration of ArgoCD in the
 `argocd.cue` file in the root of the Git repository.
+
+## Workload Clusters
+
+So far, we've generated a Platform and a registered podinfo Component with the
+Platform, but we have not yet defined a workload cluster.  Rendering the
+Platform has no effect because the podinfo Component applies only to workload
+Clusters.
+
+Create a new file named `clusters.cue` in the root of your git repository with
+the following content:
+
+<Tabs groupId="clusters">
+  <TabItem value="clusters.cue" label="clusters.cue">
+    ```cue
+    package holos
+
+    // Define two workload clusters for disaster recovery.
+    #Fleets: workload: clusters: {
+      east: _
+      west: _
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+In this file we're defining two Clusters named `east` and `west`.  This example
+demonstrates how Holos simplifies the process of configuring multiple clusters
+with nearly identical configuration, useful for assigning one cluster among a
+set as the primary.  Clusters which are not primary can then be configured to
+automatically follow the leader.  The primary can be configured to automatically
+restore persistent data from backups stored in buckets.
+
+:::tip
+
+Automatic database backup and restore is an advanced topic made possible by
+Cloud Native PG.  Check back for a guide on this topic and additional Day 2
+operations topics.
+
+:::
+
+## Render the Platform {#render-platform}
+
+With workload clusters defined render the platform to render the podinfo
+Component for each cluster.
+
+<Tabs groupId="render-platform">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos render platform ./platform
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    rendered components/podinfo for cluster west in 99.480792ms
+    rendered components/podinfo for cluster east in 99.882667ms
+    ```
+  </TabItem>
+</Tabs>
+
+The render platform command iterates over every Cluster and renders each
+Component integrated into the Platform.  Note how two additional sub-trees have
+been created under the deploy directory, one for each cluster `east` and `west`.
+
+<Tabs groupId="tree-platform">
+  <TabItem value="command" label="Command">
+    ```bash
+    tree deploy
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    deploy
+    └── clusters
+        ├── default
+        │   ├── components
+        │   │   └── podinfo
+        │   │       └── podinfo.gen.yaml
+        │   └── gitops
+        │       └── podinfo.application.gen.yaml
+        ├── east
+        │   ├── components
+        │   │   └── podinfo
+        │   │       └── podinfo.gen.yaml
+        │   └── gitops
+        │       └── podinfo.application.gen.yaml
+        └── west
+            ├── components
+            │   └── podinfo
+            │       └── podinfo.gen.yaml
+            └── gitops
+                └── podinfo.application.gen.yaml
+
+    14 directories, 6 files
+    ```
+  </TabItem>
+</Tabs>
+
+Holos provides consistency and safety to these changes by ensuring the ArgoCD
+Application is defined in a manner unified with the configuration we placed at
+the root.  Note how the Application resource is generated for each cluster.
+
+<Tabs groupId="applications">
+  <TabItem value="east" label="east">
+  `deploy/clusters/east/gitops/podinfo.application.gen.yaml`
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: podinfo
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    # highlight-next-line
+    path: ./deploy/clusters/east/components/podinfo
+    repoURL: https://example.com/holos-quickstart.git
+    targetRevision: main
+```
+  </TabItem>
+  <TabItem value="west" label="west">
+  `deploy/clusters/west/gitops/podinfo.application.gen.yaml`
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: podinfo
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    # highlight-next-line
+    path: ./deploy/clusters/west/components/podinfo
+    repoURL: https://example.com/holos-quickstart.git
+    targetRevision: main
+```
+  </TabItem>
+  <TabItem value="default" label="default">
+  `deploy/clusters/default/gitops/podinfo.application.gen.yaml`
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: podinfo
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    # highlight-next-line
+    path: ./deploy/clusters/default/components/podinfo
+    repoURL: https://example.com/holos-quickstart.git
+    targetRevision: main
+```
+  </TabItem>
+</Tabs>
+
+Add and commit the rendered platform with east and west workload clusters.
+
+<Tabs groupId="commit-render-platform">
+  <TabItem value="command" label="Command">
+    ```bash
+    git add .
+    git commit -m "holos render platform ./platform - $(holos --version)"
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    [main 5aebcf5] holos render platform ./platform - 0.93.2
+     5 files changed, 263 insertions(+)
+     create mode 100644 clusters.cue
+     create mode 100644 deploy/clusters/east/components/podinfo/podinfo.gen.yaml
+     create mode 100644 deploy/clusters/east/gitops/podinfo.application.gen.yaml
+     create mode 100644 deploy/clusters/west/components/podinfo/podinfo.gen.yaml
+     create mode 100644 deploy/clusters/west/gitops/podinfo.application.gen.yaml
+    ```
+  </TabItem>
+</Tabs>
 
 ## Quickstart Recap {#quickstart-recap}
 
