@@ -442,8 +442,8 @@ clusters.
 </Tabs>
 
 The render platform command iterates over every Cluster in the Fleet and renders
-each assigned Component. Notice the two additional subdirectories created under
-the deploy directory, one for each cluster: `east` and `west`.
+each Component assigned to the Fleet. Notice the two additional subdirectories
+created under the deploy directory, one for each cluster: `east` and `west`.
 
 <Tabs groupId="tree-platform">
   <TabItem value="command" label="Command">
@@ -571,22 +571,12 @@ Add and commit the rendered Platform and workload Clusters.
 
 ## Upgrade a Helm Chart
 
-Holos is designed to ease the burden of day 2 operations.  Upgrading software,
-integrating new software, and making safe platform-wide configuration changes
-are easier to accomplish with Holos.
-
-Let's upgrade the podinfo Component to see how this works in practice.  First,
-update the Component version field to the latest upstream Helm chart version.
-
----
-
 Holos is designed to ease the burden of Day 2 operations. With Holos, upgrading
 software, integrating new software, and making safe platform-wide configuration
 changes become easier.
 
 Let's upgrade the podinfo Component to see how this works in practice. First,
 update the Component version field to the latest upstream Helm chart version.
-
 
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
@@ -632,21 +622,6 @@ component wraps around the chart to mix in additional resources and integrate
 the component with the broader Platform.
 
 ## Visualize the Changes
-
-Holos makes it easier to see exactly what changes are made and what resources
-will be applied to the API server.  On principle, holos operates against local
-files.  The task of applying the files is left to ecosystem tools such as
-kubectl and ArgoCD.  This makes it easier for platform operators to inspect
-changes before merging them into the main branch, or committing them at all.
-
-For example, using `git diff` we can see the only functional change when
-upgrading this helm chart is deploying a new container image tag to each
-cluster.  Labels are modified as well, which we can classify as non-functional
-changes in this case.  Furthermore, we can slowly roll out this change by
-applying it first to the east cluster, then to the west cluster. In this way we
-can limit the potential blast radius of a problematic change.
-
----
 
 Holos makes it easier to see exactly what changes are made and which resources
 will be applied to the API server. By design, Holos operates on local files,
