@@ -4,19 +4,23 @@ import Admonition from '@theme/Admonition';
 
 # Quickstart Guide
 
-In this guide you'll experience how Holos makes the process of operating a
-platform safer, easier, and more consistent. We'll use Holos to manage a vendor
-provided Helm chart as a Component.  Next, we'll mix-in our own custom resources
-to manage the component with GitOps.  Finally, we'll see how Holos makes it
-safer and easier to maintain software over time by surfacing the exact changes
-that will be made when upgrading the vendor's chart to a new version.
+In this guide, you'll experience how Holos makes the process of operating a
+Platform safer, easier, and more consistent. We'll use Holos to manage a
+vendor-provided Helm chart as a Component. Next, we'll mix in our own custom
+resources to manage the Component with GitOps. Finally, you'll see how Holos
+makes it safer and easier to maintain software over time by surfacing the exact
+changes that will be applied when upgrading the vendor's chart to a new version,
+before they are actually made.
+
+The [Concepts](docs/concepts) page defines capitalized terms such as Platform
+and Component.
 
 ## What you'll need {#Requirements}
 
 You'll need the following tools installed to complete this guide.
 
-1. [holos](/docs/install) - to build the platform.
-2. [helm](https://helm.sh/docs/intro/install/) - to render Holos components that
+1. [holos](/docs/install) - to build the Platform.
+2. [helm](https://helm.sh/docs/intro/install/) - to render Holos Components that
 wrap upstream Helm charts.
 
 Optionally, if you'd like to apply the rendered manifests to a real cluster
@@ -37,10 +41,10 @@ Install Holos with the following command or other methods listed on the
 go install github.com/holos-run/holos/cmd/holos@latest
 ```
 
-## Git repository
+## Create a Git Repository
 
-Start by initializing an empty Git repository.  Holos is designed to operate
-against local files in a Git repository.
+Start by initializing an empty Git repository. Holos operates on local files
+stored in a Git repository.
 
 <Tabs groupId="init">
   <TabItem value="command" label="Command">
@@ -57,15 +61,15 @@ against local files in a Git repository.
   </TabItem>
 </Tabs>
 
-This guide assumes commands are run from the root directory of this Git
-repository unless otherwise stated.
+This guide assumes you will run commands from the root directory of the Git
+repository unless stated otherwise.
 
 ## Generate the Platform {#Generate-Platform}
 
-Generate the Platform code in the repository root.  A Platform refers to all of
-the software holistically integrated to provide a software development platform
-for your organization.  In this guide the platform will contain a single
-Component to demonstrate how the concepts fit together.
+Generate the Platform code in the repository root. A Platform refers to the
+entire set of software holistically integrated to provide a software development
+platform for your organization. In this guide, the Platform will include a
+single Component to demonstrate how the concepts fit together.
 
 ```bash
 holos generate platform quickstart
@@ -91,8 +95,8 @@ Commit the generated platform config to the repository.
 
 ## Generate a Component {#generate-component}
 
-The platform you generated is empty.  Generate the CUE code that defines a
-Helm Component with the following command.
+The platform you generated is currently empty. Run the following command to
+generate the CUE code that defines a Helm Component.
 
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
@@ -107,15 +111,15 @@ Helm Component with the following command.
   </TabItem>
 </Tabs>
 
-The `--component-version 6.6.1` flag intentionally installs an older release.
-We'll see how Holos helps with software upgrades later in this guide.
+The --component-version 6.6.1 flag intentionally installs an older release.
+You'll see how Holos assists with software upgrades later in this guide.
 
-The generate component command produces two files.  A leaf
-`components/podinfo/podinfo.gen.cue` file, and a root `podinfo.gen.cue` file.
-Holos takes advantage of the fact that [order is
+The generate component command creates two files: a leaf file,
+`components/podinfo/podinfo.gen.cue`, and a root file, `podinfo.gen.cue`. Holos
+leverages the fact that [order is
 irrelevant](https://cuelang.org/docs/tour/basics/order-irrelevance/) in CUE to
 register the component with the Platform by adding a file to the root of the Git
-repository.  The second file defines the component itself in the leaf component
+repository. The second file defines the component in the leaf component
 directory.
 
 <Tabs groupId="podinfo-files">
@@ -129,7 +133,7 @@ directory.
 
     let Chart = {
       Name:      "podinfo"
-      Version:   "6.6.2"
+      Version:   "6.6.1"
       Namespace: "default"
 
       Repo: name: "podinfo"
@@ -155,16 +159,15 @@ directory.
   </TabItem>
 </Tabs>
 
-In this example we're providing the minimal information about the Helm chart we
-want to manage.  The name, version, Kubernetes namespace to deploy into, and the
-chart repository location.
+In this example, we provide the minimal information needed to manage the Helm
+chart: the name, version, Kubernetes namespace for deployment, and the chart
+repository location.
 
-This chart deploys cleanly with no values provided, but we include an empty
-Values struct to illustrate how Holos improves the consistency and safety of
-Helm by taking advantage of the strong type checking in CUE.  Shared values,
-such as the organization domain name, can safely be passed to all Components
-across all clusters in the Platform by defining them at the root of the
-configuration.
+This chart deploys cleanly without any values provided, but we include an empty
+Values struct to show how Holos improves consistency and safety in Helm by
+leveraging the strong type-checking in CUE. You can safely pass shared values,
+such as the organization’s domain name, to all Components across all clusters in
+the Platform by defining them at the root of the configuration.
 
 Commit the generated component config to the repository.
 
@@ -187,8 +190,8 @@ Commit the generated component config to the repository.
 
 ## Render the Component
 
-Individual components can be rendered without needing to be included in a
-Platform spec, useful when developing a new component.
+You can render individual components without adding them to a Platform, which is
+helpful when developing a new component.
 
 <Tabs groupId="render-podinfo">
   <TabItem value="command" label="Command">
@@ -204,9 +207,9 @@ Platform spec, useful when developing a new component.
   </TabItem>
 </Tabs>
 
-First, the command caches the helm chart locally to speed up subsequent
-renderings.  Then the command executes helm to produce the output which is
-written into the deploy directory.
+First, the command caches the Helm chart locally to speed up subsequent
+renderings. Then, the command runs Helm to produce the output and writes it into
+the deploy directory.
 
 <Tabs groupId="tree-podinfo">
   <TabItem value="command" label="Command">
@@ -228,30 +231,29 @@ written into the deploy directory.
   </TabItem>
 </Tabs>
 
-The component is deployed to one cluster named default. The same component is
-often deployed to multiple clusters, for example east and west for reliability.
+The component deploys to one cluster named `default`. In practice, the same
+component is often deployed to multiple clusters, such as `east` and `west` to
+provide redundancy and increase availability.
 
 :::tip
-
-This example is equivalent to executing `helm template` on the chart and saving
-the output to a file.  Holos simplifies this task by making it safer and more
-consistent across multiple charts.
-
+This example is equivalent to running `helm template` on the chart and saving
+the output to a file. Holos simplifies this task, making it safer and more
+consistent when managing many charts.
 :::
 
 ## Mix in an ArgoCD Application
 
-We've seen how Holos works with Helm, but we haven't seen how Holos makes it
-easier to consistently and safely manage all of the software that goes into a
+We've seen how Holos works with Helm, but we haven't yet explored how Holos
+makes it easier to consistently and safely manage all of the software in a
 Platform.
 
-Holos offers the ability to easily mix-in resources that differentiate your
-Platform.  We'll use this feature to mix-in an ArgoCD [Application][application]
-to manage the podinfo Component with GitOps.  We'll define this configuration in
-a way that is automatically and consistently re-used across all Components added
-to the Platform in the future.
+Holos allows you to easily mix in resources that differentiate your Platform.
+We'll use this feature to mix in an ArgoCD [Application][application] to manage
+the podinfo Component with GitOps. We'll define this configuration in a way that
+can be automatically and consistently reused across all future Components added
+to the Platform.
 
-Create a new file named `argocd.cue` in the root of your git repository with the
+Create a new file named `argocd.cue` in the root of your Git repository with the
 following contents:
 
 <Tabs groupId="argocd-config">
@@ -269,8 +271,8 @@ following contents:
 
 :::tip
 If you plan to apply the rendered output to a real cluster, change the
-example.com RepoURL to the url of the git repository you created in this guide.
-You don't need to change the example if you're getting a feel for Holos by
+`example.com` RepoURL to the URL of the Git repository you created in this
+guide. You don't need to change the example if you're just exploring Holos by
 inspecting the rendered output without applying it to a live cluster.
 :::
 
@@ -291,22 +293,19 @@ With this file in place, render the component again.
   </TabItem>
 </Tabs>
 
-Holos uses the locally cached copy of the chart to render the output to improve
-performance and reliability.  Then, the Helm template output is rendered along
-with an additional ArgoCD Application resource for GitOps in the
-`podinfo.application.gen.yaml` file.
+Holos uses the locally cached chart to improve performance and reliability. It
+then renders the Helm template output along with an ArgoCD Application resource
+for GitOps.
 
 :::tip
-
 By defining the ArgoCD configuration at the root, we again take advantage of the
 fact that [order is
 irrelevant](https://cuelang.org/docs/tour/basics/order-irrelevance/) in CUE.
-
 :::
 
-Defining the configuration at the root causes all future leaf Components to take
-on the ArgoCD configuration and render an Application manifest to manage the
-component with GitOps.
+Defining the configuration at the root ensures all future leaf Components take
+the ArgoCD configuration and render an Application manifest for GitOps
+management.
 
 <Tabs groupId="tree-podinfo-argocd">
   <TabItem value="command" label="Command">
@@ -330,9 +329,8 @@ component with GitOps.
   </TabItem>
 </Tabs>
 
-Note the new `podinfo.application.gen.yaml` created by enabling the ArgoCD in
-the Helm component.  The Application resource in the file looks like the
-following.
+Notice the new `podinfo.application.gen.yaml` file created by enabling ArgoCD in
+the Helm component. The Application resource in the file looks like this:
 
 <Tabs groupId="podinfo-application">
   <TabItem value="file" label="podinfo.application.gen.yaml">
@@ -355,13 +353,11 @@ following.
 </Tabs>
 
 :::tip
-
-Holos will generate a similar Application resource for all additional Components
+Holos generates a similar Application resource for every additional Component
 added to your Platform.
-
 :::
 
-Finally, add and commit the results to your platform Git repository.
+Finally, add and commit the results to your Platform's Git repository.
 
 <Tabs groupId="commit-argo">
   <TabItem value="command" label="Command">
@@ -381,20 +377,20 @@ Finally, add and commit the results to your platform Git repository.
   </TabItem>
 </Tabs>
 
-In this section we learned how Holos provides a simple way to mix resources into
-Components, like an ArgoCD Application.  Holos provides consistency by managing
-an Application resource for every Component added to the platform, all by
-defining the configuration in `argocd.cue` at the root of the repository.
+In this section, we learned how Holos simplifies mixing resources into
+Components, like an ArgoCD Application. Holos ensures consistency by managing an
+Application resource for every Component added to the Platform through the
+configuration you define in `argocd.cue` at the root of the repository.
 
-## Workload Clusters
+## Define Workload Clusters {#workload-clusters}
 
 We've generated a Component to manage podinfo and integrated it with our
-Platform, but rendering the Platform does not render podinfo.  Podinfo isn't
+Platform, but rendering the Platform doesn't render podinfo. Podinfo isn't
 rendered because we haven't assigned any Clusters to the workload Fleet.
 
-Define two new clusters, east and west, and assign them to the workload Fleet.
-Create a new file named `clusters.cue` in the root of your git repository with
-the following contents:
+Define two new clusters, `east` and `west`, and assign them to the workload
+Fleet. Create a new file named `clusters.cue` in the root of your Git repository
+with the following contents:
 
 <Tabs groupId="clusters">
   <TabItem value="clusters.cue" label="clusters.cue">
@@ -411,25 +407,24 @@ the following contents:
   </TabItem>
 </Tabs>
 
-This example demonstrates how Holos simplifies the process of configuring
-multiple clusters with similar configuration by grouping them into a Fleet.
+This example shows how Holos simplifies configuring multiple clusters with
+similar configuration by grouping them into a Fleet.
 
 :::tip
-Fleets are useful to segment a group of Clusters into one leader and multiple
-followers by marking one cluster as the primary.  Holos makes the process
-of reconfiguring which cluster is the primary safer, easier, and more
-consistent.  The primary can be configured to automatically restore persistent
-data from backups stored in buckets.  Non-primary clusters can be configured to
-automatically follow the primary.
+Fleets help segment a group of Clusters into one leader and multiple followers
+by designating one cluster as the primary. Holos makes it safer, easier, and
+more consistent to reconfigure which cluster is the primary. The primary can be
+set to automatically restore persistent data from backups, while non-primary
+clusters can be configured to automatically replicate from the primary.
 
 Automatic database backup, restore, and streaming replication is an advanced
-topic made possible by Cloud Native PG and CUE.  Check back for a guide on this
-topic and additional Day 2 operations topics.
+topic enabled by Cloud Native PG and CUE. Check back for a guide on this and
+other Day 2 operations topics.
 :::
 
 ## Render the Platform {#render-platform}
 
-Render the platform to render the podinfo Component for each of the workload
+Render the Platform to render the podinfo Component for each of the workload
 clusters.
 
 <Tabs groupId="render-platform">
@@ -446,9 +441,9 @@ clusters.
   </TabItem>
 </Tabs>
 
-The render platform command iterates over every Cluster in the Fleet and then
-renders each assigned Component.  Note the two additional subdirectories created
-under the deploy directory, one for each cluster `east` and `west`.
+The render platform command iterates over every Cluster in the Fleet and renders
+each assigned Component. Notice the two additional subdirectories created under
+the deploy directory, one for each cluster: `east` and `west`.
 
 <Tabs groupId="tree-platform">
   <TabItem value="command" label="Command">
@@ -486,8 +481,8 @@ under the deploy directory, one for each cluster `east` and `west`.
   </TabItem>
 </Tabs>
 
-Holos provides consistency and safety by ensuring the ArgoCD Application is
-defined once, with strong type checking, at the configuration root.
+Holos ensures consistency and safety by defining the ArgoCD Application once,
+with strong type checking, at the configuration root.
 
 New Application resources are automatically generated for the `east` and `west`
 workload Clusters.
@@ -552,7 +547,7 @@ spec:
   </TabItem>
 </Tabs>
 
-Add and commit the rendered platform along with the workload Clusters.
+Add and commit the rendered Platform and workload Clusters.
 
 <Tabs groupId="commit-render-platform">
   <TabItem value="command" label="Command">
@@ -583,6 +578,16 @@ are easier to accomplish with Holos.
 Let's upgrade the podinfo Component to see how this works in practice.  First,
 update the Component version field to the latest upstream Helm chart version.
 
+---
+
+Holos is designed to ease the burden of Day 2 operations. With Holos, upgrading
+software, integrating new software, and making safe platform-wide configuration
+changes become easier.
+
+Let's upgrade the podinfo Component to see how this works in practice. First,
+update the Component version field to the latest upstream Helm chart version.
+
+
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
     ```bash
@@ -596,7 +601,7 @@ update the Component version field to the latest upstream Helm chart version.
   </TabItem>
 </Tabs>
 
-Remove the cached chart version:
+Remove the cached chart version.
 
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
@@ -606,7 +611,7 @@ Remove the cached chart version:
   </TabItem>
 </Tabs>
 
-Now re-render the whole Platform:
+Now re-render the Platform.
 
 <Tabs groupId="render-platform2">
   <TabItem value="command" label="Command">
@@ -622,9 +627,9 @@ Now re-render the whole Platform:
   </TabItem>
 </Tabs>
 
-Note, we're still using the upstream chart without modifying it.  The Holos
-component wraps around the chart to mix in the additional resources and
-integrate the component with the broader Platform.
+Notice we're still using the upstream chart without modifying it. The Holos
+component wraps around the chart to mix in additional resources and integrate
+the component with the broader Platform.
 
 ## Visualize the Changes
 
@@ -640,6 +645,20 @@ cluster.  Labels are modified as well, which we can classify as non-functional
 changes in this case.  Furthermore, we can slowly roll out this change by
 applying it first to the east cluster, then to the west cluster. In this way we
 can limit the potential blast radius of a problematic change.
+
+---
+
+Holos makes it easier to see exactly what changes are made and which resources
+will be applied to the API server. By design, Holos operates on local files,
+leaving the task of applying them to ecosystem tools like `kubectl` and ArgoCD.
+This allows platform operators to inspect changes during code review, or before
+committing the change at all.
+
+For example, using `git diff`, we see that the only functional change when
+upgrading this Helm chart is the deployment of a new container image tag to each
+cluster.  Additionally, we can roll out this change gradually by applying it to
+the east cluster first, then to the west cluster, limiting the potential blast
+radius of a problematic change.
 
 <Tabs groupId="git-diff">
   <TabItem value="command" label="Command">
@@ -693,44 +712,37 @@ index 7cc3332..8c1647d 100644
 </Tabs>
 
 :::tip
-
 Holos is designed to surface the _fully rendered_ manifests intended for the
-Kubernetes API server to make it easier to see and reason about platform wide
+Kubernetes API server, making it easier to see and reason about platform-wide
 configuration changes.
-
 :::
 
 ## Recap {#recap}
 
-In this quickstart guide we learned how Holos makes it easier, safer, and more
-consistent to manage a Platform composed of multiple clusters and existing Helm
+In this quickstart guide, we learned how Holos makes it easier, safer, and more
+consistent to manage a Platform composed of multiple Clusters and upstream Helm
 charts.
 
-We learned how to:
+We covered how to:
 
 1. Generate a Git repository for the Platform config.
-2. Create a Component that wraps the unmodified upstream podinfo Helm chart.
-3. Render an individual component.
-4. Define root level configuration that mixes in an ArgoCD Application resource
-to every Component in the Platform.
-5. Define multiple workload clusters which share a _nearly_ identical
-configuration, but which can vary when necessary, for example assigning a leader
-and followers.
-6. Render the manifests for the entire Platform with the `holos render platform`
-command.
-7. Upgrade a helm chart to the latest version as an important Day 2 task.
-8. Visualize the exact changes which _will be_, but have not yet been applied to
-each cluster in the Platform.
+2. Wrap the unmodified upstream podinfo Helm chart into a Component.
+3. Render an individual Component.
+4. Mix-in your Platform's unique resources to all Components.  For example, ArgoCD Application resources.
+5. Define multiple similar, but not identical, workload clusters.
+6. Render the manifests for the entire Platform with the `holos render platform` command.
+7. Upgrade a Helm chart to the latest version as an important Day 2 task.
+8. Visualize and surface the details of planned changes Platform wide.
 
 ## Dive Deeper
 
-If you'd like to dive deeper, please take a look at the [Schema API][schema] and
-[Core API][core] reference docs.  The main difference between the schema package
-and the core package is that the schema is for users to write refined CUE with,
-while the core package what the schema produces for `holos` to execute.  Users
-rarely need to interact with the core API if they're on the happy path, but can
-easily use the core package as an escape hatch when the happy path doesn't lead
-to the desired destination.
+If you'd like to dive deeper, check out the [Schema API][schema] and [Core
+API][core] reference docs. The main difference between the schema and core
+packages is that the schema is used by users to write refined CUE, while the
+core package is what the schema produces for `holos` to execute. Users rarely
+need to interact with the Core API when on the happy path, but can use the core
+package as an escape hatch when the happy path doesn't go where you want.
+
 
 [application]: https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
 [schema]: /docs/api/schema/v1alpha3/
