@@ -70,47 +70,31 @@ holos generate platform quickstart
 
 Commit the generated platform config to the repository.
 
-```bash
-git add .
-git commit -m "holos generate platform quickstart - $(holos --version)"
-```
-
-## Create a Component
-
-The platform you generated is empty.  Rendering the platform succeeds, but does
-nothing because there are no Components listed in the Platform spec:
-
-```cue
-package holos
-
-import core "github.com/holos-run/holos/api/core/v1alpha3"
-
-core.#Platform & {
-	metadata: name: "quickstart"
-}
-```
-
-<Tabs groupId="render">
+<Tabs groupId="commit-platform">
   <TabItem value="command" label="Command">
     ```bash
-    holos render platform ./platform
+    git add .
+    git commit -m "holos generate platform quickstart - $(holos --version)"
     ```
   </TabItem>
   <TabItem value="output" label="Output">
-    ```bash
-    # No output is produced, the Platform contains no Components.
+    ```txt
+    [main (root-commit) 0b17b7f] holos generate platform quickstart
+     213 files changed, 72349 insertions(+)
+     ...
     ```
   </TabItem>
 </Tabs>
 
-Generate the CUE code definition for a Component that wraps the podinfo Helm
-chart.
+## Generate a Component {#generate-component}
+
+The platform you generated is empty.  Generate the CUE code definition for a
+Component that wraps the podinfo Helm chart.
 
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
     ```bash
-    mkdir -p components
-    (cd components && holos generate component helm podinfo)
+    holos generate component helm podinfo
     ```
   </TabItem>
   <TabItem value="output" label="Output">
@@ -120,35 +104,82 @@ chart.
   </TabItem>
 </Tabs>
 
-The HelmChart Component is defined in the `components/podinfo/podinfo.cue` file, for example:
+This command produces two files.  A leaf `components/podinfo/podinfo.gen.cue`
+file, and a root `podinfo.gen.cue` file.  Holos takes advantage of the fact that
+[order is irrelevant](https://cuelang.org/docs/tour/basics/order-irrelevance/)
+in CUE to register the component with the Platform specification by adding a
+file to the root of the Git repository in addition to defining the component
+itself in the leaf component directory.
 
-```cue
-package holos
+The Helm chart Component is defined in the `components/podinfo/podinfo.cue`
+file, for example:
 
-// Produce a helm chart build plan.
-(#Helm & Chart).Output
+<Tabs groupId="podinfo-files">
+  <TabItem value="components/podinfo/podinfo.gen.cue" label="Leaf">
+    `components/podinfo/podinfo.gen.cue`
+    ```cue
+    package holos
 
-let Chart = {
-	Name:      "podinfo"
-	Version:   "6.6.2"
-	Namespace: "default"
+    // Produce a helm chart build plan.
+    (#Helm & Chart).Output
 
-	Repo: name: "podinfo"
-	Repo: url:  "https://stefanprodan.github.io/podinfo"
+    let Chart = {
+      Name:      "podinfo"
+      Version:   "6.6.2"
+      Namespace: "default"
 
-	Values: {}
-}
-```
+      Repo: name: "podinfo"
+      Repo: url:  "https://stefanprodan.github.io/podinfo"
+
+      Values: {}
+    }
+    ```
+  </TabItem>
+  <TabItem value="podinfo.gen.cue" label="Root">
+    `podinfo.gen.cue`
+    ```cue
+    package holos
+
+    // Manage podinfo on workload clusters only
+    for Cluster in #Fleets.workload.clusters {
+      #Platform: Components: "\(Cluster.name)/podinfo": {
+        path:    "components/podinfo"
+        cluster: Cluster.name
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
 
 In this example we're providing the minimal information about the Helm chart we
-want to manage in this Component.  The name, version, Kubernetes namespace to
-deploy into, and the chart repository location.
+want to manage.  The name, version, Kubernetes namespace to deploy into, and the
+chart repository location.
 
 This chart deploys cleanly with no values provided, but we include an empty
-struct to illustrate how Holos improves the consistency and safety of Helm
-values by taking advantage the strong type checking in CUE.  Shared values, such
-as the organization domain name, can safely be passed to all Components across
-all clusters in the Platform.
+Values struct to illustrate how Holos improves the consistency and safety of
+Helm by taking advantage the strong type checking in CUE.  Shared values,
+such as the organization domain name, can safely be passed to all Components
+across all clusters in the Platform by defining them at the root of the
+configuration.
+
+Commit the generated component config to the repository.
+
+<Tabs groupId="commit-component">
+  <TabItem value="command" label="Command">
+    ```bash
+    git add .
+    git commit -m "holos generate component helm podinfo - $(holos --version)"
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    [main cc0e90c] holos generate component helm podinfo
+     2 files changed, 24 insertions(+)
+     create mode 100644 components/podinfo/podinfo.gen.cue
+     create mode 100644 podinfo.gen.cue
+    ```
+  </TabItem>
+</Tabs>
 
 ## Render the Component
 
@@ -187,6 +218,8 @@ written into the deploy directory.
             └── components
                 └── podinfo
                     └── podinfo.gen.yaml
+
+    5 directories, 1 file
     ```
   </TabItem>
 </Tabs>
@@ -194,7 +227,13 @@ written into the deploy directory.
 The component is deployed to one cluster named default. The same component is
 often deployed to multiple clusters, for example east and west for reliability.
 
-This example is equivalent to executing `helm template` on the chart.
+:::tip
+
+This example is equivalent to executing `helm template` on the chart and saving
+the output to a file.  Holos simplifies this task by making it safer and more
+consistent across multiple charts.
+
+:::
 
 ## Mix in an ArgoCD Application
 
@@ -245,9 +284,22 @@ With this file in place, render the component again.
   </TabItem>
 </Tabs>
 
-The render command uses the cached chart this time around.  Then, the helm
-template output is rendered along with an additional ArgoCD Application resource
-for GitOps in the `podinfo.application.gen.yaml` file.
+Holos uses the locally cached copy of the chart to render the output to improve
+performance and reliability.  Then, the Helm template output is rendered along
+with an additional ArgoCD Application resource for GitOps in the
+`podinfo.application.gen.yaml` file.
+
+:::tip
+
+By defining the ArgoCD configuration at the root, we again take advantage of the
+fact that [order is
+irrelevant](https://cuelang.org/docs/tour/basics/order-irrelevance/) in CUE.
+
+:::
+
+Defining the configuration at the root causes all of the leaf Components to take
+on the ArgoCD configuration and render an Application resource for the
+Component.
 
 <Tabs groupId="tree-podinfo-argocd">
   <TabItem value="command" label="Command">
@@ -265,6 +317,8 @@ for GitOps in the `podinfo.application.gen.yaml` file.
             │       └── podinfo.gen.yaml
             └── gitops
                 └── podinfo.application.gen.yaml
+
+    6 directories, 2 files
     ```
   </TabItem>
 </Tabs>
@@ -306,14 +360,15 @@ Finally, add and commit the results to your platform Git repository.
   <TabItem value="command" label="Command">
     ```bash
     git add .
-    git commit -m "Mix in an ArgoCD Application"
+    git commit -m "holos render component ./components/podinfo --cluster-name=default"
     ```
   </TabItem>
   <TabItem value="output" label="Output">
     ```txt
-    [main 22e4f0b] Mix in an ArgoCD Application
-     3 files changed, 22 insertions(+), 1 deletion(-)
+    [main f95cef1] holos render component ./components/podinfo --cluster-name=default
+     3 files changed, 134 insertions(+)
      create mode 100644 argocd.cue
+     create mode 100644 deploy/clusters/default/components/podinfo/podinfo.gen.yaml
      create mode 100644 deploy/clusters/default/gitops/podinfo.application.gen.yaml
     ```
   </TabItem>
