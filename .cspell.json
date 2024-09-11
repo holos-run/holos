@@ -5,6 +5,7 @@
     "mdx"
   ],
   "words": [
+    "apiextensions",
     "applicationset",
     "argoproj",
     "authcode",
@@ -24,6 +25,7 @@
     "crossplane",
     "cuecontext",
     "cuelang",
+    "customresourcedefinition",
     "devicecode",
     "dnsmasq",
     "dscacheutil",
@@ -87,6 +89,7 @@
     "ropc",
     "SECRETKEY",
     "secretstores",
+    "serverside",
     "spanid",
     "spiffe",
     "startupapicheck",

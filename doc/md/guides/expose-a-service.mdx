@@ -34,16 +34,16 @@ stored in a Git repository.
 
 <Tabs groupId="init">
   <TabItem value="command" label="Command">
-    ```bash
-    mkdir expose-a-service
-    cd expose-a-service
-    git init
-    ```
+```bash
+mkdir expose-a-service
+cd expose-a-service
+git init
+```
   </TabItem>
   <TabItem value="output" label="Output">
-    ```txt
-    Initialized empty Git repository in /expose-a-service/.git/
-    ```
+```txt showLineNumbers
+Initialized empty Git repository in /expose-a-service/.git/
+```
   </TabItem>
 </Tabs>
 
@@ -63,7 +63,7 @@ holos generate component workload-cluster
 ```
   </TabItem>
   <TabItem value="output" label="Output">
-```txt
+```txt showLineNumbers
 generated component
 ```
   </TabItem>
@@ -73,17 +73,17 @@ Commit the generated platform config to the repository.
 
 <Tabs groupId="commit-platform">
   <TabItem value="command" label="Command">
-    ```bash
-    git add .
-    git commit -m "holos generate platform guide - $(holos --version)"
-    ```
+```bash
+git add .
+git commit -m "holos generate platform guide - $(holos --version)"
+```
   </TabItem>
   <TabItem value="output" label="Output">
-    ```txt
-    [main (root-commit) 0b17b7f] holos generate platform guide - 0.93.3
-     213 files changed, 72349 insertions(+)
-     ...
-    ```
+```txt showLineNumbers
+[main (root-commit) 0b17b7f] holos generate platform guide - 0.93.3
+  213 files changed, 72349 insertions(+)
+  ...
+```
   </TabItem>
 </Tabs>
 
@@ -104,7 +104,7 @@ holos generate component gateway-api
 ```
   </TabItem>
   <TabItem value="output" label="Output">
-```txt
+```txt showLineNumbers
 generated component
 ```
   </TabItem>
@@ -143,12 +143,6 @@ for Fleet in #Fleets {
   </TabItem>
 </Tabs>
 
-:::tip
-This example is equivalent to running `kubectl kustomize
-./components/gateway-api` and saving the output to a file.  Holos simplifies
-this task and makes it consistent with Helm and other tools.
-:::
-
 Notice the Component also includes a `kustomization.yaml` file at the leaf.
 This is an unmodified upstream copy of the standard way to install the Gateway
 API.
@@ -166,6 +160,73 @@ resources:
 ```
   </TabItem>
 </Tabs>
+
+Render the Platform to render the Component for the workload clusters.
+
+<Tabs groupId="render-platform-gateway">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+rendered components/gateway-api for cluster workload in 279.312292ms
+```
+  </TabItem>
+</Tabs>
+
+:::tip
+This example is equivalent to running `kubectl kustomize
+./components/gateway-api` and saving the output to a file.  Holos simplifies
+this task and makes it consistent with Helm and other tools.
+:::
+
+Add and commit the Component and rendered Platform.
+
+<Tabs groupId="commit-gateway-api">
+  <TabItem value="command" label="Command">
+```bash
+git add .
+git commit -m "add gateway-api component"
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+[main 88575a5] add gateway-api component
+ 9 files changed, 26907 insertions(+)
+ create mode 100644 components/gateway-api/gateway-api.cue
+ create mode 100644 components/gateway-api/kustomization.yaml
+ create mode 100644 components/gateway-api/standard/gateway.networking.k8s.io_gatewayclasses.yaml
+ create mode 100644 components/gateway-api/standard/gateway.networking.k8s.io_gateways.yaml
+ create mode 100644 components/gateway-api/standard/gateway.networking.k8s.io_grpcroutes.yaml
+ create mode 100644 components/gateway-api/standard/gateway.networking.k8s.io_httproutes.yaml
+ create mode 100644 components/gateway-api/standard/gateway.networking.k8s.io_referencegrants.yaml
+ create mode 100644 deploy/clusters/workload/components/gateway-api/gateway-api.gen.yaml
+ create mode 100644 gateway-api.gen.cue
+```
+  </TabItem>
+</Tabs>
+
+Optionally apply the rendered component to your cluster.
+
+<Tabs groupId="apply-gateway-api">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/gateway-api
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+customresourcedefinition.apiextensions.k8s.io/gatewayclasses.gateway.networking.k8s.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/gateways.gateway.networking.k8s.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/grpcroutes.gateway.networking.k8s.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/httproutes.gateway.networking.k8s.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/referencegrants.gateway.networking.k8s.io serverside-applied
+```
+  </TabItem>
+</Tabs>
+
 
 ## Namespaces
 
