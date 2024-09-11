@@ -129,7 +129,7 @@ type StandardFleets struct {
 	// Workload represents a Fleet of zero or more workload Clusters.
 	Workload Fleet `json:"workload" cue:"{name: \"workload\"}"`
 	// Management represents a Fleet with one Cluster named management.
-	Management Fleet `json:"management" cue:"{name: \"management\", clusters: management: _}"`
+	Management Fleet `json:"management" cue:"{name: \"management\"}"`
 }
 
 // Platform is a convenience structure to produce a core Platform specification

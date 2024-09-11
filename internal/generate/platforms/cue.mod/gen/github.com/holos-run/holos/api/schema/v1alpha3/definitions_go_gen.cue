@@ -127,7 +127,7 @@ import (
 	workload: #Fleet & {name: "workload"} @go(Workload)
 
 	// Management represents a Fleet with one Cluster named management.
-	management: #Fleet & {name: "management", clusters: management: _} @go(Management)
+	management: #Fleet & {name: "management"} @go(Management)
 }
 
 // Platform is a convenience structure to produce a core Platform specification
