@@ -12,11 +12,11 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
  */
 const sidebars: SidebarsConfig = {
   doc: [
-    'quickstart/index',
+    'quickstart',
     'concepts',
     'install',
     'comparison',
-    'localhost/index',
+    'localhost',
   ],
   api: [
     {

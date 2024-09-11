@@ -98,7 +98,7 @@ const config: Config = {
       items: [
         {
           type: 'doc',
-          docId: 'quickstart/index',
+          docId: 'quickstart',
           position: 'left',
           label: 'Try Holos',
         },
