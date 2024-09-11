@@ -41,12 +41,7 @@ const config: Config = {
     [
       '@docusaurus/plugin-client-redirects',
       {
-        redirects: [
-          {
-            from: "/docs/tutorial/local/k3d/",
-            to: "/docs/guides/try-holos/",
-          },
-        ],
+        redirects: [],
       },
     ],
   ],
@@ -98,19 +93,14 @@ const config: Config = {
       items: [
         {
           type: 'doc',
-          docId: 'quickstart',
+          docId: 'guides/quickstart',
           position: 'left',
           label: 'Try Holos',
         },
+        { to: '/docs', label: 'Docs', position: 'left' },
         {
           type: 'doc',
-          docId: 'concepts',
-          position: 'left',
-          label: 'Docs',
-        },
-        {
-          type: 'docSidebar',
-          sidebarId: 'api',
+          docId: 'api',
           position: 'left',
           label: 'API',
         },
@@ -135,7 +125,7 @@ const config: Config = {
           title: 'Docs',
           items: [
             {
-              label: 'Get Started',
+              label: 'Quickstart',
               to: '/docs/quickstart',
             },
             {
@@ -144,11 +134,11 @@ const config: Config = {
             },
             {
               label: 'Documentation',
-              to: '/docs/intro',
+              to: '/docs',
             },
             {
               label: 'API Reference',
-              to: '/docs/api/core/v1alpha2',
+              to: '/docs/api',
             },
           ],
         },

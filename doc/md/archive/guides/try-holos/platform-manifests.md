@@ -2,7 +2,7 @@
 
 This document provides an example of how Holos uses CUE and Helm to unify and
 render the platform configuration.  It refers to the manifests rendered in the
-[Try Holos Locally](/docs/guides/try-holos/) guide.
+Try Holos Locally guide.
 
 Take a moment to review the manifests `holos` rendered to build the platform.
 

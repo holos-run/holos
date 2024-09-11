@@ -1,16 +1,20 @@
+---
+description: Build a local Cluster to use with these guides.
+slug: /guides/local-cluster
+sidebar_position: 200
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Admonition from '@theme/Admonition';
 
-# localhost Guide
+# Local Cluster
 
 In this guide you'll set up a Cluster on your local host to apply and explore
-the configuration described in our other guides.  Most of our guides are written
-to be read without requiring you to apply configuration to a Cluster.
-
-After completing this guide you'll have a real Kubernetes API server suitable
-for use with our other guides, and you'll be able to easily reset the cluster to
-a known good state for the purpose of developing you Platform with Holos.
+the configuration described in our other guides.  After completing this guide
+you'll have a standard Kubernetes API server with proper DNS and TLS
+certificates.  You'll be able to easily reset the cluster to a known good state
+to iterate on your own Platform.
 
 The [Concepts](/docs/concepts) page defines capitalized terms such as Platform
 and Component.

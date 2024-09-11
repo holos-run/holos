@@ -2,7 +2,7 @@
 
 This document captures notes on locally developing Holos.
 
-Follow the steps in [Try Holos Locally](/docs/guides/try-holos), but take care
+Follow the steps in [Try Holos Locally](../guides/try-holos), but take care
 to select `Develop` tabs when creating the k3d cluster so you have a local
 registry to push to.
 

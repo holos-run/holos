@@ -1,21 +1,27 @@
+---
+description: Use Holos to expose a Service with the Gateway API.
+slug: /guides/expose-a-service
+sidebar_position: 300
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Admonition from '@theme/Admonition';
 
-# Quickstart Guide
+# Expose a Service
 
-In this guide, you'll experience how Holos makes the process of operating a
-Platform safer, easier, and more consistent. We'll use Holos to manage a
-vendor-provided Helm chart as a Component. Next, we'll mix in our own custom
-resources to manage the Component with GitOps. Finally, you'll see how Holos
-makes it safer and easier to maintain software over time by surfacing the exact
-changes that will be applied when upgrading the vendor's chart to a new version,
-before they are actually made.
+In this guide, you'll learn how to expose a service with Holos using the Gateway
+API.
+
+:::warning TODO
+- Mix-in HTTPRoute.
+- Inject the domain via the Model.
+:::
 
 The [Concepts](/docs/concepts) page defines capitalized terms such as Platform
 and Component.
 
-## What you'll need {#Requirements}
+## What you'll need {#requirements}
 
 You'll need the following tools installed to complete this guide.
 
@@ -24,16 +30,7 @@ You'll need the following tools installed to complete this guide.
 wrap upstream Helm charts.
 
 Optionally, if you'd like to apply the rendered manifests to a real Cluster,
-first complete the [localhost Guide](/docs/localhost).
-
-## Install Holos
-
-Install Holos with the following command or other methods listed on the
-[Installation](/docs/install/) page.
-
-```bash
-go install github.com/holos-run/holos/cmd/holos@latest
-```
+first complete the [localhost Guide](../local-cluster).
 
 ## Create a Git Repository
 
@@ -43,14 +40,14 @@ stored in a Git repository.
 <Tabs groupId="init">
   <TabItem value="command" label="Command">
     ```bash
-    mkdir holos-quickstart
-    cd holos-quickstart
+    mkdir expose-a-service
+    cd expose-a-service
     git init
     ```
   </TabItem>
   <TabItem value="output" label="Output">
     ```txt
-    Initialized empty Git repository in /holos-quickstart/.git/
+    Initialized empty Git repository in /expose-a-service/.git/
     ```
   </TabItem>
 </Tabs>
@@ -60,10 +57,8 @@ repository unless stated otherwise.
 
 ## Generate the Platform {#Generate-Platform}
 
-Generate the Platform code in the repository root. A Platform refers to the
-entire set of software holistically integrated to provide a software development
-platform for your organization. In this guide, the Platform will include a
-single Component to demonstrate how the concepts fit together.
+Start by generating the same platform used for the
+[Quickstart](/docs/quickstart) guide.
 
 ```bash
 holos generate platform quickstart

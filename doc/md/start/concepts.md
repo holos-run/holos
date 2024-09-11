@@ -1,3 +1,9 @@
+---
+description: Learn the concepts and domain language Holos uses.
+slug: /concepts
+sidebar_position: 200
+---
+
 # Concepts
 
 ## Introduction

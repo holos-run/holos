@@ -1,3 +1,9 @@
+---
+description: Install the Holos executable.
+slug: /install
+sidebar_position: 100
+---
+
 # Installation
 
 Holos is distributed as a single file executable.
