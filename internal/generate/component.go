@@ -81,22 +81,10 @@ func (s *Schematic) FlagSet() *flag.FlagSet {
 	return fs
 }
 
-// CueComponents returns a slice of embedded component schematics or nil if there are none.
-func CueComponents() []string {
-	entries, err := fs.ReadDir(components, filepath.Join(componentsRoot, "cue"))
-	if err != nil {
-		return nil
-	}
-	dirs := make([]string, 0, len(entries))
-	for _, entry := range entries {
-		dirs = append(dirs, entry.Name())
-	}
-	return dirs
-}
-
-// HelmComponents returns a slice of embedded component schematics or nil if there are none.
-func HelmComponents() []string {
-	entries, err := fs.ReadDir(components, filepath.Join(componentsRoot, "helm"))
+// Components returns a slice of embedded component schematics or nil if there
+// are none.
+func Components(name string) []string {
+	entries, err := fs.ReadDir(components, filepath.Join(componentsRoot, name))
 	if err != nil {
 		return nil
 	}

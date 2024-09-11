@@ -101,7 +101,7 @@ generate the CUE code that defines a Helm Component.
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
     ```bash
-    holos generate component helm podinfo --component-version 6.6.1
+    holos generate component podinfo --component-version 6.6.1
     ```
   </TabItem>
   <TabItem value="output" label="Output">
@@ -175,12 +175,12 @@ Commit the generated component config to the repository.
   <TabItem value="command" label="Command">
     ```bash
     git add .
-    git commit -m "holos generate component helm podinfo - $(holos --version)"
+    git commit -m "holos generate component podinfo - $(holos --version)"
     ```
   </TabItem>
   <TabItem value="output" label="Output">
     ```txt
-    [main cc0e90c] holos generate component helm podinfo
+    [main cc0e90c] holos generate component podinfo
      2 files changed, 24 insertions(+)
      create mode 100644 components/podinfo/podinfo.gen.cue
      create mode 100644 podinfo.gen.cue
@@ -581,7 +581,7 @@ update the Component version field to the latest upstream Helm chart version.
 <Tabs groupId="gen-podinfo">
   <TabItem value="command" label="Command">
     ```bash
-    holos generate component helm podinfo --component-version 6.6.2
+    holos generate component podinfo --component-version 6.6.2
     ```
   </TabItem>
   <TabItem value="output" label="Output">

@@ -52,30 +52,10 @@ func NewComponent() *cobra.Command {
 	cmd := command.New("component")
 	cmd.Short = "generate a component from an embedded schematic"
 
-	cmd.AddCommand(NewCueComponent())
-	cmd.AddCommand(NewHelmComponent())
-
-	return cmd
-}
-
-func NewHelmComponent() *cobra.Command {
-	cmd := command.New("helm")
-	cmd.Short = "generate a helm component from a schematic"
-
-	for _, name := range generate.HelmComponents() {
-		cmd.AddCommand(makeSchematicCommand("helm", name))
+	for _, name := range generate.Components("v1alpha3") {
+		cmd.AddCommand(makeSchematicCommand("v1alpha3", name))
 	}
 
-	return cmd
-}
-
-func NewCueComponent() *cobra.Command {
-	cmd := command.New("cue")
-	cmd.Short = "generate a cue component from a schematic"
-
-	for _, name := range generate.CueComponents() {
-		cmd.AddCommand(makeSchematicCommand("cue", name))
-	}
 	return cmd
 }
 
