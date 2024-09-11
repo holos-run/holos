@@ -15,7 +15,7 @@ import (
 // from package core.  Useful as a convenience wrapper to render a HelmChart
 // with optional mix-in resources and Kustomization post-processing.
 type Helm struct {
-	// Name represents the chart name.
+	// Name represents the Component name.
 	Name string
 	// Version represents the chart version.
 	Version string
@@ -152,7 +152,7 @@ type Platform struct {
 // Kustomize provides a BuildPlan via the Output field which contains one
 // KustomizeBuild from package core.
 type Kustomize struct {
-	// Name represents the chart name.
+	// Name represents the Component name.
 	Name string
 
 	// Kustomization represents the kustomize build plan for holos to render.

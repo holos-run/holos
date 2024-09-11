@@ -81,7 +81,7 @@ Helm provides a BuildPlan via the Output field which contains one HelmChart from
 
 ```go
 type Helm struct {
-    // Name represents the chart name.
+    // Name represents the Component name.
     Name string
     // Version represents the chart version.
     Version string
@@ -139,7 +139,7 @@ Kustomize provides a BuildPlan via the Output field which contains one Kustomize
 
 ```go
 type Kustomize struct {
-    // Name represents the chart name.
+    // Name represents the Component name.
     Name string
 
     // Kustomization represents the kustomize build plan for holos to render.
