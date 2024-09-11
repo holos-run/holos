@@ -1,0 +1,5 @@
+{
+  "name": "workload-cluter",
+  "short": "define a workload cluster for the guides",
+  "long": "Define a workload cluster named workload for use with the documentation."
+}
