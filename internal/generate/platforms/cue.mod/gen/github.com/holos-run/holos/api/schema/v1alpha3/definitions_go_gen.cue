@@ -27,7 +27,7 @@ import (
 	Namespace: string
 
 	// Resources are kubernetes api objects to mix into the output.
-	Resources: {...} & {...} @go(,map[string]any)
+	Resources: {...} @go(,map[string]any)
 
 	// Repo represents the chart repository
 	Repo: {
@@ -158,6 +158,19 @@ import (
 
 	// Kustomization represents the kustomize build plan for holos to render.
 	Kustomization: core.#KustomizeBuild
+
+	// Output represents the derived BuildPlan for the Holos cli to render.
+	Output: core.#BuildPlan
+}
+
+// Kubernetes provides a BuildPlan via the Output field which contains inline
+// API Objects provided directly from CUE.
+#Kubernetes: {
+	// Name represents the Component name.
+	Name: string
+
+	// Resources represents the kubernetes api objects for the Component.
+	Resources: {...} @go(,map[string]any)
 
 	// Output represents the derived BuildPlan for the Holos cli to render.
 	Output: core.#BuildPlan

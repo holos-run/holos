@@ -22,7 +22,7 @@ type Helm struct {
 	// Namespace represents the helm namespace option when rendering the chart.
 	Namespace string
 	// Resources are kubernetes api objects to mix into the output.
-	Resources map[string]any `cue:"{...}"`
+	Resources map[string]any
 
 	// Repo represents the chart repository
 	Repo struct {
@@ -157,6 +157,18 @@ type Kustomize struct {
 
 	// Kustomization represents the kustomize build plan for holos to render.
 	Kustomization core.KustomizeBuild
+
+	// Output represents the derived BuildPlan for the Holos cli to render.
+	Output core.BuildPlan
+}
+
+// Kubernetes provides a BuildPlan via the Output field which contains inline
+// API Objects provided directly from CUE.
+type Kubernetes struct {
+	// Name represents the Component name.
+	Name string
+	// Resources represents the kubernetes api objects for the Component.
+	Resources map[string]any
 
 	// Output represents the derived BuildPlan for the Holos cli to render.
 	Output core.BuildPlan

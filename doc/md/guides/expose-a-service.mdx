@@ -227,9 +227,144 @@ customresourcedefinition.apiextensions.k8s.io/referencegrants.gateway.networking
   </TabItem>
 </Tabs>
 
-
 ## Namespaces
+
+Platform operators often need to manage Namespaces prior to services being
+deployed.  This is necessary because a Namespace is a security boundary.
+Platform operators often need to manage service accounts, roles, and secrets
+before workloads can be deployed.
+
+Holos makes this task easier, safer, and more consistent through the namespaces
+component.  The namespaces component offers a mechanism for other components to
+register the Namespace they need.  The namespaces component initializes each
+Namespace and optionally mixes in resources consistently across the Platform.
+
+Run the following command to generate a Component to manage Namespaces across
+the Platform.
+
+<Tabs groupId="gen-namespaces">
+  <TabItem value="command" label="Command">
+```bash
+holos generate component namespaces
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+generated component
+```
+  </TabItem>
+</Tabs>
+
+The command generates two main configuration files once again, one at the leaf,
+and another at the root.  The leaf uses a Kubernetes build plan to produce
+resources directly from CUE.
+
+<Tabs groupId="namespaces-files">
+  <TabItem value="components/namespaces/namespaces.cue" label="Leaf">
+    `components/namespaces/namespaces.cue`
+```cue showLineNumbers
+package holos
+
+let Objects = {
+	Name: "namespaces"
+	// highlight-next-line
+	Resources: Namespace: #Namespaces
+}
+
+// Produce a kubernetes objects build plan.
+(#Kubernetes & Objects).Output
+```
+  </TabItem>
+  <TabItem value="namespaces.gen.cue" label="Root">
+    `namespaces.gen.cue`
+```cue showLineNumbers
+package holos
+
+import corev1 "k8s.io/api/core/v1"
+
+// #Namespaces defines all managed namespaces in the Platform.
+// Holos adopts the sig-multicluster position of namespace sameness.
+#Namespaces: {
+	// Validate against v1 of the kubernetes core api
+	// highlight-next-line
+	[Name=string]: corev1.#Namespace & {
+		metadata: name: Name
+	}
+}
+
+// Manage the Component on every Cluster in the Platform
+for Fleet in #Fleets {
+	for Cluster in Fleet.clusters {
+		#Platform: Components: "\(Cluster.name)/namespaces": {
+			path:    "components/namespaces"
+			cluster: Cluster.name
+		}
+	}
+}
+```
+  </TabItem>
+</Tabs>
+
+Notice how resources are managed directly in CUE at the leaf with the Kubernetes
+Component.  This is the same mechanism used to mix-in resources to Helm and
+Kustomize Components.  The leaf refers to `#Namespaces` defined at the root.  At
+the root `#Namespaces` enforces a constraint: each Namespace must conform to the
+`k8s.io/api/core/v1` specification.
+
+:::important
+We've covered three kinds of Components so far: Helm in the [Quickstart],
+Kustomize and Kubernetes in this guide.  Holos offers a consistent way to manage
+these different packaging methods safely and easily.
+
+- At the **leaf** Holos tailors the Component to your Platform, mixing
+in resources and customizing the rendered output.
+- At the **root** Holos integrates a Component with the rest of your Platform.
+
+You'll see this pattern again and again as you build your Platform.
+:::
+
+Render the Platform to render the Component for the workload clusters.
+
+<Tabs groupId="render-platform-gateway">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+rendered components/namespaces for cluster workload in 72.675292ms
+rendered components/gateway-api for cluster workload in 259.174583ms
+```
+  </TabItem>
+</Tabs>
+
+Add and commit the Component and rendered Platform.
+
+<Tabs groupId="commit-gateway-api">
+  <TabItem value="command" label="Command">
+```bash
+git add .
+git commit -m "add namespaces component"
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+[main 1bf0d61] add namespaces component
+ 3 files changed, 30 insertions(+)
+ create mode 100644 components/namespaces/namespaces.cue
+ create mode 100644 deploy/clusters/workload/components/namespaces/namespaces.gen.yaml
+ create mode 100644 namespaces.gen.cue
+```
+  </TabItem>
+</Tabs>
+
+`#Namespaces` is currently empty, so the rendered output of
+`namespaces.gen.yaml` is also empty.  Namespaces will be automatically managed
+as you add Components to the Platform.
 
 ## Istio
 
 ## httpbin
+
+[Quickstart]: /docs/quickstart

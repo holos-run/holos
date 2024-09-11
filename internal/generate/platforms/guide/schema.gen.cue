@@ -8,6 +8,8 @@ import schema "github.com/holos-run/holos/api/schema/v1alpha3"
 
 #Kustomize: schema.#Kustomize
 
+#Kubernetes: schema.#Kubernetes
+
 #ArgoConfig: schema.#ArgoConfig & {
 	ClusterName: _ClusterName
 }

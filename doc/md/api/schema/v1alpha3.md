@@ -14,6 +14,7 @@ Package v1alpha3 contains CUE definitions intended as convenience wrappers aroun
 - [type Cluster](<#Cluster>)
 - [type Fleet](<#Fleet>)
 - [type Helm](<#Helm>)
+- [type Kubernetes](<#Kubernetes>)
 - [type Kustomize](<#Kustomize>)
 - [type Platform](<#Platform>)
 - [type StandardFleets](<#StandardFleets>)
@@ -88,7 +89,7 @@ type Helm struct {
     // Namespace represents the helm namespace option when rendering the chart.
     Namespace string
     // Resources are kubernetes api objects to mix into the output.
-    Resources map[string]any `cue:"{...}"`
+    Resources map[string]any
 
     // Repo represents the chart repository
     Repo struct {
@@ -126,6 +127,23 @@ type Helm struct {
 
     // ArgoConfig represents the ArgoCD GitOps configuration for this Component.
     ArgoConfig ArgoConfig
+
+    // Output represents the derived BuildPlan for the Holos cli to render.
+    Output core.BuildPlan
+}
+```
+
+<a name="Kubernetes"></a>
+## type Kubernetes {#Kubernetes}
+
+Kubernetes provides a BuildPlan via the Output field which contains inline API Objects provided directly from CUE.
+
+```go
+type Kubernetes struct {
+    // Name represents the Component name.
+    Name string
+    // Resources represents the kubernetes api objects for the Component.
+    Resources map[string]any
 
     // Output represents the derived BuildPlan for the Holos cli to render.
     Output core.BuildPlan

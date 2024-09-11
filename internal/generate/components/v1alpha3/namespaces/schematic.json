@@ -1,0 +1,5 @@
+{
+  "name": "namespaces",
+  "short": "manage namespaces consistently",
+  "long": "Provides the #Namespaces root struct for components to register with."
+}

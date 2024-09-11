@@ -217,3 +217,17 @@ import (
 		spec: components: kustomizeBuildList: [Kustomization]
 	}
 }
+
+#Kubernetes: {
+	Name:      _
+	Resources: #Resources
+
+	Output: #BuildPlan & {
+		_Name: Name
+		// resources is a map unlike other build plans which use a list.
+		spec: components: resources: (Name): {
+			metadata: name: Name
+			apiObjectMap: (#APIObjects & {apiObjects: Resources}).apiObjectMap
+		}
+	}
+}
