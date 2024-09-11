@@ -149,3 +149,16 @@ import (
 	// and render each listed Component, injecting the Model.
 	Output: core.#Platform
 }
+
+// Kustomize provides a BuildPlan via the Output field which contains one
+// KustomizeBuild from package core.
+#Kustomize: {
+	// Name represents the chart name.
+	Name: string
+
+	// Kustomization represents the kustomize build plan for holos to render.
+	Kustomization: core.#KustomizeBuild
+
+	// Output represents the derived BuildPlan for the Holos cli to render.
+	Output: core.#BuildPlan
+}

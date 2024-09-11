@@ -13,24 +13,16 @@ import Admonition from '@theme/Admonition';
 In this guide, you'll learn how to expose a service with Holos using the Gateway
 API.
 
-:::warning TODO
-Complete this section once the steps are complete.
-:::
-
 The [Concepts](/docs/concepts) page defines capitalized terms such as Platform
 and Component.
 
 ## What you'll need {#requirements}
 
-:::warning TODO
-Complete this section once the steps are complete.
-:::
-
 You'll need the following tools installed to complete this guide.
 
 1. [holos](/docs/install) - to build the Platform.
-2. [helm](https://helm.sh/docs/intro/install/) - to render Holos Components that
-wrap upstream Helm charts.
+2. [helm](https://helm.sh/docs/intro/install/) - to render Helm Components.
+3. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to render Kustomize Components.
 
 Optionally, if you'd like to apply the rendered manifests to a real Cluster,
 first complete the [localhost Guide](../local-cluster).
@@ -60,11 +52,22 @@ repository unless stated otherwise.
 
 ## Generate the Platform {#Generate-Platform}
 
-Start by generating a platform used as the basis for our guides.
+Start by generating a platform with one workload Cluster.  The `guide` Platform
+is intended as a starting point for all of our guides.
 
+<Tabs groupId="generate-platform">
+  <TabItem value="command" label="Command">
 ```bash
 holos generate platform guide
+holos generate component workload-cluster
 ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+generated component
+```
+  </TabItem>
+</Tabs>
 
 Commit the generated platform config to the repository.
 
@@ -84,12 +87,88 @@ Commit the generated platform config to the repository.
   </TabItem>
 </Tabs>
 
-## Manage httpbin {#manage-httpbin}
+## Gateway API
 
-The platform you generated is currently empty. Run the following command to
-generate a Holos Component for the
-[httpbin](https://github.com/mccutchen/go-httpbin) service.
+The Gateway API is an official Kubernetes project focused on L4 and L7 routing .
+You'll use the custom resources defined by the Gateway API to expose the httpbin
+service outside of the cluster.  The Kubernetes Gateway API does not come
+installed by default on most Kubernetes clusters, so we need to manage the
+custom resource definitions (CRDs).
 
-httpbin is a simple backend service useful for end-to-end testing.  In this
-guide, we use httpbin as a example of a service your organization develops and
-deploy onto your Platform.
+Run the following command to generate a Component to manage the Gateway API.
+
+<Tabs groupId="gen-gateway-api">
+  <TabItem value="command" label="Command">
+```bash
+holos generate component gateway-api
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+generated component
+```
+  </TabItem>
+</Tabs>
+
+The command generates two main configuration files, one at the leaf, and another
+at the root of the tree.  At the leaf, the config produces a Kustomize build
+plan for Holos to render.  At the root, the config adds the Component to all
+Clusters in the Platform.
+
+<Tabs groupId="gateway-api-files">
+  <TabItem value="components/gateway-api/gateway-api.cue" label="Leaf">
+    `components/gateway-api/gateway-api.cue`
+```cue showLineNumbers
+package holos
+
+// Produce a kubectl kustomize build plan.
+(#Kustomize & {Name: "gateway-api"}).Output
+```
+  </TabItem>
+  <TabItem value="gateway-api.gen.cue" label="Root">
+    `gateway-api.gen.cue`
+```cue showLineNumbers
+package holos
+
+// Manage on every Cluster in the Platform
+for Fleet in #Fleets {
+	for Cluster in Fleet.clusters {
+		#Platform: Components: "\(Cluster.name)/gateway-api": {
+			path:    "components/gateway-api"
+			cluster: Cluster.name
+		}
+	}
+}
+```
+  </TabItem>
+</Tabs>
+
+:::tip
+This example is equivalent to running `kubectl kustomize
+./components/gateway-api` and saving the output to a file.  Holos simplifies
+this task and makes it consistent with Helm and other tools.
+:::
+
+Notice the Component also includes a `kustomization.yaml` file at the leaf.
+This is an unmodified upstream copy of the standard way to install the Gateway
+API.
+
+<Tabs groupId="gateway-kustomization-yaml">
+  <TabItem value="kustomization.yaml" label="kustomization.yaml">
+  `components/gateway-api/kustomization.yaml`
+```yaml showLineNumbers
+resources:
+- standard/gateway.networking.k8s.io_gatewayclasses.yaml
+- standard/gateway.networking.k8s.io_gateways.yaml
+- standard/gateway.networking.k8s.io_grpcroutes.yaml
+- standard/gateway.networking.k8s.io_httproutes.yaml
+- standard/gateway.networking.k8s.io_referencegrants.yaml
+```
+  </TabItem>
+</Tabs>
+
+## Namespaces
+
+## Istio
+
+## httpbin

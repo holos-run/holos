@@ -208,3 +208,12 @@ import (
 	Output: spec: model:    Model
 	Output: spec: components: [for c in Components {c}]
 }
+
+#Kustomize: {
+	Name: _
+	Kustomization: metadata: name: string | *Name
+	Output: #BuildPlan & {
+		_Name: Name
+		spec: components: kustomizeBuildList: [Kustomization]
+	}
+}

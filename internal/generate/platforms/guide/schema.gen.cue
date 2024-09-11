@@ -6,6 +6,8 @@ import schema "github.com/holos-run/holos/api/schema/v1alpha3"
 	ArgoConfig: #ArgoConfig
 }
 
+#Kustomize: schema.#Kustomize
+
 #ArgoConfig: schema.#ArgoConfig & {
 	ClusterName: _ClusterName
 }

@@ -14,6 +14,7 @@ Package v1alpha3 contains CUE definitions intended as convenience wrappers aroun
 - [type Cluster](<#Cluster>)
 - [type Fleet](<#Fleet>)
 - [type Helm](<#Helm>)
+- [type Kustomize](<#Kustomize>)
 - [type Platform](<#Platform>)
 - [type StandardFleets](<#StandardFleets>)
 
@@ -125,6 +126,24 @@ type Helm struct {
 
     // ArgoConfig represents the ArgoCD GitOps configuration for this Component.
     ArgoConfig ArgoConfig
+
+    // Output represents the derived BuildPlan for the Holos cli to render.
+    Output core.BuildPlan
+}
+```
+
+<a name="Kustomize"></a>
+## type Kustomize {#Kustomize}
+
+Kustomize provides a BuildPlan via the Output field which contains one KustomizeBuild from package core.
+
+```go
+type Kustomize struct {
+    // Name represents the chart name.
+    Name string
+
+    // Kustomization represents the kustomize build plan for holos to render.
+    Kustomization core.KustomizeBuild
 
     // Output represents the derived BuildPlan for the Holos cli to render.
     Output core.BuildPlan

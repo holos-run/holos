@@ -1,0 +1,5 @@
+{
+  "name": "gateway-api",
+  "short": "gateway api custom resource definitions",
+  "long": "Gateway API represents the next generation of Kubernetes Ingress, Load Balancing, and Service Mesh APIs."
+}
