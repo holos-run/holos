@@ -1,0 +1,6 @@
+{
+  "name": "local-ca",
+  "short": "manages a cluster issuer for use with our guides",
+  "long": "manages a cluster issuer that uses the mkcert ca private key to issue certs",
+  "namespace": "cert-manager"
+}

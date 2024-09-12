@@ -88,7 +88,7 @@ Finally, add your trusted certificate authority.
   <TabItem value="command" label="Command">
 ```bash
 kubectl apply --server-side=true -f "$(mkcert -CAROOT)/namespace.yaml"
-kubectl apply --server-side=true -f "$(mkcert -CAROOT)/local-ca.yaml"
+kubectl apply --server-side=true -n cert-manager -f "$(mkcert -CAROOT)/local-ca.yaml"
 ```
   </TabItem>
   <TabItem value="output" label="Output">

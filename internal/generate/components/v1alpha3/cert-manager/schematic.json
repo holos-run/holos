@@ -1,0 +1,10 @@
+{
+  "name": "cert-manager",
+  "short": "cloud native X.509 certificate management for kubernetes",
+  "long": "cert-manager creates tls certificates for workloads in your kubernetes cluster and renews the certificates before they expire.",
+  "chart": "",
+  "reponame": "jetstack",
+  "repourl": "https://charts.jetstack.io",
+  "version": "1.15.3",
+  "namespace": "cert-manager"
+}

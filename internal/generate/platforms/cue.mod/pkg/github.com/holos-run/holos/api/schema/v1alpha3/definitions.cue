@@ -11,6 +11,7 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 
 	app "argoproj.io/application/v1alpha1"
+	ci "cert-manager.io/clusterissuer/v1"
 )
 
 #Resources: {
@@ -19,6 +20,7 @@ import (
 		metadata: name: string | *InternalLabel
 	}
 
+	ClusterIssuer: [_]:      ci.#ClusterIssuer
 	ClusterRole: [_]:        rbacv1.#ClusterRole
 	ClusterRoleBinding: [_]: rbacv1.#ClusterRoleBinding
 	ConfigMap: [_]:          corev1.#ConfigMap
