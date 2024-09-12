@@ -12,6 +12,7 @@ import (
 
 	app "argoproj.io/application/v1alpha1"
 	ci "cert-manager.io/clusterissuer/v1"
+	rgv1 "gateway.networking.k8s.io/referencegrant/v1beta1"
 )
 
 #Resources: {
@@ -28,6 +29,7 @@ import (
 	Deployment: [_]:         appsv1.#Deployment
 	Job: [_]:                batchv1.#Job
 	Namespace: [_]:          corev1.#Namespace
+	ReferenceGrant: [_]:     rgv1.#ReferenceGrant
 	Role: [_]:               rbacv1.#Role
 	RoleBinding: [_]:        rbacv1.#RoleBinding
 	Service: [_]:            corev1.#Service
