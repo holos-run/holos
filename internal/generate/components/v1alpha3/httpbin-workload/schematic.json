@@ -1,0 +1,6 @@
+{
+  "name": "httpbin-workload",
+  "short": "manages the httpbin deployment and service",
+  "long": "httpbin is useful to inspect requests and responses",
+  "namespace": "httpbin"
+}

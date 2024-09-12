@@ -545,7 +545,9 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt showLineNumbers
-rendered components/gateway-api for cluster workload in 279.312292ms
+rendered components/namespaces for cluster workload in 73.789333ms
+rendered components/cert-manager for cluster workload in 137.878584ms
+rendered components/gateway-api for cluster workload in 176.406666ms
 ```
   </TabItem>
 </Tabs>
@@ -556,7 +558,7 @@ This example is equivalent to running `kubectl kustomize
 this task and makes it consistent with Helm and other tools.
 :::
 
-Add and commit the Component and rendered Platform.
+Add and commit the configuration and rendered manifests.
 
 <Tabs groupId="commit-gateway-api">
   <TabItem value="command" label="Command">
@@ -1143,7 +1145,210 @@ local-ca   True    12s
   </TabItem>
 </Tabs>
 
-## httpbin
+## httpbin Workload
+
+Generate the component.
+
+<Tabs groupId="gen-httpbin-workload">
+  <TabItem value="command" label="Command">
+```bash
+holos generate component httpbin-workload
+holos generate component referencegrant
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+generated component
+generated component
+```
+  </TabItem>
+</Tabs>
+
+:::warning
+REVIEW THE FILES
+:::
+
+Render the platform.
+
+<Tabs groupId="render-httpbin-workload">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+rendered components/httpbin/workload for cluster workload in 100.821083ms
+rendered components/istio/ztunnel for cluster workload in 123.260917ms
+rendered components/istio/base for cluster workload in 124.368417ms
+rendered components/istio/gateway for cluster workload in 124.71975ms
+rendered components/istio/cni for cluster workload in 125.941709ms
+rendered components/istio/istiod for cluster workload in 139.979666ms
+rendered components/cert-manager for cluster workload in 165.070041ms
+rendered components/local-ca for cluster workload in 78.725625ms
+rendered components/gateway-api for cluster workload in 193.146417ms
+rendered components/namespaces for cluster workload in 79.939875ms
+```
+  </TabItem>
+  <TabItem value="manifest" label="Manifest">
+  `deploy/clusters/workload/components/httpbin-workload/httpbin-workload.gen.yaml`
+```yaml showLineNumbers
+---
+# Source: CUE apiObjects.Deployment.httpbin
+metadata:
+  name: httpbin
+  namespace: httpbin
+  labels:
+    app: httpbin
+spec:
+  selector:
+    matchLabels:
+      app: httpbin
+      app.kubernetes.io/instance: httpbin
+  template:
+    metadata:
+      labels:
+        app: httpbin
+        app.kubernetes.io/instance: httpbin
+    spec:
+      containers:
+        - name: httpbin
+          image: quay.io/holos/mccutchen/go-httpbin
+          ports:
+            - containerPort: 8080
+          securityContext:
+            seccompProfile:
+              type: RuntimeDefault
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 8192
+            runAsGroup: 8192
+            capabilities:
+              drop:
+                - ALL
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+kind: Deployment
+apiVersion: apps/v1
+---
+# Source: CUE apiObjects.ReferenceGrant.httpbin
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: istio-ingress
+  namespace: httpbin
+  labels:
+    app: httpbin
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: istio-ingress
+  to:
+    - group: ""
+      kind: Service
+---
+# Source: CUE apiObjects.Service.httpbin
+metadata:
+  name: httpbin
+  namespace: httpbin
+  labels:
+    app: httpbin
+spec:
+  selector:
+    app: httpbin
+    app.kubernetes.io/instance: httpbin
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+kind: Service
+apiVersion: v1
+```
+  </TabItem>
+</Tabs>
+
+Add and commit the configuration and rendered manifests.
+
+<Tabs groupId="commit-httpbin-workload">
+  <TabItem value="command" label="Command">
+```bash
+git add .
+git commit -m "integrate httpbin workload into the platform"
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+[main 838ee91] integrate httpbin workload into the platform
+ 5 files changed, 177 insertions(+)
+ create mode 100644 components/httpbin/workload/httpbin-workload.cue
+ create mode 100644 deploy/clusters/workload/components/httpbin-workload/httpbin-workload.gen.yaml
+ create mode 100644 httpbin-workload.gen.cue
+ create mode 100644 referencegrant.gen.cue
+```
+  </TabItem>
+</Tabs>
+
+As an optional step, apply the rendered manifests.
+
+<Tabs groupId="httpbin-workload-apply-namespaces">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/namespaces
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+namespace/cert-manager serverside-applied
+namespace/httpbin serverside-applied
+namespace/istio-ingress serverside-applied
+namespace/istio-system serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+<Tabs groupId="httpbin-workload-apply-workload">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-workload
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+deployment.apps/httpbin serverside-applied
+referencegrant.gateway.networking.k8s.io/istio-ingress serverside-applied
+service/httpbin serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+Verify the pod is ready.
+
+<Tabs groupId="get-pods-httpbin">
+  <TabItem value="command" label="Command">
+```bash
+kubectl get pods -n httpbin
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+NAME                       READY   STATUS    RESTARTS   AGE
+httpbin-699b8dd85b-qc8v2   1/1     Running   0          22s
+```
+  </TabItem>
+</Tabs>
+
+## HTTP Routes
+
+httpbin is running but still isn't exposed outside of the cluster, so we can't
+browse to it.  We'll add HTTPRoute and Certificate resources to expose the
+service.
+
+:::warning
+TODO
+:::
 
 [Quickstart]: /docs/quickstart
 [Local Cluster]: /docs/guides/local-cluster
