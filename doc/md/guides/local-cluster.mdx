@@ -1,7 +1,7 @@
 ---
 description: Build a local Cluster to use with these guides.
 slug: /guides/local-cluster
-sidebar_position: 200
+sidebar_position: 300
 ---
 
 import Tabs from '@theme/Tabs';
@@ -10,14 +10,96 @@ import Admonition from '@theme/Admonition';
 
 # Local Cluster
 
-In this guide you'll set up a Cluster on your local host to apply and explore
-the configuration described in our other guides.  After completing this guide
-you'll have a standard Kubernetes API server with proper DNS and TLS
-certificates.  You'll be able to easily reset the cluster to a known good state
-to iterate on your own Platform.
+In this guide we'll set up a local k3d cluster to apply and explore the
+configuration described in our other guides.  After completing this guide you'll
+have a standard Kubernetes API server with proper DNS and TLS certificates.
+You'll be able to easily reset the cluster to a known good state to iterate on
+your own Platform.
 
 The [Concepts](/docs/concepts) page defines capitalized terms such as Platform
 and Component.
+
+## Reset the Cluster
+
+If you've already followed this guide, reset the cluster by running the
+following commands.  Skip this section if you're creating a cluster for the
+first time.
+
+First, delete the cluster.
+
+<Tabs groupId="k3d-cluster-delete">
+  <TabItem value="command" label="Command">
+```bash
+k3d cluster delete workload
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+INFO[0000] Deleting cluster 'workload'
+INFO[0000] Deleting cluster network 'k3d-workload'
+INFO[0000] Deleting 1 attached volumes...
+INFO[0000] Removing cluster details from default kubeconfig...
+INFO[0000] Removing standalone kubeconfig file (if there is one)...
+INFO[0000] Successfully deleted cluster workload!
+```
+  </TabItem>
+</Tabs>
+
+Then create the cluster again.
+
+<Tabs groupId="k3d-cluster-create">
+  <TabItem value="command" label="Command">
+```bash
+k3d cluster create workload \
+  --registry-use k3d-registry.holos.localhost:5100 \
+  --port "443:443@loadbalancer" \
+  --k3s-arg "--disable=traefik@server:0"
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+INFO[0000] portmapping '443:443' targets the loadbalancer: defaulting to [servers:*:proxy agents:*:proxy]
+INFO[0000] Prep: Network
+INFO[0000] Created network 'k3d-workload'
+INFO[0000] Created image volume k3d-workload-images
+INFO[0000] Starting new tools node...
+INFO[0000] Starting node 'k3d-workload-tools'
+INFO[0001] Creating node 'k3d-workload-server-0'
+INFO[0001] Creating LoadBalancer 'k3d-workload-serverlb'
+INFO[0001] Using the k3d-tools node to gather environment information
+INFO[0001] HostIP: using network gateway 172.17.0.1 address
+INFO[0001] Starting cluster 'workload'
+INFO[0001] Starting servers...
+INFO[0001] Starting node 'k3d-workload-server-0'
+INFO[0003] All agents already running.
+INFO[0003] Starting helpers...
+INFO[0003] Starting node 'k3d-workload-serverlb'
+INFO[0009] Injecting records for hostAliases (incl. host.k3d.internal) and for 3 network members into CoreDNS configmap...
+INFO[0012] Cluster 'workload' created successfully!
+INFO[0012] You can now use it like this:
+kubectl cluster-info
+```
+  </TabItem>
+</Tabs>
+
+Finally, add your trusted certificate authority.
+
+<Tabs groupId="apply-local-ca">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f "$(mkcert -CAROOT)/namespace.yaml"
+kubectl apply --server-side=true -f "$(mkcert -CAROOT)/local-ca.yaml"
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+namespace/cert-manager serverside-applied
+secret/local-ca serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+You're back to the same state as the first time you completed this guide.
 
 ## What you'll need {#requirements}
 
@@ -150,10 +232,11 @@ cp -p "${CAROOT}/rootCA.pem" ca.crt
 cp -p "${CAROOT}/rootCA.pem" tls.crt
 cp -p "${CAROOT}/rootCA-key.pem" tls.key
 kubectl create secret generic --from-file=.  --dry-run=client -o yaml local-ca > ../local-ca.yaml
+echo 'type: kubernetes.io/tls' >> ../local-ca.yaml
+
 cd ..
 
-echo 'type: kubernetes.io/tls' >> local-ca.yaml
-kubectl apply --server-side=true -f- <<EOF
+cat <<EOF > namespace.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -164,8 +247,12 @@ spec:
   finalizers:
   - kubernetes
 EOF
+kubectl apply --server-side=true -f namespace.yaml
 kubectl apply -n cert-manager --server-side=true -f local-ca.yaml
 
+# Save the Secret to easily reset the cluster later.
+install -m 0644 namespace.yaml "${CAROOT}/namespace.yaml"
+install -m 0600 local-ca.yaml "${CAROOT}/local-ca.yaml"
 ```
 
 :::warning
@@ -183,12 +270,6 @@ with:
 ```bash
 k3d cluster delete workload
 ```
-
-## Reset {#reset}
-
-If you'd like to reset to a known good state, execute the [Clean Up](#clean-up)
-section, then [Create the Cluster](#create-the-cluster) and the [Setup Root
-CA](#setup-root-ca) tasks.
 
 ## Next Steps
 

@@ -1,0 +1,5 @@
+{
+  "name": "istio",
+  "short": "istio service mesh",
+  "long": "Easily build cloud native workloads securely and reliably with Istio."
+}

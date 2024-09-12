@@ -1,7 +1,7 @@
 ---
 description: Use Holos to expose a Service with the Gateway API.
 slug: /guides/expose-a-service
-sidebar_position: 300
+sidebar_position: 200
 ---
 
 import Tabs from '@theme/Tabs';
@@ -115,6 +115,9 @@ at the root of the tree.  At the leaf, the config produces a Kustomize build
 plan for Holos to render.  At the root, the config adds the Component to all
 Clusters in the Platform.
 
+Notice the `kustomization.yaml` file at the leaf.  This is an unmodified
+upstream copy of the standard way to install the Gateway API.
+
 <Tabs groupId="gateway-api-files">
   <TabItem value="components/gateway-api/gateway-api.cue" label="Leaf">
     `components/gateway-api/gateway-api.cue`
@@ -123,6 +126,17 @@ package holos
 
 // Produce a kubectl kustomize build plan.
 (#Kustomize & {Name: "gateway-api"}).Output
+```
+  </TabItem>
+  <TabItem value="kustomization.yaml" label="kustomization.yaml">
+  `components/gateway-api/kustomization.yaml`
+```yaml showLineNumbers
+resources:
+- standard/gateway.networking.k8s.io_gatewayclasses.yaml
+- standard/gateway.networking.k8s.io_gateways.yaml
+- standard/gateway.networking.k8s.io_grpcroutes.yaml
+- standard/gateway.networking.k8s.io_httproutes.yaml
+- standard/gateway.networking.k8s.io_referencegrants.yaml
 ```
   </TabItem>
   <TabItem value="gateway-api.gen.cue" label="Root">
@@ -139,24 +153,6 @@ for Fleet in #Fleets {
 		}
 	}
 }
-```
-  </TabItem>
-</Tabs>
-
-Notice the Component also includes a `kustomization.yaml` file at the leaf.
-This is an unmodified upstream copy of the standard way to install the Gateway
-API.
-
-<Tabs groupId="gateway-kustomization-yaml">
-  <TabItem value="kustomization.yaml" label="kustomization.yaml">
-  `components/gateway-api/kustomization.yaml`
-```yaml showLineNumbers
-resources:
-- standard/gateway.networking.k8s.io_gatewayclasses.yaml
-- standard/gateway.networking.k8s.io_gateways.yaml
-- standard/gateway.networking.k8s.io_grpcroutes.yaml
-- standard/gateway.networking.k8s.io_httproutes.yaml
-- standard/gateway.networking.k8s.io_referencegrants.yaml
 ```
   </TabItem>
 </Tabs>
@@ -229,18 +225,17 @@ customresourcedefinition.apiextensions.k8s.io/referencegrants.gateway.networking
 
 ## Namespaces
 
-Platform operators often need to manage Namespaces prior to services being
-deployed.  This is necessary because a Namespace is a security boundary.
-Platform operators often need to manage service accounts, roles, and secrets
-before workloads can be deployed.
+We often need to manage namespaces prior to workloads being deployed.  This is
+necessary because a namespace is a security boundary.  Holos makes it easier,
+safer, and more consistent to manage service accounts, role bindings, and
+secrets prior to deploying workloads into a namespace.
 
-Holos makes this task easier, safer, and more consistent through the namespaces
-component.  The namespaces component offers a mechanism for other components to
-register the Namespace they need.  The namespaces component initializes each
-Namespace and optionally mixes in resources consistently across the Platform.
+We'll see how this works with the namespaces component, which offers a mechanism
+for other components to register their namespaces.  The namespaces component
+initializes each registered namespace, optionally mixing in resources
+consistently.
 
-Run the following command to generate a Component to manage Namespaces across
-the Platform.
+Run the following command to generate the namespaces component.
 
 <Tabs groupId="gen-namespaces">
   <TabItem value="command" label="Command">
@@ -255,9 +250,9 @@ generated component
   </TabItem>
 </Tabs>
 
-The command generates two main configuration files once again, one at the leaf,
-and another at the root.  The leaf uses a Kubernetes build plan to produce
-resources directly from CUE.
+The command generates two main configuration files like we've seen with other
+components.  One file at the leaf, and another at the root.  The leaf uses a
+Kubernetes build plan to produce resources directly from CUE.
 
 <Tabs groupId="namespaces-files">
   <TabItem value="components/namespaces/namespaces.cue" label="Leaf">
@@ -305,25 +300,28 @@ for Fleet in #Fleets {
   </TabItem>
 </Tabs>
 
-Notice how resources are managed directly in CUE at the leaf with the Kubernetes
-Component.  This is the same mechanism used to mix-in resources to Helm and
-Kustomize Components.  The leaf refers to `#Namespaces` defined at the root.  At
-the root `#Namespaces` enforces a constraint: each Namespace must conform to the
-`k8s.io/api/core/v1` specification.
+Notice the highlighted line in the leaf file.  Resources are managed directly in
+CUE at the leaf using the Kubernetes component.  This is the same mechanism used
+to mix-in resources to Helm and Kustomize components.  The leaf refers to
+`#Namespaces` defined at the root.  At the root `#Namespaces` enforces a
+constraint: each Namespace must conform to the `k8s.io/api/core/v1`
+specification.
 
 :::important
-We've covered three kinds of Components so far: Helm in the [Quickstart],
-Kustomize and Kubernetes in this guide.  Holos offers a consistent way to manage
-these different packaging methods safely and easily.
+We've covered three kinds of components so far.  The [Quickstart] guide
+introduced Helm.  We've used Kustomize and Kubernetes in this guide.
 
-- At the **leaf** Holos tailors the Component to your Platform, mixing
-in resources and customizing the rendered output.
-- At the **root** Holos integrates a Component with the rest of your Platform.
-
-You'll see this pattern again and again as you build your Platform.
+Holos offers a consistent way to manage these different kinds of packaging
+safely and easily.
 :::
 
-Render the Platform to render the Component for the workload clusters.
+- At the **leaf** Holos tailors the component to your platform, mixing
+in resources and customizing the rendered output.
+- At the **root** Holos integrates a component with the rest of your platform.
+
+You'll see this pattern again and again as you build your platform.
+
+Render the platform to render the component for the workload clusters.
 
 <Tabs groupId="render-platform-gateway">
   <TabItem value="command" label="Command">
@@ -339,7 +337,7 @@ rendered components/gateway-api for cluster workload in 259.174583ms
   </TabItem>
 </Tabs>
 
-Add and commit the Component and rendered Platform.
+Add and commit the configuration and rendered manifests.
 
 <Tabs groupId="commit-gateway-api">
   <TabItem value="command" label="Command">
@@ -360,11 +358,442 @@ git commit -m "add namespaces component"
 </Tabs>
 
 `#Namespaces` is currently empty, so the rendered output of
-`namespaces.gen.yaml` is also empty.  Namespaces will be automatically managed
-as you add Components to the Platform.
+`namespaces.gen.yaml` is also empty.
+
+:::tip
+Namespaces will be automatically managed as we add more components to the
+platform over time.
+:::
 
 ## Istio
+
+We'll manage Istio to implement the Gateway API so we can expose the httpbin
+service outside of the cluster.
+
+Run the following command to generate the istio components.
+
+<Tabs groupId="gen-istio">
+  <TabItem value="command" label="Command">
+```bash
+holos generate component istio
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+generated component
+```
+  </TabItem>
+</Tabs>
+
+:::important
+Mix in the `istio-k3d` component if you're applying the rendered manifests to
+k3d as described in our [Local Cluster] guide.
+:::
+
+Skip this step if you aren't using k3d.  Istio needs to be configured to refer
+to the nonstandard cni configuration paths k3d uses.
+
+<Tabs groupId="gen-istio-k3d">
+  <TabItem value="command" label="Command">
+```bash
+holos generate component istio-k3d
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+generated component
+```
+  </TabItem>
+  <TabItem value="file" label="istio-k3d.gen.cue">
+  Holos makes it easier and safer to mix-in this additional configuration at the root.
+```cue showLineNumbers
+package holos
+
+// If you are using k3d with the default Flannel CNI, you must append some
+// values to your installation command, as k3d uses nonstandard locations for
+// CNI configuration and binaries.
+//
+// See https://istio.io/latest/docs/ambient/install/platform-prerequisites/#k3d
+#Istio: Values: cni: {
+	cniConfDir: "/var/lib/rancher/k3s/agent/etc/cni/net.d"
+	cniBinDir:  "/bin"
+}
+```
+  </TabItem>
+</Tabs>
+
+Consistent with the other components we've seen, the istio components define
+configuration at the root and leafs of the tree.  Unlike previous components
+we've generated, this command generated multiple components to manage Istio.
+
+<Tabs groupId="tree-istio">
+  <TabItem value="command" label="Command">
+```bash
+tree components/istio
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+components/istio
+├── base
+│   ├── istio-base.cue
+│   └── values.gen.cue
+├── cni
+│   ├── cni.cue
+│   └── values.gen.cue
+├── gateway
+│   ├── gateway.cue
+│   └── values.gen.cue
+├── istiod
+│   ├── istiod.cue
+│   └── values.gen.cue
+└── ztunnel
+    ├── values.gen.cue
+    └── ztunnel.cue
+
+6 directories, 10 files
+```
+  </TabItem>
+</Tabs>
+
+These components share the configuration defined at the root in `istio.gen.cue`.
+
+Let's review how Holos makes it safer and easier to share Helm values defined at
+the root with the istiod and cni components defined at the leaf.
+
+1. istiod and cni use version `"1.23.1"` and namespace `"istio-system"` defined at
+the root.
+2. The Helm value to configure ambient (sidecar-less) mode is defined once at
+the root.
+3. The root adds a constraint to fail validation if the istio system namespace
+is not `"istio-system"`.  Future upgrades are safer with this constraint, if the
+upstream vendor changes the default in the future the component will fail
+validation.
+4. The root registers two Namespaces, `"istio-system"` and `"istio-ingress"`.
+5. The root manages the components on all workload clusters in the platform.
+
+<Tabs groupId="istio-files">
+  <TabItem value="istiod.cue" label="istiod">
+    Leaf `components/istio/istiod/istiod.cue`
+```cue showLineNumbers
+package holos
+
+// Produce a helm chart build plan.
+(#Helm & Chart).Output
+
+let Chart = {
+	Name:      "istiod"
+	// highlight-next-line
+	Version:   #Istio.Version
+	// highlight-next-line
+	Namespace: #Istio.System.Namespace
+
+	Chart: chart: name: "istiod"
+
+	Repo: name: "istio"
+	Repo: url:  "https://istio-release.storage.googleapis.com/charts"
+
+  // highlight-next-line
+	Values: #Istio.Values
+}
+```
+  </TabItem>
+  <TabItem value="cni.cue" label="cni">
+    Leaf `components/istio/cni/cni.cue`
+```cue showLineNumbers
+package holos
+
+// Produce a helm chart build plan.
+(#Helm & Chart).Output
+
+let Chart = {
+	Name:      "istio-cni"
+	// highlight-next-line
+	Version:   #Istio.Version
+	// highlight-next-line
+	Namespace: #Istio.System.Namespace
+
+	Chart: chart: name: "cni"
+
+	Repo: name: "istio"
+	Repo: url:  "https://istio-release.storage.googleapis.com/charts"
+
+	// highlight-next-line
+	Values: #Istio.Values
+}
+```
+  </TabItem>
+  <TabItem value="istio.gen.cue" label="Root">
+    Root `istio.gen.cue`
+```cue showLineNumbers
+package holos
+
+// #Istio represents platform wide configuration
+#Istio: {
+	// highlight-next-line
+	Version: "1.23.1"
+	// highlight-next-line
+	System: Namespace:  "istio-system"
+	Gateway: Namespace: "istio-ingress"
+
+	// Constrain Helm values for safer, easier upgrades and consistency across
+	// platform components.
+	// highlight-next-line
+	Values: global: istioNamespace: System.Namespace
+
+	// Configure ambient mode
+	// highlight-next-line
+	Values: profile: "ambient"
+}
+
+// Register the Namespaces
+#Namespaces: (#Istio.System.Namespace):  _
+#Namespaces: (#Istio.Gateway.Namespace): _
+
+// Manage istio on workload clusters
+for Cluster in #Fleets.workload.clusters {
+	#Platform: Components: {
+		"\(Cluster.name)/istio-base": {
+			path:    "components/istio/base"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/istiod": {
+			path:    "components/istio/istiod"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/istio-cni": {
+			path:    "components/istio/cni"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/istio-ztunnel": {
+			path:    "components/istio/ztunnel"
+			cluster: Cluster.name
+		}
+		"\(Cluster.name)/istio-gateway": {
+			path:    "components/istio/gateway"
+			cluster: Cluster.name
+		}
+	}
+}
+```
+  </TabItem>
+</Tabs>
+
+:::tip
+Many software projects managed by Holos are organized into a collection of
+components working together, for example to safely manage custom resource
+definitions, secrets, and policy separately from the workloads that rely on
+them.
+:::
+
+Render the platform to render the istio components for the workload clusters.
+
+<Tabs groupId="render-platform-istio">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+rendered components/namespaces for cluster workload in 85.490833ms
+rendered components/istio/ztunnel for cluster workload in 111.784667ms
+rendered components/istio/cni for cluster workload in 112.362417ms
+rendered components/istio/base for cluster workload in 113.058ms
+rendered components/istio/gateway for cluster workload in 119.018208ms
+rendered components/istio/istiod for cluster workload in 127.736334ms
+rendered components/gateway-api for cluster workload in 181.922333ms
+```
+  </TabItem>
+</Tabs>
+
+Add and commit the configuration and rendered manifests.
+
+<Tabs groupId="commit-istio">
+  <TabItem value="command" label="Command">
+```bash
+git add .
+git commit -m "add istio"
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+[main aca8ff6] add istio
+ 18 files changed, 18955 insertions(+)
+ create mode 100644 components/istio/base/istio-base.cue
+ create mode 100644 components/istio/base/values.gen.cue
+ create mode 100644 components/istio/cni/cni.cue
+ create mode 100644 components/istio/cni/values.gen.cue
+ create mode 100644 components/istio/gateway/gateway.cue
+ create mode 100644 components/istio/gateway/values.gen.cue
+ create mode 100644 components/istio/istiod/istiod.cue
+ create mode 100644 components/istio/istiod/values.gen.cue
+ create mode 100644 components/istio/ztunnel/values.gen.cue
+ create mode 100644 components/istio/ztunnel/ztunnel.cue
+ create mode 100644 deploy/clusters/workload/components/istio-base/istio-base.gen.yaml
+ create mode 100644 deploy/clusters/workload/components/istio-cni/istio-cni.gen.yaml
+ create mode 100644 deploy/clusters/workload/components/istio-gateway/istio-gateway.gen.yaml
+ create mode 100644 deploy/clusters/workload/components/istio-ztunnel/istio-ztunnel.gen.yaml
+ create mode 100644 deploy/clusters/workload/components/istiod/istiod.gen.yaml
+ create mode 100644 istio-k3d.gen.cue
+ create mode 100644 istio.gen.cue
+```
+  </TabItem>
+</Tabs>
+
+Optionally apply the rendered component to your cluster.
+
+<Tabs groupId="apply-istio-namespaces">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/namespaces
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+namespace/istio-ingress serverside-applied
+namespace/istio-system serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+<Tabs groupId="apply-istio-base">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/istio-base
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+customresourcedefinition.apiextensions.k8s.io/wasmplugins.extensions.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/destinationrules.networking.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/envoyfilters.networking.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/gateways.networking.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/proxyconfigs.networking.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/serviceentries.networking.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/sidecars.networking.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/virtualservices.networking.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/workloadentries.networking.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/workloadgroups.networking.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/authorizationpolicies.security.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/peerauthentications.security.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/requestauthentications.security.istio.io serverside-applied
+customresourcedefinition.apiextensions.k8s.io/telemetries.telemetry.istio.io serverside-applied
+serviceaccount/istio-reader-service-account serverside-applied
+validatingwebhookconfiguration.admissionregistration.k8s.io/istiod-default-validator serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+<Tabs groupId="apply-istiod">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/istiod
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+poddisruptionbudget.policy/istiod serverside-applied
+serviceaccount/istiod serverside-applied
+configmap/istio serverside-applied
+configmap/istio-sidecar-injector serverside-applied
+clusterrole.rbac.authorization.k8s.io/istiod-clusterrole-istio-system serverside-applied
+clusterrole.rbac.authorization.k8s.io/istiod-gateway-controller-istio-system serverside-applied
+clusterrole.rbac.authorization.k8s.io/istio-reader-clusterrole-istio-system serverside-applied
+clusterrolebinding.rbac.authorization.k8s.io/istiod-clusterrole-istio-system serverside-applied
+clusterrolebinding.rbac.authorization.k8s.io/istiod-gateway-controller-istio-system serverside-applied
+clusterrolebinding.rbac.authorization.k8s.io/istio-reader-clusterrole-istio-system serverside-applied
+role.rbac.authorization.k8s.io/istiod serverside-applied
+rolebinding.rbac.authorization.k8s.io/istiod serverside-applied
+service/istiod serverside-applied
+deployment.apps/istiod serverside-applied
+horizontalpodautoscaler.autoscaling/istiod serverside-applied
+mutatingwebhookconfiguration.admissionregistration.k8s.io/istio-sidecar-injector serverside-applied
+validatingwebhookconfiguration.admissionregistration.k8s.io/istio-validator-istio-system serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+<Tabs groupId="apply-istio-cni">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/istio-cni
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+serviceaccount/istio-cni serverside-applied
+configmap/istio-cni-config serverside-applied
+clusterrole.rbac.authorization.k8s.io/istio-cni serverside-applied
+clusterrole.rbac.authorization.k8s.io/istio-cni-repair-role serverside-applied
+clusterrole.rbac.authorization.k8s.io/istio-cni-ambient serverside-applied
+clusterrolebinding.rbac.authorization.k8s.io/istio-cni serverside-applied
+clusterrolebinding.rbac.authorization.k8s.io/istio-cni-repair-rolebinding serverside-applied
+clusterrolebinding.rbac.authorization.k8s.io/istio-cni-ambient serverside-applied
+daemonset.apps/istio-cni-node serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+<Tabs groupId="apply-istio-ztunnel">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/istio-ztunnel
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+serviceaccount/ztunnel serverside-applied
+daemonset.apps/ztunnel serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+<Tabs groupId="apply-istio-gateway">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/istio-gateway
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+serviceaccount/gateway serverside-applied
+role.rbac.authorization.k8s.io/gateway serverside-applied
+rolebinding.rbac.authorization.k8s.io/gateway serverside-applied
+service/gateway serverside-applied
+deployment.apps/gateway serverside-applied
+horizontalpodautoscaler.autoscaling/gateway serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+Make sure all pod containers become ready.
+
+<Tabs groupId="apply-istio-ready">
+  <TabItem value="command" label="Command">
+```bash
+kubectl get pods -A
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+NAMESPACE       NAME                                      READY   STATUS    RESTARTS   AGE
+istio-ingress   gateway-6748c5f547-s46pj                  1/1     Running   0          26s
+istio-system    istio-cni-node-852nr                      1/1     Running   0          2m9s
+istio-system    istiod-5b4d8d4c77-t694z                   1/1     Running   0          3m15s
+istio-system    ztunnel-msqbn                             1/1     Running   0          63s
+kube-system     coredns-576bfc4dc7-2g4k9                  1/1     Running   0          113m
+kube-system     local-path-provisioner-6795b5f9d8-wsz8p   1/1     Running   0          113m
+kube-system     metrics-server-557ff575fb-fctr7           1/1     Running   0          113m
+kube-system     svclb-gateway-5d311af0-fp5mk              3/3     Running   0          26s
+```
+  </TabItem>
+</Tabs>
+
+Once all pods are ready, we're ready to manage httpbin so we can route http
+traffic to it.
 
 ## httpbin
 
 [Quickstart]: /docs/quickstart
+[Local Cluster]: /docs/guides/local-cluster
