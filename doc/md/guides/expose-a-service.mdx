@@ -316,7 +316,7 @@ holos render platform ./platform
 ```
   </TabItem>
   <TabItem value="output" label="Output">
-```txt showLineNumbers
+```txt
 rendered components/namespaces for cluster workload in 65.184791ms
 rendered components/cert-manager for cluster workload in 467.379292ms
 ```
@@ -377,7 +377,7 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/namespac
 ```
   </TabItem>
   <TabItem value="output" label="Output">
-```txt showLineNumbers
+```txt
 namespace/cert-manager serverside-applied
 ```
   </TabItem>
@@ -544,7 +544,7 @@ holos render platform ./platform
 ```
   </TabItem>
   <TabItem value="output" label="Output">
-```txt showLineNumbers
+```txt
 rendered components/namespaces for cluster workload in 73.789333ms
 rendered components/cert-manager for cluster workload in 137.878584ms
 rendered components/gateway-api for cluster workload in 176.406666ms
@@ -679,9 +679,6 @@ components/istio
 ├── cni
 │   ├── cni.cue
 │   └── values.gen.cue
-├── gateway
-│   ├── gateway.cue
-│   └── values.gen.cue
 ├── istiod
 │   ├── istiod.cue
 │   └── values.gen.cue
@@ -689,7 +686,7 @@ components/istio
     ├── values.gen.cue
     └── ztunnel.cue
 
-6 directories, 10 files
+5 directories, 8 files
 ```
   </TabItem>
 </Tabs>
@@ -768,25 +765,19 @@ package holos
 
 // #Istio represents platform wide configuration
 #Istio: {
-	// highlight-next-line
 	Version: "1.23.1"
-	// highlight-next-line
-	System: Namespace:  "istio-system"
-	Gateway: Namespace: "istio-ingress"
+	System: Namespace: "istio-system"
 
 	// Constrain Helm values for safer, easier upgrades and consistency across
 	// platform components.
-	// highlight-next-line
 	Values: global: istioNamespace: System.Namespace
 
 	// Configure ambient mode
-	// highlight-next-line
 	Values: profile: "ambient"
 }
 
 // Register the Namespaces
-#Namespaces: (#Istio.System.Namespace):  _
-#Namespaces: (#Istio.Gateway.Namespace): _
+#Namespaces: (#Istio.System.Namespace): _
 
 // Manage istio on workload clusters
 for Cluster in #Fleets.workload.clusters {
@@ -805,10 +796,6 @@ for Cluster in #Fleets.workload.clusters {
 		}
 		"\(Cluster.name)/istio-ztunnel": {
 			path:    "components/istio/ztunnel"
-			cluster: Cluster.name
-		}
-		"\(Cluster.name)/istio-gateway": {
-			path:    "components/istio/gateway"
 			cluster: Cluster.name
 		}
 	}
@@ -834,13 +821,13 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt showLineNumbers
-rendered components/namespaces for cluster workload in 85.490833ms
-rendered components/istio/ztunnel for cluster workload in 111.784667ms
-rendered components/istio/cni for cluster workload in 112.362417ms
-rendered components/istio/base for cluster workload in 113.058ms
-rendered components/istio/gateway for cluster workload in 119.018208ms
-rendered components/istio/istiod for cluster workload in 127.736334ms
-rendered components/gateway-api for cluster workload in 181.922333ms
+rendered components/namespaces for cluster workload in 86.820875ms
+rendered components/cert-manager for cluster workload in 158.442917ms
+rendered components/gateway-api for cluster workload in 189.35275ms
+rendered components/istio/cni for cluster workload in 374.337583ms
+rendered components/istio/base for cluster workload in 469.407167ms
+rendered components/istio/istiod for cluster workload in 506.368ms
+rendered components/istio/ztunnel for cluster workload in 536.091542ms
 ```
   </TabItem>
 </Tabs>
@@ -856,21 +843,18 @@ git commit -m "add istio"
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt showLineNumbers
-[main aca8ff6] add istio
- 18 files changed, 18955 insertions(+)
+[main b4ecb69] add istio
+ 15 files changed, 18571 insertions(+)
  create mode 100644 components/istio/base/istio-base.cue
  create mode 100644 components/istio/base/values.gen.cue
  create mode 100644 components/istio/cni/cni.cue
  create mode 100644 components/istio/cni/values.gen.cue
- create mode 100644 components/istio/gateway/gateway.cue
- create mode 100644 components/istio/gateway/values.gen.cue
  create mode 100644 components/istio/istiod/istiod.cue
  create mode 100644 components/istio/istiod/values.gen.cue
  create mode 100644 components/istio/ztunnel/values.gen.cue
  create mode 100644 components/istio/ztunnel/ztunnel.cue
  create mode 100644 deploy/clusters/workload/components/istio-base/istio-base.gen.yaml
  create mode 100644 deploy/clusters/workload/components/istio-cni/istio-cni.gen.yaml
- create mode 100644 deploy/clusters/workload/components/istio-gateway/istio-gateway.gen.yaml
  create mode 100644 deploy/clusters/workload/components/istio-ztunnel/istio-ztunnel.gen.yaml
  create mode 100644 deploy/clusters/workload/components/istiod/istiod.gen.yaml
  create mode 100644 istio-k3d.gen.cue
@@ -889,7 +873,7 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/namespac
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt showLineNumbers
-namespace/istio-ingress serverside-applied
+namespace/cert-manager serverside-applied
 namespace/istio-system serverside-applied
 ```
   </TabItem>
@@ -987,24 +971,6 @@ daemonset.apps/ztunnel serverside-applied
   </TabItem>
 </Tabs>
 
-<Tabs groupId="apply-istio-gateway">
-  <TabItem value="command" label="Command">
-```bash
-kubectl apply --server-side=true -f deploy/clusters/workload/components/istio-gateway
-```
-  </TabItem>
-  <TabItem value="output" label="Output">
-```txt showLineNumbers
-serviceaccount/gateway serverside-applied
-role.rbac.authorization.k8s.io/gateway serverside-applied
-rolebinding.rbac.authorization.k8s.io/gateway serverside-applied
-service/gateway serverside-applied
-deployment.apps/gateway serverside-applied
-horizontalpodautoscaler.autoscaling/gateway serverside-applied
-```
-  </TabItem>
-</Tabs>
-
 Make sure all pod containers become ready.
 
 <Tabs groupId="apply-istio-ready">
@@ -1015,20 +981,21 @@ kubectl get pods -A
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt showLineNumbers
-NAMESPACE       NAME                                      READY   STATUS    RESTARTS   AGE
-istio-ingress   gateway-6748c5f547-s46pj                  1/1     Running   0          26s
-istio-system    istio-cni-node-852nr                      1/1     Running   0          2m9s
-istio-system    istiod-5b4d8d4c77-t694z                   1/1     Running   0          3m15s
-istio-system    ztunnel-msqbn                             1/1     Running   0          63s
-kube-system     coredns-576bfc4dc7-2g4k9                  1/1     Running   0          113m
-kube-system     local-path-provisioner-6795b5f9d8-wsz8p   1/1     Running   0          113m
-kube-system     metrics-server-557ff575fb-fctr7           1/1     Running   0          113m
-kube-system     svclb-gateway-5d311af0-fp5mk              3/3     Running   0          26s
+NAMESPACE      NAME                                       READY   STATUS    RESTARTS   AGE
+cert-manager   cert-manager-9647b459d-qcv77               1/1     Running   0          6m43s
+cert-manager   cert-manager-cainjector-5d8798687c-jbrx8   1/1     Running   0          6m43s
+cert-manager   cert-manager-webhook-c77744d75-gr7t9       1/1     Running   0          6m43s
+istio-system   istio-cni-node-8pcjc                       1/1     Running   0          45s
+istio-system   istiod-5b4d8d4c77-gjq9l                    1/1     Running   0          52s
+istio-system   ztunnel-8qjbp                              1/1     Running   0          41s
+kube-system    coredns-576bfc4dc7-t997m                   1/1     Running   0          10m
+kube-system    local-path-provisioner-6795b5f9d8-q2c8d    1/1     Running   0          10m
+kube-system    metrics-server-557ff575fb-xtw7b            1/1     Running   0          10m
 ```
   </TabItem>
 </Tabs>
 
-Once all pods are ready, we're ready for the next step toward exposing httpbin.
+Once all pods are ready, we're ready for the next step.
 
 ## Certificate Issuer
 
@@ -1093,7 +1060,29 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt showLineNumbers
-TODO
+rendered components/local-ca for cluster workload in 97.506958ms
+rendered components/namespaces for cluster workload in 99.706375ms
+rendered components/istio/ztunnel for cluster workload in 126.974292ms
+rendered components/istio/cni for cluster workload in 127.192084ms
+rendered components/istio/base for cluster workload in 128.667ms
+rendered components/istio/istiod for cluster workload in 136.803583ms
+rendered components/cert-manager for cluster workload in 158.166041ms
+rendered components/gateway-api for cluster workload in 198.166583ms
+```
+  </TabItem>
+  <TabItem value="manifest" label="Manifest">
+  `deploy/clusters/workload/components/local-ca/local-ca.gen.yaml`
+```yaml showLineNumbers
+---
+# Source: CUE apiObjects.ClusterIssuer.LocalCA
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: local-ca
+  namespace: cert-manager
+spec:
+  ca:
+    secretName: local-ca
 ```
   </TabItem>
 </Tabs>
@@ -1109,7 +1098,11 @@ git commit -m "integrate local-ca into the platform"
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt showLineNumbers
-TODO
+[main 6e21f5d] integrate local-ca into the platform
+ 3 files changed, 41 insertions(+)
+ create mode 100644 components/local-ca/local-ca.cue
+ create mode 100644 deploy/clusters/workload/components/local-ca/local-ca.gen.yaml
+ create mode 100644 local-ca.gen.cue
 ```
   </TabItem>
 </Tabs>
@@ -1123,13 +1116,13 @@ kubectl apply --server-side=true -f deploy/clusters/workload/components/local-ca
 ```
   </TabItem>
   <TabItem value="output" label="Output">
-```txt showLineNumbers
+```txt
 clusterissuer.cert-manager.io/local-ca serverside-applied
 ```
   </TabItem>
 </Tabs>
 
-Verify the local-ca ClusterIssuer is ready:
+Verify the local-ca ClusterIssuer is ready.
 
 <Tabs groupId="local-ca-get">
   <TabItem value="command" label="Command">
@@ -1144,6 +1137,280 @@ local-ca   True    12s
 ```
   </TabItem>
 </Tabs>
+
+Now that we have a ClusterIssuer we can issue a certificate to expose services
+outside the cluster.
+
+## Ingress Gateway
+
+With the certificate issuer in place, we have everything necessary to manage a
+Gateway resource.  We'll configure the gateway to use a Certificate issued by
+the local-ca cluster issuer.  The gateway terminates the tls connection from the
+browsers and uses mtls to secure the connection to the backend httpbin
+deployment.
+
+Generate the component.
+
+<Tabs groupId="gen-istio-gateway">
+  <TabItem value="command" label="Command">
+```bash
+holos generate component istio-gateway
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+generated component
+```
+  </TabItem>
+</Tabs>
+
+:::warning
+TODO: What's going on here?
+:::
+
+<Tabs groupId="gateway-files">
+  <TabItem value="leaf" label="Leaf">
+  `components/istio/gateway/gateway.cue`
+```cue showLineNumbers
+package holos
+
+// Produce a kubernetes objects build plan.
+(#Kubernetes & Objects).Output
+
+let Objects = {
+	Name:      "istio-gateway"
+	Namespace: #Istio.Gateway.Namespace
+
+	Resources: {
+		// The default gateway with all listeners attached to tls certs.
+		Gateway: default: {
+			metadata: namespace: Namespace
+
+			let Listeners = {
+				http: {
+					name:     "http"
+					protocol: "HTTP"
+					port:     80
+					allowedRoutes: namespaces: from: "Same"
+				}
+				https: {
+					name:     "https"
+					protocol: "HTTPS"
+					port:     443
+					allowedRoutes: namespaces: from: "Same"
+					tls: mode: "Terminate"
+					tls: certificateRefs: [{
+						kind: "Secret"
+						name: "gateway-cert"
+					}]
+				}
+			}
+
+			spec: listeners: [for x in Listeners {x}]
+		}
+
+		// Manage a simple cert for example.com and *.example.com
+		Certificate: "gateway-cert": {
+			metadata: name:      "gateway-cert"
+			metadata: namespace: Namespace
+			spec: commonName:    #Platform.Domain
+			spec: dnsNames: [spec.commonName, "*.\(spec.commonName)"]
+			spec: secretName: metadata.name
+			spec: issuerRef: {
+				kind: "ClusterIssuer"
+				name: "local-ca"
+			}
+		}
+
+		// Manage a service account to prevent ArgoCD from pruning it.
+		ServiceAccount: "default-istio": {
+			metadata: namespace: Namespace
+			metadata: labels: {
+				"gateway.istio.io/managed":               "istio.io-gateway-controller"
+				"gateway.networking.k8s.io/gateway-name": "default"
+				"istio.io/gateway-name":                  "default"
+			}
+		}
+	}
+}
+```
+  </TabItem>
+  <TabItem value="root" label="Root">
+  `istio-gateway.gen.cue`
+```cue showLineNumbers
+package holos
+
+// #Istio represents platform wide configuration
+#Istio: Gateway: Namespace: "istio-ingress"
+
+// Register the Namespaces
+#Namespaces: (#Istio.Gateway.Namespace): _
+
+// Manage istio on workload clusters
+for Cluster in #Fleets.workload.clusters {
+	#Platform: Components: {
+		"\(Cluster.name)/istio-gateway": {
+			path:    "components/istio/gateway"
+			cluster: Cluster.name
+		}
+	}
+}
+```
+  </TabItem>
+</Tabs>
+
+Render the platform to render manifests into the deploy directory.
+
+<Tabs groupId="render-platform-gateway">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+rendered components/local-ca for cluster workload in 85.818ms
+rendered components/istio/gateway for cluster workload in 100.907958ms
+rendered components/istio/ztunnel for cluster workload in 125.883709ms
+rendered components/istio/base for cluster workload in 126.6505ms
+rendered components/istio/cni for cluster workload in 127.74825ms
+rendered components/istio/istiod for cluster workload in 144.296333ms
+rendered components/cert-manager for cluster workload in 164.358959ms
+rendered components/namespaces for cluster workload in 83.744375ms
+rendered components/gateway-api for cluster workload in 192.226541ms
+```
+  </TabItem>
+  <TabItem value="manifest" label="Manifest">
+  `deploy/clusters/workload/components/istio-gateway/istio-gateway.gen.yaml`
+```yaml showLineNumbers
+---
+# Source: CUE apiObjects.Certificate.gateway-cert
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gateway-cert
+  namespace: istio-ingress
+spec:
+  commonName: holos.localhost
+  dnsNames:
+    - holos.localhost
+    - '*.holos.localhost'
+  issuerRef:
+    kind: ClusterIssuer
+    name: local-ca
+  secretName: gateway-cert
+---
+# Source: CUE apiObjects.Gateway.default
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: default
+  namespace: istio-ingress
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https
+      protocol: HTTPS
+      port: 443
+      allowedRoutes:
+        namespaces:
+          from: Same
+      tls:
+        certificateRefs:
+          - kind: Secret
+            name: gateway-cert
+        mode: Terminate
+---
+# Source: CUE apiObjects.ServiceAccount.default-istio
+metadata:
+  name: default-istio
+  namespace: istio-ingress
+  labels:
+    gateway.istio.io/managed: istio.io-gateway-controller
+    gateway.networking.k8s.io/gateway-name: default
+    istio.io/gateway-name: default
+kind: ServiceAccount
+apiVersion: v1
+```
+  </TabItem>
+</Tabs>
+
+Add and commit the configuration and rendered manifests.
+
+<Tabs groupId="commit-istio-gateway">
+  <TabItem value="command" label="Command">
+```bash
+git add .
+git commit -m "integrate istio-gateway into the platform"
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+[main 957eb6c] integrate istio-gateway into the platform
+ 5 files changed, 147 insertions(+)
+ create mode 100644 components/istio/gateway/gateway.cue
+ create mode 100644 components/istio/gateway/readme.md
+ create mode 100644 deploy/clusters/workload/components/istio-gateway/istio-gateway.gen.yaml
+ create mode 100644 istio-gateway.gen.cue
+```
+  </TabItem>
+</Tabs>
+
+As an optional step, apply the configuration to the cluster.
+
+<Tabs groupId="gateway-apply-namespaces">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/namespaces
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+namespace/cert-manager serverside-applied
+namespace/istio-ingress serverside-applied
+namespace/istio-system serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+<Tabs groupId="gateway-apply-gateway">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/istio-gateway
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+certificate.cert-manager.io/gateway-cert serverside-applied
+gateway.gateway.networking.k8s.io/default serverside-applied
+serviceaccount/default-istio serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+Verify the pod is ready.
+
+<Tabs groupId="get-pods-gateway">
+  <TabItem value="command" label="Command">
+```bash
+kubectl get pods -n istio-ingress
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+NAME                             READY   STATUS    RESTARTS   AGE
+default-istio-54598d985b-ggnpl   1/1     Running   0          15s
+```
+  </TabItem>
+</Tabs>
+
+Once the gateway is ready we'll move on to managing the backend httpbin service.
 
 ## httpbin Workload
 
@@ -1178,16 +1445,16 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt showLineNumbers
-rendered components/httpbin/workload for cluster workload in 100.821083ms
-rendered components/istio/ztunnel for cluster workload in 123.260917ms
-rendered components/istio/base for cluster workload in 124.368417ms
-rendered components/istio/gateway for cluster workload in 124.71975ms
-rendered components/istio/cni for cluster workload in 125.941709ms
-rendered components/istio/istiod for cluster workload in 139.979666ms
-rendered components/cert-manager for cluster workload in 165.070041ms
-rendered components/local-ca for cluster workload in 78.725625ms
-rendered components/gateway-api for cluster workload in 193.146417ms
-rendered components/namespaces for cluster workload in 79.939875ms
+rendered components/istio/gateway for cluster workload in 104.4915ms
+rendered components/httpbin/workload for cluster workload in 115.201458ms
+rendered components/istio/ztunnel for cluster workload in 129.636792ms
+rendered components/istio/cni for cluster workload in 130.582667ms
+rendered components/istio/base for cluster workload in 131.983042ms
+rendered components/istio/istiod for cluster workload in 144.606917ms
+rendered components/cert-manager for cluster workload in 171.715542ms
+rendered components/local-ca for cluster workload in 80.987958ms
+rendered components/namespaces for cluster workload in 85.749792ms
+rendered components/gateway-api for cluster workload in 204.091834ms
 ```
   </TabItem>
   <TabItem value="manifest" label="Manifest">
@@ -1272,7 +1539,7 @@ apiVersion: v1
 
 Add and commit the configuration and rendered manifests.
 
-<Tabs groupId="commit-httpbin-workload">
+<Tabs groupId="add-commit-httpbin-workload">
   <TabItem value="command" label="Command">
 ```bash
 git add .
@@ -1340,15 +1607,13 @@ httpbin-699b8dd85b-qc8v2   1/1     Running   0          22s
   </TabItem>
 </Tabs>
 
+We can move on to the next step once httpbin is ready.
+
 ## HTTP Routes
 
 httpbin is running but still isn't exposed outside of the cluster, so we can't
-browse to it.  We'll add HTTPRoute and Certificate resources to expose the
-service.
-
-:::warning
-TODO - Adding the routes should add the certificate!
-:::
+browse to it.  We'll add a HTTPRoute to expose the service outside of the
+cluster.
 
 Generate the component.
 
@@ -1366,8 +1631,67 @@ generated component
 </Tabs>
 
 :::warning
-REVIEW THE FILES
+TODO: What's going on here?
 :::
+
+<Tabs groupId="routes-files">
+  <TabItem value="leaf" label="Leaf">
+  `components/httpbin/routes/httpbin-routes.cue`
+```cue showLineNumbers
+package holos
+
+// Produce a kubernetes objects build plan.
+(#Kubernetes & Objects).Output
+
+let Objects = {
+	Name:      "httpbin-routes"
+	Namespace: #Istio.Gateway.Namespace
+
+	Resources: [_]: [_]: metadata: namespace: Namespace
+	Resources: HTTPRoute: (#HTTPRouteClone & {Name: "httpbin"}).Output
+}
+
+#HTTPRouteClone: {
+	Name: string
+	let Host = "\(Name).\(#Platform.Domain)"
+	Output: "\(Name)": {
+		metadata: namespace: _
+		metadata: name:      Name
+		metadata: labels: app: Name
+		spec: hostnames: [Host]
+		spec: parentRefs: [{
+			name:      "default"
+			namespace: metadata.namespace
+		}]
+		spec: rules: [
+			{
+				matches: [{path: {type: "PathPrefix", value: "/"}}]
+				backendRefs: [{
+					name:      Name
+					namespace: #HTTPBin.Namespace
+					port:      #HTTPBin.Port
+				}]
+			},
+		]
+	}
+}
+```
+  </TabItem>
+  <TabItem value="root" label="Root">
+  `httpbin-routes.cue`
+```cue showLineNumbers
+package holos
+
+// Manage the component on workload clusters
+for Cluster in #Fleets.workload.clusters {
+	#Platform: Components: "\(Cluster.name)/httpbin-routes": {
+		path:    "components/httpbin/routes"
+		cluster: Cluster.name
+	}
+}
+```
+  </TabItem>
+</Tabs>
 
 Render the platform.
 
@@ -1379,17 +1703,17 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt showLineNumbers
-rendered components/httpbin/routes for cluster workload in 98.463125ms
-rendered components/httpbin/workload for cluster workload in 114.090583ms
-rendered components/istio/cni for cluster workload in 129.239125ms
-rendered components/istio/ztunnel for cluster workload in 131.220459ms
-rendered components/istio/gateway for cluster workload in 131.174834ms
-rendered components/istio/base for cluster workload in 131.630542ms
-rendered components/istio/istiod for cluster workload in 146.532083ms
-rendered components/cert-manager for cluster workload in 170.442625ms
-rendered components/local-ca for cluster workload in 77.9745ms
-rendered components/namespaces for cluster workload in 79.440166ms
-rendered components/gateway-api for cluster workload in 178.380917ms
+rendered components/httpbin/routes for cluster workload in 100.305584ms
+rendered components/istio/gateway for cluster workload in 112.474125ms
+rendered components/httpbin/workload for cluster workload in 113.30375ms
+rendered components/istio/cni for cluster workload in 133.608375ms
+rendered components/istio/base for cluster workload in 133.778208ms
+rendered components/istio/ztunnel for cluster workload in 137.056083ms
+rendered components/istio/istiod for cluster workload in 150.802ms
+rendered components/cert-manager for cluster workload in 172.605375ms
+rendered components/local-ca for cluster workload in 83.810167ms
+rendered components/namespaces for cluster workload in 88.066375ms
+rendered components/gateway-api for cluster workload in 183.743958ms
 ```
   </TabItem>
   <TabItem value="manifest" label="Manifest">
@@ -1422,6 +1746,117 @@ spec:
 ```
   </TabItem>
 </Tabs>
+
+Add and commit the configuration and rendered manifests.
+
+<Tabs groupId="commit-httpbin-routes">
+  <TabItem value="command" label="Command">
+```bash
+git add .
+git commit -m "expose httpbin using httproutes"
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+[main a7bf425] expose httpbin using httproutes
+ 3 files changed, 70 insertions(+)
+ create mode 100644 components/httpbin/routes/httpbin-routes.cue
+ create mode 100644 deploy/clusters/workload/components/httpbin-routes/httpbin-routes.gen.yaml
+ create mode 100644 httpbin-routes.gen.cue
+```
+  </TabItem>
+</Tabs>
+
+As an optional step, apply the configuration to the cluster.
+
+<Tabs groupId="apply-routes">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/components/httpbin-routes
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+httproute.gateway.networking.k8s.io/httpbin serverside-applied
+```
+  </TabItem>
+</Tabs>
+
+Verify the route is accepted.
+
+<Tabs groupId="verify-routes">
+  <TabItem value="command" label="Command">
+```bash
+kubectl -n istio-ingress describe httproutes.gateway.networking.k8s.io httpbin
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+Name:         httpbin
+Namespace:    istio-ingress
+Labels:       app=httpbin
+Annotations:  <none>
+API Version:  gateway.networking.k8s.io/v1
+Kind:         HTTPRoute
+Metadata:
+  Creation Timestamp:  2024-09-13T18:06:40Z
+  Generation:          1
+  Resource Version:    3928
+  UID:                 24a0e7f7-0069-4bec-bc73-d3c361a4124f
+Spec:
+  Hostnames:
+    httpbin.holos.localhost
+  Parent Refs:
+    Group:      gateway.networking.k8s.io
+    Kind:       Gateway
+    Name:       default
+    Namespace:  istio-ingress
+  Rules:
+    Backend Refs:
+      Group:      
+      Kind:       Service
+      Name:       httpbin
+      Namespace:  httpbin
+      Port:       80
+      Weight:     1
+    Matches:
+      Path:
+        Type:   PathPrefix
+        Value:  /
+Status:
+  Parents:
+    Conditions:
+      Last Transition Time:  2024-09-13T18:06:40Z
+      // highlight-next-line
+      Message:               Route was valid, bound to 2 parents
+      Observed Generation:   1
+      Reason:                Accepted
+      Status:                True
+      Type:                  Accepted
+      Last Transition Time:  2024-09-13T18:06:40Z
+      Message:               All references resolved
+      Observed Generation:   1
+      Reason:                ResolvedRefs
+      Status:                True
+      Type:                  ResolvedRefs
+    Controller Name:         istio.io/gateway-controller
+    Parent Ref:
+      Group:      gateway.networking.k8s.io
+      Kind:       Gateway
+      Name:       default
+      Namespace:  istio-ingress
+Events:           <none>
+```
+  </TabItem>
+</Tabs>
+
+We've successfully exposed httpbin once the route is accepted.  Browse to
+https://httpbin.holos.localhost/dump/request and you should see your request
+headers echoed back to you.
+
+:::warning
+Wrap up
+:::
 
 [Quickstart]: /docs/quickstart
 [Local Cluster]: /docs/guides/local-cluster

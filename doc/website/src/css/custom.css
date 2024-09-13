@@ -5,10 +5,10 @@
  */
 
 /* Enable wrapping by default for mobile */
-pre code {
+/* pre code {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
+} */
 
 /* You can override the default Infima variables here. */
 :root {

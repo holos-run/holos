@@ -3,8 +3,7 @@ package holos
 // #Istio represents platform wide configuration
 #Istio: {
 	Version: "1.23.1"
-	System: Namespace:  "istio-system"
-	Gateway: Namespace: "istio-ingress"
+	System: Namespace: "istio-system"
 
 	// Constrain Helm values for safer, easier upgrades and consistency across
 	// platform components.
@@ -15,8 +14,7 @@ package holos
 }
 
 // Register the Namespaces
-#Namespaces: (#Istio.System.Namespace):  _
-#Namespaces: (#Istio.Gateway.Namespace): _
+#Namespaces: (#Istio.System.Namespace): _
 
 // Manage istio on workload clusters
 for Cluster in #Fleets.workload.clusters {
@@ -35,10 +33,6 @@ for Cluster in #Fleets.workload.clusters {
 		}
 		"\(Cluster.name)/istio-ztunnel": {
 			path:    "components/istio/ztunnel"
-			cluster: Cluster.name
-		}
-		"\(Cluster.name)/istio-gateway": {
-			path:    "components/istio/gateway"
 			cluster: Cluster.name
 		}
 	}

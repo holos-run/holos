@@ -15,6 +15,7 @@ import (
 	rgv1 "gateway.networking.k8s.io/referencegrant/v1beta1"
 	certv1 "cert-manager.io/certificate/v1"
 	hrv1 "gateway.networking.k8s.io/httproute/v1"
+	gwv1 "gateway.networking.k8s.io/gateway/v1"
 )
 
 #Resources: {
@@ -39,7 +40,10 @@ import (
 	Service: [_]:            corev1.#Service
 	ServiceAccount: [_]:     corev1.#ServiceAccount
 	StatefulSet: [_]:        appsv1.#StatefulSet
-	...
+
+	Gateway: [_]: gwv1.#Gateway & {
+		spec: gatewayClassName: string | *"istio"
+	}
 }
 
 #Helm: {

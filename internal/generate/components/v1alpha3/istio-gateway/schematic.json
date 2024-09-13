@@ -1,0 +1,5 @@
+{
+  "name": "istio-gateway",
+  "short": "kubernetes ingress gateway api",
+  "long": "Gateway API ingress gateway with certificate management"
+}
