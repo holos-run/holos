@@ -13,6 +13,8 @@ import (
 	app "argoproj.io/application/v1alpha1"
 	ci "cert-manager.io/clusterissuer/v1"
 	rgv1 "gateway.networking.k8s.io/referencegrant/v1beta1"
+	certv1 "cert-manager.io/certificate/v1"
+	hrv1 "gateway.networking.k8s.io/httproute/v1"
 )
 
 #Resources: {
@@ -21,12 +23,14 @@ import (
 		metadata: name: string | *InternalLabel
 	}
 
+	Certificate: [_]:        certv1.#Certificate
 	ClusterIssuer: [_]:      ci.#ClusterIssuer
 	ClusterRole: [_]:        rbacv1.#ClusterRole
 	ClusterRoleBinding: [_]: rbacv1.#ClusterRoleBinding
 	ConfigMap: [_]:          corev1.#ConfigMap
 	CronJob: [_]:            batchv1.#CronJob
 	Deployment: [_]:         appsv1.#Deployment
+	HTTPRoute: [_]:          hrv1.#HTTPRoute
 	Job: [_]:                batchv1.#Job
 	Namespace: [_]:          corev1.#Namespace
 	ReferenceGrant: [_]:     rgv1.#ReferenceGrant

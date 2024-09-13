@@ -1347,8 +1347,81 @@ browse to it.  We'll add HTTPRoute and Certificate resources to expose the
 service.
 
 :::warning
-TODO
+TODO - Adding the routes should add the certificate!
 :::
+
+Generate the component.
+
+<Tabs groupId="gen-httpbin-routes">
+  <TabItem value="command" label="Command">
+```bash
+holos generate component httpbin-routes
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+generated component
+```
+  </TabItem>
+</Tabs>
+
+:::warning
+REVIEW THE FILES
+:::
+
+Render the platform.
+
+<Tabs groupId="render-httpbin-routes">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+rendered components/httpbin/routes for cluster workload in 98.463125ms
+rendered components/httpbin/workload for cluster workload in 114.090583ms
+rendered components/istio/cni for cluster workload in 129.239125ms
+rendered components/istio/ztunnel for cluster workload in 131.220459ms
+rendered components/istio/gateway for cluster workload in 131.174834ms
+rendered components/istio/base for cluster workload in 131.630542ms
+rendered components/istio/istiod for cluster workload in 146.532083ms
+rendered components/cert-manager for cluster workload in 170.442625ms
+rendered components/local-ca for cluster workload in 77.9745ms
+rendered components/namespaces for cluster workload in 79.440166ms
+rendered components/gateway-api for cluster workload in 178.380917ms
+```
+  </TabItem>
+  <TabItem value="manifest" label="Manifest">
+  `deploy/clusters/workload/components/httpbin-routes/httpbin-routes.gen.yaml`
+```yaml showLineNumbers
+---
+# Source: CUE apiObjects.HTTPRoute.httpbin
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: httpbin
+  namespace: istio-ingress
+  labels:
+    app: httpbin
+spec:
+  hostnames:
+    - httpbin.holos.localhost
+  parentRefs:
+    - name: default
+      namespace: istio-ingress
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: httpbin
+          namespace: httpbin
+          port: 80
+```
+  </TabItem>
+</Tabs>
 
 [Quickstart]: /docs/quickstart
 [Local Cluster]: /docs/guides/local-cluster

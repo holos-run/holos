@@ -1,0 +1,6 @@
+{
+  "name": "httpbin-routes",
+  "short": "expose httpbin with httproute resources",
+  "long": "expose httpbin with httproute resources",
+  "namespace": "istio-ingress"
+}

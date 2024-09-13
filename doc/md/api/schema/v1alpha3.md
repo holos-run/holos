@@ -185,6 +185,10 @@ type Platform struct {
     // Output represents the core Platform spec for the holos cli to iterate over
     // and render each listed Component, injecting the Model.
     Output core.Platform
+    // Domain represents the primary domain the Platform operates in.  This field
+    // is intended as a sensible default for component authors to reference and
+    // platform operators to define.
+    Domain string `cue:"string | *\"holos.localhost\""`
 }
 ```
 
