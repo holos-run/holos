@@ -1,7 +1,7 @@
 package holos
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let Mode = _Platform.Model.rbac.mode
 

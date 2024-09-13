@@ -17,4 +17,4 @@ let Chart = {
 }
 
 // Produce a helm chart build plan.
-(#Helm & Chart).Output
+(#Helm & Chart).BuildPlan

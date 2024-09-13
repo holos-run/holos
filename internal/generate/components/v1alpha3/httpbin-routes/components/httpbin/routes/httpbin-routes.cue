@@ -1,14 +1,14 @@
 package holos
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let Objects = {
 	Name:      "{{ .Name }}"
 	Namespace: #Istio.Gateway.Namespace
 
 	Resources: [_]: [_]: metadata: namespace: Namespace
-	Resources: HTTPRoute: (#HTTPRouteClone & {Name: "httpbin"}).Output
+	Resources: HTTPRoute: (#HTTPRouteClone & {Name: "httpbin"}).BuildPlan
 }
 
 #HTTPRouteClone: {

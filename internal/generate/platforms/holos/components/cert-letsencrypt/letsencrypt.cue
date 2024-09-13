@@ -3,7 +3,7 @@ package holos
 import ci "cert-manager.io/clusterissuer/v1"
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 // The cloudflare api token is platform scoped, not cluster scoped.
 #SecretName: "cloudflare-api-token-secret"

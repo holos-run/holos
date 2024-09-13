@@ -3,7 +3,7 @@ package holos
 import ci "cert-manager.io/clusterissuer/v1"
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let Objects = {
 	Name:      "local-ca"

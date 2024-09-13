@@ -1,7 +1,7 @@
 package holos
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let Objects = {
 	Name:      "gateway"
@@ -23,10 +23,10 @@ let Objects = {
 			metadata: namespace: Namespace
 			spec: {
 				// Work with a struct of listeners instead of a list.
-				_listeners: (#WildcardListener & {Name: "httpbin", Cluster: false}).Output
-				_listeners: (#WildcardListener & {Name: "argocd", Cluster: false}).Output
-				_listeners: (#WildcardListener & {Name: "backstage", Cluster: false}).Output
-				_listeners: (#WildcardListener & {Name: "app", Cluster: false}).Output
+				_listeners: (#WildcardListener & {Name: "httpbin", Cluster: false}).BuildPlan
+				_listeners: (#WildcardListener & {Name: "argocd", Cluster: false}).BuildPlan
+				_listeners: (#WildcardListener & {Name: "backstage", Cluster: false}).BuildPlan
+				_listeners: (#WildcardListener & {Name: "app", Cluster: false}).BuildPlan
 				listeners: [for x in _listeners {x}]
 			}
 		}

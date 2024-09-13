@@ -1,7 +1,7 @@
 package holos
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 _AppInfo: spec: component: "infra"
 

@@ -6,4 +6,4 @@ let Objects = {
 }
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan

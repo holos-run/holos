@@ -704,7 +704,7 @@ the root.
 is not `"istio-system"`.  Future upgrades are safer with this constraint, if the
 upstream vendor changes the default in the future the component will fail
 validation.
-4. The root registers two Namespaces, `"istio-system"` and `"istio-ingress"`.
+4. The root registers the istio-system namespace with the namespaces component.
 5. The root manages the components on all workload clusters in the platform.
 
 <Tabs groupId="istio-files">

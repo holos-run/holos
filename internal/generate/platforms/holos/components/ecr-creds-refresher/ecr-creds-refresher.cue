@@ -3,7 +3,7 @@ package holos
 let NAME = "ecr-creds-refresher"
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let AWS_ACCOUNT = _Platform.Model.aws.accountNumber
 

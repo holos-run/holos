@@ -14,7 +14,7 @@ import (
 // Refer to [Using Cert Manager to Deploy TLS for Postgres on Kubernetes](https://www.crunchydata.com/blog/using-cert-manager-to-deploy-tls-for-postgres-on-kubernetes)
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let SelfSigned = "\(_DBName)-selfsigned"
 let RootCA = "\(_DBName)-root-ca"

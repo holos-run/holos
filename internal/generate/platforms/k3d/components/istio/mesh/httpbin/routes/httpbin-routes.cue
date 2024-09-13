@@ -1,7 +1,7 @@
 package holos
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let Objects = {
 	Name:      "httpbin-routes"
@@ -9,7 +9,7 @@ let Objects = {
 
 	Resources: {
 		Resources: [_]: [_]: metadata: namespace: Namespace
-		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin"}).Output
+		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin"}).BuildPlan
 	}
 }
 

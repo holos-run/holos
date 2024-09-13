@@ -3,7 +3,7 @@ package holos
 import ss "external-secrets.io/secretstore/v1beta1"
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let Objects = {
 	Name:      "secretstores"

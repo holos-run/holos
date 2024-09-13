@@ -3,9 +3,9 @@ package holos
 import "encoding/yaml"
 
 // Produce a helm chart build plan.
-(#Helm & Chart).Output
+(#Helm & Chart).BuildPlan
 
-_MeshConfig: (#MeshConfig & {}).Output
+_MeshConfig: (#MeshConfig & {}).BuildPlan
 
 let Chart = {
 	Name:      "istiod"

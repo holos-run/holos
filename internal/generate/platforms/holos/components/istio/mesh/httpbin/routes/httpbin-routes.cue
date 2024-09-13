@@ -1,7 +1,7 @@
 package holos
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let Objects = {
 	Name:      "httpbin-routes"
@@ -11,11 +11,11 @@ let Objects = {
 		Resources: [_]: [_]: metadata: namespace: Namespace
 		// Multiple HTTPRoutes to test Chrome http2 connection reuse with *.admin
 		// wildcard cert.
-		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin"}).Output
-		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin1"}).Output
-		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin2"}).Output
-		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin3"}).Output
-		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin4"}).Output
+		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin"}).BuildPlan
+		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin1"}).BuildPlan
+		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin2"}).BuildPlan
+		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin3"}).BuildPlan
+		HTTPRoute: (#HTTPRouteClone & {Name: "httpbin4"}).BuildPlan
 	}
 }
 

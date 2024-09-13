@@ -6,7 +6,7 @@ import (
 )
 
 // Produce a helm chart build plan.
-(#Helm & Chart).Output
+(#Helm & Chart).BuildPlan
 
 let Chart = {
 	Name:      "argo-cd"

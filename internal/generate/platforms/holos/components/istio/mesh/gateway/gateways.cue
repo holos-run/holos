@@ -3,7 +3,7 @@ package holos
 import "encoding/json"
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let Objects = {
 	Name:      "gateway"
@@ -42,10 +42,10 @@ let Objects = {
 			}
 			spec: {
 				// Work with a struct of listeners instead of a list.
-				_listeners: (#WildcardListener & {Name: "admin", Selector: _Selector.GrantSubdomainAdmin, Cluster: true}).Output
-				_listeners: (#WildcardListener & {Name: "login", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).Output
-				_listeners: (#WildcardListener & {Name: "app", Selector: _Selector.GrantSubdomainApp, Cluster: false}).Output
-				_listeners: (#WildcardListener & {Name: "app", Selector: _Selector.GrantSubdomainApp, Cluster: true}).Output
+				_listeners: (#WildcardListener & {Name: "admin", Selector: _Selector.GrantSubdomainAdmin, Cluster: true}).BuildPlan
+				_listeners: (#WildcardListener & {Name: "login", Selector: _Selector.GrantSubdomainLogin, Cluster: false}).BuildPlan
+				_listeners: (#WildcardListener & {Name: "app", Selector: _Selector.GrantSubdomainApp, Cluster: false}).BuildPlan
+				_listeners: (#WildcardListener & {Name: "app", Selector: _Selector.GrantSubdomainApp, Cluster: true}).BuildPlan
 				listeners: [for x in _listeners {x}]
 			}
 		}

@@ -8,7 +8,7 @@ import (
 )
 
 // Produce a helm chart build plan.
-(#Helm & Chart).Output
+(#Helm & Chart).BuildPlan
 
 // https://github.com/crossplane/crossplane/releases
 let CrossplaneVersion = "1.16.0"

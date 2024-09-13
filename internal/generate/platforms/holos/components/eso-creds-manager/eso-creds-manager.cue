@@ -10,7 +10,7 @@ let REFRESHER = "eso-creds-refresher"
 let EMAIL = _Platform.Model.eso.gcpServiceAccount
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let Objects = {
 	Name:      NAME

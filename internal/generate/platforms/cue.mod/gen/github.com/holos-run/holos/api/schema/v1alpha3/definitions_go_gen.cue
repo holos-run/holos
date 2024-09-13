@@ -13,21 +13,33 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
+// Component represents the fields common the different kinds of component.  All
+// components have a name, support mixing in resources, and produce a BuildPlan.
+#ComponentFields: {
+	// Name represents the Component name.
+	Name: string
+
+	// Resources are kubernetes api objects to mix into the output.
+	Resources: {...} @go(,map[string]any)
+
+	// ArgoConfig represents the ArgoCD GitOps configuration for this Component.
+	ArgoConfig: #ArgoConfig
+
+	// BuildPlan represents the derived BuildPlan for the Holos cli to render.
+	BuildPlan: core.#BuildPlan
+}
+
 // Helm provides a BuildPlan via the Output field which contains one HelmChart
 // from package core.  Useful as a convenience wrapper to render a HelmChart
 // with optional mix-in resources and Kustomization post-processing.
 #Helm: {
-	// Name represents the Component name.
-	Name: string
+	#ComponentFields
 
 	// Version represents the chart version.
 	Version: string
 
 	// Namespace represents the helm namespace option when rendering the chart.
 	Namespace: string
-
-	// Resources are kubernetes api objects to mix into the output.
-	Resources: {...} @go(,map[string]any)
 
 	// Repo represents the chart repository
 	Repo: {
@@ -62,12 +74,24 @@ import (
 	// KustomizeResources represents additional resources files to include in the
 	// kustomize resources list.
 	KustomizeResources: {...} & {[string]: {...}} @go(,map[string]any)
+}
 
-	// ArgoConfig represents the ArgoCD GitOps configuration for this Component.
-	ArgoConfig: #ArgoConfig
+// Kustomize provides a BuildPlan via the Output field which contains one
+// KustomizeBuild from package core.
+#Kustomize: {
+	#ComponentFields
 
-	// Output represents the derived BuildPlan for the Holos cli to render.
-	Output: core.#BuildPlan
+	// Kustomization represents the kustomize build plan for holos to render.
+	Kustomization: core.#KustomizeBuild
+}
+
+// Kubernetes provides a BuildPlan via the Output field which contains inline
+// API Objects provided directly from CUE.
+#Kubernetes: {
+	#ComponentFields
+
+	// Objects represents the kubernetes api objects for the Component.
+	Objects: core.#KubernetesObjects
 }
 
 // ArgoConfig represents the ArgoCD GitOps configuration for a Component.
@@ -153,30 +177,4 @@ import (
 	// is intended as a sensible default for component authors to reference and
 	// platform operators to define.
 	Domain: string & (string | *"holos.localhost")
-}
-
-// Kustomize provides a BuildPlan via the Output field which contains one
-// KustomizeBuild from package core.
-#Kustomize: {
-	// Name represents the Component name.
-	Name: string
-
-	// Kustomization represents the kustomize build plan for holos to render.
-	Kustomization: core.#KustomizeBuild
-
-	// Output represents the derived BuildPlan for the Holos cli to render.
-	Output: core.#BuildPlan
-}
-
-// Kubernetes provides a BuildPlan via the Output field which contains inline
-// API Objects provided directly from CUE.
-#Kubernetes: {
-	// Name represents the Component name.
-	Name: string
-
-	// Resources represents the kubernetes api objects for the Component.
-	Resources: {...} @go(,map[string]any)
-
-	// Output represents the derived BuildPlan for the Holos cli to render.
-	Output: core.#BuildPlan
 }

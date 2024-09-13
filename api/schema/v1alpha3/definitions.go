@@ -11,18 +11,29 @@ import (
 
 //go:generate ../../../hack/gendoc
 
+// Component represents the fields common the different kinds of component.  All
+// components have a name, support mixing in resources, and produce a BuildPlan.
+type ComponentFields struct {
+	// Name represents the Component name.
+	Name string
+	// Resources are kubernetes api objects to mix into the output.
+	Resources map[string]any
+	// ArgoConfig represents the ArgoCD GitOps configuration for this Component.
+	ArgoConfig ArgoConfig
+	// BuildPlan represents the derived BuildPlan for the Holos cli to render.
+	BuildPlan core.BuildPlan
+}
+
 // Helm provides a BuildPlan via the Output field which contains one HelmChart
 // from package core.  Useful as a convenience wrapper to render a HelmChart
 // with optional mix-in resources and Kustomization post-processing.
 type Helm struct {
-	// Name represents the Component name.
-	Name string
+	ComponentFields `json:",inline"`
+
 	// Version represents the chart version.
 	Version string
 	// Namespace represents the helm namespace option when rendering the chart.
 	Namespace string
-	// Resources are kubernetes api objects to mix into the output.
-	Resources map[string]any
 
 	// Repo represents the chart repository
 	Repo struct {
@@ -57,27 +68,23 @@ type Helm struct {
 	// KustomizeResources represents additional resources files to include in the
 	// kustomize resources list.
 	KustomizeResources map[string]any `cue:"{[string]: {...}}"`
-
-	// ArgoConfig represents the ArgoCD GitOps configuration for this Component.
-	ArgoConfig ArgoConfig
-
-	// Output represents the derived BuildPlan for the Holos cli to render.
-	Output core.BuildPlan
 }
 
-// Resources represents the default schema for a Kubernetes API object resource.
-// For example, a Service, Namespace or Deployment.  The top level key is the
-// kind of resource so default behavior and strict schema enforcement may be
-// enforced for the kind.  The second level keys are an arbitrary internal
-// label, which serves as the default value for the resource metadata name
-// field, but may differ for situations where the same resource kind and name
-// are managed in different namespaces.
-//
-// Refer to [definitions.cue] for the CUE schema definition as an example to
-// build on when defining your own Components.
-//
-// [definitions.cue]: https://github.com/holos-run/holos/blob/main/internal/generate/platforms/cue.mod/pkg/github.com/holos-run/holos/api/schema/v1alpha3/definitions.cue#L9
-// type Resources map[string]map[string]any
+// Kustomize provides a BuildPlan via the Output field which contains one
+// KustomizeBuild from package core.
+type Kustomize struct {
+	ComponentFields `json:",inline"`
+	// Kustomization represents the kustomize build plan for holos to render.
+	Kustomization core.KustomizeBuild
+}
+
+// Kubernetes provides a BuildPlan via the Output field which contains inline
+// API Objects provided directly from CUE.
+type Kubernetes struct {
+	ComponentFields `json:",inline"`
+	// Objects represents the kubernetes api objects for the Component.
+	Objects core.KubernetesObjects
+}
 
 // ArgoConfig represents the ArgoCD GitOps configuration for a Component.
 // Useful to define once at the root of the Platform configuration and reuse
@@ -151,29 +158,4 @@ type Platform struct {
 	// is intended as a sensible default for component authors to reference and
 	// platform operators to define.
 	Domain string `cue:"string | *\"holos.localhost\""`
-}
-
-// Kustomize provides a BuildPlan via the Output field which contains one
-// KustomizeBuild from package core.
-type Kustomize struct {
-	// Name represents the Component name.
-	Name string
-
-	// Kustomization represents the kustomize build plan for holos to render.
-	Kustomization core.KustomizeBuild
-
-	// Output represents the derived BuildPlan for the Holos cli to render.
-	Output core.BuildPlan
-}
-
-// Kubernetes provides a BuildPlan via the Output field which contains inline
-// API Objects provided directly from CUE.
-type Kubernetes struct {
-	// Name represents the Component name.
-	Name string
-	// Resources represents the kubernetes api objects for the Component.
-	Resources map[string]any
-
-	// Output represents the derived BuildPlan for the Holos cli to render.
-	Output core.BuildPlan
 }

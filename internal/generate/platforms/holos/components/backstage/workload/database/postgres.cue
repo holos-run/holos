@@ -1,7 +1,7 @@
 package holos
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 // Restore from backup.  Flip this to true after the database is provisioned and
 // a backup has been taken.

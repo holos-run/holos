@@ -9,7 +9,7 @@ import (
 let NAME = "ecr-creds-manager"
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 // The path Pod Identity uses.
 let MOUNT = "/var/run/secrets/eks.amazonaws.com/serviceaccount/"

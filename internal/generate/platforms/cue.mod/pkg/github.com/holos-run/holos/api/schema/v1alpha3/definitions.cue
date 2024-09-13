@@ -4,45 +4,39 @@ import (
 	"encoding/yaml"
 	core "github.com/holos-run/holos/api/core/v1alpha3"
 	kc "sigs.k8s.io/kustomize/api/types"
-
-	corev1 "k8s.io/api/core/v1"
-	appsv1 "k8s.io/api/apps/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
-	batchv1 "k8s.io/api/batch/v1"
-
 	app "argoproj.io/application/v1alpha1"
-	ci "cert-manager.io/clusterissuer/v1"
-	rgv1 "gateway.networking.k8s.io/referencegrant/v1beta1"
-	certv1 "cert-manager.io/certificate/v1"
-	hrv1 "gateway.networking.k8s.io/httproute/v1"
-	gwv1 "gateway.networking.k8s.io/gateway/v1"
 )
 
-#Resources: {
-	[Kind=string]: [InternalLabel=string]: {
-		kind: Kind
-		metadata: name: string | *InternalLabel
-	}
+#Platform: {
+	Name:  _
+	Model: _
+	Components: [string]: _
 
-	Certificate: [_]:        certv1.#Certificate
-	ClusterIssuer: [_]:      ci.#ClusterIssuer
-	ClusterRole: [_]:        rbacv1.#ClusterRole
-	ClusterRoleBinding: [_]: rbacv1.#ClusterRoleBinding
-	ConfigMap: [_]:          corev1.#ConfigMap
-	CronJob: [_]:            batchv1.#CronJob
-	Deployment: [_]:         appsv1.#Deployment
-	HTTPRoute: [_]:          hrv1.#HTTPRoute
-	Job: [_]:                batchv1.#Job
-	Namespace: [_]:          corev1.#Namespace
-	ReferenceGrant: [_]:     rgv1.#ReferenceGrant
-	Role: [_]:               rbacv1.#Role
-	RoleBinding: [_]:        rbacv1.#RoleBinding
-	Service: [_]:            corev1.#Service
-	ServiceAccount: [_]:     corev1.#ServiceAccount
-	StatefulSet: [_]:        appsv1.#StatefulSet
+	// TODO: Rename this field to the kind of thing it produces like we renamed
+	// component Output to BuildPlan.
+	Output: metadata: name: Name
+	Output: spec: model:    Model
+	Output: spec: components: [for c in Components {c}]
+}
 
-	Gateway: [_]: gwv1.#Gateway & {
-		spec: gatewayClassName: string | *"istio"
+#BuildPlan: core.#BuildPlan & {
+	_Name:       string
+	_Namespace?: string
+	_ArgoConfig: #ArgoConfig
+
+	if _ArgoConfig.Enabled {
+		let NAME = "gitops/\(_Name)"
+
+		// Render the ArgoCD Application for GitOps as an additional Component of
+		// the BuildPlan.
+		spec: components: resources: (NAME): {
+			metadata: name: NAME
+			if _Namespace != _|_ {
+				metadata: namespace: _Namespace
+			}
+
+			deployFiles: (#Argo & {ComponentName: _Name, ArgoConfig: _ArgoConfig}).deployFiles
+		}
 	}
 }
 
@@ -50,7 +44,7 @@ import (
 	Name:      string
 	Version:   string
 	Namespace: string
-	Resources: #Resources
+	Resources: _
 
 	Repo: {
 		name: string | *""
@@ -83,7 +77,7 @@ import (
 			}
 		}
 
-		apiObjectMap: (#APIObjects & {apiObjects: Resources}).apiObjectMap
+		apiObjectMap: (core.#APIObjects & {apiObjects: Resources}).apiObjectMap
 	}
 
 	// EnableKustomizePostProcessor processes helm output with kustomize if true.
@@ -117,8 +111,7 @@ import (
 	// ArgoConfig represents the ArgoCD GitOps integration for this Component.
 	ArgoConfig: _
 
-	// output represents the build plan provided to the holos cli.
-	Output: #BuildPlan & {
+	BuildPlan: #BuildPlan & {
 		_Name:       Name
 		_Namespace:  Namespace
 		_ArgoConfig: ArgoConfig
@@ -126,24 +119,25 @@ import (
 	}
 }
 
-#BuildPlan: core.#BuildPlan & {
-	_Name:       string
-	_Namespace?: string
-	_ArgoConfig: #ArgoConfig
+#Kustomize: {
+	Name: _
+	Resources: {...}
+	Kustomization: metadata: name: string | *Name
+	Kustomization: apiObjectMap: (core.#APIObjects & {apiObjects: Resources}).apiObjectMap
+	BuildPlan: #BuildPlan & {
+		_Name: Name
+		spec: components: kustomizeBuildList: [Kustomization]
+	}
+}
 
-	if _ArgoConfig.Enabled {
-		let NAME = "gitops/\(_Name)"
-
-		// Render the ArgoCD Application for GitOps as an additional Component of
-		// the BuildPlan.
-		spec: components: resources: (NAME): {
-			metadata: name: NAME
-			if _Namespace != _|_ {
-				metadata: namespace: _Namespace
-			}
-
-			deployFiles: (#Argo & {ComponentName: _Name, ArgoConfig: _ArgoConfig}).deployFiles
-		}
+#Kubernetes: {
+	Name: _
+	Resources: {...}
+	Objects: metadata: name: string | *Name
+	Objects: apiObjectMap: (core.#APIObjects & {apiObjects: Resources}).apiObjectMap
+	BuildPlan: #BuildPlan & {
+		_Name: Name
+		spec: components: kubernetesObjectsList: [Objects]
 	}
 }
 
@@ -186,60 +180,5 @@ import (
 		duration:    string | *"5s"
 		factor:      number | *2
 		maxDuration: string | *"3m0s"
-	}
-}
-
-// #APIObjects defines the output format for kubernetes api objects.  The holos
-// cli expects the yaml representation of each api object in the apiObjectMap
-// field.
-#APIObjects: core.#APIObjects & {
-	// apiObjects represents the un-marshalled form of each kubernetes api object
-	// managed by a holos component.
-	apiObjects: {
-		[Kind=string]: {
-			[string]: {
-				kind: Kind
-				...
-			}
-		}
-	}
-
-	// apiObjectMap holds the marshalled representation of apiObjects
-	for kind, v in apiObjects {
-		for name, obj in v {
-			apiObjectMap: (kind): (name): yaml.Marshal(obj)
-		}
-	}
-}
-
-#Platform: {
-	Name:  _
-	Model: _
-	Components: [string]: _
-	Output: metadata: name: Name
-	Output: spec: model:    Model
-	Output: spec: components: [for c in Components {c}]
-}
-
-#Kustomize: {
-	Name: _
-	Kustomization: metadata: name: string | *Name
-	Output: #BuildPlan & {
-		_Name: Name
-		spec: components: kustomizeBuildList: [Kustomization]
-	}
-}
-
-#Kubernetes: {
-	Name:      _
-	Resources: #Resources
-
-	Output: #BuildPlan & {
-		_Name: Name
-		// resources is a map unlike other build plans which use a list.
-		spec: components: resources: (Name): {
-			metadata: name: Name
-			apiObjectMap: (#APIObjects & {apiObjects: Resources}).apiObjectMap
-		}
 	}
 }

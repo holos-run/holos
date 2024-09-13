@@ -3,7 +3,7 @@ package holos
 import "encoding/yaml"
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).Output
+(#Kubernetes & Objects).BuildPlan
 
 let ContainerPort = _Component.spec.port
 

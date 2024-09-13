@@ -1,4 +1,4 @@
 package holos
 
 // Produce a kubectl kustomize build plan.
-(#Kustomize & {Name: "{{ .Name }}"}).Output
+(#Kustomize & {Name: "{{ .Name }}"}).BuildPlan

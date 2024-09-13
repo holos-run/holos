@@ -12,6 +12,7 @@ Package v1alpha3 contains CUE definitions intended as convenience wrappers aroun
 
 - [type ArgoConfig](<#ArgoConfig>)
 - [type Cluster](<#Cluster>)
+- [type ComponentFields](<#ComponentFields>)
 - [type Fleet](<#Fleet>)
 - [type Helm](<#Helm>)
 - [type Kubernetes](<#Kubernetes>)
@@ -62,6 +63,24 @@ type Cluster struct {
 }
 ```
 
+<a name="ComponentFields"></a>
+## type ComponentFields {#ComponentFields}
+
+Component represents the fields common the different kinds of component. All components have a name, support mixing in resources, and produce a BuildPlan.
+
+```go
+type ComponentFields struct {
+    // Name represents the Component name.
+    Name string
+    // Resources are kubernetes api objects to mix into the output.
+    Resources map[string]any
+    // ArgoConfig represents the ArgoCD GitOps configuration for this Component.
+    ArgoConfig ArgoConfig
+    // BuildPlan represents the derived BuildPlan for the Holos cli to render.
+    BuildPlan core.BuildPlan
+}
+```
+
 <a name="Fleet"></a>
 ## type Fleet {#Fleet}
 
@@ -82,14 +101,12 @@ Helm provides a BuildPlan via the Output field which contains one HelmChart from
 
 ```go
 type Helm struct {
-    // Name represents the Component name.
-    Name string
+    ComponentFields `json:",inline"`
+
     // Version represents the chart version.
     Version string
     // Namespace represents the helm namespace option when rendering the chart.
     Namespace string
-    // Resources are kubernetes api objects to mix into the output.
-    Resources map[string]any
 
     // Repo represents the chart repository
     Repo struct {
@@ -124,12 +141,6 @@ type Helm struct {
     // KustomizeResources represents additional resources files to include in the
     // kustomize resources list.
     KustomizeResources map[string]any `cue:"{[string]: {...}}"`
-
-    // ArgoConfig represents the ArgoCD GitOps configuration for this Component.
-    ArgoConfig ArgoConfig
-
-    // Output represents the derived BuildPlan for the Holos cli to render.
-    Output core.BuildPlan
 }
 ```
 
@@ -140,13 +151,9 @@ Kubernetes provides a BuildPlan via the Output field which contains inline API O
 
 ```go
 type Kubernetes struct {
-    // Name represents the Component name.
-    Name string
-    // Resources represents the kubernetes api objects for the Component.
-    Resources map[string]any
-
-    // Output represents the derived BuildPlan for the Holos cli to render.
-    Output core.BuildPlan
+    ComponentFields `json:",inline"`
+    // Objects represents the kubernetes api objects for the Component.
+    Objects core.KubernetesObjects
 }
 ```
 
@@ -157,14 +164,9 @@ Kustomize provides a BuildPlan via the Output field which contains one Kustomize
 
 ```go
 type Kustomize struct {
-    // Name represents the Component name.
-    Name string
-
+    ComponentFields `json:",inline"`
     // Kustomization represents the kustomize build plan for holos to render.
     Kustomization core.KustomizeBuild
-
-    // Output represents the derived BuildPlan for the Holos cli to render.
-    Output core.BuildPlan
 }
 ```
 
