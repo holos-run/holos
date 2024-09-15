@@ -5,7 +5,7 @@ import (
 	ks "sigs.k8s.io/kustomize/api/types"
 )
 
-(#Kustomize & {Name: "argocd-crds"}).BuildPlan
+(#Kubernetes & {Name: "argocd-crds"}).BuildPlan
 
 let Kustomization = ks.#Kustomization & {
 	apiVersion: "kustomize.config.k8s.io/v1beta1"
@@ -15,6 +15,6 @@ let Kustomization = ks.#Kustomization & {
 
 // Generate a kustomization.yaml directly from CUE so that we can manage the
 // correct version of the custom resource definitions.
-spec: components: kustomizeBuildList: [{
+spec: components: kubernetesObjectsList: [{
 	kustomize: kustomizeFiles: "kustomization.yaml": yaml.Marshal(Kustomization)
 }]
