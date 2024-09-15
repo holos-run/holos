@@ -11,6 +11,7 @@ import (
 	certv1 "cert-manager.io/certificate/v1"
 	hrv1 "gateway.networking.k8s.io/httproute/v1"
 	gwv1 "gateway.networking.k8s.io/gateway/v1"
+	ap "argoproj.io/appproject/v1alpha1"
 )
 
 #Resources: {
@@ -19,6 +20,7 @@ import (
 		metadata: name: string | *InternalLabel
 	}
 
+	AppProject: [_]:         ap.#AppProject
 	Certificate: [_]:        certv1.#Certificate
 	ClusterIssuer: [_]:      ci.#ClusterIssuer
 	ClusterRole: [_]:        rbacv1.#ClusterRole

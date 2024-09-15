@@ -118,6 +118,9 @@ import (
 	// Application.spec.source.targetRevision field.  Defaults to the branch named
 	// main.
 	TargetRevision: string & (string | *"main")
+
+	// AppProject represents the ArgoCD Project to associate the Application with.
+	AppProject: string & (string | *"default")
 }
 
 // Cluster represents a cluster managed by the Platform.

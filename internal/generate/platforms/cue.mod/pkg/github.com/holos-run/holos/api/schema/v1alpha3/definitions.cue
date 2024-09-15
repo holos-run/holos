@@ -162,7 +162,7 @@ import (
 		metadata: namespace: "argocd"
 		spec: {
 			destination: server: "https://kubernetes.default.svc"
-			project: "default"
+			project: ArgoConfig.AppProject
 			source: {
 				path:           "\(ArgoConfig.DeployRoot)/deploy/clusters/\(ArgoConfig.ClusterName)/components/\(ComponentName)"
 				repoURL:        ArgoConfig.RepoURL

@@ -106,6 +106,8 @@ type ArgoConfig struct {
 	// Application.spec.source.targetRevision field.  Defaults to the branch named
 	// main.
 	TargetRevision string `cue:"string | *\"main\""`
+	// AppProject represents the ArgoCD Project to associate the Application with.
+	AppProject string `cue:"string | *\"default\""`
 }
 
 // Cluster represents a cluster managed by the Platform.

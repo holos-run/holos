@@ -1,0 +1,5 @@
+{
+  "name": "app-projects",
+  "short": "#AppProjects registration point",
+  "long": "Manage ArgoCD AppProject resources centrally."
+}
