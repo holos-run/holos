@@ -1,0 +1,5 @@
+{
+  "name": "httproutes",
+  "short": "#HTTPRoutes registration point",
+  "long": "Provides the #HTTPRoutes registration point to manage httproutes in the istio-ingress namespace."
+}

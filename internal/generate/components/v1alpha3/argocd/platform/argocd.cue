@@ -7,8 +7,8 @@ for Fleet in #Fleets {
 			path:    "projects/platform/components/argocd/crds"
 			cluster: Cluster.name
 		}
-		#Platform: Components: "\(Cluster.name)/argo-cd": {
-			path:    "projects/platform/components/argocd/argo-cd"
+		#Platform: Components: "\(Cluster.name)/argocd": {
+			path:    "projects/platform/components/argocd/argocd"
 			cluster: Cluster.name
 		}
 	}

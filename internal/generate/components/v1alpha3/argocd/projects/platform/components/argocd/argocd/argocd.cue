@@ -6,7 +6,7 @@ import "strings"
 (#Helm & Chart).BuildPlan
 
 let Chart = {
-	Name:      "argo-cd"
+	Name:      "argocd"
 	Namespace: #ArgoCD.Namespace
 	Version:   "7.5.2"
 
@@ -14,7 +14,7 @@ let Chart = {
 	Repo: url:  "https://argoproj.github.io/argo-helm"
 
 	Chart: chart: name:    "argo-cd"
-	Chart: chart: release: "argo-cd"
+	Chart: chart: release: Name
 	// Upstream uses a Kubernetes Job to create the argocd-redis Secret.  Enable
 	// hooks to enable the Job.
 	Chart: enableHooks: true

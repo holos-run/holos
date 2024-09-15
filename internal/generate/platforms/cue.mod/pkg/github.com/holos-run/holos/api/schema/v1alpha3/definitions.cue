@@ -57,7 +57,7 @@ import (
 		metadata: name:      string | *Name
 		metadata: namespace: string | *Namespace
 		chart: name:         string | *Name
-		chart: release:      chart.name
+		chart: release:      string | *chart.name
 		chart: version:      string | *Version
 		chart: repository:   Repo
 
