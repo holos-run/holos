@@ -2,6 +2,7 @@ package render
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/holos-run/holos"
 	core "github.com/holos-run/holos/api/core/v1alpha3"
@@ -21,6 +22,9 @@ type KubernetesObjects struct {
 func (o *KubernetesObjects) Render(ctx context.Context, path holos.InstancePath) (*Result, error) {
 	result := NewResult(o.Component.Component)
 	result.addObjectMap(ctx, o.Component.APIObjectMap)
+	if err := result.kustomize(ctx); err != nil {
+		return nil, errors.Wrap(fmt.Errorf("could not kustomize: %w", err))
+	}
 	return result, nil
 }
 
