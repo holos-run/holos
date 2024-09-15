@@ -7,21 +7,27 @@ import (
 
 (#Kubernetes & {Name: "argocd-crds"}).BuildPlan
 
+// Holos stages BuildPlan resources as an intermediate step of the rendering
+// pipeline.  The purpose is to provide the resources to kustomize for
+// post-processing.
+let BuildPlanResources = "build-plan-resources.yaml"
+
 let Kustomization = ks.#Kustomization & {
 	apiVersion: "kustomize.config.k8s.io/v1beta1"
 	kind:       "Kustomization"
 	resources: [
-		"https://github.com/argoproj/argo-cd//manifests/crds/?ref=v\(#ArgoCD.Version)",
+		// Kustomize the intermediate build plan resources.
 		BuildPlanResources,
+		// Mix-in external resources.
+		"https://github.com/argoproj/argo-cd//manifests/crds/?ref=v\(#ArgoCD.Version)",
 	]
 }
 
-// Generate a kustomization.yaml directly from CUE so that we can manage the
-// correct version of the custom resource definitions.
+// Generate a kustomization.yaml directly from CUE so we can provide the correct
+// version.
 spec: components: kubernetesObjectsList: [{
-	// resourcesFile represents the output to post-process with kustomize
+	// intermediate build plan resources to kustomize.  Necessary to activate the
+	// kustomization post-rendering step in holos.
 	kustomize: resourcesFile: BuildPlanResources
 	kustomize: kustomizeFiles: "kustomization.yaml": yaml.Marshal(Kustomization)
 }]
-
-let BuildPlanResources = "build-plan-resources.yaml"
