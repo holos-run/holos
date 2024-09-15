@@ -1,0 +1,5 @@
+{
+  "name": "argocd",
+  "short": "declaritive gitops for kubernetes",
+  "long": "Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes."
+}
