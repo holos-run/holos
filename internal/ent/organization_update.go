@@ -216,10 +216,10 @@ func (ou *OrganizationUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Organization.name": %w`, err)}
 		}
 	}
-	if _, ok := ou.mutation.CreatorID(); ou.mutation.CreatorCleared() && !ok {
+	if ou.mutation.CreatorCleared() && len(ou.mutation.CreatorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Organization.creator"`)
 	}
-	if _, ok := ou.mutation.EditorID(); ou.mutation.EditorCleared() && !ok {
+	if ou.mutation.EditorCleared() && len(ou.mutation.EditorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Organization.editor"`)
 	}
 	return nil
@@ -583,10 +583,10 @@ func (ouo *OrganizationUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Organization.name": %w`, err)}
 		}
 	}
-	if _, ok := ouo.mutation.CreatorID(); ouo.mutation.CreatorCleared() && !ok {
+	if ouo.mutation.CreatorCleared() && len(ouo.mutation.CreatorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Organization.creator"`)
 	}
-	if _, ok := ouo.mutation.EditorID(); ouo.mutation.EditorCleared() && !ok {
+	if ouo.mutation.EditorCleared() && len(ouo.mutation.EditorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Organization.editor"`)
 	}
 	return nil

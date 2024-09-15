@@ -241,13 +241,13 @@ func (pc *PlatformCreate) check() error {
 	if _, ok := pc.mutation.DisplayName(); !ok {
 		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "Platform.display_name"`)}
 	}
-	if _, ok := pc.mutation.CreatorID(); !ok {
+	if len(pc.mutation.CreatorIDs()) == 0 {
 		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required edge "Platform.creator"`)}
 	}
-	if _, ok := pc.mutation.EditorID(); !ok {
+	if len(pc.mutation.EditorIDs()) == 0 {
 		return &ValidationError{Name: "editor", err: errors.New(`ent: missing required edge "Platform.editor"`)}
 	}
-	if _, ok := pc.mutation.OrganizationID(); !ok {
+	if len(pc.mutation.OrganizationIDs()) == 0 {
 		return &ValidationError{Name: "organization", err: errors.New(`ent: missing required edge "Platform.organization"`)}
 	}
 	return nil

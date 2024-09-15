@@ -218,10 +218,10 @@ func (oc *OrganizationCreate) check() error {
 	if _, ok := oc.mutation.DisplayName(); !ok {
 		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "Organization.display_name"`)}
 	}
-	if _, ok := oc.mutation.CreatorID(); !ok {
+	if len(oc.mutation.CreatorIDs()) == 0 {
 		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required edge "Organization.creator"`)}
 	}
-	if _, ok := oc.mutation.EditorID(); !ok {
+	if len(oc.mutation.EditorIDs()) == 0 {
 		return &ValidationError{Name: "editor", err: errors.New(`ent: missing required edge "Organization.editor"`)}
 	}
 	return nil

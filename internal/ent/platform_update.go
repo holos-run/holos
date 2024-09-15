@@ -232,13 +232,13 @@ func (pu *PlatformUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
-	if _, ok := pu.mutation.CreatorID(); pu.mutation.CreatorCleared() && !ok {
+	if pu.mutation.CreatorCleared() && len(pu.mutation.CreatorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Platform.creator"`)
 	}
-	if _, ok := pu.mutation.EditorID(); pu.mutation.EditorCleared() && !ok {
+	if pu.mutation.EditorCleared() && len(pu.mutation.EditorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Platform.editor"`)
 	}
-	if _, ok := pu.mutation.OrganizationID(); pu.mutation.OrganizationCleared() && !ok {
+	if pu.mutation.OrganizationCleared() && len(pu.mutation.OrganizationIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Platform.organization"`)
 	}
 	return nil
@@ -580,13 +580,13 @@ func (puo *PlatformUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Platform.name": %w`, err)}
 		}
 	}
-	if _, ok := puo.mutation.CreatorID(); puo.mutation.CreatorCleared() && !ok {
+	if puo.mutation.CreatorCleared() && len(puo.mutation.CreatorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Platform.creator"`)
 	}
-	if _, ok := puo.mutation.EditorID(); puo.mutation.EditorCleared() && !ok {
+	if puo.mutation.EditorCleared() && len(puo.mutation.EditorIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Platform.editor"`)
 	}
-	if _, ok := puo.mutation.OrganizationID(); puo.mutation.OrganizationCleared() && !ok {
+	if puo.mutation.OrganizationCleared() && len(puo.mutation.OrganizationIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "Platform.organization"`)
 	}
 	return nil
