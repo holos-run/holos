@@ -124,8 +124,13 @@ import (
 	Resources: {...}
 	Kustomization: metadata: name: string | *Name
 	Kustomization: apiObjectMap: (core.#APIObjects & {apiObjects: Resources}).apiObjectMap
+
+	// ArgoConfig represents the ArgoCD GitOps integration for this Component.
+	ArgoConfig: _
+
 	BuildPlan: #BuildPlan & {
-		_Name: Name
+		_Name:       Name
+		_ArgoConfig: ArgoConfig
 		spec: components: kustomizeBuildList: [Kustomization]
 	}
 }
@@ -135,8 +140,13 @@ import (
 	Resources: {...}
 	Objects: metadata: name: string | *Name
 	Objects: apiObjectMap: (core.#APIObjects & {apiObjects: Resources}).apiObjectMap
+
+	// ArgoConfig represents the ArgoCD GitOps integration for this Component.
+	ArgoConfig: _
+
 	BuildPlan: #BuildPlan & {
-		_Name: Name
+		_Name:       Name
+		_ArgoConfig: ArgoConfig
 		spec: components: kubernetesObjectsList: [Objects]
 	}
 }
