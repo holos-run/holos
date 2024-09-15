@@ -1,0 +1,5 @@
+{
+  "name": "argocd-config-manage-a-project-guide",
+  "short": "generate applications for the manage-a-project guide",
+  "long": "https://github.com/holos-run/holos-manage-a-project-guide"
+}

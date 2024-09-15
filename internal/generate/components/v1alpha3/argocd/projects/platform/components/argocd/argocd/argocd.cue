@@ -33,8 +33,9 @@ let Chart = {
 	Values: #Values & {
 		kubeVersionOverride: "1.29.0"
 		// handled in the argo-crds component
-		crds: install:  false
-		global: domain: "argocd.\(#Platform.Domain)"
+		crds: install: false
+		// Configure the same fqdn the HTTPRoute is configured with.
+		global: domain: #HTTPRoutes.argocd.spec.hostnames[0]
 		dex: enabled:   false
 		// the platform handles mutual tls to the backend
 		configs: params: "server.insecure": true
