@@ -1,0 +1,5 @@
+{
+  "name": "bank-of-holos",
+  "short": "demo bank composed of two projects",
+  "long": "Bank of Holos is a sample HTTP-based web app that simulates a bank's payment processing network, allowing users to create artificial bank accounts and complete transactions."
+}

@@ -34,6 +34,7 @@ import (
 	ReferenceGrant: [_]:     rgv1.#ReferenceGrant
 	Role: [_]:               rbacv1.#Role
 	RoleBinding: [_]:        rbacv1.#RoleBinding
+	Secret: [_]:             corev1.#Secret
 	Service: [_]:            corev1.#Service
 	ServiceAccount: [_]:     corev1.#ServiceAccount
 	StatefulSet: [_]:        appsv1.#StatefulSet
