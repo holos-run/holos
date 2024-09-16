@@ -111,8 +111,8 @@ let Objects = {
 								subPath:   "postgres"
 							}]
 						}]
-						serviceAccount:     "bank-of-anthos"
-						serviceAccountName: "default"
+						serviceAccount:     BankName
+						serviceAccountName: BankName
 						volumes: [{
 							emptyDir: {}
 							name: "postgresdb"
