@@ -65,8 +65,8 @@ let BankName = #BankOfHolos.Name
 			kind:       "ConfigMap"
 			metadata: name: "service-api-config"
 			data: {
-				TRANSACTIONS_API_ADDR: "ledgerwriter\(#BankOfHolos.Backend.Namespace).svc:8080"
-				BALANCES_API_ADDR:     "balancereader\(#BankOfHolos.Backend.Namespace).svc:8080"
+				TRANSACTIONS_API_ADDR: "ledgerwriter.\(#BankOfHolos.Backend.Namespace).svc:8080"
+				BALANCES_API_ADDR:     "balancereader.\(#BankOfHolos.Backend.Namespace).svc:8080"
 				HISTORY_API_ADDR:      "transactionhistory.\(#BankOfHolos.Backend.Namespace).svc:8080"
 				CONTACTS_API_ADDR:     "contacts.\(#BankOfHolos.Backend.Namespace).svc:8080"
 				USERSERVICE_API_ADDR:  "userservice.\(#BankOfHolos.Backend.Namespace).svc:8080"
