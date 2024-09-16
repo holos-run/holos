@@ -1,0 +1,6 @@
+{
+  "name": "external-secrets",
+  "short": "safer secret management",
+  "long": "https://external-secrets.io",
+  "version": "0.10.3"
+}
