@@ -2,12 +2,21 @@ package holos
 
 // Manage on workload clusters only
 for Cluster in #Fleets.workload.clusters {
+	// Owned by the security team
 	#Platform: Components: "\(Cluster.name)/bank-secrets": {
 		path:    "projects/bank-of-holos/security/components/bank-secrets"
 		cluster: Cluster.name
 	}
+
+	// Owned by the frontend team
 	#Platform: Components: "\(Cluster.name)/bank-frontend": {
 		path:    "projects/bank-of-holos/frontend/components/bank-frontend"
+		cluster: Cluster.name
+	}
+
+	// Owned by the backend team
+	#Platform: Components: "\(Cluster.name)/bank-backend-config": {
+		path:    "projects/bank-of-holos/backend/components/bank-backend-config"
 		cluster: Cluster.name
 	}
 	#Platform: Components: "\(Cluster.name)/bank-accounts-db": {

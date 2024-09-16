@@ -152,14 +152,5 @@ let Objects = {
 				}
 			}
 		}
-
-		// Allow HTTPRoutes in the ingress gateway namespace to reference Services
-		// in this namespace.
-		ReferenceGrant: grant: #ReferenceGrant & {
-			metadata: namespace: Namespace
-		}
-
-		// Include shared resources
-		#BankOfHolos.Resources
 	}
 }

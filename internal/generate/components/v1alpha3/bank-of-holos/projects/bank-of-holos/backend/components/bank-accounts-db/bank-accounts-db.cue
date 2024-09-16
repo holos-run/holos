@@ -19,9 +19,6 @@ let Objects = {
 	// Ensure resources go in the correct namespace
 	Resources: [_]: [_]: metadata: namespace: Namespace
 
-	// Include shared resources
-	Resources: #BankOfHolos.Resources
-
 	// https://github.com/GoogleCloudPlatform/bank-of-anthos/blob/release/v0.6.5/kubernetes-manifests/accounts-db.yaml
 	Resources: {
 		ConfigMap: "accounts-db-config": {
