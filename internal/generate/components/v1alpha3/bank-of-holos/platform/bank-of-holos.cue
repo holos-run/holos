@@ -36,4 +36,8 @@ for Cluster in #Fleets.workload.clusters {
 		path:    "projects/bank-of-holos/backend/components/bank-ledger-writer"
 		cluster: Cluster.name
 	}
+	#Platform: Components: "\(Cluster.name)/bank-balance-reader": {
+		path:    "projects/bank-of-holos/backend/components/bank-balance-reader"
+		cluster: Cluster.name
+	}
 }
