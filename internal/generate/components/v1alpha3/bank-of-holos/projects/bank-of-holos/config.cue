@@ -65,11 +65,11 @@ let BankName = #BankOfHolos.Name
 			kind:       "ConfigMap"
 			metadata: name: "service-api-config"
 			data: {
-				TRANSACTIONS_API_ADDR: "ledgerwriter:8080"
-				BALANCES_API_ADDR:     "balancereader:8080"
-				HISTORY_API_ADDR:      "transactionhistory:8080"
-				CONTACTS_API_ADDR:     "contacts:8080"
-				USERSERVICE_API_ADDR:  "userservice:8080"
+				TRANSACTIONS_API_ADDR: "ledgerwriter\(#BankOfHolos.Backend.Namespace).svc:8080"
+				BALANCES_API_ADDR:     "balancereader\(#BankOfHolos.Backend.Namespace).svc:8080"
+				HISTORY_API_ADDR:      "transactionhistory.\(#BankOfHolos.Backend.Namespace).svc:8080"
+				CONTACTS_API_ADDR:     "contacts.\(#BankOfHolos.Backend.Namespace).svc:8080"
+				USERSERVICE_API_ADDR:  "userservice.\(#BankOfHolos.Backend.Namespace).svc:8080"
 			}
 		}
 
@@ -80,8 +80,8 @@ let BankName = #BankOfHolos.Name
 			data: {
 				USE_DEMO_DATA:       "True"
 				DEMO_LOGIN_USERNAME: "testuser"
-				// All demo user accounts are hardcoded to use the login password 'bankofholos'
-				DEMO_LOGIN_PASSWORD: "bankofholos"
+				// All demo user accounts are hardcoded to use the login password 'bankofanthos'
+				DEMO_LOGIN_PASSWORD: "bankofanthos"
 			}
 		}
 	}
