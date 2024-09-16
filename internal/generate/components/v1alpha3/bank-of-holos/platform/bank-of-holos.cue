@@ -10,6 +10,10 @@ for Cluster in #Fleets.workload.clusters {
 		path:    "projects/bank-of-holos/frontend/components/bank-frontend"
 		cluster: Cluster.name
 	}
+	#Platform: Components: "\(Cluster.name)/bank-accounts-db": {
+		path:    "projects/bank-of-holos/backend/components/bank-accounts-db"
+		cluster: Cluster.name
+	}
 	#Platform: Components: "\(Cluster.name)/bank-userservice": {
 		path:    "projects/bank-of-holos/backend/components/bank-userservice"
 		cluster: Cluster.name
