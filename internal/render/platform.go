@@ -14,6 +14,7 @@ import (
 )
 
 func Platform(ctx context.Context, concurrency int, pf *core.Platform, stderr io.Writer) error {
+	parentStart := time.Now()
 	total := len(pf.Spec.Components)
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -60,5 +61,12 @@ func Platform(ctx context.Context, concurrency int, pf *core.Platform, stderr io
 	})
 
 	// Wait for completion and return the first error (if any)
-	return g.Wait()
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	duration := time.Since(parentStart)
+	msg := fmt.Sprintf("rendered platform in %s", duration)
+	logger.FromContext(ctx).InfoContext(ctx, msg, "duration", duration)
+	return nil
 }
