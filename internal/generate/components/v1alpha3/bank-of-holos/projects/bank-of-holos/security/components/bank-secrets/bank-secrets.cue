@@ -9,15 +9,20 @@ import (
 // Produce a kubernetes objects build plan.
 (#Kubernetes & Objects).BuildPlan
 
-let BankName = #BankOfHolos.Name
+// This may be useful to copy and generate other secrets.
+let SecretName = "jwt-key"
+
+// Roles for reading and writing secrets
+let Reader = "\(SecretName)-reader"
+let Writer = "\(SecretName)-writer"
+
+// AllowedName represents the service account allowed to read the generated
+// secret.
+let AllowedName = #BankOfHolos.Name
 
 let Objects = {
 	Name:      "bank-secrets"
 	Namespace: #BankOfHolos.Security.Namespace
-
-	// Roles for reading and writing secrets
-	let Reader = "jwt-key-reader"
-	let Writer = "jwt-key-writer"
 
 	Resources: [_]: [_]: metadata: namespace:    Namespace
 	Resources: [_]: [ID=string]: metadata: name: string | *ID
@@ -96,7 +101,7 @@ let Objects = {
 			rules: [{
 				apiGroups: [""]
 				resources: ["secrets"]
-				resourceNames: ["jwt-key"]
+				resourceNames: [SecretName]
 				verbs: ["get"]
 			}]
 		}
@@ -111,11 +116,11 @@ let Objects = {
 			}
 			subjects: [{
 				kind:      "ServiceAccount"
-				name:      BankName
+				name:      AllowedName
 				namespace: #BankOfHolos.Frontend.Namespace
 			}, {
 				kind:      "ServiceAccount"
-				name:      BankName
+				name:      AllowedName
 				namespace: #BankOfHolos.Backend.Namespace
 			},
 			]
@@ -138,23 +143,23 @@ let ENTRYPOINT = """
 	set -euo pipefail
 
 	cd "$tmpdir"
-	mkdir jwt-key
-	cd jwt-key
+	mkdir secret
+	cd secret
+
 	echo "generating private key" >&2
-	ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key -q -N "" -C bank-of-holos
+	ssh-keygen -t rsa -b 4096 -m PEM -f jwtRS256.key -q -N "" -C \(AllowedName)
 	echo "generating public key" >&2
 	ssh-keygen -e -m PKCS8 -f jwtRS256.key > jwtRS256.key.pub
 	cd ..
 
-	echo "copying keys into manifest secret.yaml" >&2
-	kubectl create secret generic jwt-key --from-file=jwt-key --dry-run=client -o yaml > secret.yaml
+	echo "copying secret into kubernetes manifest secret.yaml" >&2
+	kubectl create secret generic \(SecretName) --from-file=secret --dry-run=client -o yaml > secret.yaml
 
-	echo "applying secret" >&2
+	echo "applying secret.yaml" >&2
 	kubectl apply --server-side=true -f secret.yaml
 
 	echo "cleaning up" >&2
-	rm -rf jwt-key
-	rm -f secret.yaml
+	rm -rf secret secret.yaml
 
 	echo "ok done" >&2
 	"""
