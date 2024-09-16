@@ -8,7 +8,7 @@ let Chart = {
 	Repo: name: "external-secrets"
 	Repo: url:  "https://charts.external-secrets.io"
 
-	Values: installCrds: true
+	Values: installCRDs: false
 }
 
 // Produce a helm chart build plan.
