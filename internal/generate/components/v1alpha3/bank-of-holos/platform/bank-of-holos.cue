@@ -44,4 +44,8 @@ for Cluster in #Fleets.workload.clusters {
 		path:    "projects/bank-of-holos/backend/components/bank-transaction-history"
 		cluster: Cluster.name
 	}
+	#Platform: Components: "\(Cluster.name)/bank-contacts": {
+		path:    "projects/bank-of-holos/backend/components/bank-contacts"
+		cluster: Cluster.name
+	}
 }
