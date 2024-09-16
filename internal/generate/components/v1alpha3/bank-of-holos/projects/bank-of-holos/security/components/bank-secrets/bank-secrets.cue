@@ -9,40 +9,46 @@ import (
 // Produce a kubernetes objects build plan.
 (#Kubernetes & Objects).BuildPlan
 
+let BankName = #BankOfHolos.Name
+
 let Objects = {
 	Name:      "bank-secrets"
 	Namespace: #BankOfHolos.Security.Namespace
+
+	// Roles for reading and writing secrets
+	let Reader = "jwt-key-reader"
+	let Writer = "jwt-key-writer"
 
 	Resources: [_]: [_]: metadata: namespace:    Namespace
 	Resources: [_]: [ID=string]: metadata: name: string | *ID
 
 	Resources: {
-		// Kubernetes ServiceAccount used by the Job.
-		ServiceAccount: (Name): corev1.#ServiceAccount
+		// Kubernetes ServiceAccount used by the secret generator job.
+		ServiceAccount: (Writer): corev1.#ServiceAccount
 		// Role to allow the ServiceAccount to update secrets.
-		Role: (Name): rbacv1.#Role & {
+		Role: (Writer): rbacv1.#Role & {
 			rules: [{
 				apiGroups: [""]
 				resources: ["secrets"]
 				verbs: ["create", "update", "patch"]
 			}]
 		}
-
-		RoleBinding: (Name): rbacv1.#RoleBinding & {
+		// Bind the role to the service account.
+		RoleBinding: (Writer): rbacv1.#RoleBinding & {
 			roleRef: {
 				apiGroup: "rbac.authorization.k8s.io"
 				kind:     "Role"
-				name:     Role[Name].metadata.name
+				name:     Role[Writer].metadata.name
 			}
 			subjects: [{
 				kind:      "ServiceAccount"
-				name:      ServiceAccount[Name].metadata.name
+				name:      ServiceAccount[Writer].metadata.name
 				namespace: Namespace
 			}]
 		}
 
 		let JobSpec = {
-			serviceAccountName: Name
+			serviceAccountName: Writer
 			restartPolicy:      "OnFailure"
 			securityContext: {
 				seccompProfile: type: "RuntimeDefault"
@@ -70,20 +76,49 @@ let Objects = {
 					}]
 				},
 			]
-			volumes: [
-				{
-					name: "config"
-					configMap: name: Name
-				},
-			]
+			volumes: [{
+				name: "config"
+				configMap: name: Writer
+			}]
 		}
 
-		Job: (Name): batchv1.#Job & {
+		Job: (Writer): batchv1.#Job & {
 			spec: template: spec: JobSpec
 		}
 
-		ConfigMap: (Name): corev1.#ConfigMap & {
+		ConfigMap: (Writer): corev1.#ConfigMap & {
 			data: entrypoint: ENTRYPOINT
+		}
+
+		// Allow the SecretStore in the frontend and backend namespaces to read the
+		// secret.
+		Role: (Reader): rbacv1.#Role & {
+			rules: [{
+				apiGroups: [""]
+				resources: ["secrets"]
+				resourceNames: ["jwt-key"]
+				verbs: ["get"]
+			}]
+		}
+
+		// Grant access to the bank-of-holos service account in the frontend and
+		// backend namespaces.
+		RoleBinding: (Reader): rbacv1.#RoleBinding & {
+			roleRef: {
+				apiGroup: "rbac.authorization.k8s.io"
+				kind:     "Role"
+				name:     Role[Reader].metadata.name
+			}
+			subjects: [{
+				kind:      "ServiceAccount"
+				name:      BankName
+				namespace: #BankOfHolos.Frontend.Namespace
+			}, {
+				kind:      "ServiceAccount"
+				name:      BankName
+				namespace: #BankOfHolos.Backend.Namespace
+			},
+			]
 		}
 	}
 }

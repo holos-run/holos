@@ -2,6 +2,7 @@ package holos
 
 // Platform wide definitions
 #BankOfHolos: {
+	Name: "bank-of-holos"
 	Frontend: Namespace: "bank-frontend"
 	Backend: Namespace:  "bank-backend"
 	Security: Namespace: "bank-security"
