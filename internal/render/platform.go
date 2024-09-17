@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"path/filepath"
 	"time"
 
 	core "github.com/holos-run/holos/api/core/v1alpha2"
@@ -50,7 +51,7 @@ func Platform(ctx context.Context, concurrency int, pf *core.Platform, stderr io
 						}
 
 						duration := time.Since(start)
-						msg := fmt.Sprintf("rendered %s for cluster %s in %s", component.Path, component.Cluster, duration)
+						msg := fmt.Sprintf("rendered %s for cluster %s in %s", filepath.Base(component.Path), component.Cluster, duration)
 						log.InfoContext(ctx, msg, "duration", duration)
 						return nil
 					}
