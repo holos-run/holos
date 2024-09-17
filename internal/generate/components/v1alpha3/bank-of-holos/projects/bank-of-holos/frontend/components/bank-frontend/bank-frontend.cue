@@ -90,7 +90,7 @@ let Objects = {
 								value: "false"
 							}, {
 								name:  "SCHEME"
-								value: "http"
+								value: "https"
 							}, {
 								name:  "LOG_LEVEL"
 								value: "info"
