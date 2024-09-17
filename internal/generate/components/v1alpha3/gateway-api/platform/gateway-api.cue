@@ -4,7 +4,7 @@ package holos
 for Fleet in #Fleets {
 	for Cluster in Fleet.clusters {
 		#Platform: Components: "\(Cluster.name)/gateway-api": {
-			path:    "components/gateway-api"
+			path:    "projects/platform/components/gateway-api"
 			cluster: Cluster.name
 		}
 	}
