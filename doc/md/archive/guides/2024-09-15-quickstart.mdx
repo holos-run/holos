@@ -1,0 +1,724 @@
+---
+description: Try Holos with this quick start guide.
+slug: /archive/2024-09-15-quickstart
+sidebar_position: 100
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Admonition from '@theme/Admonition';
+
+# Quickstart
+
+In this guide, you'll experience how Holos makes the process of operating a
+Platform safer, easier, and more consistent. We'll use Holos to manage a
+vendor-provided Helm chart as a Component. Next, we'll mix in our own custom
+resources to manage the Component with GitOps. Finally, you'll see how Holos
+makes it safer and easier to maintain software over time by surfacing the exact
+changes that will be applied when upgrading the vendor's chart to a new version,
+before they are actually made.
+
+The [Concepts](/docs/concepts) page defines capitalized terms such as Platform
+and Component.
+
+## What you'll need {#requirements}
+
+You'll need the following tools installed to complete this guide.
+
+1. [holos](/docs/install) - to build the Platform.
+2. [helm](https://helm.sh/docs/intro/install/) - to render Holos Components that
+wrap upstream Helm charts.
+
+Optionally, if you'd like to apply the rendered manifests to a real Cluster,
+first complete the [Local Cluster Guide](/docs/guides/local-cluster).
+
+## Install Holos
+
+Install Holos with the following command or other methods listed on the
+[Installation](/docs/install/) page.
+
+```bash
+go install github.com/holos-run/holos/cmd/holos@latest
+```
+
+## Create a Git Repository
+
+Start by initializing an empty Git repository. Holos operates on local files
+stored in a Git repository.
+
+<Tabs groupId="init">
+  <TabItem value="command" label="Command">
+    ```bash
+    mkdir holos-quickstart
+    cd holos-quickstart
+    git init
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    Initialized empty Git repository in /holos-quickstart/.git/
+    ```
+  </TabItem>
+</Tabs>
+
+This guide assumes you will run commands from the root directory of the Git
+repository unless stated otherwise.
+
+## Generate the Platform {#Generate-Platform}
+
+Generate the Platform code in the repository root. A Platform refers to the
+entire set of software holistically integrated to provide a software development
+platform for your organization. In this guide, the Platform will include a
+single Component to demonstrate how the concepts fit together.
+
+```bash
+holos generate platform quickstart
+```
+
+Commit the generated platform config to the repository.
+
+<Tabs groupId="commit-platform">
+  <TabItem value="command" label="Command">
+    ```bash
+    git add .
+    git commit -m "holos generate platform quickstart - $(holos --version)"
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    [main (root-commit) 0b17b7f] holos generate platform quickstart
+     213 files changed, 72349 insertions(+)
+     ...
+    ```
+  </TabItem>
+</Tabs>
+
+## Generate a Component {#generate-component}
+
+The platform you generated is currently empty. Run the following command to
+generate the CUE code that defines a Helm Component.
+
+<Tabs groupId="gen-podinfo">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos generate component podinfo --component-version 6.6.1
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    generated component
+    ```
+  </TabItem>
+</Tabs>
+
+The --component-version 6.6.1 flag intentionally installs an older release.
+You'll see how Holos assists with software upgrades later in this guide.
+
+The generate component command creates two files: a leaf file,
+`components/podinfo/podinfo.gen.cue`, and a root file, `podinfo.gen.cue`. Holos
+leverages the fact that [order is
+irrelevant](https://cuelang.org/docs/tour/basics/order-irrelevance/) in CUE to
+register the component with the Platform by adding a file to the root of the Git
+repository. The second file defines the component in the leaf component
+directory.
+
+<Tabs groupId="podinfo-files">
+  <TabItem value="components/podinfo/podinfo.gen.cue" label="Leaf">
+    `components/podinfo/podinfo.gen.cue`
+    ```cue showLineNumbers
+    package holos
+
+    // Produce a helm chart build plan.
+    (#Helm & Chart).Output
+
+    let Chart = {
+      Name:      "podinfo"
+      Version:   "6.6.1"
+      Namespace: "default"
+
+      Repo: name: "podinfo"
+      Repo: url:  "https://stefanprodan.github.io/podinfo"
+
+      Values: {}
+    }
+    ```
+  </TabItem>
+  <TabItem value="podinfo.gen.cue" label="Root">
+    `podinfo.gen.cue`
+    ```cue showLineNumbers
+    package holos
+
+    // Manage podinfo on workload clusters only
+    for Cluster in #Fleets.workload.clusters {
+      #Platform: Components: "\(Cluster.name)/podinfo": {
+        path:    "components/podinfo"
+        cluster: Cluster.name
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+In this example, we provide the minimal information needed to manage the Helm
+chart: the name, version, Kubernetes namespace for deployment, and the chart
+repository location.
+
+This chart deploys cleanly without any values provided, but we include an empty
+Values struct to show how Holos improves consistency and safety in Helm by
+leveraging the strong type-checking in CUE. You can safely pass shared values,
+such as the organization’s domain name, to all Components across all clusters in
+the Platform by defining them at the root of the configuration.
+
+Commit the generated component config to the repository.
+
+<Tabs groupId="commit-component">
+  <TabItem value="command" label="Command">
+    ```bash
+    git add .
+    git commit -m "holos generate component podinfo - $(holos --version)"
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    [main cc0e90c] holos generate component podinfo
+     2 files changed, 24 insertions(+)
+     create mode 100644 components/podinfo/podinfo.gen.cue
+     create mode 100644 podinfo.gen.cue
+    ```
+  </TabItem>
+</Tabs>
+
+## Render the Component
+
+You can render individual components without adding them to a Platform, which is
+helpful when developing a new component.
+
+<Tabs groupId="render-podinfo">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos render component ./components/podinfo --cluster-name=default
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    cached
+    rendered podinfo
+    ```
+  </TabItem>
+</Tabs>
+
+First, the command caches the Helm chart locally to speed up subsequent
+renderings. Then, the command runs Helm to produce the output and writes it into
+the deploy directory.
+
+<Tabs groupId="tree-podinfo">
+  <TabItem value="command" label="Command">
+    ```bash
+    tree deploy
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    deploy
+    └── clusters
+        └── default
+            └── components
+                └── podinfo
+                    └── podinfo.gen.yaml
+
+    5 directories, 1 file
+    ```
+  </TabItem>
+</Tabs>
+
+The component deploys to one cluster named `default`. In practice, the same
+component is often deployed to multiple clusters, such as `east` and `west` to
+provide redundancy and increase availability.
+
+:::tip
+This example is equivalent to running `helm template` on the chart and saving
+the output to a file. Holos simplifies this task, making it safer and more
+consistent when managing many charts.
+:::
+
+## Mix in an ArgoCD Application
+
+We've seen how Holos works with Helm, but we haven't yet explored how Holos
+makes it easier to consistently and safely manage all of the software in a
+Platform.
+
+Holos allows you to easily mix in resources that differentiate your Platform.
+We'll use this feature to mix in an ArgoCD [Application][application] to manage
+the podinfo Component with GitOps. We'll define this configuration in a way that
+can be automatically and consistently reused across all future Components added
+to the Platform.
+
+Create a new file named `argocd.cue` in the root of your Git repository with the
+following contents:
+
+<Tabs groupId="argocd-config">
+  <TabItem value="command" label="argocd.cue">
+    ```cue showLineNumbers
+    package holos
+
+    #ArgoConfig: {
+      Enabled: true
+      RepoURL: "https://github.com/holos-run/holos-quickstart-guide"
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+:::tip
+If you plan to apply the rendered output to a real cluster, change the
+`example.com` RepoURL to the URL of the Git repository you created in this
+guide. You don't need to change the example if you're just exploring Holos by
+inspecting the rendered output without applying it to a live cluster.
+:::
+
+With this file in place, render the component again.
+
+<Tabs groupId="render-podinfo-argocd">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos render component ./components/podinfo --cluster-name=default
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    wrote deploy file
+    rendered gitops/podinfo
+    rendered podinfo
+    ```
+  </TabItem>
+</Tabs>
+
+Holos uses the locally cached chart to improve performance and reliability. It
+then renders the Helm template output along with an ArgoCD Application resource
+for GitOps.
+
+:::tip
+By defining the ArgoCD configuration at the root, we again take advantage of the
+fact that [order is
+irrelevant](https://cuelang.org/docs/tour/basics/order-irrelevance/) in CUE.
+:::
+
+Defining the configuration at the root ensures all future leaf Components take
+the ArgoCD configuration and render an Application manifest for GitOps
+management.
+
+<Tabs groupId="tree-podinfo-argocd">
+  <TabItem value="command" label="Command">
+    ```bash
+    tree deploy
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    deploy
+    └── clusters
+        └── default
+            ├── components
+            │   └── podinfo
+            │       └── podinfo.gen.yaml
+            └── gitops
+                └── podinfo.application.gen.yaml
+
+    6 directories, 2 files
+    ```
+  </TabItem>
+</Tabs>
+
+Notice the new `podinfo.application.gen.yaml` file created by enabling ArgoCD in
+the Helm component. The Application resource in the file looks like this:
+
+<Tabs groupId="podinfo-application">
+  <TabItem value="file" label="podinfo.application.gen.yaml">
+    ```yaml showLineNumbers
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: podinfo
+      namespace: argocd
+    spec:
+      destination:
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        path: ./deploy/clusters/default/components/podinfo
+        repoURL: https://example.com/holos-quickstart.git
+        targetRevision: main
+    ```
+  </TabItem>
+</Tabs>
+
+:::tip
+Holos generates a similar Application resource for every additional Component
+added to your Platform.
+:::
+
+Finally, add and commit the results to your Platform's Git repository.
+
+<Tabs groupId="commit-argo">
+  <TabItem value="command" label="Command">
+    ```bash
+    git add .
+    git commit -m "holos render component ./components/podinfo --cluster-name=default"
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    [main f95cef1] holos render component ./components/podinfo --cluster-name=default
+     3 files changed, 134 insertions(+)
+     create mode 100644 argocd.cue
+     create mode 100644 deploy/clusters/default/components/podinfo/podinfo.gen.yaml
+     create mode 100644 deploy/clusters/default/gitops/podinfo.application.gen.yaml
+    ```
+  </TabItem>
+</Tabs>
+
+In this section, we learned how Holos simplifies mixing resources into
+Components, like an ArgoCD Application. Holos ensures consistency by managing an
+Application resource for every Component added to the Platform through the
+configuration you define in `argocd.cue` at the root of the repository.
+
+## Define Workload Clusters {#workload-clusters}
+
+We've generated a Component to manage podinfo and integrated it with our
+Platform, but rendering the Platform doesn't render podinfo. Podinfo isn't
+rendered because we haven't assigned any Clusters to the workload Fleet.
+
+Define two new clusters, `east` and `west`, and assign them to the workload
+Fleet. Create a new file named `clusters.cue` in the root of your Git repository
+with the following contents:
+
+<Tabs groupId="clusters">
+  <TabItem value="clusters.cue" label="clusters.cue">
+    ```cue showLineNumbers
+    package holos
+
+    // Define two workload clusters for disaster recovery.
+    #Fleets: workload: clusters: {
+      // In CUE _ indicates values are defined elsewhere.
+      east: _
+      west: _
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+This example shows how Holos simplifies configuring multiple clusters with
+similar configuration by grouping them into a Fleet.
+
+:::tip
+Fleets help segment a group of Clusters into one leader and multiple followers
+by designating one cluster as the primary. Holos makes it safer, easier, and
+more consistent to reconfigure which cluster is the primary. The primary can be
+set to automatically restore persistent data from backups, while non-primary
+clusters can be configured to automatically replicate from the primary.
+
+Automatic database backup, restore, and streaming replication is an advanced
+topic enabled by Cloud Native PG and CUE. Check back for a guide on this and
+other Day 2 operations topics.
+:::
+
+## Render the Platform {#render-platform}
+
+Render the Platform to render the podinfo Component for each of the workload
+clusters.
+
+<Tabs groupId="render-platform">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos render platform ./platform
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    rendered components/podinfo for cluster west in 99.480792ms
+    rendered components/podinfo for cluster east in 99.882667ms
+    ```
+  </TabItem>
+</Tabs>
+
+The render platform command iterates over every Cluster in the Fleet and renders
+each Component assigned to the Fleet. Notice the two additional subdirectories
+created under the deploy directory, one for each cluster: `east` and `west`.
+
+<Tabs groupId="tree-platform">
+  <TabItem value="command" label="Command">
+    ```bash
+    tree deploy
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    deploy
+    └── clusters
+        ├── default
+        │   ├── components
+        │   │   └── podinfo
+        │   │       └── podinfo.gen.yaml
+        │   └── gitops
+        │       └── podinfo.application.gen.yaml
+        # highlight-next-line
+        ├── east
+        │   ├── components
+        │   │   └── podinfo
+        │   │       └── podinfo.gen.yaml
+        │   └── gitops
+        │       └── podinfo.application.gen.yaml
+        # highlight-next-line
+        └── west
+            ├── components
+            │   └── podinfo
+            │       └── podinfo.gen.yaml
+            └── gitops
+                └── podinfo.application.gen.yaml
+
+    14 directories, 6 files
+    ```
+  </TabItem>
+</Tabs>
+
+Holos ensures consistency and safety by defining the ArgoCD Application once,
+with strong type checking, at the configuration root.
+
+New Application resources are automatically generated for the `east` and `west`
+workload Clusters.
+
+<Tabs groupId="applications">
+  <TabItem value="east" label="east">
+  `deploy/clusters/east/gitops/podinfo.application.gen.yaml`
+```yaml showLineNumbers
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: podinfo
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    # highlight-next-line
+    path: ./deploy/clusters/east/components/podinfo
+    repoURL: https://example.com/holos-quickstart.git
+    targetRevision: main
+```
+  </TabItem>
+  <TabItem value="west" label="west">
+  `deploy/clusters/west/gitops/podinfo.application.gen.yaml`
+```yaml showLineNumbers
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: podinfo
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    # highlight-next-line
+    path: ./deploy/clusters/west/components/podinfo
+    repoURL: https://example.com/holos-quickstart.git
+    targetRevision: main
+```
+  </TabItem>
+  <TabItem value="default" label="default">
+  `deploy/clusters/default/gitops/podinfo.application.gen.yaml`
+```yaml showLineNumbers
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: podinfo
+  namespace: argocd
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    # highlight-next-line
+    path: ./deploy/clusters/default/components/podinfo
+    repoURL: https://example.com/holos-quickstart.git
+    targetRevision: main
+```
+  </TabItem>
+</Tabs>
+
+Add and commit the rendered Platform and workload Clusters.
+
+<Tabs groupId="commit-render-platform">
+  <TabItem value="command" label="Command">
+    ```bash
+    git add .
+    git commit -m "holos render platform ./platform - $(holos --version)"
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    [main 5aebcf5] holos render platform ./platform - 0.93.2
+     5 files changed, 263 insertions(+)
+     create mode 100644 clusters.cue
+     create mode 100644 deploy/clusters/east/components/podinfo/podinfo.gen.yaml
+     create mode 100644 deploy/clusters/east/gitops/podinfo.application.gen.yaml
+     create mode 100644 deploy/clusters/west/components/podinfo/podinfo.gen.yaml
+     create mode 100644 deploy/clusters/west/gitops/podinfo.application.gen.yaml
+    ```
+  </TabItem>
+</Tabs>
+
+## Upgrade a Helm Chart
+
+Holos is designed to ease the burden of Day 2 operations. With Holos, upgrading
+software, integrating new software, and making safe platform-wide configuration
+changes become easier.
+
+Let's upgrade the podinfo Component to see how this works in practice. First,
+update the Component version field to the latest upstream Helm chart version.
+
+<Tabs groupId="gen-podinfo">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos generate component podinfo --component-version 6.6.2
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    generated component
+    ```
+  </TabItem>
+</Tabs>
+
+Remove the cached chart version.
+
+<Tabs groupId="gen-podinfo">
+  <TabItem value="command" label="Command">
+    ```bash
+    rm -rf components/podinfo/vendor
+    ```
+  </TabItem>
+</Tabs>
+
+Now re-render the Platform.
+
+<Tabs groupId="render-platform2">
+  <TabItem value="command" label="Command">
+    ```bash
+    holos render platform ./platform
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+    ```txt
+    rendered components/podinfo for cluster east in 327.10475ms
+    rendered components/podinfo for cluster west in 327.796541ms
+    ```
+  </TabItem>
+</Tabs>
+
+Notice we're still using the upstream chart without modifying it. The Holos
+component wraps around the chart to mix in additional resources and integrate
+the component with the broader Platform.
+
+## Visualize the Changes
+
+Holos makes it easier to see exactly what changes are made and which resources
+will be applied to the API server. By design, Holos operates on local files,
+leaving the task of applying them to ecosystem tools like `kubectl` and ArgoCD.
+This allows platform operators to inspect changes during code review, or before
+committing the change at all.
+
+For example, using `git diff`, we see that the only functional change when
+upgrading this Helm chart is the deployment of a new container image tag to each
+cluster.  Additionally, we can roll out this change gradually by applying it to
+the east cluster first, then to the west cluster, limiting the potential blast
+radius of a problematic change.
+
+<Tabs groupId="git-diff">
+  <TabItem value="command" label="Command">
+    ```bash
+    git diff deploy/clusters/east
+    ```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```diff showLineNumbers
+diff --git a/deploy/clusters/east/components/podinfo/podinfo.gen.yaml b/deploy/clusters/east/components/podinfo/podinfo.gen.yaml
+index 7cc3332..8c1647d 100644
+--- a/deploy/clusters/east/components/podinfo/podinfo.gen.yaml
++++ b/deploy/clusters/east/components/podinfo/podinfo.gen.yaml
+@@ -5,9 +5,9 @@ kind: Service
+ metadata:
+   name: podinfo
+   labels:
+-    helm.sh/chart: podinfo-6.6.1
++    helm.sh/chart: podinfo-6.6.2
+     app.kubernetes.io/name: podinfo
+-    app.kubernetes.io/version: "6.6.1"
++    app.kubernetes.io/version: "6.6.2"
+     app.kubernetes.io/managed-by: Helm
+ spec:
+   type: ClusterIP
+@@ -29,9 +29,9 @@ kind: Deployment
+ metadata:
+   name: podinfo
+   labels:
+-    helm.sh/chart: podinfo-6.6.1
++    helm.sh/chart: podinfo-6.6.2
+     app.kubernetes.io/name: podinfo
+-    app.kubernetes.io/version: "6.6.1"
++    app.kubernetes.io/version: "6.6.2"
+     app.kubernetes.io/managed-by: Helm
+ spec:
+   replicas: 1
+@@ -53,7 +53,7 @@ spec:
+       terminationGracePeriodSeconds: 30
+       containers:
+         - name: podinfo
+         # highlight-next-line
+-          image: "ghcr.io/stefanprodan/podinfo:6.6.1"
+         # highlight-next-line
++          image: "ghcr.io/stefanprodan/podinfo:6.6.2"
+           imagePullPolicy: IfNotPresent
+           command:
+             - ./podinfo
+```
+  </TabItem>
+</Tabs>
+
+:::tip
+Holos is designed to surface the _fully rendered_ manifests intended for the
+Kubernetes API server, making it easier to see and reason about platform-wide
+configuration changes.
+:::
+
+## Recap {#recap}
+
+In this quickstart guide, we learned how Holos makes it easier, safer, and more
+consistent to manage a Platform composed of multiple Clusters and upstream Helm
+charts.
+
+We covered how to:
+
+1. Generate a Git repository for the Platform config.
+2. Wrap the unmodified upstream podinfo Helm chart into a Component.
+3. Render an individual Component.
+4. Mix-in your Platform's unique resources to all Components.  For example, ArgoCD Application resources.
+5. Define multiple similar, but not identical, workload clusters.
+6. Render the manifests for the entire Platform with the `holos render platform` command.
+7. Upgrade a Helm chart to the latest version as an important Day 2 task.
+8. Visualize and surface the details of planned changes Platform wide.
+
+## Dive Deeper
+
+If you'd like to dive deeper, check out the [Schema API][schema] and [Core
+API][core] reference docs. The main difference between the schema and core
+packages is that the schema is used by users to write refined CUE, while the
+core package is what the schema produces for `holos` to execute. Users rarely
+need to interact with the Core API when on the happy path, but can use the core
+package as an escape hatch when the happy path doesn't go where you want.
+
+
+[application]: https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
+[schema]: /docs/api/schema/v1alpha3/
+[core]: /docs/api/core/v1alpha3/
