@@ -12,7 +12,7 @@ import (
 // post-processing.
 let BuildPlanResources = "build-plan-resources.yaml"
 
-let Kustomization = ks.#Kustomization & {
+_Kustomization: ks.#Kustomization & {
 	apiVersion: "kustomize.config.k8s.io/v1beta1"
 	kind:       "Kustomization"
 	resources: [
@@ -29,5 +29,5 @@ spec: components: kubernetesObjectsList: [{
 	// intermediate build plan resources to kustomize.  Necessary to activate the
 	// kustomization post-rendering step in holos.
 	kustomize: resourcesFile: BuildPlanResources
-	kustomize: kustomizeFiles: "kustomization.yaml": yaml.Marshal(Kustomization)
+	kustomize: kustomizeFiles: "kustomization.yaml": yaml.Marshal(_Kustomization)
 }]

@@ -1,6 +1,6 @@
 package holos
 
-let Chart = {
+_Chart: {
 	Name:      "external-secrets"
 	Version:   "0.10.3"
 	Namespace: "external-secrets"
@@ -12,4 +12,4 @@ let Chart = {
 }
 
 // Produce a helm chart build plan.
-(#Helm & Chart).BuildPlan
+(#Helm & _Chart).BuildPlan
