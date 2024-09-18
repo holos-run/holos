@@ -40,8 +40,8 @@ const FeatureList: FeatureItem[] = [
     description: (
       <>
         Reduce risk and increase confidence in your configuration changes.
-        Holos offers clear visibility into complete resource configuration
-        <i>before</i> being applied.
+        Holos offers clear visibility into platform wide changes before the
+        change is made.
       </>
     ),
   },
