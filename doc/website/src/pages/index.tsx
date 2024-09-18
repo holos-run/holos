@@ -18,9 +18,9 @@ function HomepageHeader() {
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <p className="projectDesc">
           Holos adds CUE's type safety, unified structure, and strong validation
-          features to your current software packages, including Helm and
-          Kustomize.  These features make the experience of integrating software
-          packages into a holistic platform a pleasant journey.
+          features to your Kubernetes configuration manifests, including Helm
+          and Kustomize.  These features make the experience of integrating
+          software into a holistic platform a pleasant journey.
         </p>
         <div className={styles.buttons}>
           <Link
@@ -44,8 +44,8 @@ export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={`${siteConfig.title} Package Manager`}
-      description="Holos adds CUE's type safety, unified structure, and strong validation features to your current software packages, including Helm and Kustomize.">
+      title={`${siteConfig.title} Platform Manager`}
+      description="Holos adds CUE's type safety, unified structure, and strong validation features to your Kubernetes configuration manifests, including Helm and Kustomize.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

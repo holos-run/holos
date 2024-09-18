@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Holos',
-  tagline: 'The Holistic Package Manager for Cloud Native Applications',
+  tagline: 'The Holistic Platform Manager',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
