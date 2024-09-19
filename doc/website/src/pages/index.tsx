@@ -26,14 +26,9 @@ function HomepageHeader() {
           <Link
             className="button button--secondary button--lg"
             to="docs/quickstart">
-            Get Started
-          </Link>
-          <span className={styles.divider}></span>
-          <Link
-            className="button button--primary button--lg"
-            to="docs/concepts">
             Learn More
           </Link>
+          <span className={styles.divider}></span>
         </div>
       </div>
     </header >
