@@ -1,19 +1,19 @@
 package holos
 
-import schema "github.com/holos-run/holos/api/schema/v1alpha3"
+import api "github.com/holos-run/holos/api/author/v1alpha3"
 
-#Platform: schema.#Platform
-#Fleets:   schema.#StandardFleets
+#Platform: api.#Platform
+#Fleets:   api.#StandardFleets
 
 _ComponentConfig: {
 	Resources:  #Resources
 	ArgoConfig: #ArgoConfig
 }
 
-#Helm:       schema.#Helm & _ComponentConfig
-#Kustomize:  schema.#Kustomize & _ComponentConfig
-#Kubernetes: schema.#Kubernetes & _ComponentConfig
+#Helm:       api.#Helm & _ComponentConfig
+#Kustomize:  api.#Kustomize & _ComponentConfig
+#Kubernetes: api.#Kubernetes & _ComponentConfig
 
-#ArgoConfig: schema.#ArgoConfig & {
+#ArgoConfig: api.#ArgoConfig & {
 	ClusterName: _ClusterName
 }

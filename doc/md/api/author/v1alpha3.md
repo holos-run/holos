@@ -3,7 +3,7 @@
 # v1alpha3
 
 ```go
-import "github.com/holos-run/holos/api/schema/v1alpha3"
+import "github.com/holos-run/holos/api/author/v1alpha3"
 ```
 
 Package v1alpha3 contains CUE definitions intended as convenience wrappers around the core data types defined in package core. The purpose of these wrappers is to make life easier for platform engineers by reducing boiler plate code and generating component build plans in a consistent manner.
