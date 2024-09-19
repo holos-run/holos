@@ -10,16 +10,20 @@ import Admonition from '@theme/Admonition';
 
 # Deploy a Service
 
-Welcome to the Holos Deploy a Service guide.  Holos is an open source tool to
-manage software development platforms safely, easily, and consistently.  In this
-guide we'll apply the concepts we learned in the [Quickstart] guide to deploy a
-containerized service distributed as a Helm chart.  We'll also use a Holos
-component to deploy the same service with CUE instead of Helm to explore the
-type checking and safety features Holos offers.
+Welcome to the Holos Deploy a Service guide.  In this guide we'll explore how
+Holos helps the platform team work efficiently with a migration team at the
+fictional [Bank of Holos] to migrate a service from an acquired company onto the
+bank's platform.
 
-As we work through this guide, consider how Holos enables a platform team to
-define structures to help software development teams deploy their services
-safely and consistently.
+We'll build on the concepts we learned in the [Quickstart] guide and explore how
+the migration team safely integrates a Helm chart from the acquired company into
+the bank's platform consistent with the policies defined by the platform team.
+
+We'll also see how the platform team uses Holos and CUE to define consistent and
+safe structures for Namespaces, AppProjects, and HTTPRoutes for other teams. The
+migration team uses these structures to integrate the Helm chart into the bank's
+platform in a self-service way, without filing tickets or interrupting the
+platform team.
 
 ## What you'll need {#requirements}
 
@@ -1442,3 +1446,4 @@ for some time.
 [code owners]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 [ReferenceGrant]: https://gateway-api.sigs.k8s.io/api-types/referencegrant/
 [Local Cluster Guide]: /docs/guides/local-cluster
+[Bank of Holos]: https://github.com/holos-run/bank-of-holos
