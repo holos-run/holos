@@ -11,30 +11,52 @@ type FeatureItem = {
 // We don't focus on features, but rather problems and solutions.
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Faster',
-    Svg: require('@site/static/img/base00/undraw_together_re_a8x4.svg').default,
+    title: 'For Platform Engineers',
+    Svg: require('@site/static/img/base00/undraw_software_engineer_re_tnjc.svg').default,
     description: (
       <>
-        Cut your time to market.  Something about developer productivity.
+        Spend more time building platform features and less time maintaining
+        scripts and text templates.  Add type checking and validation to your
+        existing Helm charts and manifests. Define golden paths for teams to
+        safely spin up new projects without interrupting you.  Automatically
+        manage Namespaces, Certificates, Secrets, Roles, and labels with
+        strongly typed CUE definitions. Take unmodified, upstream software and
+        mix-in the resources making your platform unique and valuable.
+        <br />
+        <a href="/docs/">Learn More</a>
       </>
     ),
   },
   {
-    title: 'Safer',
-    Svg: require('@site/static/img/base00/undraw_fitting_pieces_re_nss7.svg').default,
+    title: 'For Software Developers',
+    Svg: require('@site/static/img/base00/undraw_through_the_park_lxnl.svg').default,
     description: (
       <>
-        Replace manual tasks with workflows that are well structured and strongly typed.
+        Move faster along paved roads provided by your platform and security
+        teams.  Quickly spin up new projects and environments without filing
+        tickets.  Develop where it works best for you, locally or in the cloud.
+        Deploy your existing Helm charts, Kubernetes manifests, or containers
+        safely and confidently with strong type checking. Reduce the friction of
+        integrating your services into your organization's platform.
+        <br />
+        <a href="/docs/">Learn More</a>
       </>
     ),
   },
   {
-    title: 'Secure',
-    Svg: require('@site/static/img/base00/undraw_code_review_re_woeb.svg').default,
+    title: 'For Security Teams',
+    Svg: require('@site/static/img/base00/undraw_security_on_re_e491.svg').default,
     description: (
       <>
-        Empower your security team to pave smooth roads for dev teams to deploy
-        services securely.
+        Express your security policies as reusable, well defined, typed
+        configuration.   Build guard rails making it easy to develop services
+        securely.  Automatically provision and configure SecretStores,
+        ExternalSecrets, AuthorizationPolicies, RoleBindings, etc... for project
+        teams.  Gain clear visibility into the complete configuration of the
+        platform to quickly identify risk and audit your security posture.
+        Integrate your preferred security tools with the platform.
+        <br />
+        <a href="/docs/">Learn More</a>
       </>
     ),
   }

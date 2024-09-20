@@ -17,15 +17,15 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <p className="projectDesc">
-          Building and operating an internal development platform is a
-          challenge.  Engineering teams glue their tools to the rest.  This glue
-          is sticky and hard to work with, frustrating engineering teams.
+          Engineering teams spend considerable time and effort gluing software
+          projects together into a platform.  This integration glue is usually
+          made with bespoke scripts and error prone text templates.  This glue
+          layer is often makeshift, slowing teams down and inviting outages due
+          to configuration errors.
         </p>
         <p className="projectDesc">
-          Holos is a universal adapter that replaces the glue in your platform
-          without replacing your tools.  Holos leverages the safe, consistent,
-          and well-defined structure of CUE to solve the problem of integrating
-          bespoke tools and processes into a centrally managed platform.
+          Holos helps teams deliver faster by offering a well defined, safe, and
+          automated integration layer to manage your platform holistically.
         </p>
         <div className={styles.buttons}>
           <Link
