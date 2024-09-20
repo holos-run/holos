@@ -17,8 +17,15 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <p className="projectDesc">
-          Holos offers a unique, holistic approach to platform management that
-          enables your engineering teams to ship safely and consistently.
+          Building and operating an internal development platform is a
+          challenge.  Engineering teams glue their tools to the rest.  This glue
+          is sticky and hard to work with, frustrating engineering teams.
+        </p>
+        <p className="projectDesc">
+          Holos is a universal adapter that replaces the glue in your platform
+          without replacing your tools.  Holos leverages the safe, consistent,
+          and well-defined structure of CUE to solve the problem of integrating
+          bespoke tools and processes into a centrally managed platform.
         </p>
         <div className={styles.buttons}>
           <Link
@@ -34,7 +41,7 @@ function HomepageHeader() {
           </Link>
           <span className={styles.divider}></span>
         </div>
-      </div>
+      </div >
     </header >
   );
 }

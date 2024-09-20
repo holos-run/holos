@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Holos',
-  tagline: 'Ship features faster, safer, securely',
+  tagline: 'Holos makes it easier and faster to integrate services into your internal development platform.',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here

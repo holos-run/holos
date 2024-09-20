@@ -10,6 +10,18 @@
   overflow-wrap: anywhere;
 } */
 
+.hero__title {
+  text-align: left;
+}
+
+.hero__subtitle {
+  text-align: left;
+}
+
+.projectDesc {
+  text-align: left;
+}
+
 /* You can override the default Infima variables here. */
 :root {
   --ifm-link-color: #268bd2;
