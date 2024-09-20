@@ -17,15 +17,19 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <p className="projectDesc">
-          Holos adds CUE's type safety, unified structure, and strong validation
-          features to your Kubernetes configuration manifests, including Helm
-          and Kustomize.  These features make the experience of integrating
-          software into a holistic platform a pleasant journey.
+          Holos offers a unique, holistic approach to platform management that
+          enables your engineering teams to ship safely and consistently.
         </p>
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
             to="docs/quickstart">
+            Get Started
+          </Link>
+          <span className={styles.divider}></span>
+          <Link
+            className="button button--primary button--lg"
+            to="docs/">
             Learn More
           </Link>
           <span className={styles.divider}></span>

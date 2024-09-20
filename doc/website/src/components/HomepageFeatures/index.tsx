@@ -8,53 +8,36 @@ type FeatureItem = {
   description: JSX.Element;
 };
 
-// TODO: Consider focusing on the three pillars of Safe, Easy, Consistent.
+// We don't focus on features, but rather problems and solutions.
 const FeatureList: FeatureItem[] = [
   {
-    title: 'Kustomize Helm',
+    title: 'Faster',
     Svg: require('@site/static/img/base00/undraw_together_re_a8x4.svg').default,
     description: (
       <>
-        Super charge your existing Helm charts by providing well defined,
-        validated input values, post-processing the output with Kustomize,
-        and mixing in your own custom resources.  All without modifying upstream
-        charts to alleviate the pain of upgrades.
+        Cut your time to market.  Something about developer productivity.
       </>
     ),
   },
   {
-    title: 'Unified Data Model',
+    title: 'Safer',
     Svg: require('@site/static/img/base00/undraw_fitting_pieces_re_nss7.svg').default,
     description: (
       <>
-        Unify all of your platform components into one well-defined, strongly
-        typed data model with CUE.  Holos makes it easier and safer to integrate
-        seamlessly with software distributed with current and future tools that
-        produce Kubernetes resource manifests.
+        Replace manual tasks with workflows that are well structured and strongly typed.
       </>
     ),
   },
   {
-    title: 'Deep Insights',
+    title: 'Secure',
     Svg: require('@site/static/img/base00/undraw_code_review_re_woeb.svg').default,
     description: (
       <>
-        Reduce risk and increase confidence in your configuration changes.
-        Holos offers clear visibility into platform wide changes before the
-        change is made.
+        Empower your security team to pave smooth roads for dev teams to deploy
+        services securely.
       </>
     ),
-  },
-  {
-    title: 'Interoperable',
-    Svg: require('@site/static/img/base00/undraw_version_control_re_mg66.svg').default,
-    description: (
-      <>
-        Holos is designed for compatibility with your preferred tools and
-        processes, for example git diff and code reviews.
-      </>
-    ),
-  },
+  }
 ];
 
 function Feature({ title, Svg, description }: FeatureItem) {
