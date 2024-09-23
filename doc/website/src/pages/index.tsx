@@ -24,8 +24,9 @@ function HomepageHeader() {
           to configuration errors.
         </p>
         <p className="projectDesc">
-          Holos helps teams deliver faster by offering a well defined, safe, and
-          automated integration layer to manage your platform holistically.
+          Holos helps teams deliver value faster by offering a well defined,
+          safe, and automated integration layer to manage your platform
+          holistically.
         </p>
         <div className={styles.buttons}>
           <Link
