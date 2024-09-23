@@ -32,6 +32,10 @@ easier for multiple teams to deliver services on a platform.  These teams are:
 - **Security**
 - **Quality Assurance**
 
+In this guide we'll show how Holos enables teams to work autonomously
+while still allowing the platform team to enforce the standards and policies
+they care about to provide a secure and consistent software development platform.
+
 Here's a screenshot of the retail banking application we'll build and deploy on
 our platform.  We'll keep each of these teams in mind as we work through the
 guides.  Each of our guides focuses on different aspects of delivering the Bank
@@ -109,15 +113,25 @@ Resolving deltas: 100% (394/394), done.
 
 Run the rest of the commands in this guide from the root of the repository.
 
-## Configure ArgoCD {#configure-argocd}
+## Configuring GitOps {#configuring-gitops}
 
 The Bank of Holos platform is organized as a collection of software components.
 Each component represents a piece of software provided by an upstream vendor,
 for example ArgoCD, or software developed in-house.  Components are also used to
 glue together, or integrate, other components into the platform.
 
-We'll start by changing the platform to point to our fork.  We need to do this
-so we'll be able to see changes in ArgoCD as we make changes with GitOps.
+The platform team provides ArgoCD as a means for teams to implement GitOps
+within their software development workflow.  Each team using the Bank of Holos
+platform uses a Holos resource provided by the platform team to create their
+ArgoCD Application definition.  In doing so, the platform team has provided
+a "golden path" for each team to independently make the changes they need
+while still centrally enforcing the policies that provide a consistent and
+safe experience.
+
+Currently each team is using the upstream `bank-of-repo` repository as their
+source of truth. We'll start by changing ArgoCD to point to our fork.  This will
+allow us to be able to see the results of our changes in ArgoCD using a GitOps
+workflow.
 
 <Tabs groupId="argocd-config">
   <TabItem value="command" label="projects/argocd-config.cue">
@@ -591,7 +605,7 @@ component is called a BuildPlan.  A BuildPlan is a list of zero or more
 kubernetes resources, Helm charts, Kustomize bases, and additional files to
 write into the `deploy/` directory.
 
-Let's take a look at the cert-manager component.  Notice the
+Now let's look at the cert-manager component.  Notice the
 `platform/cert-manager.cue` file has the field `path:
 "projects/platform/components/cert-manager"`.  This path indicates where to
 start working with the cert-manager component.
@@ -657,7 +671,8 @@ root, `projects/cert-manager.cue`
 5. We define Helm values in CUE to take advantage of strong type checking and
 manage multiple Helm charts consistently with platform wide values.
 
-Let's take a look at the BuildPlan this CUE configuration defines.
+Let's take a look at the BuildPlan that results from the CUE configuration
+described above.
 
 <Tabs groupId="B54D5791-4E5B-4148-A368-62D9BE80760C">
   <TabItem value="command" label="Command">
@@ -751,6 +766,16 @@ When the Author API doesn't offer a path forward, authors may use the Core API
 directly from CUE.  We can think of the Core API as an escape hatch for the
 Author API.  We'll see some examples of this in action in the more advanced
 guides.
+
+## Review
+
+Let's review the concepts we've covered in this guide:
+
+- A Holos platform is comprised of the CUE files that define the platform specification within the `platform` directory.
+- The files in the `platform` directory each model an individual Holos component, and provide the path to the directory where the component's CUE configuration resides.
+- A Holos platform must be rendered to generate Kubernetes manifest files.
+- Holos resources enable teams to work autonomously while still allowing for centralized enforcement of company policies.
+- Changes to one component can impact other components, and we can use `holos render platform` with `git diff` to assess the impact.
 
 ## Next Steps
 
