@@ -181,3 +181,24 @@ import (
 	// platform operators to define.
 	Domain: string & (string | *"holos.localhost")
 }
+
+// Organization represents organizational metadata useful across the platform.
+#Organization: {
+	Name:        string
+	DisplayName: string
+}
+
+// OrganizationStrict represents organizational metadata useful across the
+// platform.  This is an example of using CUE regular expressions to constrain
+// and validate configuration.
+#OrganizationStrict: {
+	#Organization
+
+	// Name represents the organization name as a resource name.  Must be 63
+	// characters or less.  Must start with a letter.  May contain non-repeating
+	// hyphens, letters, and numbers.  Must end with a letter or number.
+	Name: string & (=~"^[a-z][0-9a-z-]{1,61}[0-9a-z]$" & !~"--")
+
+	// DisplayName represents the human readable organization name.
+	DisplayName: string & (=~"^[0-9A-Za-z][0-9A-Za-z ]{2,61}[0-9A-Za-z]$" & !~"  ")
+}

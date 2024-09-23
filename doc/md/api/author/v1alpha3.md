@@ -17,6 +17,8 @@ Package v1alpha3 contains CUE definitions intended as convenience wrappers aroun
 - [type Helm](<#Helm>)
 - [type Kubernetes](<#Kubernetes>)
 - [type Kustomize](<#Kustomize>)
+- [type Organization](<#Organization>)
+- [type OrganizationStrict](<#OrganizationStrict>)
 - [type Platform](<#Platform>)
 - [type StandardFleets](<#StandardFleets>)
 
@@ -169,6 +171,35 @@ type Kustomize struct {
     ComponentFields `json:",inline"`
     // Kustomization represents the kustomize build plan for holos to render.
     Kustomization core.KustomizeBuild
+}
+```
+
+<a name="Organization"></a>
+## type Organization {#Organization}
+
+Organization represents organizational metadata useful across the platform.
+
+```go
+type Organization struct {
+    Name        string
+    DisplayName string
+}
+```
+
+<a name="OrganizationStrict"></a>
+## type OrganizationStrict {#OrganizationStrict}
+
+OrganizationStrict represents organizational metadata useful across the platform. This is an example of using CUE regular expressions to constrain and validate configuration.
+
+```go
+type OrganizationStrict struct {
+    Organization `json:",inline"`
+    // Name represents the organization name as a resource name.  Must be 63
+    // characters or less.  Must start with a letter.  May contain non-repeating
+    // hyphens, letters, and numbers.  Must end with a letter or number.
+    Name string `cue:"=~ \"^[a-z][0-9a-z-]{1,61}[0-9a-z]$\" & !~ \"--\""`
+    // DisplayName represents the human readable organization name.
+    DisplayName string `cue:"=~ \"^[0-9A-Za-z][0-9A-Za-z ]{2,61}[0-9A-Za-z]$\" & !~ \"  \""`
 }
 ```
 

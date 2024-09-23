@@ -2,8 +2,13 @@ package holos
 
 import api "github.com/holos-run/holos/api/author/v1alpha3"
 
-#Platform: api.#Platform
-#Fleets:   api.#StandardFleets
+// Define the default organization name
+#Organization: DisplayName: string | *"Bank of Holos"
+#Organization: Name:        string | *"bank-of-holos"
+
+#Organization: api.#OrganizationStrict
+#Platform:     api.#Platform
+#Fleets:       api.#StandardFleets
 
 _ComponentConfig: {
 	Resources:  #Resources

@@ -15,7 +15,7 @@ and paved roads for other teams to leverage for quicker delivery.
 - [Guides] are organized into example use-cases of how Holos helps engineering
 teams at the fictional Bank of Holos deliver business value on the bank's
 platform.
-- The [API Reference] is a technical reference for when you're writing CUE code to define your your platform.
+- The [API Reference] is a technical reference for when you're writing CUE code to define your platform.
 
 ## Backstory
 

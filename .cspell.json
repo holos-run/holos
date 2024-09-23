@@ -7,6 +7,7 @@
   "words": [
     "acraccesstokens",
     "admissionregistration",
+    "anthos",
     "apiextensions",
     "applicationset",
     "applicationsets",
@@ -31,6 +32,7 @@
     "clusterrole",
     "clusterrolebinding",
     "clustersecretstores",
+    "CNCF",
     "configmap",
     "cookiesecret",
     "coredns",

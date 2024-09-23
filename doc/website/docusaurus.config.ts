@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
   title: 'Holos',
-  tagline: 'Holos helps you build and maintain your software development platform safely and easily.',
+  tagline: 'Holos helps you manage your software development platform safely and easily.',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -12,6 +12,7 @@ const config: Config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
+  // trailing slash is necessary for Cloudflare pages.
   trailingSlash: true,
 
   // GitHub pages deployment config.
@@ -65,7 +66,7 @@ const config: Config = {
           blogSidebarTitle: "All posts",
           feedOptions: {
             type: 'all',
-            copyright: `Copyright © ${new Date().getFullYear()}, The Holos Authors.`,
+            copyright: `Copyright © ${new Date().getFullYear()}, The Holos Authors`,
           },
           showReadingTime: false,
         },
