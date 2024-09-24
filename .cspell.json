@@ -75,6 +75,7 @@
     "healthz",
     "helmchartconfigs",
     "helmcharts",
+    "Hiera",
     "holos",
     "holoslogger",
     "horizontalpodautoscaler",
