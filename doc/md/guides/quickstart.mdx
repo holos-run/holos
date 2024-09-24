@@ -326,6 +326,39 @@ So what happens when we run `holos render platform`?  We saw `holos` write plain
 manifest files, let's dive into how and why we implemented platform rendering
 like this.
 
+```mermaid
+---
+title: Figure 1 - Render Pipeline
+---
+graph LR
+    PS[<a href="/docs/api/author/v1alpha3/#Platform">Platform</a>]
+    HC[<a href="/docs/api/author/v1alpha3/#ComponentFields">Components</a>]
+    BP[<a href="/docs/api/core/v1alpha3#BuildPlan">BuildPlan</a>]
+
+    H[<a href="/docs/api/author/v1alpha3/#Helm">Helm</a>]
+    K[<a href="/docs/api/author/v1alpha3/#Kustomize">Kustomize</a>]
+    O[<a href="/docs/api/author/v1alpha3/#Kubernetes">Kubernetes</a>]
+
+    P[<a href="/docs/api/core/v1alpha3#Kustomize">Kustomize</a>]
+    Y[Kubernetes <br/>Resources]
+    G[GitOps <br/>Resource]
+    FS[Local Files]
+
+    C[Kube API Server]
+
+    PS --> HC --> BP
+    BP --> H --> P
+    BP --> K --> P
+    BP --> O --> P
+
+    P --> Y --> FS
+    P --> G --> FS
+
+    FS --> ArgoCD --> C
+    FS --> Flux --> C
+    FS --> kubectl --> C
+```
+
 ### Why do we render the platform? {#why-render-the-platform}
 
 We built Holos to make the process of managing a platform safer, easier, and
@@ -348,6 +381,11 @@ we're able to see and consider how a single-line change, like the one we just
 made, affects the whole platform.  Before we made Holos we were frustrated with
 how difficult it was to get this zoomed-out, broad perspective of each change we
 made.
+
+:::tip
+Holos implements the [rendered manifests pattern] so you don't have to build it
+yourself.
+:::
 
 ### How does platform rendering work? {#how-platform-rendering-works}
 
@@ -424,7 +462,7 @@ before going further.
 :::
 
 > In its simplest form, CUE looks a lot like JSON. This is because CUE is a
-superset of JSON.  Or, put differently: all valid JSON is CUE[^1].
+superset of JSON.  Or, put differently: all valid JSON is CUE.[^1]
 >
 > 1. C-style comments are allowed
 > 2. field names without special characters don't need to be quoted
@@ -788,5 +826,5 @@ Helm charts or Deployments and manage it with Holos.
 [core]: /docs/api/core/v1alpha3/
 [Deploy a Service]: /docs/guides/deploy-a-service/
 [Manage a Project]: /docs/guides/manage-a-project/
-
+[rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern/
 [^1]: [The Basics of CUE](https://cuelang.org/docs/tour/basics/json-superset/)

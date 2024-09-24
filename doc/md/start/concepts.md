@@ -324,28 +324,28 @@ ArgoCD, or Flux.
 
 ```mermaid
 ---
-title: Figure 2 - Render Pipeline
+title: Figure 1 - Render Pipeline
 ---
 graph LR
-    PS[<a href="/docs/api/core/v1alpha2#PlatformSpec">PlatformSpec</a>]
-    BP[<a href="/docs/api/core/v1alpha2#BuildPlan">BuildPlan</a>]
-    HC[<a href="/docs/api/core/v1alpha2#HolosComponent">Components</a>]
+    PS[<a href="/docs/api/author/v1alpha3/#Platform">Platform</a>]
+    HC[<a href="/docs/api/author/v1alpha3/#ComponentFields">Components</a>]
+    BP[<a href="/docs/api/core/v1alpha3#BuildPlan">BuildPlan</a>]
 
-    H[<a href="/docs/api/core/v1alpha2#HelmChart">HelmChart</a>]
-    K[<a href="/docs/api/core/v1alpha2#KustomizeBuild">KustomizeBuild</a>]
-    O[<a href="/docs/api/core/v1alpha2#KubernetesObjects">KubernetesObjects</a>]
+    H[<a href="/docs/api/author/v1alpha3/#Helm">Helm</a>]
+    K[<a href="/docs/api/author/v1alpha3/#Kustomize">Kustomize</a>]
+    O[<a href="/docs/api/author/v1alpha3/#Kubernetes">Kubernetes</a>]
 
-    P[<a href="/docs/api/core/v1alpha2#Kustomize">Kustomize</a>]
+    P[<a href="/docs/api/core/v1alpha3#Kustomize">Kustomize</a>]
     Y[Kubernetes <br/>Resources]
     G[GitOps <br/>Resource]
     FS[Local Files]
 
     C[Kube API Server]
 
-    PS --> BP --> HC
-    HC --> H --> P
-    HC --> K --> P
-    HC --> O --> P
+    PS --> HC --> BP
+    BP --> H --> P
+    BP --> K --> P
+    BP --> O --> P
 
     P --> Y --> FS
     P --> G --> FS
