@@ -10,21 +10,16 @@ import Admonition from '@theme/Admonition';
 
 # Change a Service
 
-In this guide we'll explore how Holos helps the frontend development team at the
-[Bank of Holos] reconfigures a service they've already deployed.  In doing so,
-we'll see how simple configuration configuration changes are safer with type
-checking, and how rendering the complete platform provides clear visibility into
-changes.
+In this guide, we'll explore how Holos supports the frontend development team at [Bank of Holos] in reconfiguring an already deployed service. Along the way, we'll demonstrate how simple configuration changes are made safer with type checking, and how rendering the complete platform provides clear visibility into those changes.
 
-We'll build on the concepts we learned in the [Quickstart] and [Deploy a
-Service] guides.
+This guide builds on the concepts covered in the [Quickstart] and [Deploy a Service] guides.
 
 ## What you'll need {#requirements}
 
 Like our other guides, this guide is intended to be useful without needing to
-run the commands.  If you'd like to render the platform and apply the manifests
-to a real Cluster, complete the [Local Cluster
-Guide](/docs/guides/local-cluster) before this guide.
+run each command.  If you'd like to apply the manifests to a real Cluster,
+complete the [Local Cluster Guide](/docs/guides/local-cluster) before this
+guide.
 
 You'll need the following tools installed to run the commands in this guide.
 
@@ -68,14 +63,8 @@ local platform synced to the start of this guide.
 
 ```bash
 ./scripts/reset-cluster
-```
-
-Then apply the current manifests with.
-
-```bash
 ./scripts/apply
 ```
-
 
 ## Rename the Bank
 
@@ -84,7 +73,7 @@ Holistic Bank.  The software development team responsible for the front end
 website needs to update the branding accordingly.
 
 Let's explore how Holos catches errors early, before they land in production,
-then guides the team to the correct place to make a change.
+then guides the team to the best place to make a change.
 
 The bank front end web service is managed by the
 `projects/bank-of-holos/frontend/components/bank-frontend/` component which
@@ -328,14 +317,16 @@ let Objects = {
   </TabItem>
 </Tabs>
 
-Line 6 of the schema cue file defines the _default_ display name by using
-`string | *"..."`.  In CUE, the asterisk denotes a [default value].
+Line 6 of the `schema.gen.cue` file defines the _default_ value for
+`#Organization.DisplayName` by using `string | *"..."`.  In CUE, the `*`
+asterisk character denotes a [default value].
 
-Line 78 of the bank-frontend cue file refers to `#Organization.DisplayName` to
+Line 78 of the `bank-frontend.cue` file refers to `#Organization.DisplayName` to
 configure the front end web container.
 
-Let's change the name of the bank by defining a new name at the root of the
-configuration.  Create `projects/organization.cue` with the following content.
+Let's change the name of the bank by defining a new value for
+`#Organization.DisplayName` at the root of the configuration.  Create
+`projects/organization.cue` with the following content.
 
 <Tabs groupId="B386181F-EBE7-469D-8CB5-37631067669B">
   <TabItem value="projects/organization.cue" label="projects/organization.cue">
@@ -373,10 +364,14 @@ could not run: could not render component: exit status 1 at internal/render/plat
   </TabItem>
 </Tabs>
 
-Whoops, the development team defined a value that isn't allowed by the
-configuration.  Someone else in the organization placed a [constraint] on the
+:::warning Whoops
+The development team defined a value that isn't allowed by the
+configuration.
+:::
+
+Someone else in the organization placed a [constraint] on the
 configuration to ensure the display name contains only letters, numbers, and
-spaces.
+spaces.  This constraint is expressed as a [regular expression].
 
 :::tip
 CUE provides clear visibility where to start looking to resolve conflicts.  Each
@@ -434,9 +429,13 @@ rendered platform in 718.015959ms
   </TabItem>
 </Tabs>
 
-Great, the platform rendered successfully so we know the display name is valid
-according to the constraints.  Let's see if the new display name value updated
-the configuration for the bank frontend.
+:::tip Success
+Great, the platform rendered.  We know the display name is valid according to
+the constraints.
+:::
+
+Let's see if the new display name value updated the configuration for the bank
+frontend.
 
 <Tabs groupId="6C068651-2061-4262-BE1E-7BB3E7EB66CB">
   <TabItem value="command" label="Command">
@@ -533,19 +532,23 @@ index dae6f93..d41516b 100644
   </TabItem>
 </Tabs>
 
+:::danger
 The new display name changed the frontend container, but it _also_ affected the
-app-projects component.  Submitting a pull request would trigger a code review
-from the platform engineering team who manages the app-projects component.
-Let's see how to narrow the change down to limit the scope to the bank's user
-facing services.  All of these serves are managed under
-`projects/bank-of-holos/` Move the `organization.cue` file we created into this
-folder to limit the scope of configuration to the the components contained within.
+app-projects component owned by the platform team.
+:::
+
+Submitting a pull request would trigger a code review from the platform
+engineering team who manages the app-projects component.  Let's see how to
+narrow the change down to limit the scope to the bank's user facing services.
+All of these services are managed under `projects/bank-of-holos/` Move the
+`organization.cue` file into this folder to limit the scope of configuration to
+the the components contained within.
 
 ```bash
 mv projects/organization.cue projects/bank-of-holos/
 ```
 
-Render the platform and review what changed.
+Render the platform and let's see what changed.
 
 <Tabs groupId="0FFEC244-B59B-4136-9C82-837985DC2AB8">
   <TabItem value="command" label="Command">
@@ -611,10 +614,14 @@ index dae6f93..d41516b 100644
   </TabItem>
 </Tabs>
 
+:::tip Success
 Great!  This time, the only manifest affected is our `bank-frontend.gen.yaml`.
-The `BANK_NAME` environment variable will change as we expected.
+:::
 
-Let's commit and push this change and see if it works in the platform.
+The `BANK_NAME` environment variable will change as we expect, and only the dev
+teams managing the bank services components are affected by the change.
+
+Let's commit and push this change and see if it works.
 
 <Tabs groupId="435D9C60-F841-4CF1-A947-506422E6BAC9">
   <TabItem value="command" label="Command">
@@ -661,18 +668,22 @@ https://bank.holos.localhost/.
 
 ![bank-frontend login page](./img/change-a-service-login-page.png)
 
-Great!  We successfully made our change and successfully applied the changed
+:::tip Success
+We successfully made our change and successfully applied the changed
 configuration to the platform.
+:::
 
-- We saw how multiple teams could be impacted by defining configuration at the
+Thanks for taking the time to work through this guide which covered:
+
+- How multiple teams could be impacted by defining configuration at the
 `projects/` path.
-- We scoped our change to only affect components within the
+- How to scope our change to only affect components within the
 `projects/bank-of-holos/` path, eliminating the impact on other teams.
-- We saw how CUE can be used to [constrain] values in Holos, increasing safety.
-- We saw how CUE surfaces the file and line number of _every_ place to look for
-where a value is defined, making it faster and easier to troubleshoot problems.
+- How CUE can [constrain] values in Holos, increasing safety.
+- How to handle a [default value] in CUE.
+- How CUE surfaces the file and line number of _every_ place to look for where a
+value is defined, making it faster and easier to troubleshoot problems.
 
-Thanks for taking the time to work through this guide.
 
 [Quickstart]: /docs/quickstart/
 [Deploy a Service]: /docs/guides/deploy-a-service/
@@ -698,4 +709,6 @@ Thanks for taking the time to work through this guide.
 [Local Cluster Guide]: /docs/guides/local-cluster
 [Bank of Holos]: https://github.com/holos-run/bank-of-holos
 [default value]: https://cuelang.org/docs/tour/types/defaults/
+[constrain]: https://cuelang.org/docs/tour/basics/constraints/
 [constraint]: https://cuelang.org/docs/tour/basics/constraints/
+[regular expression]: https://cuelang.org/docs/tour/expressions/regexp/

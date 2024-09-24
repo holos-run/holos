@@ -113,7 +113,7 @@ const config: Config = {
           "className": "header-godoc-link",
         },
         {
-          href: 'https://github.com/holos-run/holos',
+          href: 'https://github.com/holos-run',
           label: 'GitHub',
           position: 'right',
         },
