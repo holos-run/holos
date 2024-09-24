@@ -34,19 +34,6 @@ wrap Helm charts.
 3. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to render Holos
 Components that render with Kustomize.
 
-If you plan to apply the changes we make, you may delete and re-create your
-local platform with the following commands.
-
-```bash
-./scripts/reset-cluster
-```
-
-Then apply the current manifests with:
-
-```bash
-./scripts/apply
-```
-
 ## Fork the Git Repository
 
 If you haven't already done so, [fork the Bank of
@@ -75,6 +62,20 @@ Resolving deltas: 100% (394/394), done.
 </Tabs>
 
 Run the rest of the commands in this guide from the root of the repository.
+
+If you plan to apply the changes we make, you can delete and re-create your
+local platform synced to the start of this guide.
+
+```bash
+./scripts/reset-cluster
+```
+
+Then apply the current manifests with.
+
+```bash
+./scripts/apply
+```
+
 
 ## Rename the Bank
 
