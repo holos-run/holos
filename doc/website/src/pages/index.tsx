@@ -17,11 +17,10 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <p className="projectDesc">
-          Engineering teams spend considerable time and effort gluing software
-          projects together into a platform.  This integration glue is usually
-          made with bespoke scripts and error prone text templates.  This glue
-          layer is often makeshift, slowing teams down and inviting outages due
-          to configuration errors.
+          Engineering teams spend significant time creating custom scripts and
+          error-prone templates to integrate software projects into a software
+          development platform.  This glue layer is often makeshift, slowing
+          teams down and increasing the risk of outages.
         </p>
         <p className="projectDesc">
           Holos helps teams deliver value faster by offering a well defined,
