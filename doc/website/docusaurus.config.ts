@@ -107,12 +107,6 @@ const config: Config = {
         },
         { to: '/blog', label: 'Blog', position: 'left' },
         {
-          "href": "https://pkg.go.dev/github.com/holos-run/holos?tab=doc",
-          "label": "GoDoc",
-          "position": "left",
-          "className": "header-godoc-link",
-        },
-        {
           href: 'https://github.com/holos-run',
           label: 'GitHub',
           position: 'right',
@@ -147,7 +141,19 @@ const config: Config = {
           title: 'Community',
           items: [
             {
-              label: 'Discuss',
+              label: 'Support',
+              href: '/docs/support',
+            },
+            {
+              label: 'Announcements List',
+              href: 'https://groups.google.com/g/holos-announce',
+            },
+            {
+              label: 'Discussion List',
+              href: 'https://groups.google.com/g/holos-discuss',
+            },
+            {
+              label: 'Discussion Forum',
               href: 'https://github.com/holos-run/holos/discussions',
             },
           ],
@@ -163,6 +169,10 @@ const config: Config = {
               label: 'GitHub',
               href: 'https://github.com/holos-run/holos',
             },
+            {
+              label: 'GoDoc',
+              href: 'https://pkg.go.dev/github.com/holos-run/holos?tab=doc',
+            }
           ],
         },
       ],
