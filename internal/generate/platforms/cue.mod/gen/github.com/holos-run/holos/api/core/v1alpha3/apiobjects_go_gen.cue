@@ -18,6 +18,12 @@ import "google.golang.org/protobuf/types/known/structpb"
 // output.
 #InternalLabel: string
 
+// NameLabel is a unique identifier useful to convert a CUE struct to a list
+// when the values have a Name field with a default value.  This type is
+// intended to indicate the common use case of converting a struct to a list
+// where the Name field of the value aligns with the struct field name.
+#NameLabel: string
+
 // Kind is a kubernetes api object kind. Defined as a type for clarity and type
 // checking.
 #Kind: string

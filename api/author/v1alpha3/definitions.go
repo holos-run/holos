@@ -166,6 +166,7 @@ type Platform struct {
 type Organization struct {
 	Name        string
 	DisplayName string
+	Domain      string
 }
 
 // OrganizationStrict represents organizational metadata useful across the
@@ -179,4 +180,47 @@ type OrganizationStrict struct {
 	Name string `cue:"=~ \"^[a-z][0-9a-z-]{1,61}[0-9a-z]$\" & !~ \"--\""`
 	// DisplayName represents the human readable organization name.
 	DisplayName string `cue:"=~ \"^[0-9A-Za-z][0-9A-Za-z ]{2,61}[0-9A-Za-z]$\" & !~ \"  \""`
+}
+
+// Projects represents projects managed by the platform team for use by other
+// teams using the platform.
+type Projects map[core.NameLabel]Project
+
+// Project represents logical grouping of components owned by one or more teams.
+// Useful for the platform team to manage resources for project teams to use.
+type Project struct {
+	// Name represents project name.
+	Name string
+	// Owner represents the team who own this project.
+	Owner Owner
+	// Namespaces represents the namespaces assigned to this project.
+	Namespaces map[core.NameLabel]Namespace
+	// Hostnames represents the host names to expose for this project.
+	Hostnames map[core.NameLabel]Hostname
+}
+
+// Owner represents the owner of a resource.  For example, the name and email
+// address of an engineering team.
+type Owner struct {
+	Name  string
+	Email string
+}
+
+// Namespace represents a Kubernetes namespace.
+type Namespace struct {
+	Name string
+}
+
+// Hostname represents the left most dns label of a domain name.
+type Hostname struct {
+	// Name represents the subdomain to expose, e.g. "www"
+	Name string
+	// Namespace represents the namespace metadata.name field of backend object
+	// reference.
+	Namespace string
+	// Service represents the Service metadata.name field of backend object
+	// reference.
+	Service string
+	// Port represents the Service port of the backend object reference.
+	Port int
 }

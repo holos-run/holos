@@ -15,6 +15,8 @@ model.
 For a hands-on introduction, check out our [Quickstart] Guide.
 :::
 
+<!-- truncate -->
+
 ### The Backstory
 
 In our roles at [Open Infrastructure Services], and earlier at Puppet, we helped

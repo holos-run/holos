@@ -13,6 +13,7 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
 const sidebars: SidebarsConfig = {
   doc: [
     'introduction',
+    'technical-overview',
     {
       label: 'Getting Started',
       type: 'category',

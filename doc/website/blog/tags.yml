@@ -2,3 +2,8 @@ holos:
   label: Holos
   permalink: /holos
   description: Holos Platform
+
+tech:
+  label: Technical
+  permalink: /tech
+  description: Technical Articles
