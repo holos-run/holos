@@ -233,7 +233,7 @@ spec:
             name: eso-reader
       server:
         url: https://management.example.com:6443
-        caBundle: LS0tLS1CRUd...QVRFLS0tLS0K
+        caBundle: LS0tLS1CRUd...S0tLS0K
 ```
   </TabItem>
   <TabItem value="deploy/clusters/overview/components/httproutes/httproutes.gen.yaml" label="httproutes">
@@ -578,7 +578,9 @@ spec:
 Note the rendered Helm chart resources have consistent project labels.  The
 platform team added a constraint to the project so all helm charts are post
 processed with kustomize to add these common labels.  The platform team
-accomplishes this by adding a constraint in the project directory.  This can be seen in [experiement/components.cue](https://github.com/holos-run/bank-of-holos/blob/v0.1.1/examples/tech-overview/projects/experiment/components.cue)
+accomplishes this by adding a constraint in the project directory.  This can be
+seen in
+[experiment/components.cue](https://github.com/holos-run/bank-of-holos/blob/v0.1.1/examples/tech-overview/projects/experiment/components.cue)
 
 We've covered how the platform team provides a golden path for development teams
 to register their projects by defining a Projects structure.  We've also covered

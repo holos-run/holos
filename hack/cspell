@@ -4,4 +4,4 @@ set -euo pipefail
 
 TOPLEVEL="$(cd $(dirname "$0") && git rev-parse --show-toplevel)"
 
-cd "${TOPLEVEL}" && npx cspell ./doc/md/**/*.{md,mdx,markdown}
+cd "${TOPLEVEL}" && npx cspell ./doc/md/**/*.{md,mdx,markdown} ./doc/md/*.{md,mdx,markdown}
