@@ -25,9 +25,9 @@ Platform teams need to develop and maintain significant glue code to integrate
 Helm charts and YAML manifests into a platform built on Kubernetes.  This glue
 code is often implemented with home grown umbrella charts and scripts.
 Maintaining these charts and scripts takes time and effort that could otherwise
-be spent on improved functionality.  The need for each organization to develop
-and maintain significant platform glue indicates a gap in tooling in the
-ecosystem.  Holos is a Go command line tool leveraging [CUE] to fill this gap.
+be spent improving the platform.  The need for each organization to develop and
+maintain this glue code indicates a gap in the Kubernetes ecosystem.  Holos is a
+Go command line tool leveraging [CUE] to fill this gap.
 
 ## Key Features
 
