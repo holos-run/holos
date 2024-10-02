@@ -10,10 +10,12 @@ import Admonition from '@theme/Admonition';
 ## Overview
 
 Holos makes it easier for platform teams to integrate software into their
-platform.  Holos takes a holistic approach, enabling cross team collaboration
-through well-structured, typed definitions.  These definitions provide golden
-paths for other teams to easily integrate their services into the software
-development platform.
+platform.  Existing tools in the Kubernetes ecosystem are narrowly focused on
+application management.  Holos takes a holistic approach, focusing on the broad
+integration layer where applications are joined into the platform.  Holos
+improves cross team collaboration through well defined, typed structures at the
+integration layer.  These definitions provide golden paths for other teams to
+easily integrate their own services into the platform.
 
 <!-- truncate -->
 
@@ -21,14 +23,16 @@ development platform.
 
 Platform teams need to develop and maintain significant glue code to integrate
 Helm charts and YAML manifests into a platform built on Kubernetes.  This glue
-code is often implemented with umbrella charts and scripts, indicating a tooling
-gap at the integration layer in the ecosystem.  Holos is a Go command line tool
-leveraging [CUE] to fill this integration tool gap.
+code is often implemented with home grown umbrella charts and scripts.
+Maintaining these charts and scripts takes time and effort that could otherwise
+be spent on improved functionality.  The need for each organization to develop
+and maintain significant platform glue indicates a gap in tooling in the
+ecosystem.  Holos is a Go command line tool leveraging [CUE] to fill this gap.
 
 ## Key Features
 
 1. Holos enables teams to provide simple definitions for other teams to use as golden paths.
-2. Define integrations in CUE with strong type checking.  No more text templates or bash scripts.
+2. Define integrations in [CUE] with strong type checking.  No more text templates or bash scripts.
 3. Simplify complex integration.  Order does not matter.  Validation is early and quick.
 4. Reuse your existing Helm charts and Kustomize bases.
 5. Implement the [rendered manifests pattern].  Changes are clearly visible platform-wide.
@@ -75,28 +79,25 @@ graph LR
 ## Use Case
 
 One of the development teams at the fictional Bank of Holos wants to deploy a
-simple web app they're working on for an experimental project.
+simple web app for an experimental project they're working on.
 
-The platform team at the bank wants to build a simple golden path for
-dev teams to provision resources for projects they're working on.
-
-The development teams are very busy, they don't want to spend time dealing with
-the complexity of Kubernetes just to deploy their container.
+The platform team at the bank wants to build a simple golden path for teams to
+provision projects consistently and easily in compliance with the bank's
+policies.
 
 ### Platform Team
 
 The platform team builds a golden path for development teams to register their
-project with the platform.  When a project start, the platform team needs to
-manage quite a few resources.  All of these resources can be derived from only 3
-pieces of information.
+project with the platform.  In compliance with bank policy, the platform team
+needs to manage important security resources for each new project.  All of these
+resources can be derived from only 3 pieces of information.
 
 1. The name of the project the dev team is working on.
 2. The name of the team who currently owns the project.
 3. The services, if any, the project is exposing.
 
-The platform team defines a structure to enable the dev team to register these
-three pieces of information with the platform.  This structure provides the
-golden path for the dev team.
+The platform team defines a structure for the dev team to register this
+information.  This structure provides the golden path for the dev team.
 
 The development team registers their experimental project, creatively named
 "experiment" by submitting a pull request that contains this information.
@@ -370,6 +371,11 @@ All components are registered with the platform in the
 directory.
 :::
 
+:::important
+Holos supports [CODEOWNERS] by clearly defining the teams responsible for each
+platform component.
+:::
+
 ### Development Team
 
 The development team has the platform resources they need, but they still need
@@ -609,3 +615,4 @@ how the development team deploys their existing Helm chart onto the platform.
 [rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern/
 [examples/tech-overview]: https://github.com/holos-run/bank-of-holos/tree/v0.1.1/examples/tech-overview
 [BackendObjectReference]: https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io%2fv1.BackendObjectReference
+[CODEOWNERS]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners

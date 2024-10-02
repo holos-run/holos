@@ -33,6 +33,7 @@
     "clusterrolebinding",
     "clustersecretstores",
     "CNCF",
+    "CODEOWNERS",
     "configmap",
     "cookiesecret",
     "coredns",
