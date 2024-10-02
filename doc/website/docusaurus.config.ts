@@ -100,9 +100,10 @@ const config: Config = {
           type: 'doc',
           docId: 'guides/quickstart',
           position: 'left',
-          label: 'Try Holos',
+          label: 'Quickstart',
         },
-        { to: '/docs', label: 'Docs', position: 'left' },
+        { to: '/docs/technical-overview', label: 'Docs', position: 'left' },
+        { to: '/docs/guides', label: 'Guides', position: 'left' },
         {
           type: 'doc',
           docId: 'api',

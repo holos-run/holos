@@ -125,13 +125,24 @@ platform resources necessary to support the development team.
 2. **RoleBinding** to grant the dev team access to the project namespace.
 3. **SecretStore** which implements the secret management policy for the bank.
 4. **ReferenceGrant** to expose the project services through the Gateway API.
-5. **AppProject** to deploy and manage the project Applications with ArgoCD.
-6. **HTTPRoutes** to expose the project services, if any.
+5. **HTTPRoutes** to expose the project services, if any.
+6. **AppProject** to deploy and manage the project Applications with ArgoCD.
 7. **Common Labels** to ensure every resource is labeled for resource accounting.
 
-With the three pieces of information provided by the dev team and the resource
-definitions provided by the platform team, rendering the platform generates
-fully rendered manifests for all of these resources.
+Rendering the platform generates fully rendered manifests for all of these
+resources.  These manifests are derived from the three pieces of information the
+dev team provided.
+
+Note the platform team must manage these resources across multiple namespaces.
+The first four reside in the project namespace owned by the dev team.  The
+HTTPRoute and AppProject go into two namespaces managed by the platform team.
+Holos makes it easier for the platform team to organize these resources into
+different components with different owners.
+
+:::tip
+Holos supports [CODEOWNERS] by clearly defining the teams responsible for each
+platform component.
+:::
 
 <Tabs groupId="2E46EA1C-B118-44BF-AE20-752E8D1CE131">
   <TabItem value="command" label="Command">
@@ -142,21 +153,20 @@ holos render platform ./platform
   <TabItem value="output" label="Output">
 ```txt
 rendered namespaces for cluster overview in 93.024042ms
-rendered httproutes for cluster overview in 96.047ms
 rendered projects for cluster overview in 96.080667ms
-rendered podinfo for cluster overview in 367.708375ms
-rendered platform in 367.805292ms
+rendered httproutes for cluster overview in 96.047ms
+rendered platform in 96.805292ms
 ```
-  </TabItem>
-</Tabs>
-
-Rendering the platform writes fully rendered manifests for each component
-integrated into the platform to the `deploy/` directory.
-
-:::tip
+:::note
 If you'd like to try this for yourself, `cd` into [examples/tech-overview] and
 render the platform.
 :::
+
+  </TabItem>
+</Tabs>
+
+The fully rendered manifests are written into the `deploy/` directory organized
+by cluster and component for GitOps.
 
 <Tabs groupId="07FBE14E-E9EA-437B-9FA1-C6D8806524AD">
   <TabItem value="deploy/clusters/overview/components/namespaces/namespaces.gen.yaml" label="namespaces">
@@ -269,20 +279,26 @@ spec:
   </TabItem>
 </Tabs>
 
-The platform team writes definitions implementing the [Author API] to integrate
-the dev teams experiment into the bank's platform according to the policies of
-the bank.
+The rendered manifests are derived from the project registration information by
+definitions implemented by the platform team.  The [Author API] provides a
+[Project] schema, but does not define an implementation.  The platform team
+implements the [Project] schema by writing a `#Projects` definition to manage
+resources according to bank policies.
 
 :::important
 The Author API is intended as a convenient, ergonomic reference for component
 authors.  Definitions **are not** confined to the Author API.
 :::
 
-The following example shows how the platform team derives the Namespace from the
-project registration provided by the dev team.
+The following example shows how the platform team wrote the `#Projects`
+definition to derive the Namespace from the project registration provided by the
+dev team.
 
 <Tabs groupId="5732727B-295E-46E1-B851-F8A1C5D7DF88">
-  <TabItem value="projects/platform/components/namespaces/namespaces.cue" label="projects/platform/components/namespaces/namespaces.cue">
+  <TabItem value="projects/platform/components/namespaces/namespaces.cue" label="Namespaces Component">
+```txt
+projects/platform/components/namespaces/namespaces.cue
+```
 ```cue showLineNumbers
 package holos
 
@@ -298,7 +314,10 @@ let Objects = {
 1. This is the namespaces component which simply manages all of the namespaces derived from the project registration data shown in the second tab.
 2. Line 5 manages a Namespace for each value of the `#Namespaces` struct.  See the second tab for how the platform team defines this structure.
   </TabItem>
-  <TabItem value="projects/projects.cue" label="projects/projects.cue">
+  <TabItem value="projects/projects.cue" label="#Projects Definition">
+```txt
+projects/projects.cue
+```
 ```cue showLineNumbers
 package holos
 
@@ -359,21 +378,27 @@ for Project in #Projects {
   </TabItem>
 </Tabs>
 
-:::tip
-The
+The RoleBinding, SecretScore, and ReferenceGrant are managed in the
 [projects](https://github.com/holos-run/bank-of-holos/blob/v0.1.1/examples/tech-overview/projects/platform/components/projects/projects.cue)
-component is where the platform team manages namespaced project resources.  The
+component, similar to the previous namespaces example.
+The HTTPRoute is managed separately in the
 [httproutes](https://github.com/holos-run/bank-of-holos/blob/v0.1.1/examples/tech-overview/projects/platform/components/httproutes/httproutes.cue)
-component exposes services.
+component.
 
 All components are registered with the platform in the
 [platform](https://github.com/holos-run/bank-of-holos/tree/v0.1.1/examples/tech-overview/platform)
 directory.
-:::
 
 :::important
-Holos supports [CODEOWNERS] by clearly defining the teams responsible for each
-platform component.
+Multiple components, potentially owned by different teams, derive fully rendered
+resources from the same three project values.  The dev team added these three
+values to the `#Projects` definition.  The platform team wrote the definition to
+integrate software according to bank policies.  CUE powers this _unified_
+platform configuration model.
+:::
+
+:::tip
+Components map 1:1 to ArgoCD Applications or Flux Kustomizations.
 :::
 
 ### Development Team
@@ -383,7 +408,10 @@ to deploy their container.  The development team submits a pull request adding
 the following two files to deploy their existing Helm chart.
 
 <Tabs groupId="7AD1DDA9-8001-462B-8BE0-D9410EB51233">
-  <TabItem value="projects/experiment/components/podinfo/podinfo.cue" label="projects/experiment/components/podinfo/podinfo.cue">
+  <TabItem value="projects/experiment/components/podinfo/podinfo.cue" label="Helm Component">
+```txt
+projects/experiment/components/podinfo/podinfo.cue
+```
 ```cue showLineNumbers
 package holos
 
@@ -400,7 +428,10 @@ let Chart = {
 This file represents a Helm chart component to add to the platform.  The second
 tab registers this component with the platform.
   </TabItem>
-  <TabItem value="platform/podinfo.cue" label="platform/podinfo.cue">
+  <TabItem value="platform/podinfo.cue" label="Component Registration">
+```
+platform/podinfo.cue
+```
 ```cue showLineNumbers
 package holos
 
@@ -582,8 +613,8 @@ spec:
 </Tabs>
 
 Note the rendered Helm chart resources have consistent project labels.  The
-platform team added a constraint to the project so all helm charts are post
-processed with kustomize to add these common labels.  The platform team
+platform team added a constraint to the project so all Helm charts are post
+processed with Kustomize to add these common labels.  The platform team
 accomplishes this by adding a constraint in the project directory.  This can be
 seen in
 [experiment/components.cue](https://github.com/holos-run/bank-of-holos/blob/v0.1.1/examples/tech-overview/projects/experiment/components.cue)
@@ -616,3 +647,4 @@ how the development team deploys their existing Helm chart onto the platform.
 [examples/tech-overview]: https://github.com/holos-run/bank-of-holos/tree/v0.1.1/examples/tech-overview
 [BackendObjectReference]: https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io%2fv1.BackendObjectReference
 [CODEOWNERS]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+[Project]: /docs/api/author/v1alpha3/#Project
