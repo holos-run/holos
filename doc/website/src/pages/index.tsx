@@ -16,7 +16,7 @@ function HomepageHeader() {
           {siteConfig.title}
         </Heading>
         <div className="diagramImg">
-          <img src="./img/holos-diagram-color-transparent.svg" alt="Holos Diagram"/>
+          <img src="./img/holos-diagram-color-transparent.svg" alt="Holos Diagram" />
         </div>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <p className="projectDesc">
@@ -39,7 +39,7 @@ function HomepageHeader() {
           <span className={styles.divider}></span>
           <Link
             className="button button--primary button--lg"
-            to="docs/">
+            to="docs/technical-overview/">
             Learn More
           </Link>
           <span className={styles.divider}></span>
