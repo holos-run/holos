@@ -15,6 +15,9 @@ function HomepageHeader() {
         <Heading as="h1" className="hero__title">
           {siteConfig.title}
         </Heading>
+        <div className="diagramImg">
+          <img src="./img/holos-diagram-color-transparent.svg" alt="Holos Diagram"/>
+        </div>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <p className="projectDesc">
           Engineering teams spend significant time creating custom scripts and
