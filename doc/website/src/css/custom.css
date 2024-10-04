@@ -22,6 +22,21 @@
   text-align: left;
 }
 
+/* Ensure img in hero banner scales well even on mobile */
+@media screen and (max-width: 996px) {
+  div.diagramImg {
+    width: 100%;
+    max-width: 100px;
+    height: auto;
+  }
+}
+
+div.diagramImg {
+  width: 30%;
+  min-width: 300px;
+  float: right;
+}
+
 /* You can override the default Infima variables here. */
 :root {
   --ifm-link-color: #268bd2;
