@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/holos-run/holos/internal/artifact"
 	"github.com/holos-run/holos/internal/builder"
 	"github.com/holos-run/holos/internal/builder/v1alpha4"
 	"github.com/holos-run/holos/internal/cli/command"
@@ -83,9 +84,18 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 		decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
 		decoder.DisallowUnknownFields()
 
+		art := artifact.New(artifact.WriteTo(cfg.WriteTo()))
+
 		switch version := tm.APIVersion; version {
 		case "v1alpha4":
-			return errors.NotImplemented()
+			builder := v1alpha4.BuildPlan{
+				Concurrency: concurrency,
+				Stderr:      cmd.ErrOrStderr(),
+			}
+			if err := decoder.Decode(&builder.BuildPlan); err != nil {
+				return errors.Format("could not decode build plan %s: %w", bd.Dir, err)
+			}
+			return render.Component(ctx, &builder, art)
 		// Legacy method.
 		case "v1alpha3", "v1alpha2", "v1alpha1":
 			results, err := build.Run(ctx, config)
@@ -176,7 +186,7 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 
 		switch version := tm.APIVersion; version {
 		case "v1alpha4":
-			builder := v1alpha4.PlatformBuilder{
+			builder := v1alpha4.Platform{
 				Concurrency: concurrency,
 				Stderr:      cmd.ErrOrStderr(),
 			}

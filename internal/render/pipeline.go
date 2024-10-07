@@ -2,62 +2,29 @@ package render
 
 import (
 	"context"
-	"sync"
 
 	"github.com/holos-run/holos"
+	"github.com/holos-run/holos/internal/artifact"
+	"github.com/holos-run/holos/internal/errors"
 )
 
-func NewArtifact() *Artifact {
-	return &Artifact{
-		m: make(map[holos.FilePath]holos.FileContent),
+// Platform renders a platform, writing fully rendered manifests to files.
+func Platform(ctx context.Context, b holos.Builder) error {
+	// Artifacts are currently written by each `holos render component`
+	// subprocess, not the parent `holos render platform` process.
+	if err := b.Build(ctx, artifact.New()); err != nil {
+		return errors.Wrap(err)
 	}
+	return nil
 }
 
-// Artifact represents the fully rendered manifests build from the holos
-// rendering pipeline.  Files are organized by keys representing paths relative
-// to the current working directory.  Values represent the file string content.
-type Artifact struct {
-	mu sync.RWMutex
-	m  map[holos.FilePath]holos.FileContent
-}
-
-// Set sets an artifact file with write locking.
-func (a *Artifact) Set(path holos.FilePath, content holos.FileContent) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
-	a.m[path] = content
-}
-
-// Get gets the content of an artifact file path with read locking.
-func (a *Artifact) Get(path holos.FilePath) (content holos.FileContent, ok bool) {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	content, ok = a.m[path]
-	return
-}
-
-func (a *Artifact) Keys() []holos.FilePath {
-	a.mu.RLock()
-	defer a.mu.RUnlock()
-	keys := make([]holos.FilePath, 0, len(a.m))
-	for key := range a.m {
-		keys = append(keys, key)
+// Component renders a component writing fully rendered manifests to files.
+func Component(ctx context.Context, b holos.Builder, a holos.Artifact) error {
+	if err := b.Build(ctx, a); err != nil {
+		return errors.Wrap(err)
 	}
-	return keys
-}
-
-type Setter interface {
-	Set(path holos.FilePath, content holos.FileContent)
-}
-
-type Getter interface {
-	Get(path holos.FilePath) (content holos.FileContent, ok bool)
-	Keys() []holos.FilePath
-}
-
-// Builder represents the primary interface to the holos rendering pipeline.
-// Pipeline stages render manifests then use [Setter] s to associate the
-// rendered output with an output [holos.FilePath].
-type Builder interface {
-	Build(ctx context.Context, s Setter) error
+	if err := a.Save(ctx); err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
 }

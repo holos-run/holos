@@ -254,6 +254,8 @@ func loadUserData(ctx *cue.Context, moduleRoot string) (val cue.Value, err error
 // provided to the entrypoint through a json encoded string tag named
 // platform_config.  The resulting cue.Value is unified with all user data files
 // at the path "#UserData".
+//
+// Deprecated: Use holos.Builder instead
 func (b *Builder) Run(ctx context.Context, cfg *client.Config) (results []*render.Result, err error) {
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "cue: building instances")

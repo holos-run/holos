@@ -14,16 +14,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// Platform renders a platform, writing fully rendered manifests to files.
-func Platform(ctx context.Context, b Builder) error {
-	// Artifacts are currently written by each `holos render component`
-	// subprocess, not the parent `holos render platform` process.
-	if err := b.Build(ctx, NewArtifact()); err != nil {
-		return errors.Wrap(err)
-	}
-	return nil
-}
-
 // Deprecated: Use Platform instead.
 func LegacyPlatform(ctx context.Context, concurrency int, pf *core.Platform, stderr io.Writer) error {
 	parentStart := time.Now()

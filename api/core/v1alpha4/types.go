@@ -54,15 +54,22 @@ type APIObjects struct {
 // purpose of using the [Component] DeployFiles field to deploy an ArgoCD
 // or Flux gitops resource for the holos component.
 type BuildPlan struct {
-	Kind       string        `json:"kind" cue:"\"BuildPlan\""`
-	APIVersion string        `json:"apiVersion" cue:"string | *\"v1alpha4\""`
-	Spec       BuildPlanSpec `json:"spec"`
+	// Kind represents the type of the resource.
+	Kind string `json:"kind" cue:"\"BuildPlan\""`
+	// APIVersion represents the versioned schema of the resource.
+	APIVersion string `json:"apiVersion" cue:"string | *\"v1alpha4\""`
+	// Metadata represents data about the resource such as the Name.
+	Metadata Metadata `json:"metadata"`
+	// Spec specifies the desired state of the resource.
+	Spec BuildPlanSpec `json:"spec"`
 }
 
 // BuildPlanSpec represents the specification of the build plan.
 type BuildPlanSpec struct {
 	// Disabled causes the holos cli to take no action over the [BuildPlan].
 	Disabled bool `json:"disabled,omitempty"`
+	// TODO: Support generators
+	// TODO: Support kustomize pipeline
 }
 
 // FileContent represents file contents.
@@ -102,12 +109,12 @@ type NameLabel string
 // primary use case is to collect the cluster names, cluster types, platform
 // model, and holos components to build into one resource.
 type Platform struct {
-	// Kind is a string value representing the resource this object represents.
+	// Kind is a string value representing the resource.
 	Kind string `json:"kind" cue:"\"Platform\""`
-	// APIVersion represents the versioned schema of this representation of an object.
+	// APIVersion represents the versioned schema of this resource.
 	APIVersion string `json:"apiVersion" cue:"string | *\"v1alpha4\""`
-	// Metadata represents data about the object such as the Name.
-	Metadata PlatformMetadata `json:"metadata"`
+	// Metadata represents data about the resource such as the Name.
+	Metadata Metadata `json:"metadata"`
 
 	// Spec represents the specification.
 	Spec PlatformSpec `json:"spec"`
@@ -121,8 +128,9 @@ type PlatformComponent struct {
 	Cluster string `json:"cluster"`
 }
 
-type PlatformMetadata struct {
-	// Name represents the Platform name.
+// Metadata represents data about the resource such as the Name.
+type Metadata struct {
+	// Name represents the resource name.
 	Name string `json:"name"`
 }
 

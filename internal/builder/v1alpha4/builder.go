@@ -7,29 +7,32 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/api/core/v1alpha4"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
-	"github.com/holos-run/holos/internal/render"
 	"github.com/holos-run/holos/internal/util"
 	"golang.org/x/sync/errgroup"
 )
 
 // Platform represents a platform builder.
-type PlatformBuilder struct {
+type Platform struct {
 	Platform    v1alpha4.Platform
 	Concurrency int
 	Stderr      io.Writer
 }
 
-func (b *PlatformBuilder) Build(ctx context.Context, s render.Setter) error {
+// Build builds a Platform by concurrently building a BuildPlan for each
+// platform component.  No artifact files are written directly, only indirectly
+// by rendering each component.
+func (p *Platform) Build(ctx context.Context, _ holos.Artifact) error {
 	parentStart := time.Now()
-	components := b.Platform.Spec.Components
+	components := p.Platform.Spec.Components
 	total := len(components)
 	g, ctx := errgroup.WithContext(ctx)
 	// Limit the number of concurrent goroutines due to CUE memory usage concerns
 	// while rendering components.  One more for the producer.
-	g.SetLimit(b.Concurrency + 1)
+	g.SetLimit(p.Concurrency + 1)
 	// Spawn a producer because g.Go() blocks when the group limit is reached.
 	g.Go(func() error {
 		for idx, component := range components {
@@ -64,9 +67,11 @@ func (b *PlatformBuilder) Build(ctx context.Context, s render.Setter) error {
 							component.Path,
 						}
 						// TODO(jeff) Add Tags for #268
+						// Need to add them to v1alpha4.Platform first, then use them here.
+						// Make sure to constrain the string so it can't have a comma.
 						result, err := util.RunCmd(ctx, "holos", args...)
 						if err != nil {
-							_, _ = io.Copy(b.Stderr, result.Stderr)
+							_, _ = io.Copy(p.Stderr, result.Stderr)
 							return errors.Wrap(fmt.Errorf("could not render component: %w", err))
 						}
 
@@ -93,6 +98,18 @@ func (b *PlatformBuilder) Build(ctx context.Context, s render.Setter) error {
 
 	duration := time.Since(parentStart)
 	msg := fmt.Sprintf("rendered platform in %s", duration)
-	logger.FromContext(ctx).InfoContext(ctx, msg, "duration", duration, "version", b.Platform.APIVersion)
+	logger.FromContext(ctx).InfoContext(ctx, msg, "duration", duration, "version", p.Platform.APIVersion)
 	return nil
+}
+
+// BuildPlan represents a component builder.
+type BuildPlan struct {
+	BuildPlan   v1alpha4.BuildPlan
+	Concurrency int
+	Stderr      io.Writer
+}
+
+// Build builds a BuildPlan into artifact files.
+func (b *BuildPlan) Build(ctx context.Context, artifact holos.Artifact) error {
+	return errors.NotImplemented()
 }

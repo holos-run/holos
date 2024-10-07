@@ -1,6 +1,8 @@
 // Package holos defines types for the rest of the system.
 package holos
 
+import "context"
+
 // A PathCueMod is a string representing the absolute filesystem path of a cue
 // module.  It is given a unique type so the API is clear.
 type PathCueMod string
@@ -21,4 +23,17 @@ type FileContent string
 type TypeMeta struct {
 	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
 	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
+}
+
+// Builder builds file artifacts.
+type Builder interface {
+	Build(context.Context, Artifact) error
+}
+
+// Artifact saves stores and saves file artifacts.
+type Artifact interface {
+	Get(FilePath) (FileContent, bool)
+	Set(FilePath, FileContent)
+	Keys() []FilePath
+	Save(context.Context) error
 }

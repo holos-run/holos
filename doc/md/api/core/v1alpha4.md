@@ -24,10 +24,10 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 - [type FilePath](<#FilePath>)
 - [type InternalLabel](<#InternalLabel>)
 - [type Kind](<#Kind>)
+- [type Metadata](<#Metadata>)
 - [type NameLabel](<#NameLabel>)
 - [type Platform](<#Platform>)
 - [type PlatformComponent](<#PlatformComponent>)
-- [type PlatformMetadata](<#PlatformMetadata>)
 - [type PlatformSpec](<#PlatformSpec>)
 
 
@@ -76,9 +76,14 @@ A BuildPlan usually has an additional empty \[KubernetesObjects\] for the purpos
 
 ```go
 type BuildPlan struct {
-    Kind       string        `json:"kind" cue:"\"BuildPlan\""`
-    APIVersion string        `json:"apiVersion" cue:"string | *\"v1alpha4\""`
-    Spec       BuildPlanSpec `json:"spec"`
+    // Kind represents the type of the resource.
+    Kind string `json:"kind" cue:"\"BuildPlan\""`
+    // APIVersion represents the versioned schema of the resource.
+    APIVersion string `json:"apiVersion" cue:"string | *\"v1alpha4\""`
+    // Metadata represents data about the resource such as the Name.
+    Metadata Metadata `json:"metadata"`
+    // Spec specifies the desired state of the resource.
+    Spec BuildPlanSpec `json:"spec"`
 }
 ```
 
@@ -141,6 +146,18 @@ Kind is a kubernetes api object kind. Defined as a type for clarity and type che
 type Kind string
 ```
 
+<a name="Metadata"></a>
+## type Metadata {#Metadata}
+
+Metadata represents data about the resource such as the Name.
+
+```go
+type Metadata struct {
+    // Name represents the resource name.
+    Name string `json:"name"`
+}
+```
+
 <a name="NameLabel"></a>
 ## type NameLabel {#NameLabel}
 
@@ -157,12 +174,12 @@ Platform represents a platform to manage. A Platform resource informs holos whic
 
 ```go
 type Platform struct {
-    // Kind is a string value representing the resource this object represents.
+    // Kind is a string value representing the resource.
     Kind string `json:"kind" cue:"\"Platform\""`
-    // APIVersion represents the versioned schema of this representation of an object.
+    // APIVersion represents the versioned schema of this resource.
     APIVersion string `json:"apiVersion" cue:"string | *\"v1alpha4\""`
-    // Metadata represents data about the object such as the Name.
-    Metadata PlatformMetadata `json:"metadata"`
+    // Metadata represents data about the resource such as the Name.
+    Metadata Metadata `json:"metadata"`
 
     // Spec represents the specification.
     Spec PlatformSpec `json:"spec"`
@@ -180,18 +197,6 @@ type PlatformComponent struct {
     Path string `json:"path"`
     // Cluster is the cluster name to provide when rendering the component.
     Cluster string `json:"cluster"`
-}
-```
-
-<a name="PlatformMetadata"></a>
-## type PlatformMetadata {#PlatformMetadata}
-
-
-
-```go
-type PlatformMetadata struct {
-    // Name represents the Platform name.
-    Name string `json:"name"`
 }
 ```
 

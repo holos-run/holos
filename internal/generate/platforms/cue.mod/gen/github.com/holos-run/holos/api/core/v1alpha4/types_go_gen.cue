@@ -56,9 +56,17 @@ import "google.golang.org/protobuf/types/known/structpb"
 // purpose of using the [Component] DeployFiles field to deploy an ArgoCD
 // or Flux gitops resource for the holos component.
 #BuildPlan: {
-	kind:       string & "BuildPlan"            @go(Kind)
+	// Kind represents the type of the resource.
+	kind: string & "BuildPlan" @go(Kind)
+
+	// APIVersion represents the versioned schema of the resource.
 	apiVersion: string & (string | *"v1alpha4") @go(APIVersion)
-	spec:       #BuildPlanSpec                  @go(Spec)
+
+	// Metadata represents data about the resource such as the Name.
+	metadata: #Metadata @go(Metadata)
+
+	// Spec specifies the desired state of the resource.
+	spec: #BuildPlanSpec @go(Spec)
 }
 
 // BuildPlanSpec represents the specification of the build plan.
@@ -104,14 +112,14 @@ import "google.golang.org/protobuf/types/known/structpb"
 // primary use case is to collect the cluster names, cluster types, platform
 // model, and holos components to build into one resource.
 #Platform: {
-	// Kind is a string value representing the resource this object represents.
+	// Kind is a string value representing the resource.
 	kind: string & "Platform" @go(Kind)
 
-	// APIVersion represents the versioned schema of this representation of an object.
+	// APIVersion represents the versioned schema of this resource.
 	apiVersion: string & (string | *"v1alpha4") @go(APIVersion)
 
-	// Metadata represents data about the object such as the Name.
-	metadata: #PlatformMetadata @go(Metadata)
+	// Metadata represents data about the resource such as the Name.
+	metadata: #Metadata @go(Metadata)
 
 	// Spec represents the specification.
 	spec: #PlatformSpec @go(Spec)
@@ -126,8 +134,9 @@ import "google.golang.org/protobuf/types/known/structpb"
 	cluster: string @go(Cluster)
 }
 
-#PlatformMetadata: {
-	// Name represents the Platform name.
+// Metadata represents data about the resource such as the Name.
+#Metadata: {
+	// Name represents the resource name.
 	name: string @go(Name)
 }
 
