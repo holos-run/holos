@@ -99,13 +99,38 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
 		build := builder.New(builder.Entrypoints(args))
+		log := logger.FromContext(ctx)
 
-		platform, err := build.Platform(ctx, config)
+		log.DebugContext(ctx, "cue: building platform instance")
+		bd, err := build.Unify(ctx, config)
 		if err != nil {
 			return errors.Wrap(err)
 		}
 
-		return render.Platform(ctx, concurrency, platform, cmd.ErrOrStderr())
+		tm, err := bd.TypeMeta()
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		if tm.Kind != "Platform" {
+			return errors.Format("invalid kind: want: Platform have: %s", tm.Kind)
+		}
+
+		log.DebugContext(ctx, "discriminated "+tm.APIVersion+" "+tm.Kind)
+
+		switch version := tm.APIVersion; version {
+		case "v1alpha4":
+			return errors.NotImplemented()
+		// Legacy versions
+		case "v1alpha3", "v1alpha2", "v1alpha1":
+			platform, err := build.Platform(ctx, config)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			return render.LegacyPlatform(ctx, concurrency, platform, cmd.ErrOrStderr())
+		default:
+			return errors.Format("platform version not supported: %s", version)
+		}
 	}
 
 	return cmd
