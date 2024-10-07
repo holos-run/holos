@@ -29,12 +29,12 @@ var validLogFormats = []string{"text", "json", "console"}
 // stringSlice is a comma separated list of string values
 type stringSlice []string
 
-func (s *stringSlice) String() string {
-	return strings.Join((*s)[:], ",")
+func (s stringSlice) String() string {
+	return strings.Join((s)[:], ",")
 }
 
-func (s *stringSlice) Set(value string) error {
-	*s = append(*s, strings.Split(value, ",")...)
+func (s stringSlice) Set(value string) error {
+	s = append(s, strings.Split(value, ",")...)
 	return nil
 }
 

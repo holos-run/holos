@@ -63,6 +63,7 @@ func (b *PlatformBuilder) Build(ctx context.Context, s render.Setter) error {
 							component.Cluster,
 							component.Path,
 						}
+						// TODO(jeff) Add Tags for #268
 						result, err := util.RunCmd(ctx, "holos", args...)
 						if err != nil {
 							_, _ = io.Copy(b.Stderr, result.Stderr)

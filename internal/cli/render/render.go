@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/holos-run/holos/internal/builder"
 	"github.com/holos-run/holos/internal/builder/v1alpha4"
@@ -29,8 +31,8 @@ func New(cfg *holos.Config) *cobra.Command {
 
 // New returns the component subcommand for the render command
 func NewComponent(cfg *holos.Config) *cobra.Command {
-	cmd := command.New("component DIRECTORY [DIRECTORY...]")
-	cmd.Args = cobra.MinimumNArgs(1)
+	cmd := command.New("component DIRECTORY")
+	cmd.Args = cobra.ExactArgs(1)
 	cmd.Short = "render specific components"
 	cmd.Example = "  holos render component --cluster-name=aws2 ./components/monitoring/kube-prometheus-stack"
 	cmd.Flags().AddGoFlagSet(cfg.WriteFlagSet())
@@ -41,46 +43,90 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 	cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
 
 	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
+
+	tagMap := make(tags)
+	flagSet.Var(&tagMap, "tags", "cue tags as comma separated key=value pairs")
+	var concurrency int
+	flagSet.IntVar(&concurrency, "concurrency", min(runtime.NumCPU(), 8), "number of concurrent build steps")
 	cmd.Flags().AddGoFlagSet(flagSet)
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
-		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.ClusterName()))
+		build := builder.New(
+			builder.Entrypoints(args),
+			builder.Cluster(cfg.ClusterName()),
+			builder.Tags(tagMap.Tags()),
+		)
+		log := logger.FromContext(ctx)
 
-		results, err := build.Run(ctx, config)
+		log.DebugContext(ctx, "cue: building component instance")
+		bd, err := build.Unify(ctx, config)
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		// TODO: Avoid accidental over-writes if two or more holos component
-		// instances result in the same file path. Write files into a blank
-		// temporary directory, error if a file exists, then move the directory into
-		// place.
-		var result Result
-		for _, result = range results {
-			log := logger.FromContext(ctx).With(
-				"cluster", cfg.ClusterName(),
-				"name", result.Name(),
-			)
-			if result.Continue() {
-				continue
-			}
-			// DeployFiles from the BuildPlan
-			if err := result.WriteDeployFiles(ctx, cfg.WriteTo()); err != nil {
+
+		tm, err := bd.TypeMeta()
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		if tm.Kind != "BuildPlan" {
+			return errors.Format("invalid kind: want: BuildPlan have: %s", tm.Kind)
+		}
+
+		log.DebugContext(ctx, "discriminated "+tm.APIVersion+" "+tm.Kind)
+
+		jsonBytes, err := bd.Value.MarshalJSON()
+		if err != nil {
+			return errors.Format("could not marshal json %s: %w", bd.Dir, err)
+		}
+		decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
+		decoder.DisallowUnknownFields()
+
+		switch version := tm.APIVersion; version {
+		case "v1alpha4":
+			return errors.NotImplemented()
+		// Legacy method.
+		case "v1alpha3", "v1alpha2", "v1alpha1":
+			results, err := build.Run(ctx, config)
+			if err != nil {
 				return errors.Wrap(err)
 			}
-
-			// API Objects
-			if result.SkipWriteAccumulatedOutput() {
-				log.DebugContext(ctx, "skipped writing k8s objects for "+result.Name())
-			} else {
-				path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
-				if err := result.Save(ctx, path, result.AccumulatedOutput()); err != nil {
+			// TODO: Avoid accidental over-writes if two or more holos component
+			// instances result in the same file path. Write files into a blank
+			// temporary directory, error if a file exists, then move the directory into
+			// place.
+			var result Result
+			for _, result = range results {
+				log := logger.FromContext(ctx).With(
+					"cluster", cfg.ClusterName(),
+					"name", result.Name(),
+				)
+				if result.Continue() {
+					continue
+				}
+				// DeployFiles from the BuildPlan
+				if err := result.WriteDeployFiles(ctx, cfg.WriteTo()); err != nil {
 					return errors.Wrap(err)
 				}
+
+				// API Objects
+				if result.SkipWriteAccumulatedOutput() {
+					log.DebugContext(ctx, "skipped writing k8s objects for "+result.Name())
+				} else {
+					path := result.Filename(cfg.WriteTo(), cfg.ClusterName())
+					if err := result.Save(ctx, path, result.AccumulatedOutput()); err != nil {
+						return errors.Wrap(err)
+					}
+				}
+
+				log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered")
 			}
 
-			log.InfoContext(ctx, "rendered "+result.Name(), "status", "ok", "action", "rendered")
+		default:
+			return errors.Format("component version not supported: %s", version)
 		}
+
 		return nil
 	}
 	return cmd
@@ -153,6 +199,32 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 	}
 
 	return cmd
+}
+
+// tags represents a map of key values for CUE tags for flag parsing.
+type tags map[string]string
+
+func (t tags) Tags() []string {
+	parts := make([]string, 0, len(t))
+	for k, v := range t {
+		parts = append(parts, fmt.Sprintf("%s=%s", k, v))
+	}
+	return parts
+}
+
+func (t tags) String() string {
+	return strings.Join(t.Tags(), ",")
+}
+
+func (t tags) Set(value string) error {
+	for _, item := range strings.Split(value, ",") {
+		parts := strings.SplitN(item, "=", 2)
+		if len(parts) != 2 {
+			return errors.Format("invalid format, must be tag=value")
+		}
+		t[parts[0]] = parts[1]
+	}
+	return nil
 }
 
 // Deprecated: use render.Artifact instead.

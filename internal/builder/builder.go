@@ -45,6 +45,7 @@ type Option func(*config)
 type config struct {
 	args    []string
 	cluster string
+	tags    []string
 }
 
 // BuildData represents the data necessary to produce a build plan.  It is a
@@ -131,6 +132,11 @@ func Cluster(name string) Option {
 	return func(cfg *config) { cfg.cluster = name }
 }
 
+// Tags configures tags to pass to cue when building the instance.
+func Tags(tags []string) Option {
+	return func(cfg *config) { cfg.tags = tags }
+}
+
 // Cluster returns the cluster name of the component instance being built.
 func (b *Builder) Cluster() string {
 	return b.cfg.cluster
@@ -156,15 +162,19 @@ func (b *Builder) Unify(ctx context.Context, cfg *client.Config) (bd BuildData, 
 		return bd, errors.Wrap(fmt.Errorf("could not load platform model: %w", err))
 	}
 
+	tags := make([]string, 0, len(b.cfg.tags)+2)
+	tags = append(tags,
+		"cluster="+cfg.Holos().ClusterName(),
+		// TODO: Use instance.FillPath to fill the platform config.
+		// Refer to https://pkg.go.dev/cuelang.org/go/cue#Value.FillPath
+		"platform_config="+string(platformConfigData),
+	)
+	tags = append(tags, b.cfg.tags...)
+
 	cueConfig := load.Config{
 		Dir:        bd.ModuleRoot,
 		ModuleRoot: bd.ModuleRoot,
-		// TODO: Use instance.FillPath to fill the platform config.
-		// Refer to https://pkg.go.dev/cuelang.org/go/cue#Value.FillPath
-		Tags: []string{
-			"cluster=" + cfg.Holos().ClusterName(),
-			"platform_config=" + string(platformConfigData),
-		},
+		Tags:       tags,
 	}
 
 	// Make args relative to the module directory
