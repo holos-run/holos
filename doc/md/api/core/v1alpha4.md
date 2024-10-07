@@ -15,20 +15,29 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 ## Index
 
 - [type APIObject](<#APIObject>)
-- [type APIObjectMap](<#APIObjectMap>)
 - [type APIObjects](<#APIObjects>)
+- [type BuildContext](<#BuildContext>)
+- [type BuildPaths](<#BuildPaths>)
 - [type BuildPlan](<#BuildPlan>)
 - [type BuildPlanSpec](<#BuildPlanSpec>)
+- [type BuildStep](<#BuildStep>)
+- [type Chart](<#Chart>)
 - [type FileContent](<#FileContent>)
 - [type FileContentMap](<#FileContentMap>)
 - [type FilePath](<#FilePath>)
+- [type Generator](<#Generator>)
+- [type Helm](<#Helm>)
+- [type HelmValues](<#HelmValues>)
 - [type InternalLabel](<#InternalLabel>)
 - [type Kind](<#Kind>)
+- [type Kustomization](<#Kustomization>)
+- [type Kustomize](<#Kustomize>)
 - [type Metadata](<#Metadata>)
 - [type NameLabel](<#NameLabel>)
 - [type Platform](<#Platform>)
-- [type PlatformComponent](<#PlatformComponent>)
 - [type PlatformSpec](<#PlatformSpec>)
+- [type Repository](<#Repository>)
+- [type Transformer](<#Transformer>)
 
 
 <a name="APIObject"></a>
@@ -40,39 +49,61 @@ APIObject represents the most basic generic form of a single kubernetes api obje
 type APIObject structpb.Struct
 ```
 
-<a name="APIObjectMap"></a>
-## type APIObjectMap {#APIObjectMap}
-
-APIObjectMap represents the marshalled yaml representation of kubernetes api objects. Do not produce an APIObjectMap directly, instead use [APIObjects](<#APIObjects>) to produce the marshalled yaml representation from CUE data, then provide the result to \[Component\].
-
-```go
-type APIObjectMap map[Kind]map[InternalLabel]string
-```
-
 <a name="APIObjects"></a>
 ## type APIObjects {#APIObjects}
 
-APIObjects represents Kubernetes API objects defined directly from CUE code. Useful to mix in resources to any kind of \[Component\], for example adding an ExternalSecret resource to a \[HelmChart\].
-
-[Kind](<#Kind>) must be the resource kind, e.g. Deployment or Service.
-
-[InternalLabel](<#InternalLabel>) is an arbitrary internal identifier to uniquely identify the resource within the context of a \`holos\` command. Holos will never write the intermediate label to rendered output.
-
-Refer to \[Component\] which accepts an [APIObjectMap](<#APIObjectMap>) field provided by [APIObjects](<#APIObjects>).
+APIObjects represents kubernetes resources generated from CUE.
 
 ```go
-type APIObjects struct {
-    APIObjects   map[Kind]map[InternalLabel]APIObject `json:"apiObjects"`
-    APIObjectMap APIObjectMap                         `json:"apiObjectMap"`
+type APIObjects map[Kind]map[InternalLabel]APIObject
+```
+
+<a name="BuildContext"></a>
+## type BuildContext {#BuildContext}
+
+BuildContext represents the context necessary to render a component into a BuildPlan. Useful to capture parameters passed down from a Platform spec for the purpose of idempotent rebuilds.
+
+```go
+type BuildContext struct {
+    // Path is the path of the component relative to the platform root.
+    Path string `json:"path"`
+    // Cluster is the cluster name to provide when rendering the component.
+    Cluster string `json:"cluster"`
+    // Environment for example, dev, test, stage, prod
+    Environment string `json:"environment,omitempty"`
+    // Model represents the platform model holos gets from from the
+    // PlatformService.GetPlatform rpc method and provides to CUE using a tag.
+    Model structpb.Struct `json:"model" cue:"{...}"`
+    // Tags represents cue tags to provide when rendering the component.
+    Tags []string `json:"tags,omitempty"`
+}
+```
+
+<a name="BuildPaths"></a>
+## type BuildPaths {#BuildPaths}
+
+BuildPaths represents filesystem paths relative to the platform root.
+
+```go
+type BuildPaths struct {
+    // Component represents the component directory producing a build plan.
+    Component string `json:"component"`
+    // Manifest represents the directory to store fully rendered resource manifest
+    // artifacts.
+    Manifest string `json:"manifest,omitempty"`
+    // Application represents the directory to store ArgoCD Application manifests
+    // for GitOps.
+    Application string `json:"application,omitempty"`
+    // Flux represents the directory to store Flux Kustomization manifests
+    // for GitOps.
+    Flux string `json:"flux,omitempty"`
 }
 ```
 
 <a name="BuildPlan"></a>
 ## type BuildPlan {#BuildPlan}
 
-BuildPlan represents a build plan for the holos cli to execute. The purpose of a BuildPlan is to define one or more \[Component\] kinds. For example a \[HelmChart\], \[KustomizeBuild\], or \[KubernetesObjects\].
-
-A BuildPlan usually has an additional empty \[KubernetesObjects\] for the purpose of using the \[Component\] DeployFiles field to deploy an ArgoCD or Flux gitops resource for the holos component.
+BuildPlan represents a build plan for holos to execute.
 
 ```go
 type BuildPlan struct {
@@ -94,8 +125,42 @@ BuildPlanSpec represents the specification of the build plan.
 
 ```go
 type BuildPlanSpec struct {
-    // Disabled causes the holos cli to take no action over the [BuildPlan].
-    Disabled bool `json:"disabled,omitempty"`
+    // Disabled causes the holos cli to disregard the build plan.
+    Disabled bool        `json:"disabled,omitempty"`
+    Steps    []BuildStep `json:"steps"`
+}
+```
+
+<a name="BuildStep"></a>
+## type BuildStep {#BuildStep}
+
+
+
+```go
+type BuildStep struct {
+    // Skip causes holos to skip over this build step.
+    Skip         bool          `json:"skip,omitempty"`
+    Generator    Generator     `json:"generator,omitempty"`
+    Transformers []Transformer `json:"transformers,omitempty"`
+    Paths        BuildPaths    `json:"paths"`
+}
+```
+
+<a name="Chart"></a>
+## type Chart {#Chart}
+
+Chart represents a helm chart.
+
+```go
+type Chart struct {
+    // Name represents the chart name.
+    Name string `json:"name"`
+    // Version represents the chart version.
+    Version string `json:"version"`
+    // Release represents the chart release when executing helm template.
+    Release string `json:"release"`
+    // Repository represents the repository to fetch the chart from.
+    Repository Repository `json:"repository,omitempty"`
 }
 ```
 
@@ -126,12 +191,56 @@ FilePath represents a file path.
 type FilePath string
 ```
 
+<a name="Generator"></a>
+## type Generator {#Generator}
+
+Generator generates an artifact.
+
+```go
+type Generator struct {
+    HelmEnabled bool `json:"helmEnabled,omitempty"`
+    Helm        Helm `json:"helm,omitempty"`
+
+    KustomizeEnabled bool      `json:"kustomizeEnabled,omitempty"`
+    Kustomize        Kustomize `json:"kustomize,omitempty"`
+
+    APIObjectsEnabled bool       `json:"apiObjectsEnabled,omitempty"`
+    APIObjects        APIObjects `json:"apiObjects,omitempty"`
+}
+```
+
+<a name="Helm"></a>
+## type Helm {#Helm}
+
+
+
+```go
+type Helm struct {
+    // Chart represents a helm chart to manage.
+    Chart Chart `json:"chart"`
+    // Values represents values for holos to marshal into values.yaml when
+    // rendering the chart.
+    Values HelmValues `json:"values"`
+    // EnableHooks enables helm hooks when executing the `helm template` command.
+    EnableHooks bool `json:"enableHooks,omitempty"`
+}
+```
+
+<a name="HelmValues"></a>
+## type HelmValues {#HelmValues}
+
+HelmValues represents helm chart values generated from CUE.
+
+```go
+type HelmValues structpb.Struct
+```
+
 <a name="InternalLabel"></a>
 ## type InternalLabel {#InternalLabel}
 
 InternalLabel is an arbitrary unique identifier internal to holos itself. The holos cli is expected to never write a InternalLabel value to rendered output files, therefore use a [InternalLabel](<#InternalLabel>) when the identifier must be unique and internal. Defined as a type for clarity and type checking.
 
-A InternalLabel is useful to convert a CUE struct to a list, for example producing a list of [APIObject](<#APIObject>) resources from an [APIObjectMap](<#APIObjectMap>). A CUE struct using InternalLabel keys is guaranteed to not lose data when rendering output because a InternalLabel is expected to never be written to the final output.
+A InternalLabel is useful to convert a CUE struct to a list, for example producing a list of [APIObject](<#APIObject>) resources from an \[APIObjectMap\]. A CUE struct using InternalLabel keys is guaranteed to not lose data when rendering output because a InternalLabel is expected to never be written to the final output.
 
 ```go
 type InternalLabel string
@@ -144,6 +253,29 @@ Kind is a kubernetes api object kind. Defined as a type for clarity and type che
 
 ```go
 type Kind string
+```
+
+<a name="Kustomization"></a>
+## type Kustomization {#Kustomization}
+
+Kustomization represents a kustomization.yaml file.
+
+```go
+type Kustomization structpb.Struct
+```
+
+<a name="Kustomize"></a>
+## type Kustomize {#Kustomize}
+
+Kustomize represents resources necessary to execute a kustomize build.
+
+```go
+type Kustomize struct {
+    // Kustomization represents the decoded kustomization.yaml file
+    Kustomization Kustomization `json:"kustomization"`
+    // Files holds file contents for kustomize, e.g. patch files.
+    Files FileContentMap `json:"files,omitempty"`
+}
 ```
 
 <a name="Metadata"></a>
@@ -186,20 +318,6 @@ type Platform struct {
 }
 ```
 
-<a name="PlatformComponent"></a>
-## type PlatformComponent {#PlatformComponent}
-
-PlatformComponent represents a holos component providing a BuildPlan.
-
-```go
-type PlatformComponent struct {
-    // Path is the path of the component relative to the platform root.
-    Path string `json:"path"`
-    // Cluster is the cluster name to provide when rendering the component.
-    Cluster string `json:"cluster"`
-}
-```
-
 <a name="PlatformSpec"></a>
 ## type PlatformSpec {#PlatformSpec}
 
@@ -207,11 +325,32 @@ PlatformSpec represents the specification of a Platform. Think of a platform spe
 
 ```go
 type PlatformSpec struct {
-    // Model represents the platform model holos gets from from the
-    // PlatformService.GetPlatform rpc method and provides to CUE using a tag.
-    Model structpb.Struct `json:"model" cue:"{...}"`
     // Components represents a list of holos components to manage.
-    Components []PlatformComponent `json:"components"`
+    Components []BuildContext `json:"components"`
+}
+```
+
+<a name="Repository"></a>
+## type Repository {#Repository}
+
+Repository represents a helm chart repository.
+
+```go
+type Repository struct {
+    Name string `json:"name"`
+    URL  string `json:"url"`
+}
+```
+
+<a name="Transformer"></a>
+## type Transformer {#Transformer}
+
+
+
+```go
+type Transformer struct {
+    Kind      string    `json:"kind" cue:"\"Kustomize\""`
+    Kustomize Kustomize `json:"kustomize,omitempty"`
 }
 ```
 
