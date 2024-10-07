@@ -12,37 +12,28 @@ function HomepageHeader() {
   return (
     <header className={clsx('hero hero--primary', styles.heroBanner)}>
       <div className="container">
-        <Heading as="h1" className="hero__title">
-          {siteConfig.title}
-        </Heading>
         <div className="diagramImg">
           <img src="./img/holos-diagram-color-transparent.svg" alt="Holos Diagram" />
         </div>
+        <Heading as="h1" className="hero__title">
+          {siteConfig.title}
+        </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
-        <p className="projectDesc">
-          Engineering teams spend significant time creating custom scripts and
-          error-prone templates to integrate software projects into a software
-          development platform.  This glue layer is often makeshift, slowing
-          teams down and increasing the risk of outages.
-        </p>
-        <p className="projectDesc">
-          Holos helps teams deliver value faster by offering a well defined,
-          safe, and automated integration layer to manage your platform
-          holistically.
-        </p>
-        <div className={styles.buttons}>
-          <Link
-            className="button button--secondary button--lg"
-            to="docs/quickstart">
-            Get Started
-          </Link>
-          <span className={styles.divider}></span>
-          <Link
-            className="button button--primary button--lg"
-            to="docs/technical-overview/">
-            Learn More
-          </Link>
-          <span className={styles.divider}></span>
+        <div className="hero__buttons">
+          <div className={styles.buttons}>
+            <Link
+              className="button button--secondary button--lg"
+              to="docs/quickstart">
+              Get Started
+            </Link>
+            <span className={styles.divider}></span>
+            <Link
+              className="button button--primary button--lg"
+              to="docs/technical-overview/">
+              Learn More
+            </Link>
+            <span className={styles.divider}></span>
+            </div>
         </div>
       </div >
     </header >

@@ -22,6 +22,10 @@
   text-align: left;
 }
 
+.hero__buttons {
+  float: left
+}
+
 /* Ensure img in hero banner scales well even on mobile */
 @media screen and (max-width: 996px) {
   div.diagramImg {
