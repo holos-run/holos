@@ -9,6 +9,13 @@ type PathCueMod string
 // holos instance.  It is given a unique type so the API is clear.
 type InstancePath string
 
+// FilePath represents the path of a file relative to the current working
+// directory of holos at runtime.
+type FilePath string
+
+// FileContent represents the contents of a file as a string.
+type FileContent string
+
 // TypeMeta represents the kind and version of a resource holos needs to
 // process.  Useful to discriminate generated resources.
 type TypeMeta struct {

@@ -1,11 +1,14 @@
 package render
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
 	"runtime"
 
 	"github.com/holos-run/holos/internal/builder"
+	"github.com/holos-run/holos/internal/builder/v1alpha4"
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
@@ -118,16 +121,32 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 
 		log.DebugContext(ctx, "discriminated "+tm.APIVersion+" "+tm.Kind)
 
+		jsonBytes, err := bd.Value.MarshalJSON()
+		if err != nil {
+			return errors.Format("could not marshal json %s: %w", bd.Dir, err)
+		}
+		decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
+		decoder.DisallowUnknownFields()
+
 		switch version := tm.APIVersion; version {
 		case "v1alpha4":
-			return errors.NotImplemented()
-		// Legacy versions
+			builder := v1alpha4.PlatformBuilder{
+				Concurrency: concurrency,
+				Stderr:      cmd.ErrOrStderr(),
+			}
+			if err := decoder.Decode(&builder.Platform); err != nil {
+				return errors.Format("could not decode platform %s: %w", bd.Dir, err)
+			}
+			return render.Platform(ctx, &builder)
+
+		// Legacy versions prior to the render.Builder interface.
 		case "v1alpha3", "v1alpha2", "v1alpha1":
 			platform, err := build.Platform(ctx, config)
 			if err != nil {
 				return errors.Wrap(err)
 			}
 			return render.LegacyPlatform(ctx, concurrency, platform, cmd.ErrOrStderr())
+
 		default:
 			return errors.Format("platform version not supported: %s", version)
 		}
@@ -136,6 +155,7 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 	return cmd
 }
 
+// Deprecated: use render.Artifact instead.
 type Result interface {
 	Continue() bool
 	Name() string
