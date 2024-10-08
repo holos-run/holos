@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/holos-run/holos"
@@ -35,14 +36,14 @@ func (p *Platform) Build(ctx context.Context, _ holos.Artifact) error {
 	g.SetLimit(p.Concurrency + 1)
 	// Spawn a producer because g.Go() blocks when the group limit is reached.
 	g.Go(func() error {
-		for idx, component := range components {
+		for idx := range components {
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				// Capture idx and component to avoid issues with closure. Can be
-				// removed on Go 1.22.
-				idx, component := idx, component
+				// Capture idx to avoid issues with closure.  Fixed in Go 1.22.
+				idx := idx
+				buildContext := &components[idx]
 				// Worker go routine.  Blocks if limit has been reached.
 				g.Go(func() error {
 					select {
@@ -51,24 +52,26 @@ func (p *Platform) Build(ctx context.Context, _ holos.Artifact) error {
 					default:
 						start := time.Now()
 						log := logger.FromContext(ctx).With(
-							"path", component.Path,
-							"cluster", component.Cluster,
+							"path", buildContext.Path,
+							"cluster", buildContext.Cluster,
+							"environment", buildContext.Environment,
 							"num", idx+1,
 							"total", total,
 						)
 						log.DebugContext(ctx, "render component")
 
+						tags := make([]string, 0, 1+len(buildContext.Tags))
+						tags = append(tags, "environment="+buildContext.Environment)
+						tags = append(tags, buildContext.Tags...)
+
 						// Execute a sub-process to limit CUE memory usage.
 						args := []string{
 							"render",
 							"component",
-							"--cluster-name",
-							component.Cluster,
-							component.Path,
+							"--cluster-name", buildContext.Cluster,
+							"--tags", strings.Join(tags, ","),
+							buildContext.Path,
 						}
-						// TODO(jeff) Add Tags for #268
-						// Need to add them to v1alpha4.Platform first, then use them here.
-						// Make sure to constrain the string so it can't have a comma.
 						result, err := util.RunCmd(ctx, "holos", args...)
 						if err != nil {
 							_, _ = io.Copy(p.Stderr, result.Stderr)
@@ -78,8 +81,8 @@ func (p *Platform) Build(ctx context.Context, _ holos.Artifact) error {
 						duration := time.Since(start)
 						msg := fmt.Sprintf(
 							"rendered %s for cluster %s in %s",
-							filepath.Base(component.Path),
-							component.Cluster,
+							filepath.Base(buildContext.Path),
+							buildContext.Cluster,
 							duration,
 						)
 						log.InfoContext(ctx, msg, "duration", duration)

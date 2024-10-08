@@ -16,21 +16,22 @@ package v1alpha4
 
 //go:generate ../../../hack/gendoc
 
-import "google.golang.org/protobuf/types/known/structpb"
-
 // APIObject represents the most basic generic form of a single kubernetes api
 // object.  Represented as a JSON object internally for compatibility between
 // tools, for example loading from CUE.
-type APIObject structpb.Struct
+type APIObject map[string]any
 
 // APIObjects represents kubernetes resources generated from CUE.
 type APIObjects map[Kind]map[InternalLabel]APIObject
 
 // HelmValues represents helm chart values generated from CUE.
-type HelmValues structpb.Struct
+type HelmValues map[string]any
 
-// Kustomization represents a kustomization.yaml file.
-type Kustomization structpb.Struct
+// Kustomization represents a kustomization.yaml file.  Untyped to avoid tightly
+// coupling holos to kubectl versions which was a problem for the Flux
+// maintainers.  Type checking is expected to happen in CUE against the kubectl
+// version the user prefers.
+type Kustomization map[string]any
 
 // BuildPlan represents a build plan for holos to execute.
 type BuildPlan struct {
@@ -201,7 +202,7 @@ type BuildContext struct {
 	Environment string `json:"environment,omitempty"`
 	// Model represents the platform model holos gets from from the
 	// PlatformService.GetPlatform rpc method and provides to CUE using a tag.
-	Model structpb.Struct `json:"model" cue:"{...}"`
+	Model map[string]any `json:"model"`
 	// Tags represents cue tags to provide when rendering the component.
 	Tags []string `json:"tags,omitempty"`
 }

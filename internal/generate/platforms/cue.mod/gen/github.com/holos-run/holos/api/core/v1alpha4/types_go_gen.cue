@@ -18,21 +18,22 @@
 // fully rendered manifest files written to the filesystem.
 package v1alpha4
 
-import "google.golang.org/protobuf/types/known/structpb"
-
 // APIObject represents the most basic generic form of a single kubernetes api
 // object.  Represented as a JSON object internally for compatibility between
 // tools, for example loading from CUE.
-#APIObject: structpb.#Struct
+#APIObject: {...}
 
 // APIObjects represents kubernetes resources generated from CUE.
 #APIObjects: {[string]: [string]: #APIObject}
 
 // HelmValues represents helm chart values generated from CUE.
-#HelmValues: structpb.#Struct
+#HelmValues: {...}
 
-// Kustomization represents a kustomization.yaml file.
-#Kustomization: structpb.#Struct
+// Kustomization represents a kustomization.yaml file.  Untyped to avoid tightly
+// coupling holos to kubectl versions which was a problem for the Flux
+// maintainers.  Type checking is expected to happen in CUE against the kubectl
+// version the user prefers.
+#Kustomization: {...}
 
 // BuildPlan represents a build plan for holos to execute.
 #BuildPlan: {
@@ -218,7 +219,7 @@ import "google.golang.org/protobuf/types/known/structpb"
 
 	// Model represents the platform model holos gets from from the
 	// PlatformService.GetPlatform rpc method and provides to CUE using a tag.
-	model: structpb.#Struct & {...} @go(Model)
+	model: {...} @go(Model,map[string]any)
 
 	// Tags represents cue tags to provide when rendering the component.
 	tags?: [...string] @go(Tags,[]string)

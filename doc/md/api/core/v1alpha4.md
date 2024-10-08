@@ -46,7 +46,7 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 APIObject represents the most basic generic form of a single kubernetes api object. Represented as a JSON object internally for compatibility between tools, for example loading from CUE.
 
 ```go
-type APIObject structpb.Struct
+type APIObject map[string]any
 ```
 
 <a name="APIObjects"></a>
@@ -73,7 +73,7 @@ type BuildContext struct {
     Environment string `json:"environment,omitempty"`
     // Model represents the platform model holos gets from from the
     // PlatformService.GetPlatform rpc method and provides to CUE using a tag.
-    Model structpb.Struct `json:"model" cue:"{...}"`
+    Model map[string]any `json:"model"`
     // Tags represents cue tags to provide when rendering the component.
     Tags []string `json:"tags,omitempty"`
 }
@@ -232,7 +232,7 @@ type Helm struct {
 HelmValues represents helm chart values generated from CUE.
 
 ```go
-type HelmValues structpb.Struct
+type HelmValues map[string]any
 ```
 
 <a name="InternalLabel"></a>
@@ -258,10 +258,10 @@ type Kind string
 <a name="Kustomization"></a>
 ## type Kustomization {#Kustomization}
 
-Kustomization represents a kustomization.yaml file.
+Kustomization represents a kustomization.yaml file. Untyped to avoid tightly coupling holos to kubectl versions which was a problem for the Flux maintainers. Type checking is expected to happen in CUE against the kubectl version the user prefers.
 
 ```go
-type Kustomization structpb.Struct
+type Kustomization map[string]any
 ```
 
 <a name="Kustomize"></a>
