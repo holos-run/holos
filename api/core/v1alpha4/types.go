@@ -69,21 +69,20 @@ type BuildStep struct {
 
 // Generator generates an artifact.
 type Generator struct {
-	HelmEnabled bool `json:"helmEnabled,omitempty"`
-	Helm        Helm `json:"helm,omitempty"`
 	// HelmFile represents the intermediate file for the transformer.
-	HelmFile string `json:"helmFile" cue:"string | *\"helm.gen.yaml\""`
+	HelmFile    string `json:"helmFile,omitempty"`
+	HelmEnabled bool   `json:"helmEnabled,omitempty"`
+	Helm        Helm   `json:"helm,omitempty"`
 
+	// KustomizeFile represents the intermediate file for the transformer.
+	KustomizeFile    string    `json:"kustomizeFile,omitempty"`
 	KustomizeEnabled bool      `json:"kustomizeEnabled,omitempty"`
 	Kustomize        Kustomize `json:"kustomize,omitempty"`
-	// KustomizeFile represents the intermediate file for the transformer.
-	KustomizeFile string `json:"kustomizeFile" cue:"string | *\"kustomize.gen.yaml\""`
-
-	APIObjectsEnabled bool       `json:"apiObjectsEnabled,omitempty"`
-	APIObjects        APIObjects `json:"apiObjects,omitempty"`
 
 	// APIObjectsFile represents the intermediate file for the transformer.
-	APIObjectsFile string `json:"apiObjectsFile" cue:"string | *\"api-objects.gen.yaml\""`
+	APIObjectsFile    string     `json:"apiObjectsFile,omitempty"`
+	APIObjectsEnabled bool       `json:"apiObjectsEnabled,omitempty"`
+	APIObjects        APIObjects `json:"apiObjects,omitempty"`
 }
 
 type Transformer struct {

@@ -77,21 +77,20 @@ package v1alpha4
 
 // Generator generates an artifact.
 #Generator: {
-	helmEnabled?: bool  @go(HelmEnabled)
-	helm?:        #Helm @go(Helm)
-
 	// HelmFile represents the intermediate file for the transformer.
-	helmFile:          string & (string | *"helm.gen.yaml") @go(HelmFile)
-	kustomizeEnabled?: bool                                 @go(KustomizeEnabled)
-	kustomize?:        #Kustomize                           @go(Kustomize)
+	helmFile?:    string @go(HelmFile)
+	helmEnabled?: bool   @go(HelmEnabled)
+	helm?:        #Helm  @go(Helm)
 
 	// KustomizeFile represents the intermediate file for the transformer.
-	kustomizeFile:      string & (string | *"kustomize.gen.yaml") @go(KustomizeFile)
-	apiObjectsEnabled?: bool                                      @go(APIObjectsEnabled)
-	apiObjects?:        #APIObjects                               @go(APIObjects)
+	kustomizeFile?:    string     @go(KustomizeFile)
+	kustomizeEnabled?: bool       @go(KustomizeEnabled)
+	kustomize?:        #Kustomize @go(Kustomize)
 
 	// APIObjectsFile represents the intermediate file for the transformer.
-	apiObjectsFile: string & (string | *"api-objects.gen.yaml") @go(APIObjectsFile)
+	apiObjectsFile?:    string      @go(APIObjectsFile)
+	apiObjectsEnabled?: bool        @go(APIObjectsEnabled)
+	apiObjects?:        #APIObjects @go(APIObjects)
 }
 
 #Transformer: {
