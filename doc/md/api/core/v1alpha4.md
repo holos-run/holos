@@ -16,8 +16,8 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 
 - [type APIObject](<#APIObject>)
 - [type APIObjects](<#APIObjects>)
+- [type ArtifactPaths](<#ArtifactPaths>)
 - [type BuildContext](<#BuildContext>)
-- [type BuildPaths](<#BuildPaths>)
 - [type BuildPlan](<#BuildPlan>)
 - [type BuildPlanSpec](<#BuildPlanSpec>)
 - [type BuildStep](<#BuildStep>)
@@ -58,6 +58,24 @@ APIObjects represents kubernetes resources generated from CUE.
 type APIObjects map[Kind]map[InternalLabel]APIObject
 ```
 
+<a name="ArtifactPaths"></a>
+## type ArtifactPaths {#ArtifactPaths}
+
+ArtifactPaths represents filesystem paths relative to the write to directory \(default is deploy/\) to store artifacts. Mainly used to specify the directory where resource manifests are written and a separate directory for a gitops resource manifest.
+
+Intended for holos to determine where to write the output of the transformer stage, which combines multiple generators into one stream.
+
+```go
+type ArtifactPaths struct {
+    // Manifest represents the directory to store fully rendered resource manifest
+    // artifacts.
+    Manifest string `json:"manifest,omitempty"`
+    // GitOps represents the directory to store fully rendered gitops artifacts.  For example, an ArgoCD
+    // Application or a Flux Kustomization resource.
+    Gitops string `json:"gitops,omitempty"`
+}
+```
+
 <a name="BuildContext"></a>
 ## type BuildContext {#BuildContext}
 
@@ -76,25 +94,6 @@ type BuildContext struct {
     Model map[string]any `json:"model"`
     // Tags represents cue tags to provide when rendering the component.
     Tags []string `json:"tags,omitempty"`
-}
-```
-
-<a name="BuildPaths"></a>
-## type BuildPaths {#BuildPaths}
-
-BuildPaths represents filesystem paths relative to the platform root.
-
-```go
-type BuildPaths struct {
-    // Manifest represents the directory to store fully rendered resource manifest
-    // artifacts.
-    Manifest string `json:"manifest,omitempty"`
-    // Application represents the directory to store ArgoCD Application manifests
-    // for GitOps.
-    Application string `json:"application,omitempty"`
-    // Flux represents the directory to store Flux Kustomization manifests
-    // for GitOps.
-    Flux string `json:"flux,omitempty"`
 }
 ```
 
@@ -144,7 +143,7 @@ type BuildStep struct {
     Skip         bool          `json:"skip,omitempty"`
     Generator    Generator     `json:"generator,omitempty"`
     Transformers []Transformer `json:"transformers,omitempty"`
-    Paths        BuildPaths    `json:"paths"`
+    Paths        ArtifactPaths `json:"paths"`
 }
 ```
 
@@ -202,12 +201,19 @@ Generator generates an artifact.
 type Generator struct {
     HelmEnabled bool `json:"helmEnabled,omitempty"`
     Helm        Helm `json:"helm,omitempty"`
+    // HelmFile represents the intermediate file for the transformer.
+    HelmFile string `json:"helmFile" cue:"string | *\"helm.gen.yaml\""`
 
     KustomizeEnabled bool      `json:"kustomizeEnabled,omitempty"`
     Kustomize        Kustomize `json:"kustomize,omitempty"`
+    // KustomizeFile represents the intermediate file for the transformer.
+    KustomizeFile string `json:"kustomizeFile" cue:"string | *\"kustomize.gen.yaml\""`
 
     APIObjectsEnabled bool       `json:"apiObjectsEnabled,omitempty"`
     APIObjects        APIObjects `json:"apiObjects,omitempty"`
+
+    // APIObjectsFile represents the intermediate file for the transformer.
+    APIObjectsFile string `json:"apiObjectsFile" cue:"string | *\"api-objects.gen.yaml\""`
 }
 ```
 

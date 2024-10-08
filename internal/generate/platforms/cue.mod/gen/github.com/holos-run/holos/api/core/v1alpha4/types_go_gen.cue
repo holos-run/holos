@@ -68,17 +68,26 @@ package v1alpha4
 	skip?:      bool       @go(Skip)
 	generator?: #Generator @go(Generator)
 	transformers?: [...#Transformer] @go(Transformers,[]Transformer)
-	paths: #BuildPaths @go(Paths)
+	paths: #ArtifactPaths @go(Paths)
 }
 
 // Generator generates an artifact.
 #Generator: {
-	helmEnabled?:       bool        @go(HelmEnabled)
-	helm?:              #Helm       @go(Helm)
-	kustomizeEnabled?:  bool        @go(KustomizeEnabled)
-	kustomize?:         #Kustomize  @go(Kustomize)
-	apiObjectsEnabled?: bool        @go(APIObjectsEnabled)
-	apiObjects?:        #APIObjects @go(APIObjects)
+	helmEnabled?: bool  @go(HelmEnabled)
+	helm?:        #Helm @go(Helm)
+
+	// HelmFile represents the intermediate file for the transformer.
+	helmFile:          string & (string | *"helm.gen.yaml") @go(HelmFile)
+	kustomizeEnabled?: bool                                 @go(KustomizeEnabled)
+	kustomize?:        #Kustomize                           @go(Kustomize)
+
+	// KustomizeFile represents the intermediate file for the transformer.
+	kustomizeFile:      string & (string | *"kustomize.gen.yaml") @go(KustomizeFile)
+	apiObjectsEnabled?: bool                                      @go(APIObjectsEnabled)
+	apiObjects?:        #APIObjects                               @go(APIObjects)
+
+	// APIObjectsFile represents the intermediate file for the transformer.
+	apiObjectsFile: string & (string | *"api-objects.gen.yaml") @go(APIObjectsFile)
 }
 
 #Transformer: {
@@ -95,19 +104,21 @@ package v1alpha4
 	files?: #FileContentMap @go(Files)
 }
 
-// BuildPaths represents filesystem paths relative to the platform root.
-#BuildPaths: {
+// ArtifactPaths represents filesystem paths relative to the write to directory
+// (default is deploy/) to store artifacts.  Mainly used to specify the
+// directory where resource manifests are written and a separate directory for a
+// gitops resource manifest.
+//
+// Intended for holos to determine where to write the output of the transformer
+// stage, which combines multiple generators into one stream.
+#ArtifactPaths: {
 	// Manifest represents the directory to store fully rendered resource manifest
 	// artifacts.
 	manifest?: string @go(Manifest)
 
-	// Application represents the directory to store ArgoCD Application manifests
-	// for GitOps.
-	application?: string @go(Application)
-
-	// Flux represents the directory to store Flux Kustomization manifests
-	// for GitOps.
-	flux?: string @go(Flux)
+	// GitOps represents the directory to store fully rendered gitops artifacts.  For example, an ArgoCD
+	// Application or a Flux Kustomization resource.
+	gitops?: string @go(Gitops)
 }
 
 #Helm: {

@@ -61,19 +61,26 @@ type BuildStep struct {
 	Skip         bool          `json:"skip,omitempty"`
 	Generator    Generator     `json:"generator,omitempty"`
 	Transformers []Transformer `json:"transformers,omitempty"`
-	Paths        BuildPaths    `json:"paths"`
+	Paths        ArtifactPaths `json:"paths"`
 }
 
 // Generator generates an artifact.
 type Generator struct {
 	HelmEnabled bool `json:"helmEnabled,omitempty"`
 	Helm        Helm `json:"helm,omitempty"`
+	// HelmFile represents the intermediate file for the transformer.
+	HelmFile string `json:"helmFile" cue:"string | *\"helm.gen.yaml\""`
 
 	KustomizeEnabled bool      `json:"kustomizeEnabled,omitempty"`
 	Kustomize        Kustomize `json:"kustomize,omitempty"`
+	// KustomizeFile represents the intermediate file for the transformer.
+	KustomizeFile string `json:"kustomizeFile" cue:"string | *\"kustomize.gen.yaml\""`
 
 	APIObjectsEnabled bool       `json:"apiObjectsEnabled,omitempty"`
 	APIObjects        APIObjects `json:"apiObjects,omitempty"`
+
+	// APIObjectsFile represents the intermediate file for the transformer.
+	APIObjectsFile string `json:"apiObjectsFile" cue:"string | *\"api-objects.gen.yaml\""`
 }
 
 type Transformer struct {
@@ -89,17 +96,20 @@ type Kustomize struct {
 	Files FileContentMap `json:"files,omitempty"`
 }
 
-// BuildPaths represents filesystem paths relative to the platform root.
-type BuildPaths struct {
+// ArtifactPaths represents filesystem paths relative to the write to directory
+// (default is deploy/) to store artifacts.  Mainly used to specify the
+// directory where resource manifests are written and a separate directory for a
+// gitops resource manifest.
+//
+// Intended for holos to determine where to write the output of the transformer
+// stage, which combines multiple generators into one stream.
+type ArtifactPaths struct {
 	// Manifest represents the directory to store fully rendered resource manifest
 	// artifacts.
 	Manifest string `json:"manifest,omitempty"`
-	// Application represents the directory to store ArgoCD Application manifests
-	// for GitOps.
-	Application string `json:"application,omitempty"`
-	// Flux represents the directory to store Flux Kustomization manifests
-	// for GitOps.
-	Flux string `json:"flux,omitempty"`
+	// GitOps represents the directory to store fully rendered gitops artifacts.  For example, an ArgoCD
+	// Application or a Flux Kustomization resource.
+	Gitops string `json:"gitops,omitempty"`
 }
 
 type Helm struct {
