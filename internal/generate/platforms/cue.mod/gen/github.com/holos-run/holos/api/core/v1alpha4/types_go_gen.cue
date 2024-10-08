@@ -72,7 +72,10 @@ package v1alpha4
 	skip?:      bool       @go(Skip)
 	generator?: #Generator @go(Generator)
 	transformers?: [...#Transformer] @go(Transformers,[]Transformer)
-	paths: #ArtifactPaths @go(Paths)
+
+	// Manifest represents the artifact to store transformed, fully rendered
+	// output.
+	manifest?: #FilePath @go(Manifest)
 }
 
 // Generator generates an artifact.
@@ -105,23 +108,6 @@ package v1alpha4
 
 	// Files holds file contents for kustomize, e.g. patch files.
 	files?: #FileContentMap @go(Files)
-}
-
-// ArtifactPaths represents filesystem paths relative to the write to directory
-// (default is deploy/) to store artifacts.  Mainly used to specify the
-// directory where resource manifests are written and a separate directory for a
-// gitops resource manifest.
-//
-// Intended for holos to determine where to write the output of the transformer
-// stage, which combines multiple generators into one stream.
-#ArtifactPaths: {
-	// Manifest represents the path to store fully rendered resource manifest
-	// artifacts.
-	manifest?: string @go(Manifest)
-
-	// GitOps represents the path to store fully rendered gitops artifacts.  For
-	// example, an ArgoCD Application or a Flux Kustomization resource.
-	gitops?: string @go(Gitops)
 }
 
 #Helm: {

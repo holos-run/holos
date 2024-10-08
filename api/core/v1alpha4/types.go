@@ -64,7 +64,9 @@ type BuildStep struct {
 	Skip         bool          `json:"skip,omitempty"`
 	Generator    Generator     `json:"generator,omitempty"`
 	Transformers []Transformer `json:"transformers,omitempty"`
-	Paths        ArtifactPaths `json:"paths"`
+	// Manifest represents the artifact to store transformed, fully rendered
+	// output.
+	Manifest FilePath `json:"manifest,omitempty"`
 }
 
 // Generator generates an artifact.
@@ -96,22 +98,6 @@ type Kustomize struct {
 	Kustomization Kustomization `json:"kustomization"`
 	// Files holds file contents for kustomize, e.g. patch files.
 	Files FileContentMap `json:"files,omitempty"`
-}
-
-// ArtifactPaths represents filesystem paths relative to the write to directory
-// (default is deploy/) to store artifacts.  Mainly used to specify the
-// directory where resource manifests are written and a separate directory for a
-// gitops resource manifest.
-//
-// Intended for holos to determine where to write the output of the transformer
-// stage, which combines multiple generators into one stream.
-type ArtifactPaths struct {
-	// Manifest represents the path to store fully rendered resource manifest
-	// artifacts.
-	Manifest string `json:"manifest,omitempty"`
-	// GitOps represents the path to store fully rendered gitops artifacts.  For
-	// example, an ArgoCD Application or a Flux Kustomization resource.
-	Gitops string `json:"gitops,omitempty"`
 }
 
 type Helm struct {
