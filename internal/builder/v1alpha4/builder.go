@@ -60,7 +60,8 @@ func (p *Platform) Build(ctx context.Context, _ holos.Artifact) error {
 						)
 						log.DebugContext(ctx, "render component")
 
-						tags := make([]string, 0, 1+len(buildContext.Tags))
+						tags := make([]string, 0, 2+len(buildContext.Tags))
+						tags = append(tags, "component="+buildContext.Path)
 						tags = append(tags, "environment="+buildContext.Environment)
 						tags = append(tags, buildContext.Tags...)
 
