@@ -114,5 +114,9 @@ type BuildPlan struct {
 
 // Build builds a BuildPlan into artifact files.
 func (b *BuildPlan) Build(ctx context.Context, artifact holos.Artifact) error {
+	name := b.BuildPlan.Metadata.Name
+	component := b.BuildPlan.Spec.Component
+	log := logger.FromContext(ctx).With("name", name, "component", component)
+	log.DebugContext(ctx, "building "+name)
 	return errors.NotImplemented()
 }

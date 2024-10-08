@@ -47,9 +47,13 @@ type BuildPlan struct {
 
 // BuildPlanSpec represents the specification of the build plan.
 type BuildPlanSpec struct {
+	// Component represents the component that produced the build plan.
+	// Represented as a path relative to the platform root.
+	Component string `json:"component"`
 	// Disabled causes the holos cli to disregard the build plan.
-	Disabled bool        `json:"disabled,omitempty"`
-	Steps    []BuildStep `json:"steps"`
+	Disabled bool `json:"disabled,omitempty"`
+	// Steps represent build steps for holos to execute
+	Steps []BuildStep `json:"steps"`
 }
 
 type BuildStep struct {
@@ -87,8 +91,6 @@ type Kustomize struct {
 
 // BuildPaths represents filesystem paths relative to the platform root.
 type BuildPaths struct {
-	// Component represents the component directory producing a build plan.
-	Component string `json:"component"`
 	// Manifest represents the directory to store fully rendered resource manifest
 	// artifacts.
 	Manifest string `json:"manifest,omitempty"`

@@ -52,8 +52,14 @@ package v1alpha4
 
 // BuildPlanSpec represents the specification of the build plan.
 #BuildPlanSpec: {
+	// Component represents the component that produced the build plan.
+	// Represented as a path relative to the platform root.
+	component: string @go(Component)
+
 	// Disabled causes the holos cli to disregard the build plan.
 	disabled?: bool @go(Disabled)
+
+	// Steps represent build steps for holos to execute
 	steps: [...#BuildStep] @go(Steps,[]BuildStep)
 }
 
@@ -91,9 +97,6 @@ package v1alpha4
 
 // BuildPaths represents filesystem paths relative to the platform root.
 #BuildPaths: {
-	// Component represents the component directory producing a build plan.
-	component: string @go(Component)
-
 	// Manifest represents the directory to store fully rendered resource manifest
 	// artifacts.
 	manifest?: string @go(Manifest)
