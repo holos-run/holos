@@ -64,10 +64,6 @@ package v1alpha4
 }
 
 #BuildStep: {
-	// Name represents the build step name, often the same as the build plan name.
-	// Used to construct the output manifest and gitops filenames.
-	name: string @go(Name)
-
 	// Skip causes holos to skip over this build step.
 	skip?:      bool       @go(Skip)
 	generator?: #Generator @go(Generator)

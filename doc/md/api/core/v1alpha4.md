@@ -120,9 +120,6 @@ type BuildPlanSpec struct {
 
 ```go
 type BuildStep struct {
-    // Name represents the build step name, often the same as the build plan name.
-    // Used to construct the output manifest and gitops filenames.
-    Name string `json:"name"`
     // Skip causes holos to skip over this build step.
     Skip         bool          `json:"skip,omitempty"`
     Generator    Generator     `json:"generator,omitempty"`
