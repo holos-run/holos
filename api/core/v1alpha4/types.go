@@ -57,6 +57,9 @@ type BuildPlanSpec struct {
 }
 
 type BuildStep struct {
+	// Name represents the build step name, often the same as the build plan name.
+	// Used to construct the output manifest and gitops filenames.
+	Name string `json:"name"`
 	// Skip causes holos to skip over this build step.
 	Skip         bool          `json:"skip,omitempty"`
 	Generator    Generator     `json:"generator,omitempty"`
@@ -104,11 +107,11 @@ type Kustomize struct {
 // Intended for holos to determine where to write the output of the transformer
 // stage, which combines multiple generators into one stream.
 type ArtifactPaths struct {
-	// Manifest represents the directory to store fully rendered resource manifest
+	// Manifest represents the path to store fully rendered resource manifest
 	// artifacts.
 	Manifest string `json:"manifest,omitempty"`
-	// GitOps represents the directory to store fully rendered gitops artifacts.  For example, an ArgoCD
-	// Application or a Flux Kustomization resource.
+	// GitOps represents the path to store fully rendered gitops artifacts.  For
+	// example, an ArgoCD Application or a Flux Kustomization resource.
 	Gitops string `json:"gitops,omitempty"`
 }
 

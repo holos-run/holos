@@ -64,6 +64,10 @@ package v1alpha4
 }
 
 #BuildStep: {
+	// Name represents the build step name, often the same as the build plan name.
+	// Used to construct the output manifest and gitops filenames.
+	name: string @go(Name)
+
 	// Skip causes holos to skip over this build step.
 	skip?:      bool       @go(Skip)
 	generator?: #Generator @go(Generator)
@@ -112,12 +116,12 @@ package v1alpha4
 // Intended for holos to determine where to write the output of the transformer
 // stage, which combines multiple generators into one stream.
 #ArtifactPaths: {
-	// Manifest represents the directory to store fully rendered resource manifest
+	// Manifest represents the path to store fully rendered resource manifest
 	// artifacts.
 	manifest?: string @go(Manifest)
 
-	// GitOps represents the directory to store fully rendered gitops artifacts.  For example, an ArgoCD
-	// Application or a Flux Kustomization resource.
+	// GitOps represents the path to store fully rendered gitops artifacts.  For
+	// example, an ArgoCD Application or a Flux Kustomization resource.
 	gitops?: string @go(Gitops)
 }
 
