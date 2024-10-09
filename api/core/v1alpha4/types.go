@@ -51,9 +51,17 @@ type BuildPlanSpec struct {
 // same collection. Each [Transformer] is executed sequentially, the first after
 // all generators have completed.
 //
-// Each Artifact produces one manifest file artifact.  [Generator] manifests are
-// implicitly joined into one artifact file if there is no [Transformer] that
-// would otherwise combine them.
+// Each Artifact produces one manifest file artifact.  Generator Output values
+// are used as Transformer Inputs.  The Output field of the final [Transformer]
+// should have the same value as the Artifact field.
+//
+// When there is more than one [Generator] there must be at least one
+// [Transformer] to combine outputs into one Artifact.  If there is a single
+// Generator, it may directly produce the Artifact output.
+//
+// Output fields are write-once.  It is an error for multiple Generators or
+// Transformers to produce the same Output value within the context of one
+// [BuildPlan].
 type Artifact struct {
 	Artifact     FilePath      `json:"artifact,omitempty"`
 	Generators   []Generator   `json:"generators,omitempty"`
@@ -68,8 +76,8 @@ type Artifact struct {
 type Generator struct {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
 	Kind string `json:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
-	// Manifest represents the output file for subsequent transformers.
-	Manifest string `json:"manifest"`
+	// Output represents a file for a Transformer or Artifact to consume.
+	Output FilePath `json:"output"`
 	// Resources generator. Ignored unless kind is Resources.
 	Resources Resources `json:"resources,omitempty"`
 	// Helm generator. Ignored unless kind is Helm.
@@ -128,12 +136,25 @@ type Repository struct {
 
 // Transformer transforms [Generator] manifests within a [Artifact].
 type Transformer struct {
-	// Kind represents the kind of transformer.  Must be Kustomize.
-	Kind string `json:"kind" cue:"\"Kustomize\""`
-	// Manifest represents the output file for subsequent transformers.
-	Manifest string `json:"manifest,omitempty"`
+	// Kind represents the kind of transformer. Must be Kustomize, or Join.
+	Kind string `json:"kind" cue:"\"Kustomize\" | \"Join\""`
+	// Inputs represents the files to transform. The Output of prior Generators
+	// and Transformers.
+	Inputs []FilePath `json:"inputs"`
+	// Output represents a file for a subsequent Transformer or Artifact to
+	// consume.
+	Output FilePath `json:"output"`
 	// Kustomize transformer. Ignored unless kind is Kustomize.
 	Kustomize Kustomize `json:"kustomize,omitempty"`
+	// Join transformer. Ignored unless kind is Join.
+	Join Join `json:"join,omitempty"`
+}
+
+// Join represents a [Join](https://pkg.go.dev/strings#Join) [Transformer].
+// Useful for the common case of combining the output of [Helm] and [Resources]
+// [Generator] into one [Artifact] when [Kustomize] is otherwise unnecessary.
+type Join struct {
+	Separator string `json:"separator,omitempty"`
 }
 
 // Kustomize represents a kustomization [Transformer].

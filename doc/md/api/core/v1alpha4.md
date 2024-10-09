@@ -26,6 +26,7 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 - [type Generator](<#Generator>)
 - [type Helm](<#Helm>)
 - [type InternalLabel](<#InternalLabel>)
+- [type Join](<#Join>)
 - [type Kind](<#Kind>)
 - [type Kustomization](<#Kustomization>)
 - [type Kustomize](<#Kustomize>)
@@ -47,7 +48,11 @@ Artifact represents one fully rendered manifest produced by a [Transformer](<#Tr
 
 Each [Generator](<#Generator>) may be executed concurrently with other generators in the same collection. Each [Transformer](<#Transformer>) is executed sequentially, the first after all generators have completed.
 
-Each Artifact produces one manifest file artifact. [Generator](<#Generator>) manifests are implicitly joined into one artifact file if there is no [Transformer](<#Transformer>) that would otherwise combine them.
+Each Artifact produces one manifest file artifact. Generator Output values are used as Transformer Inputs. The Output field of the final [Transformer](<#Transformer>) should have the same value as the Artifact field.
+
+When there is more than one [Generator](<#Generator>) there must be at least one [Transformer](<#Transformer>) to combine outputs into one Artifact. If there is a single Generator, it may directly produce the Artifact output.
+
+Output fields are write\-once. It is an error for multiple Generators or Transformers to produce the same Output value within the context of one [BuildPlan](<#BuildPlan>).
 
 ```go
 type Artifact struct {
@@ -185,8 +190,8 @@ Each Generator in a [Artifact](<#Artifact>) must have a distinct manifest value 
 type Generator struct {
     // Kind represents the kind of generator.  Must be Resources, Helm, or File.
     Kind string `json:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
-    // Manifest represents the output file for subsequent transformers.
-    Manifest string `json:"manifest"`
+    // Output represents a file for a Transformer or Artifact to consume.
+    Output FilePath `json:"output"`
     // Resources generator. Ignored unless kind is Resources.
     Resources Resources `json:"resources,omitempty"`
     // Helm generator. Ignored unless kind is Helm.
@@ -220,6 +225,17 @@ InternalLabel is an arbitrary unique identifier internal to holos itself. The ho
 
 ```go
 type InternalLabel string
+```
+
+<a name="Join"></a>
+## type Join {#Join}
+
+Join represents a [Join](<#Join>)\(https://pkg.go.dev/strings#Join\) [Transformer](<#Transformer>). Useful for the common case of combining the output of [Helm](<#Helm>) and [Resources](<#Resources>) [Generator](<#Generator>) into one [Artifact](<#Artifact>) when [Kustomize](<#Kustomize>) is otherwise unnecessary.
+
+```go
+type Join struct {
+    Separator string `json:"separator,omitempty"`
+}
 ```
 
 <a name="Kind"></a>
@@ -349,12 +365,18 @@ Transformer transforms [Generator](<#Generator>) manifests within a [Artifact](<
 
 ```go
 type Transformer struct {
-    // Kind represents the kind of transformer.  Must be Kustomize.
-    Kind string `json:"kind" cue:"\"Kustomize\""`
-    // Manifest represents the output file for subsequent transformers.
-    Manifest string `json:"manifest,omitempty"`
+    // Kind represents the kind of transformer. Must be Kustomize, or Join.
+    Kind string `json:"kind" cue:"\"Kustomize\" | \"Join\""`
+    // Inputs represents the files to transform. The Output of prior Generators
+    // and Transformers.
+    Inputs []FilePath `json:"inputs"`
+    // Output represents a file for a subsequent Transformer or Artifact to
+    // consume.
+    Output FilePath `json:"output"`
     // Kustomize transformer. Ignored unless kind is Kustomize.
     Kustomize Kustomize `json:"kustomize,omitempty"`
+    // Join transformer. Ignored unless kind is Join.
+    Join Join `json:"join,omitempty"`
 }
 ```
 

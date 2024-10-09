@@ -58,9 +58,17 @@ package v1alpha4
 // same collection. Each [Transformer] is executed sequentially, the first after
 // all generators have completed.
 //
-// Each Artifact produces one manifest file artifact.  [Generator] manifests are
-// implicitly joined into one artifact file if there is no [Transformer] that
-// would otherwise combine them.
+// Each Artifact produces one manifest file artifact.  Generator Output values
+// are used as Transformer Inputs.  The Output field of the final [Transformer]
+// should have the same value as the Artifact field.
+//
+// When there is more than one [Generator] there must be at least one
+// [Transformer] to combine outputs into one Artifact.  If there is a single
+// Generator, it may directly produce the Artifact output.
+//
+// Output fields are write-once.  It is an error for multiple Generators or
+// Transformers to produce the same Output value within the context of one
+// [BuildPlan].
 #Artifact: {
 	artifact?: #FilePath @go(Artifact)
 	generators?: [...#Generator] @go(Generators,[]Generator)
@@ -76,8 +84,8 @@ package v1alpha4
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
 	kind: string & ("Resources" | "Helm" | "File") @go(Kind)
 
-	// Manifest represents the output file for subsequent transformers.
-	manifest: string @go(Manifest)
+	// Output represents a file for a Transformer or Artifact to consume.
+	output: #FilePath @go(Output)
 
 	// Resources generator. Ignored unless kind is Resources.
 	resources?: #Resources @go(Resources)
@@ -144,14 +152,29 @@ package v1alpha4
 
 // Transformer transforms [Generator] manifests within a [Artifact].
 #Transformer: {
-	// Kind represents the kind of transformer.  Must be Kustomize.
-	kind: string & "Kustomize" @go(Kind)
+	// Kind represents the kind of transformer. Must be Kustomize, or Join.
+	kind: string & ("Kustomize" | "Join") @go(Kind)
 
-	// Manifest represents the output file for subsequent transformers.
-	manifest?: string @go(Manifest)
+	// Inputs represents the files to transform. The Output of prior Generators
+	// and Transformers.
+	inputs: [...#FilePath] @go(Inputs,[]FilePath)
+
+	// Output represents a file for a subsequent Transformer or Artifact to
+	// consume.
+	output: #FilePath @go(Output)
 
 	// Kustomize transformer. Ignored unless kind is Kustomize.
 	kustomize?: #Kustomize @go(Kustomize)
+
+	// Join transformer. Ignored unless kind is Join.
+	join?: #Join @go(Join)
+}
+
+// Join represents a [Join](https://pkg.go.dev/strings#Join) [Transformer].
+// Useful for the common case of combining the output of [Helm] and [Resources]
+// [Generator] into one [Artifact] when [Kustomize] is otherwise unnecessary.
+#Join: {
+	separator?: string @go(Separator)
 }
 
 // Kustomize represents a kustomization [Transformer].
