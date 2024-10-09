@@ -46,13 +46,13 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 
 Artifact represents one fully rendered manifest produced by a [Transformer](<#Transformer>) sequence, which transforms a [Generator](<#Generator>) collection. A [BuildPlan](<#BuildPlan>) produces an [Artifact](<#Artifact>) collection.
 
-Each [Generator](<#Generator>) may be executed concurrently with other generators in the same collection. Each [Transformer](<#Transformer>) is executed sequentially, the first after all generators have completed.
-
 Each Artifact produces one manifest file artifact. Generator Output values are used as Transformer Inputs. The Output field of the final [Transformer](<#Transformer>) should have the same value as the Artifact field.
 
 When there is more than one [Generator](<#Generator>) there must be at least one [Transformer](<#Transformer>) to combine outputs into one Artifact. If there is a single Generator, it may directly produce the Artifact output.
 
-Output fields are write\-once. It is an error for multiple Generators or Transformers to produce the same Output value within the context of one [BuildPlan](<#BuildPlan>).
+An Artifact is processed concurrently with other artifacts in the same [BuildPlan](<#BuildPlan>). An Artifact should not use an output from another Artifact as an input. Each [Generator](<#Generator>) may also run concurrently. Each [Transformer](<#Transformer>) is executed sequentially starting after all generators have completed.
+
+Output fields are write\-once. It is an error for multiple Generators or Transformers to produce the same Output value within the context of a [BuildPlan](<#BuildPlan>).
 
 ```go
 type Artifact struct {

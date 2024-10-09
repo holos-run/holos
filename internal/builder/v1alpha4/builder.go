@@ -125,66 +125,81 @@ func (b *BuildPlan) Build(ctx context.Context, am holos.ArtifactMap) error {
 	name := b.BuildPlan.Metadata.Name
 	component := b.BuildPlan.Spec.Component
 	log := logger.FromContext(ctx).With("name", name, "component", component)
-	log.DebugContext(ctx, "building "+name)
-
+	msg := fmt.Sprintf("could not build %s", name)
 	if b.BuildPlan.Spec.Disabled {
-		log.WarnContext(ctx, fmt.Sprintf("could not build %s: spec.disabled field is true", name))
+		log.WarnContext(ctx, fmt.Sprintf("%s: spec.disabled field is true", msg))
 		return nil
 	}
 
-	for _, a := range b.BuildPlan.Spec.Artifacts {
-		if a.Skip {
-			log.WarnContext(ctx, fmt.Sprintf("skipped artifact %s: skip field is true", a.Artifact))
-			continue
-		}
+	g, ctx := errgroup.WithContext(ctx)
+	// One more for the producer
+	g.SetLimit(b.Concurrency + 1)
 
-		// TODO(jeff): concurrent generators.
-		for _, g := range a.Generators {
-			switch g.Kind {
-			case "Resources":
-				if err := b.generateResources(log, g, am); err != nil {
-					return errors.Wrap(err)
-				}
-			case "Helm":
-				return errors.NotImplemented()
-			case "File":
-				return errors.NotImplemented()
+	// Producer.
+	g.Go(func() error {
+		for _, a := range b.BuildPlan.Spec.Artifacts {
+			if a.Skip {
+				log.WarnContext(ctx, fmt.Sprintf("skipped artifact %s: skip field is true", a.Artifact))
+				continue
+			}
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
 			default:
-				return errors.Format("could not build %s: unsupported kind %s", name, g.Kind)
+				// https://golang.org/doc/faq#closures_and_goroutines
+				a := a
+				// Worker.  Blocks if limit has been reached.
+				g.Go(func() error {
+					for _, g := range a.Generators {
+						switch g.Kind {
+						case "Resources":
+							if err := b.generateResources(log, g, am); err != nil {
+								return errors.Wrap(err)
+							}
+						case "Helm":
+							return errors.NotImplemented()
+						case "File":
+							return errors.NotImplemented()
+						default:
+							return errors.Format("%s: unsupported kind %s", msg, g.Kind)
+						}
+					}
+
+					for _, t := range a.Transformers {
+						switch t.Kind {
+						case "Kustomize":
+							if err := b.kustomize(ctx, log, t, am); err != nil {
+								return errors.Wrap(err)
+							}
+						case "Join":
+							return errors.NotImplemented()
+						default:
+							return errors.Format("%s: unsupported kind %s", msg, t.Kind)
+						}
+					}
+
+					// Write the final artifact
+					data, ok := am.Get(holos.FilePath(a.Artifact))
+					if !ok {
+						return errors.Format("%s: could not get artifact %s", msg, a.Artifact)
+					}
+					path := filepath.Join(b.WriteTo, string(a.Artifact))
+					if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
+						return errors.Format("%s: %w", msg, err)
+					}
+					if err := os.WriteFile(path, data, 0666); err != nil {
+						return errors.Format("%s: %w", msg, err)
+					}
+					log.DebugContext(ctx, "wrote: "+path)
+					return nil
+				})
 			}
 		}
+		return nil
+	})
 
-		for _, t := range a.Transformers {
-			switch t.Kind {
-			case "Kustomize":
-				if err := b.kustomize(ctx, log, t, am); err != nil {
-					return errors.Wrap(err)
-				}
-			case "Join":
-				return errors.NotImplemented()
-			default:
-				return errors.Format("could not build %s: unsupported kind %s", name, t.Kind)
-			}
-		}
-
-		msg := fmt.Sprintf("could not build %s", name)
-
-		// Write the final artifact
-		data, ok := am.Get(holos.FilePath(a.Artifact))
-		if !ok {
-			return errors.Format("%s: could not get artifact %s", msg, a.Artifact)
-		}
-		path := filepath.Join(b.WriteTo, string(a.Artifact))
-		if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
-			return errors.Format("%s: %w", msg, err)
-		}
-		if err := os.WriteFile(path, data, 0666); err != nil {
-			return errors.Format("%s: %w", msg, err)
-		}
-		log.DebugContext(ctx, "wrote: "+path)
-	}
-
-	return nil
+	// Wait for completion and return the first error (if any)
+	return g.Wait()
 }
 
 func (b *BuildPlan) generateResources(

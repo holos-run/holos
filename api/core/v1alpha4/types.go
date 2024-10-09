@@ -47,10 +47,6 @@ type BuildPlanSpec struct {
 // sequence, which transforms a [Generator] collection.  A [BuildPlan] produces
 // an [Artifact] collection.
 //
-// Each [Generator] may be executed concurrently with other generators in the
-// same collection. Each [Transformer] is executed sequentially, the first after
-// all generators have completed.
-//
 // Each Artifact produces one manifest file artifact.  Generator Output values
 // are used as Transformer Inputs.  The Output field of the final [Transformer]
 // should have the same value as the Artifact field.
@@ -59,8 +55,13 @@ type BuildPlanSpec struct {
 // [Transformer] to combine outputs into one Artifact.  If there is a single
 // Generator, it may directly produce the Artifact output.
 //
+// An Artifact is processed concurrently with other artifacts in the same
+// [BuildPlan].  An Artifact should not use an output from another Artifact as
+// an input.  Each [Generator] may also run concurrently.  Each [Transformer] is
+// executed sequentially starting after all generators have completed.
+//
 // Output fields are write-once.  It is an error for multiple Generators or
-// Transformers to produce the same Output value within the context of one
+// Transformers to produce the same Output value within the context of a
 // [BuildPlan].
 type Artifact struct {
 	Artifact     FilePath      `json:"artifact,omitempty"`
