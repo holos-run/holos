@@ -222,18 +222,17 @@ package v1alpha4
 	name: string @go(Name)
 }
 
-// PlatformSpec represents the specification of a Platform.  Think of a platform
-// specification as a list of platform components to apply to a list of
-// kubernetes clusters combined with the user-specified Platform Model.
+// PlatformSpec represents the specification of a [Platform].  Think of a
+// platform spec as a [Component] collection for multiple kubernetes clusters
+// combined with the user-specified Platform Model.
 #PlatformSpec: {
 	// Components represents a list of holos components to manage.
-	components: [...#BuildContext] @go(Components,[]BuildContext)
+	components: [...#Component] @go(Components,[]Component)
 }
 
-// BuildContext represents the context necessary to render a component into a
-// BuildPlan.  Useful to capture parameters passed down from a Platform spec for
-// the purpose of idempotent rebuilds.
-#BuildContext: {
+// Component represents the complete context necessary to produce a [BuildPlan]
+// from a [Platform] component.
+#Component: {
 	// Path is the path of the component relative to the platform root.
 	path: string @go(Path)
 

@@ -15,10 +15,10 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 ## Index
 
 - [type Artifact](<#Artifact>)
-- [type BuildContext](<#BuildContext>)
 - [type BuildPlan](<#BuildPlan>)
 - [type BuildPlanSpec](<#BuildPlanSpec>)
 - [type Chart](<#Chart>)
+- [type Component](<#Component>)
 - [type File](<#File>)
 - [type FileContent](<#FileContent>)
 - [type FileContentMap](<#FileContentMap>)
@@ -55,27 +55,6 @@ type Artifact struct {
     Generators   []Generator   `json:"generators,omitempty"`
     Transformers []Transformer `json:"transformers,omitempty"`
     Skip         bool          `json:"skip,omitempty"`
-}
-```
-
-<a name="BuildContext"></a>
-## type BuildContext {#BuildContext}
-
-BuildContext represents the context necessary to render a component into a BuildPlan. Useful to capture parameters passed down from a Platform spec for the purpose of idempotent rebuilds.
-
-```go
-type BuildContext struct {
-    // Path is the path of the component relative to the platform root.
-    Path string `json:"path"`
-    // Cluster is the cluster name to provide when rendering the component.
-    Cluster string `json:"cluster"`
-    // Environment for example, dev, test, stage, prod
-    Environment string `json:"environment,omitempty"`
-    // Model represents the platform model holos gets from from the
-    // PlatformService.GetPlatform rpc method and provides to CUE using a tag.
-    Model map[string]any `json:"model"`
-    // Tags represents cue tags to provide when rendering the component.
-    Tags []string `json:"tags,omitempty"`
 }
 ```
 
@@ -131,6 +110,27 @@ type Chart struct {
     Release string `json:"release"`
     // Repository represents the repository to fetch the chart from.
     Repository Repository `json:"repository,omitempty"`
+}
+```
+
+<a name="Component"></a>
+## type Component {#Component}
+
+Component represents the complete context necessary to produce a [BuildPlan](<#BuildPlan>) from a [Platform](<#Platform>) component.
+
+```go
+type Component struct {
+    // Path is the path of the component relative to the platform root.
+    Path string `json:"path"`
+    // Cluster is the cluster name to provide when rendering the component.
+    Cluster string `json:"cluster"`
+    // Environment for example, dev, test, stage, prod
+    Environment string `json:"environment,omitempty"`
+    // Model represents the platform model holos gets from from the
+    // PlatformService.GetPlatform rpc method and provides to CUE using a tag.
+    Model map[string]any `json:"model"`
+    // Tags represents cue tags to provide when rendering the component.
+    Tags []string `json:"tags,omitempty"`
 }
 ```
 
@@ -303,12 +303,12 @@ type Platform struct {
 <a name="PlatformSpec"></a>
 ## type PlatformSpec {#PlatformSpec}
 
-PlatformSpec represents the specification of a Platform. Think of a platform specification as a list of platform components to apply to a list of kubernetes clusters combined with the user\-specified Platform Model.
+PlatformSpec represents the specification of a [Platform](<#Platform>). Think of a platform spec as a [Component](<#Component>) collection for multiple kubernetes clusters combined with the user\-specified Platform Model.
 
 ```go
 type PlatformSpec struct {
     // Components represents a list of holos components to manage.
-    Components []BuildContext `json:"components"`
+    Components []Component `json:"components"`
 }
 ```
 
