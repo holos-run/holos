@@ -80,6 +80,8 @@ package v1alpha4
 //
 // Each Generator in a [Artifact] must have a distinct manifest value for a
 // [Transformer] to reference.
+//
+// Refer to [Resources], [Helm], and [File].
 #Generator: {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
 	kind: string & ("Resources" | "Helm" | "File") @go(Kind)
@@ -87,7 +89,11 @@ package v1alpha4
 	// Output represents a file for a Transformer or Artifact to consume.
 	output: #FilePath @go(Output)
 
-	// Resources generator. Ignored unless kind is Resources.
+	// Resources generator. Ignored unless kind is Resources.  Resources are
+	// stored as a two level struct.  The top level key is the Kind of resource,
+	// e.g. Namespace or Deployment.  The second level key is an arbitrary
+	// InternalLabel.  The third level is a map[string]any representing the
+	// Resource.
 	resources?: #Resources @go(Resources)
 
 	// Helm generator. Ignored unless kind is Helm.

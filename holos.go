@@ -27,13 +27,17 @@ type TypeMeta struct {
 
 // Builder builds file artifacts.
 type Builder interface {
-	Build(context.Context, Artifact) error
+	Build(context.Context, ArtifactMap) error
 }
 
-// Artifact saves stores and saves file artifacts.
-type Artifact interface {
-	Get(FilePath) (FileContent, bool)
-	Set(FilePath, FileContent)
+// ArtifactMap gets, sets, and saves file artifacts.
+//
+// Concrete values must ensure Set is write once, returning an error if a given
+// FilePath was previously Set.  Concrete values must be safe for concurrent
+// reads and writes.
+type ArtifactMap interface {
+	Get(FilePath) ([]byte, bool)
+	Set(FilePath, []byte) error
 	Keys() []FilePath
-	Save(context.Context) error
+	Save(context.Context, FilePath) error
 }

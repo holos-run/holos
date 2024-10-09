@@ -19,11 +19,8 @@ func Platform(ctx context.Context, b holos.Builder) error {
 }
 
 // Component renders a component writing fully rendered manifests to files.
-func Component(ctx context.Context, b holos.Builder, a holos.Artifact) error {
+func Component(ctx context.Context, b holos.Builder, a holos.ArtifactMap) error {
 	if err := b.Build(ctx, a); err != nil {
-		return errors.Wrap(err)
-	}
-	if err := a.Save(ctx); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil

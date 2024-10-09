@@ -22,7 +22,7 @@ func WriteTo(path string) Option {
 
 func New(options ...Option) *Artifact {
 	a := &Artifact{
-		m:       make(map[holos.FilePath]holos.FileContent),
+		m:       make(map[holos.FilePath][]byte),
 		writeTo: "deploy",
 	}
 	for _, o := range options {
@@ -36,22 +36,27 @@ func New(options ...Option) *Artifact {
 // to the current working directory.  Values represent the file string content.
 type Artifact struct {
 	mu      sync.RWMutex
-	m       map[holos.FilePath]holos.FileContent
+	m       map[holos.FilePath][]byte
 	writeTo string
 }
 
-// Set sets an artifact file with write locking.
-func (a *Artifact) Set(path holos.FilePath, content holos.FileContent) {
+// Set sets an artifact file with write locking.  Set returns an error if the
+// artifact was previously set.
+func (a *Artifact) Set(path holos.FilePath, data []byte) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
-	a.m[path] = content
+	if _, ok := a.m[path]; ok {
+		return errors.Format("could not set artifact %s: already set", path)
+	}
+	a.m[path] = data
+	return nil
 }
 
-// Get gets the content of an artifact file path with read locking.
-func (a *Artifact) Get(path holos.FilePath) (content holos.FileContent, ok bool) {
+// Get gets the content of an artifact with read locking.
+func (a *Artifact) Get(path holos.FilePath) (data []byte, ok bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	content, ok = a.m[path]
+	data, ok = a.m[path]
 	return
 }
 
@@ -65,29 +70,25 @@ func (a *Artifact) Keys() []holos.FilePath {
 	return keys
 }
 
-// Save writes artifacts to the output directory relative to the write to path.
-func (a *Artifact) Save(ctx context.Context) error {
+// Save saves one artifact to the current working directory, creating parent
+// directories as needed.
+func (a *Artifact) Save(ctx context.Context, path holos.FilePath) error {
 	log := logger.FromContext(ctx)
-	keys := a.Keys()
-	for _, key := range keys {
-		path := filepath.Join(a.writeTo, string(key))
-
-		content, ok := a.Get(holos.FilePath(path))
-		if !ok {
-			return errors.Format("missing key: %s", path)
-		}
-
-		dir := filepath.Dir(string(path))
-		if err := os.MkdirAll(dir, os.FileMode(0775)); err != nil {
-			log.WarnContext(ctx, "could not mkdir", "path", dir, "err", err)
-			return errors.Wrap(err)
-		}
-
-		if err := os.WriteFile(path, []byte(content), os.FileMode(0666)); err != nil {
-			log.WarnContext(ctx, "could not save", "path", path, "err", err)
-			return errors.Format("could not save: %w", err)
-		}
-		log.DebugContext(ctx, "wrote "+path, "action", "write", "path", path, "status", "ok")
+	data, ok := a.Get(path)
+	if !ok {
+		return errors.Format("missing key: %s", path)
 	}
+
+	dir := filepath.Dir(string(path))
+	if err := os.MkdirAll(dir, os.FileMode(0775)); err != nil {
+		log.WarnContext(ctx, "could not mkdir: "+err.Error(), "path", dir, "err", err)
+		return errors.Wrap(err)
+	}
+
+	if err := os.WriteFile(string(path), data, os.FileMode(0666)); err != nil {
+		log.WarnContext(ctx, "could not save: "+err.Error(), "path", path, "err", err)
+		return errors.Format("could not save: %w", err)
+	}
+	log.DebugContext(ctx, "wrote: "+string(path), "action", "write", "path", path, "status", "ok")
 	return nil
 }

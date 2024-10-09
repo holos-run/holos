@@ -73,12 +73,18 @@ type Artifact struct {
 //
 // Each Generator in a [Artifact] must have a distinct manifest value for a
 // [Transformer] to reference.
+//
+// Refer to [Resources], [Helm], and [File].
 type Generator struct {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
 	Kind string `json:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
 	// Output represents a file for a Transformer or Artifact to consume.
 	Output FilePath `json:"output"`
-	// Resources generator. Ignored unless kind is Resources.
+	// Resources generator. Ignored unless kind is Resources.  Resources are
+	// stored as a two level struct.  The top level key is the Kind of resource,
+	// e.g. Namespace or Deployment.  The second level key is an arbitrary
+	// InternalLabel.  The third level is a map[string]any representing the
+	// Resource.
 	Resources Resources `json:"resources,omitempty"`
 	// Helm generator. Ignored unless kind is Helm.
 	Helm Helm `json:"helm,omitempty"`
