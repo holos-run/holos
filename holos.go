@@ -36,6 +36,7 @@ type Builder interface {
 // FilePath was previously Set.  Concrete values must be safe for concurrent
 // reads and writes.
 type ArtifactMap interface {
-	Get(FilePath) ([]byte, bool)
-	Set(FilePath, []byte) error
+	Get(path FilePath) (data []byte, ok bool)
+	Set(path FilePath, data []byte) error
+	Save(dir, path FilePath) error
 }

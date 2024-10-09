@@ -1,6 +1,9 @@
 package artifact
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/holos-run/holos"
@@ -37,6 +40,23 @@ func (a *Artifact) Get(path holos.FilePath) (data []byte, ok bool) {
 	defer a.mu.RUnlock()
 	data, ok = a.m[path]
 	return
+}
+
+// Save writes a file to the filesystem.
+func (a *Artifact) Save(dir, path holos.FilePath) error {
+	fullPath := filepath.Join(string(dir), string(path))
+	msg := fmt.Sprintf("could not save %s", fullPath)
+	data, ok := a.Get(path)
+	if !ok {
+		return errors.Format("%s: could not get: not set: %s", msg, path)
+	}
+	if err := os.MkdirAll(filepath.Dir(fullPath), 0777); err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+	if err := os.WriteFile(fullPath, data, 0666); err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+	return nil
 }
 
 func (a *Artifact) Keys() []holos.FilePath {
