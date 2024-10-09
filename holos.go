@@ -30,7 +30,7 @@ type Builder interface {
 	Build(context.Context, ArtifactMap) error
 }
 
-// ArtifactMap gets, sets, and saves file artifacts.
+// ArtifactMap sets and gets data for file artifacts.
 //
 // Concrete values must ensure Set is write once, returning an error if a given
 // FilePath was previously Set.  Concrete values must be safe for concurrent
@@ -38,6 +38,4 @@ type Builder interface {
 type ArtifactMap interface {
 	Get(FilePath) ([]byte, bool)
 	Set(FilePath, []byte) error
-	Keys() []FilePath
-	Save(context.Context, FilePath) error
 }

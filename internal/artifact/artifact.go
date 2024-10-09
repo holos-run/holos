@@ -1,14 +1,10 @@
 package artifact
 
 import (
-	"context"
-	"os"
-	"path/filepath"
 	"sync"
 
 	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/internal/errors"
-	"github.com/holos-run/holos/internal/server/middleware/logger"
 )
 
 type Option func(*Artifact)
@@ -68,27 +64,4 @@ func (a *Artifact) Keys() []holos.FilePath {
 		keys = append(keys, key)
 	}
 	return keys
-}
-
-// Save saves one artifact to the current working directory, creating parent
-// directories as needed.
-func (a *Artifact) Save(ctx context.Context, path holos.FilePath) error {
-	log := logger.FromContext(ctx)
-	data, ok := a.Get(path)
-	if !ok {
-		return errors.Format("missing key: %s", path)
-	}
-
-	dir := filepath.Dir(string(path))
-	if err := os.MkdirAll(dir, os.FileMode(0775)); err != nil {
-		log.WarnContext(ctx, "could not mkdir: "+err.Error(), "path", dir, "err", err)
-		return errors.Wrap(err)
-	}
-
-	if err := os.WriteFile(string(path), data, os.FileMode(0666)); err != nil {
-		log.WarnContext(ctx, "could not save: "+err.Error(), "path", path, "err", err)
-		return errors.Format("could not save: %w", err)
-	}
-	log.DebugContext(ctx, "wrote: "+string(path), "action", "write", "path", path, "status", "ok")
-	return nil
 }

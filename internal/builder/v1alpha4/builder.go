@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -132,12 +134,11 @@ func (b *BuildPlan) Build(ctx context.Context, am holos.ArtifactMap) error {
 			continue
 		}
 
-		// Run the Generators
-		// TODO: run these concurrently.
+		// TODO(jeff): concurrent generators.
 		for _, g := range a.Generators {
 			switch g.Kind {
 			case "Resources":
-				if err := b.generateResources(g, am); err != nil {
+				if err := b.generateResources(log, g, am); err != nil {
 					return errors.Wrap(err)
 				}
 			case "Helm":
@@ -149,13 +150,28 @@ func (b *BuildPlan) Build(ctx context.Context, am holos.ArtifactMap) error {
 			}
 		}
 
-		// Run the Transformers
+		for _, t := range a.Transformers {
+			switch t.Kind {
+			case "Kustomize":
+				if err := b.kustomize(ctx, log, t, am); err != nil {
+					return errors.Wrap(err)
+				}
+			case "Join":
+				return errors.NotImplemented()
+			default:
+				return errors.Format("could not build %s: unsupported kind %s", name, t.Kind)
+			}
+		}
 	}
 
 	return errors.NotImplemented()
 }
 
-func (b *BuildPlan) generateResources(g v1alpha4.Generator, am holos.ArtifactMap) error {
+func (b *BuildPlan) generateResources(
+	log *slog.Logger,
+	g v1alpha4.Generator,
+	am holos.ArtifactMap,
+) error {
 	var size int
 	for _, m := range g.Resources {
 		size += len(m)
@@ -176,6 +192,63 @@ func (b *BuildPlan) generateResources(g v1alpha4.Generator, am holos.ArtifactMap
 	if err := am.Set(holos.FilePath(g.Output), data); err != nil {
 		return errors.Format("could not generate %s for %s: %w", g.Output, b.BuildPlan.Metadata.Name, err)
 	}
+
+	log.Debug("set artifact: " + string(g.Output))
+	return nil
+}
+
+func (b *BuildPlan) kustomize(
+	ctx context.Context,
+	log *slog.Logger,
+	t v1alpha4.Transformer,
+	am holos.ArtifactMap,
+) error {
+	tempDir, err := os.MkdirTemp("", "holos.kustomize")
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	defer util.Remove(ctx, tempDir)
+	msg := fmt.Sprintf("could not transform %s for %s", t.Output, b.BuildPlan.Metadata.Name)
+
+	// Write the kustomization
+	data, err := yaml.Marshal(t.Kustomize.Kustomization)
+	if err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+	path := filepath.Join(tempDir, "kustomization.yaml")
+	if err := os.WriteFile(path, data, 0666); err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+	log.DebugContext(ctx, "wrote: "+path)
+
+	// Write the inputs
+	for _, input := range t.Inputs {
+		data, ok := am.Get(holos.FilePath(input))
+		if !ok {
+			return errors.Format("%s: could not get artifact %s", msg, input)
+		}
+		path := filepath.Join(tempDir, string(input))
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		if err := os.WriteFile(path, data, 0666); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		log.DebugContext(ctx, "wrote: "+path)
+	}
+
+	// Execute kustomize
+	result, err := util.RunCmd(ctx, "kubectl", "kustomize", tempDir)
+	if err != nil {
+		log.ErrorContext(ctx, result.Stderr.String())
+		return errors.Format("%s: could not run kustomize: %w", msg, err)
+	}
+
+	// Store the artifact
+	if err := am.Set(holos.FilePath(t.Output), result.Stdout.Bytes()); err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+	log.Debug("set artifact: " + string(t.Output))
 
 	return nil
 }
