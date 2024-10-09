@@ -16,24 +16,8 @@ package v1alpha4
 
 //go:generate ../../../hack/gendoc
 
-// APIObject represents the most basic generic form of a single kubernetes api
-// object.  Represented as a JSON object internally for compatibility between
-// tools, for example loading from CUE.
-type APIObject map[string]any
-
-// APIObjects represents kubernetes resources generated from CUE.
-type APIObjects map[Kind]map[InternalLabel]APIObject
-
-// HelmValues represents helm chart values generated from CUE.
-type HelmValues map[string]any
-
-// Kustomization represents a kustomization.yaml file.  Untyped to avoid tightly
-// coupling holos to kubectl versions which was a problem for the Flux
-// maintainers.  Type checking is expected to happen in CUE against the kubectl
-// version the user prefers.
-type Kustomization map[string]any
-
-// BuildPlan represents a build plan for holos to execute.
+// BuildPlan represents a build plan for holos to execute.  Each [Platform]
+// component produces exactly one BuildPlan.
 type BuildPlan struct {
 	// Kind represents the type of the resource.
 	Kind string `json:"kind" cue:"\"BuildPlan\""`
@@ -45,7 +29,7 @@ type BuildPlan struct {
 	Spec BuildPlanSpec `json:"spec"`
 }
 
-// BuildPlanSpec represents the specification of the build plan.
+// BuildPlanSpec represents the specification of the [BuildPlan].
 type BuildPlanSpec struct {
 	// Component represents the component that produced the build plan.
 	// Represented as a path relative to the platform root.
@@ -56,58 +40,70 @@ type BuildPlanSpec struct {
 	Steps []BuildStep `json:"steps"`
 }
 
+// BuildStep represents the holos rendering pipeline for a [BuildPlan].
+//
+// Each [Generator] may be executed concurrently with other generators in the
+// same collection. Each [Transformer] is executed sequentially, the first after
+// all generators have completed.
+//
+// Each BuildStep produces one manifest file artifact.  [Generator] manifests are
+// implicitly joined into one artifact file if there is no [Transformer] that
+// would otherwise combine them.
 type BuildStep struct {
-	// Skip causes holos to skip over this build step.
-	Skip         bool          `json:"skip,omitempty"`
-	Generator    Generator     `json:"generator,omitempty"`
+	Artifact     FilePath      `json:"artifact,omitempty"`
+	Generators   []Generator   `json:"generators,omitempty"`
 	Transformers []Transformer `json:"transformers,omitempty"`
-	// Manifest represents the artifact to store transformed, fully rendered
-	// output.
-	Manifest FilePath `json:"manifest,omitempty"`
+	Skip         bool          `json:"skip,omitempty"`
 }
 
-// Generator generates an artifact.
+// Generator generates an intermediate manifest for a [BuildStep].
+//
+// Each Generator in a [BuildStep] must have a distinct manifest value for a
+// [Transformer] to reference.
 type Generator struct {
-	// HelmFile represents the intermediate file for the transformer.
-	HelmFile    string `json:"helmFile,omitempty"`
-	HelmEnabled bool   `json:"helmEnabled,omitempty"`
-	Helm        Helm   `json:"helm,omitempty"`
-
-	// KustomizeFile represents the intermediate file for the transformer.
-	KustomizeFile    string    `json:"kustomizeFile,omitempty"`
-	KustomizeEnabled bool      `json:"kustomizeEnabled,omitempty"`
-	Kustomize        Kustomize `json:"kustomize,omitempty"`
-
-	// APIObjectsFile represents the intermediate file for the transformer.
-	APIObjectsFile    string     `json:"apiObjectsFile,omitempty"`
-	APIObjectsEnabled bool       `json:"apiObjectsEnabled,omitempty"`
-	APIObjects        APIObjects `json:"apiObjects,omitempty"`
+	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
+	Kind string `json:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
+	// Manifest represents the output file for subsequent transformers.
+	Manifest string `json:"manifest"`
+	// Resources generator. Ignored unless kind is Resources.
+	Resources Resources `json:"resources,omitempty"`
+	// Helm generator. Ignored unless kind is Helm.
+	Helm Helm `json:"helm,omitempty"`
+	// File generator. Ignored unless kind is File.
+	File File `json:"file,omitempty"`
 }
 
-type Transformer struct {
-	Kind      string    `json:"kind" cue:"\"Kustomize\""`
-	Kustomize Kustomize `json:"kustomize,omitempty"`
+// Resource represents one kubernetes api object.
+type Resource map[string]any
+
+// Resources represents a kubernetes resources [Generator] from CUE.
+type Resources map[Kind]map[InternalLabel]Resource
+
+// File represents a simple single file copy [Generator].  Useful with a
+// [Kustomize] [Transformer] to process plain manifest files stored in the
+// component directory.  Multiple File generators may be used to transform
+// multiple resources.
+type File struct {
+	// Source represents a file to read relative to the component path, the
+	// [BuildPlanSpec] Component field.
+	Source FilePath `json:"source"`
 }
 
-// Kustomize represents resources necessary to execute a kustomize build.
-type Kustomize struct {
-	// Kustomization represents the decoded kustomization.yaml file
-	Kustomization Kustomization `json:"kustomization"`
-	// Files holds file contents for kustomize, e.g. patch files.
-	Files FileContentMap `json:"files,omitempty"`
-}
-
+// Helm represents a [Chart] manifest [Generator].
 type Helm struct {
 	// Chart represents a helm chart to manage.
 	Chart Chart `json:"chart"`
 	// Values represents values for holos to marshal into values.yaml when
 	// rendering the chart.
-	Values HelmValues `json:"values"`
+	Values Values `json:"values"`
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	EnableHooks bool `json:"enableHooks,omitempty"`
 }
 
-// Chart represents a helm chart.
+// Values represents [Helm] Chart values generated from CUE.
+type Values map[string]any
+
+// Chart represents a [Helm] Chart.
 type Chart struct {
 	// Name represents the chart name.
 	Name string `json:"name"`
@@ -119,11 +115,35 @@ type Chart struct {
 	Repository Repository `json:"repository,omitempty"`
 }
 
-// Repository represents a helm chart repository.
+// Repository represents a [Helm] [Chart] repository.
 type Repository struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
+
+// Transformer transforms [Generator] manifests within a [BuildStep].
+type Transformer struct {
+	// Kind represents the kind of transformer.  Must be Kustomize.
+	Kind string `json:"kind" cue:"\"Kustomize\""`
+	// Manifest represents the output file for subsequent transformers.
+	Manifest string `json:"manifest,omitempty"`
+	// Kustomize transformer. Ignored unless kind is Kustomize.
+	Kustomize Kustomize `json:"kustomize,omitempty"`
+}
+
+// Kustomize represents a kustomization [Transformer].
+type Kustomize struct {
+	// Kustomization represents the decoded kustomization.yaml file
+	Kustomization Kustomization `json:"kustomization"`
+	// Files holds file contents for kustomize, e.g. patch files.
+	Files FileContentMap `json:"files,omitempty"`
+}
+
+// Kustomization represents a kustomization.yaml file for use with the
+// [Kustomize] [Transformer].  Untyped to avoid tightly coupling holos to
+// kubectl versions which was a problem for the Flux maintainers.  Type checking
+// is expected to happen in CUE against the kubectl version the user prefers.
+type Kustomization map[string]any
 
 // FileContent represents file contents.
 type FileContent string
@@ -136,24 +156,21 @@ type FilePath string
 
 // InternalLabel is an arbitrary unique identifier internal to holos itself.
 // The holos cli is expected to never write a InternalLabel value to rendered
-// output files, therefore use a [InternalLabel] when the identifier must be
+// output files, therefore use a InternalLabel when the identifier must be
 // unique and internal.  Defined as a type for clarity and type checking.
-//
-// A InternalLabel is useful to convert a CUE struct to a list, for example
-// producing a list of [APIObject] resources from an [APIObjectMap].  A CUE
-// struct using InternalLabel keys is guaranteed to not lose data when rendering
-// output because a InternalLabel is expected to never be written to the final
-// output.
 type InternalLabel string
 
-// Kind is a kubernetes api object kind. Defined as a type for clarity and type
-// checking.
+// Kind is a discriminator. Defined as a type for clarity and type checking.
 type Kind string
 
 // NameLabel is a unique identifier useful to convert a CUE struct to a list
-// when the values have a Name field with a default value.  This type is
-// intended to indicate the common use case of converting a struct to a list
-// where the Name field of the value aligns with the struct field name.
+// when the values have a Name field with a default value.  NameLabel indicates
+// the common use case of converting a struct to a list where the Name field of
+// the value aligns with the outer struct field name.
+//
+// For example:
+//
+//	Outer: [NAME=_]: Name: NAME
 type NameLabel string
 
 // Platform represents a platform to manage.  A Platform resource informs holos

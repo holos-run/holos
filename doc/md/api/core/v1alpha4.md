@@ -14,19 +14,17 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 
 ## Index
 
-- [type APIObject](<#APIObject>)
-- [type APIObjects](<#APIObjects>)
 - [type BuildContext](<#BuildContext>)
 - [type BuildPlan](<#BuildPlan>)
 - [type BuildPlanSpec](<#BuildPlanSpec>)
 - [type BuildStep](<#BuildStep>)
 - [type Chart](<#Chart>)
+- [type File](<#File>)
 - [type FileContent](<#FileContent>)
 - [type FileContentMap](<#FileContentMap>)
 - [type FilePath](<#FilePath>)
 - [type Generator](<#Generator>)
 - [type Helm](<#Helm>)
-- [type HelmValues](<#HelmValues>)
 - [type InternalLabel](<#InternalLabel>)
 - [type Kind](<#Kind>)
 - [type Kustomization](<#Kustomization>)
@@ -36,26 +34,11 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 - [type Platform](<#Platform>)
 - [type PlatformSpec](<#PlatformSpec>)
 - [type Repository](<#Repository>)
+- [type Resource](<#Resource>)
+- [type Resources](<#Resources>)
 - [type Transformer](<#Transformer>)
+- [type Values](<#Values>)
 
-
-<a name="APIObject"></a>
-## type APIObject {#APIObject}
-
-APIObject represents the most basic generic form of a single kubernetes api object. Represented as a JSON object internally for compatibility between tools, for example loading from CUE.
-
-```go
-type APIObject map[string]any
-```
-
-<a name="APIObjects"></a>
-## type APIObjects {#APIObjects}
-
-APIObjects represents kubernetes resources generated from CUE.
-
-```go
-type APIObjects map[Kind]map[InternalLabel]APIObject
-```
 
 <a name="BuildContext"></a>
 ## type BuildContext {#BuildContext}
@@ -81,7 +64,7 @@ type BuildContext struct {
 <a name="BuildPlan"></a>
 ## type BuildPlan {#BuildPlan}
 
-BuildPlan represents a build plan for holos to execute.
+BuildPlan represents a build plan for holos to execute. Each [Platform](<#Platform>) component produces exactly one BuildPlan.
 
 ```go
 type BuildPlan struct {
@@ -99,7 +82,7 @@ type BuildPlan struct {
 <a name="BuildPlanSpec"></a>
 ## type BuildPlanSpec {#BuildPlanSpec}
 
-BuildPlanSpec represents the specification of the build plan.
+BuildPlanSpec represents the specification of the [BuildPlan](<#BuildPlan>).
 
 ```go
 type BuildPlanSpec struct {
@@ -116,24 +99,25 @@ type BuildPlanSpec struct {
 <a name="BuildStep"></a>
 ## type BuildStep {#BuildStep}
 
+BuildStep represents the holos rendering pipeline for a [BuildPlan](<#BuildPlan>).
 
+Each [Generator](<#Generator>) may be executed concurrently with other generators in the same collection. Each [Transformer](<#Transformer>) is executed sequentially, the first after all generators have completed.
+
+Each BuildStep produces one manifest file artifact. [Generator](<#Generator>) manifests are implicitly joined into one artifact file if there is no [Transformer](<#Transformer>) that would otherwise combine them.
 
 ```go
 type BuildStep struct {
-    // Skip causes holos to skip over this build step.
-    Skip         bool          `json:"skip,omitempty"`
-    Generator    Generator     `json:"generator,omitempty"`
+    Artifact     FilePath      `json:"artifact,omitempty"`
+    Generators   []Generator   `json:"generators,omitempty"`
     Transformers []Transformer `json:"transformers,omitempty"`
-    // Manifest represents the artifact to store transformed, fully rendered
-    // output.
-    Manifest FilePath `json:"manifest,omitempty"`
+    Skip         bool          `json:"skip,omitempty"`
 }
 ```
 
 <a name="Chart"></a>
 ## type Chart {#Chart}
 
-Chart represents a helm chart.
+Chart represents a [Helm](<#Helm>) Chart.
 
 ```go
 type Chart struct {
@@ -145,6 +129,19 @@ type Chart struct {
     Release string `json:"release"`
     // Repository represents the repository to fetch the chart from.
     Repository Repository `json:"repository,omitempty"`
+}
+```
+
+<a name="File"></a>
+## type File {#File}
+
+File represents a simple single file copy [Generator](<#Generator>). Useful with a [Kustomize](<#Kustomize>) [Transformer](<#Transformer>) to process plain manifest files stored in the component directory. Multiple File generators may be used to transform multiple resources.
+
+```go
+type File struct {
+    // Source represents a file to read relative to the component path, the
+    // [BuildPlanSpec] Component field.
+    Source FilePath `json:"source"`
 }
 ```
 
@@ -178,31 +175,29 @@ type FilePath string
 <a name="Generator"></a>
 ## type Generator {#Generator}
 
-Generator generates an artifact.
+Generator generates an intermediate manifest for a [BuildStep](<#BuildStep>).
+
+Each Generator in a [BuildStep](<#BuildStep>) must have a distinct manifest value for a [Transformer](<#Transformer>) to reference.
 
 ```go
 type Generator struct {
-    // HelmFile represents the intermediate file for the transformer.
-    HelmFile    string `json:"helmFile,omitempty"`
-    HelmEnabled bool   `json:"helmEnabled,omitempty"`
-    Helm        Helm   `json:"helm,omitempty"`
-
-    // KustomizeFile represents the intermediate file for the transformer.
-    KustomizeFile    string    `json:"kustomizeFile,omitempty"`
-    KustomizeEnabled bool      `json:"kustomizeEnabled,omitempty"`
-    Kustomize        Kustomize `json:"kustomize,omitempty"`
-
-    // APIObjectsFile represents the intermediate file for the transformer.
-    APIObjectsFile    string     `json:"apiObjectsFile,omitempty"`
-    APIObjectsEnabled bool       `json:"apiObjectsEnabled,omitempty"`
-    APIObjects        APIObjects `json:"apiObjects,omitempty"`
+    // Kind represents the kind of generator.  Must be Resources, Helm, or File.
+    Kind string `json:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
+    // Manifest represents the output file for subsequent transformers.
+    Manifest string `json:"manifest"`
+    // Resources generator. Ignored unless kind is Resources.
+    Resources Resources `json:"resources,omitempty"`
+    // Helm generator. Ignored unless kind is Helm.
+    Helm Helm `json:"helm,omitempty"`
+    // File generator. Ignored unless kind is File.
+    File File `json:"file,omitempty"`
 }
 ```
 
 <a name="Helm"></a>
 ## type Helm {#Helm}
 
-
+Helm represents a [Chart](<#Chart>) manifest [Generator](<#Generator>).
 
 ```go
 type Helm struct {
@@ -210,27 +205,16 @@ type Helm struct {
     Chart Chart `json:"chart"`
     // Values represents values for holos to marshal into values.yaml when
     // rendering the chart.
-    Values HelmValues `json:"values"`
+    Values Values `json:"values"`
     // EnableHooks enables helm hooks when executing the `helm template` command.
     EnableHooks bool `json:"enableHooks,omitempty"`
 }
 ```
 
-<a name="HelmValues"></a>
-## type HelmValues {#HelmValues}
-
-HelmValues represents helm chart values generated from CUE.
-
-```go
-type HelmValues map[string]any
-```
-
 <a name="InternalLabel"></a>
 ## type InternalLabel {#InternalLabel}
 
-InternalLabel is an arbitrary unique identifier internal to holos itself. The holos cli is expected to never write a InternalLabel value to rendered output files, therefore use a [InternalLabel](<#InternalLabel>) when the identifier must be unique and internal. Defined as a type for clarity and type checking.
-
-A InternalLabel is useful to convert a CUE struct to a list, for example producing a list of [APIObject](<#APIObject>) resources from an \[APIObjectMap\]. A CUE struct using InternalLabel keys is guaranteed to not lose data when rendering output because a InternalLabel is expected to never be written to the final output.
+InternalLabel is an arbitrary unique identifier internal to holos itself. The holos cli is expected to never write a InternalLabel value to rendered output files, therefore use a InternalLabel when the identifier must be unique and internal. Defined as a type for clarity and type checking.
 
 ```go
 type InternalLabel string
@@ -239,7 +223,7 @@ type InternalLabel string
 <a name="Kind"></a>
 ## type Kind {#Kind}
 
-Kind is a kubernetes api object kind. Defined as a type for clarity and type checking.
+Kind is a discriminator. Defined as a type for clarity and type checking.
 
 ```go
 type Kind string
@@ -248,7 +232,7 @@ type Kind string
 <a name="Kustomization"></a>
 ## type Kustomization {#Kustomization}
 
-Kustomization represents a kustomization.yaml file. Untyped to avoid tightly coupling holos to kubectl versions which was a problem for the Flux maintainers. Type checking is expected to happen in CUE against the kubectl version the user prefers.
+Kustomization represents a kustomization.yaml file for use with the [Kustomize](<#Kustomize>) [Transformer](<#Transformer>). Untyped to avoid tightly coupling holos to kubectl versions which was a problem for the Flux maintainers. Type checking is expected to happen in CUE against the kubectl version the user prefers.
 
 ```go
 type Kustomization map[string]any
@@ -257,7 +241,7 @@ type Kustomization map[string]any
 <a name="Kustomize"></a>
 ## type Kustomize {#Kustomize}
 
-Kustomize represents resources necessary to execute a kustomize build.
+Kustomize represents a kustomization [Transformer](<#Transformer>).
 
 ```go
 type Kustomize struct {
@@ -283,7 +267,13 @@ type Metadata struct {
 <a name="NameLabel"></a>
 ## type NameLabel {#NameLabel}
 
-NameLabel is a unique identifier useful to convert a CUE struct to a list when the values have a Name field with a default value. This type is intended to indicate the common use case of converting a struct to a list where the Name field of the value aligns with the struct field name.
+NameLabel is a unique identifier useful to convert a CUE struct to a list when the values have a Name field with a default value. NameLabel indicates the common use case of converting a struct to a list where the Name field of the value aligns with the outer struct field name.
+
+For example:
+
+```
+Outer: [NAME=_]: Name: NAME
+```
 
 ```go
 type NameLabel string
@@ -323,7 +313,7 @@ type PlatformSpec struct {
 <a name="Repository"></a>
 ## type Repository {#Repository}
 
-Repository represents a helm chart repository.
+Repository represents a [Helm](<#Helm>) [Chart](<#Chart>) repository.
 
 ```go
 type Repository struct {
@@ -332,16 +322,47 @@ type Repository struct {
 }
 ```
 
+<a name="Resource"></a>
+## type Resource {#Resource}
+
+Resource represents one kubernetes api object.
+
+```go
+type Resource map[string]any
+```
+
+<a name="Resources"></a>
+## type Resources {#Resources}
+
+Resources represents a kubernetes resources [Generator](<#Generator>) from CUE.
+
+```go
+type Resources map[Kind]map[InternalLabel]Resource
+```
+
 <a name="Transformer"></a>
 ## type Transformer {#Transformer}
 
-
+Transformer transforms [Generator](<#Generator>) manifests within a [BuildStep](<#BuildStep>).
 
 ```go
 type Transformer struct {
-    Kind      string    `json:"kind" cue:"\"Kustomize\""`
+    // Kind represents the kind of transformer.  Must be Kustomize.
+    Kind string `json:"kind" cue:"\"Kustomize\""`
+    // Manifest represents the output file for subsequent transformers.
+    Manifest string `json:"manifest,omitempty"`
+    // Kustomize transformer. Ignored unless kind is Kustomize.
     Kustomize Kustomize `json:"kustomize,omitempty"`
 }
+```
+
+<a name="Values"></a>
+## type Values {#Values}
+
+Values represents [Helm](<#Helm>) Chart values generated from CUE.
+
+```go
+type Values map[string]any
 ```
 
 Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

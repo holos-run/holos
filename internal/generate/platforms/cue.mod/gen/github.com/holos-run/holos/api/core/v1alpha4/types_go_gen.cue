@@ -18,24 +18,8 @@
 // fully rendered manifest files written to the filesystem.
 package v1alpha4
 
-// APIObject represents the most basic generic form of a single kubernetes api
-// object.  Represented as a JSON object internally for compatibility between
-// tools, for example loading from CUE.
-#APIObject: {...}
-
-// APIObjects represents kubernetes resources generated from CUE.
-#APIObjects: {[string]: [string]: #APIObject}
-
-// HelmValues represents helm chart values generated from CUE.
-#HelmValues: {...}
-
-// Kustomization represents a kustomization.yaml file.  Untyped to avoid tightly
-// coupling holos to kubectl versions which was a problem for the Flux
-// maintainers.  Type checking is expected to happen in CUE against the kubectl
-// version the user prefers.
-#Kustomization: {...}
-
-// BuildPlan represents a build plan for holos to execute.
+// BuildPlan represents a build plan for holos to execute.  Each [Platform]
+// component produces exactly one BuildPlan.
 #BuildPlan: {
 	// Kind represents the type of the resource.
 	kind: string & "BuildPlan" @go(Kind)
@@ -50,7 +34,7 @@ package v1alpha4
 	spec: #BuildPlanSpec @go(Spec)
 }
 
-// BuildPlanSpec represents the specification of the build plan.
+// BuildPlanSpec represents the specification of the [BuildPlan].
 #BuildPlanSpec: {
 	// Component represents the component that produced the build plan.
 	// Represented as a path relative to the platform root.
@@ -63,62 +47,76 @@ package v1alpha4
 	steps: [...#BuildStep] @go(Steps,[]BuildStep)
 }
 
+// BuildStep represents the holos rendering pipeline for a [BuildPlan].
+//
+// Each [Generator] may be executed concurrently with other generators in the
+// same collection. Each [Transformer] is executed sequentially, the first after
+// all generators have completed.
+//
+// Each BuildStep produces one manifest file artifact.  [Generator] manifests are
+// implicitly joined into one artifact file if there is no [Transformer] that
+// would otherwise combine them.
 #BuildStep: {
-	// Skip causes holos to skip over this build step.
-	skip?:      bool       @go(Skip)
-	generator?: #Generator @go(Generator)
+	artifact?: #FilePath @go(Artifact)
+	generators?: [...#Generator] @go(Generators,[]Generator)
 	transformers?: [...#Transformer] @go(Transformers,[]Transformer)
-
-	// Manifest represents the artifact to store transformed, fully rendered
-	// output.
-	manifest?: #FilePath @go(Manifest)
+	skip?: bool @go(Skip)
 }
 
-// Generator generates an artifact.
+// Generator generates an intermediate manifest for a [BuildStep].
+//
+// Each Generator in a [BuildStep] must have a distinct manifest value for a
+// [Transformer] to reference.
 #Generator: {
-	// HelmFile represents the intermediate file for the transformer.
-	helmFile?:    string @go(HelmFile)
-	helmEnabled?: bool   @go(HelmEnabled)
-	helm?:        #Helm  @go(Helm)
+	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
+	kind: string & ("Resources" | "Helm" | "File") @go(Kind)
 
-	// KustomizeFile represents the intermediate file for the transformer.
-	kustomizeFile?:    string     @go(KustomizeFile)
-	kustomizeEnabled?: bool       @go(KustomizeEnabled)
-	kustomize?:        #Kustomize @go(Kustomize)
+	// Manifest represents the output file for subsequent transformers.
+	manifest: string @go(Manifest)
 
-	// APIObjectsFile represents the intermediate file for the transformer.
-	apiObjectsFile?:    string      @go(APIObjectsFile)
-	apiObjectsEnabled?: bool        @go(APIObjectsEnabled)
-	apiObjects?:        #APIObjects @go(APIObjects)
+	// Resources generator. Ignored unless kind is Resources.
+	resources?: #Resources @go(Resources)
+
+	// Helm generator. Ignored unless kind is Helm.
+	helm?: #Helm @go(Helm)
+
+	// File generator. Ignored unless kind is File.
+	file?: #File @go(File)
 }
 
-#Transformer: {
-	kind:       string & "Kustomize" @go(Kind)
-	kustomize?: #Kustomize           @go(Kustomize)
+// Resource represents one kubernetes api object.
+#Resource: {...}
+
+// Resources represents a kubernetes resources [Generator] from CUE.
+#Resources: {[string]: [string]: #Resource}
+
+// File represents a simple single file copy [Generator].  Useful with a
+// [Kustomize] [Transformer] to process plain manifest files stored in the
+// component directory.  Multiple File generators may be used to transform
+// multiple resources.
+#File: {
+	// Source represents a file to read relative to the component path, the
+	// [BuildPlanSpec] Component field.
+	source: #FilePath @go(Source)
 }
 
-// Kustomize represents resources necessary to execute a kustomize build.
-#Kustomize: {
-	// Kustomization represents the decoded kustomization.yaml file
-	kustomization: #Kustomization @go(Kustomization)
-
-	// Files holds file contents for kustomize, e.g. patch files.
-	files?: #FileContentMap @go(Files)
-}
-
+// Helm represents a [Chart] manifest [Generator].
 #Helm: {
 	// Chart represents a helm chart to manage.
 	chart: #Chart @go(Chart)
 
 	// Values represents values for holos to marshal into values.yaml when
 	// rendering the chart.
-	values: #HelmValues @go(Values)
+	values: #Values @go(Values)
 
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	enableHooks?: bool @go(EnableHooks)
 }
 
-// Chart represents a helm chart.
+// Values represents [Helm] Chart values generated from CUE.
+#Values: {...}
+
+// Chart represents a [Helm] Chart.
 #Chart: {
 	// Name represents the chart name.
 	name: string @go(Name)
@@ -133,11 +131,38 @@ package v1alpha4
 	repository?: #Repository @go(Repository)
 }
 
-// Repository represents a helm chart repository.
+// Repository represents a [Helm] [Chart] repository.
 #Repository: {
 	name: string @go(Name)
 	url:  string @go(URL)
 }
+
+// Transformer transforms [Generator] manifests within a [BuildStep].
+#Transformer: {
+	// Kind represents the kind of transformer.  Must be Kustomize.
+	kind: string & "Kustomize" @go(Kind)
+
+	// Manifest represents the output file for subsequent transformers.
+	manifest?: string @go(Manifest)
+
+	// Kustomize transformer. Ignored unless kind is Kustomize.
+	kustomize?: #Kustomize @go(Kustomize)
+}
+
+// Kustomize represents a kustomization [Transformer].
+#Kustomize: {
+	// Kustomization represents the decoded kustomization.yaml file
+	kustomization: #Kustomization @go(Kustomization)
+
+	// Files holds file contents for kustomize, e.g. patch files.
+	files?: #FileContentMap @go(Files)
+}
+
+// Kustomization represents a kustomization.yaml file for use with the
+// [Kustomize] [Transformer].  Untyped to avoid tightly coupling holos to
+// kubectl versions which was a problem for the Flux maintainers.  Type checking
+// is expected to happen in CUE against the kubectl version the user prefers.
+#Kustomization: {...}
 
 // FileContent represents file contents.
 #FileContent: string
@@ -150,24 +175,21 @@ package v1alpha4
 
 // InternalLabel is an arbitrary unique identifier internal to holos itself.
 // The holos cli is expected to never write a InternalLabel value to rendered
-// output files, therefore use a [InternalLabel] when the identifier must be
+// output files, therefore use a InternalLabel when the identifier must be
 // unique and internal.  Defined as a type for clarity and type checking.
-//
-// A InternalLabel is useful to convert a CUE struct to a list, for example
-// producing a list of [APIObject] resources from an [APIObjectMap].  A CUE
-// struct using InternalLabel keys is guaranteed to not lose data when rendering
-// output because a InternalLabel is expected to never be written to the final
-// output.
 #InternalLabel: string
 
-// Kind is a kubernetes api object kind. Defined as a type for clarity and type
-// checking.
+// Kind is a discriminator. Defined as a type for clarity and type checking.
 #Kind: string
 
 // NameLabel is a unique identifier useful to convert a CUE struct to a list
-// when the values have a Name field with a default value.  This type is
-// intended to indicate the common use case of converting a struct to a list
-// where the Name field of the value aligns with the struct field name.
+// when the values have a Name field with a default value.  NameLabel indicates
+// the common use case of converting a struct to a list where the Name field of
+// the value aligns with the outer struct field name.
+//
+// For example:
+//
+//	Outer: [NAME=_]: Name: NAME
 #NameLabel: string
 
 // Platform represents a platform to manage.  A Platform resource informs holos
