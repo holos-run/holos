@@ -185,13 +185,15 @@ func (b *BuildPlan) generateResources(
 		}
 	}
 
+	msg := fmt.Sprintf("could not generate %s for %s", g.Output, b.BuildPlan.Metadata.Name)
+
 	buf, err := marshal(list)
 	if err != nil {
-		return errors.Format("could not generate %s for %s: %w", g.Output, b.BuildPlan.Metadata.Name, err)
+		return errors.Format("%s: %w", msg, err)
 	}
 
 	if err := am.Set(holos.FilePath(g.Output), buf.Bytes()); err != nil {
-		return errors.Format("could not generate %s for %s: %w", g.Output, b.BuildPlan.Metadata.Name, err)
+		return errors.Format("%s: %w", msg, err)
 	}
 
 	log.Debug("set artifact: " + string(g.Output))
