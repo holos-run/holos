@@ -1,6 +1,7 @@
 package v1alpha4
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -184,12 +185,12 @@ func (b *BuildPlan) generateResources(
 		}
 	}
 
-	data, err := yaml.Marshal(list)
+	buf, err := marshal(list)
 	if err != nil {
 		return errors.Format("could not generate %s for %s: %w", g.Output, b.BuildPlan.Metadata.Name, err)
 	}
 
-	if err := am.Set(holos.FilePath(g.Output), data); err != nil {
+	if err := am.Set(holos.FilePath(g.Output), buf.Bytes()); err != nil {
 		return errors.Format("could not generate %s for %s: %w", g.Output, b.BuildPlan.Metadata.Name, err)
 	}
 
@@ -251,4 +252,16 @@ func (b *BuildPlan) kustomize(
 	log.Debug("set artifact: " + string(t.Output))
 
 	return nil
+}
+
+func marshal(list []v1alpha4.Resource) (buf bytes.Buffer, err error) {
+	encoder := yaml.NewEncoder(&buf)
+	defer encoder.Close()
+	for _, item := range list {
+		if err = encoder.Encode(item); err != nil {
+			err = errors.Wrap(err)
+			return
+		}
+	}
+	return
 }
