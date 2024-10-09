@@ -13,6 +13,16 @@ import (
 // ErrUnsupported is errors.ErrUnsupported
 var ErrUnsupported = errors.ErrUnsupported
 
+func NotImplemented() error {
+	return wrap(New("not implemented"), 2)
+}
+
+// Format calls fmt.Format(format, a...) and wraps the error with the caller
+// source location.
+func Format(format string, a ...any) error {
+	return wrap(fmt.Errorf(format, a...), 2)
+}
+
 // As calls errors.As
 func As(err error, target any) bool {
 	return errors.As(err, target)
@@ -67,11 +77,7 @@ func (e *ErrorAt) Error() string {
 	return e.Source.Loc() + ": " + e.Err.Error()
 }
 
-// Wrap wraps err in a ErrorAt or returns err if err is nil, already a
-// ErrorAt, or caller info is not available.
-//
-// XXX: Refactor to Err(error, ...slog.Attr).  Often want to add attributes for the top level logger.
-func Wrap(err error) error {
+func wrap(err error, skip int) error {
 	// Nothing to do
 	if err == nil {
 		return nil
@@ -84,7 +90,7 @@ func Wrap(err error) error {
 	}
 
 	// Try to wrap err with caller info
-	if _, file, line, ok := runtime.Caller(1); ok {
+	if _, file, line, ok := runtime.Caller(skip); ok {
 		return &ErrorAt{
 			Err: err,
 			Source: Source{
@@ -95,6 +101,15 @@ func Wrap(err error) error {
 	}
 
 	return err
+}
+
+// Wrap wraps err in a ErrorAt or returns err if err is nil, already a
+// ErrorAt, or caller info is not available.
+//
+// XXX: Refactor to Err(error, ...slog.Attr).  Often want to add attributes for
+// the top level logger.
+func Wrap(err error) error {
+	return wrap(err, 2)
 }
 
 // Log logs err with Source location if Err is a ErrorAt

@@ -14,7 +14,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func Platform(ctx context.Context, concurrency int, pf *core.Platform, stderr io.Writer) error {
+// Deprecated: Use Platform instead.
+func LegacyPlatform(ctx context.Context, concurrency int, pf *core.Platform, stderr io.Writer) error {
 	parentStart := time.Now()
 	total := len(pf.Spec.Components)
 

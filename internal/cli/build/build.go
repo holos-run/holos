@@ -20,6 +20,7 @@ func makeBuildRunFunc(cfg *client.Config) command.RunFunc {
 		ctx := cmd.Root().Context()
 		logger.FromContext(ctx).DebugContext(ctx, "RunE", "args", args)
 		build := builder.New(builder.Entrypoints(args), builder.Cluster(cfg.Holos().ClusterName()))
+		//nolint:staticcheck
 		results, err := build.Run(ctx, cfg)
 		if err != nil {
 			return err
