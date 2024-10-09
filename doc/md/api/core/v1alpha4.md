@@ -123,10 +123,16 @@ type Chart struct {
 
 Component represents the complete context necessary to produce a [BuildPlan](<#BuildPlan>) from a [Platform](<#Platform>) component.
 
+All of these fields are passed to the holos render component command using flags, which in turn are injected to CUE using tags. Field names should be used consistently through the platform rendering process for readability.
+
 ```go
 type Component struct {
-    // Path is the path of the component relative to the platform root.
-    Path string `json:"path"`
+    // Name represents the name of the component, injected as a tag to set the
+    // BuildPlan metadata.name field.  Necessary for clear user feedback during
+    // platform rendering.
+    Name string `json:"name"`
+    // Component represents the path of the component relative to the platform root.
+    Component string `json:"component"`
     // Cluster is the cluster name to provide when rendering the component.
     Cluster string `json:"cluster"`
     // Environment for example, dev, test, stage, prod
@@ -134,7 +140,9 @@ type Component struct {
     // Model represents the platform model holos gets from from the
     // PlatformService.GetPlatform rpc method and provides to CUE using a tag.
     Model map[string]any `json:"model"`
-    // Tags represents cue tags to provide when rendering the component.
+    // Tags represents cue tags to inject when rendering the component.  The json
+    // struct tag names of other fields in this struct are reserved tag names not
+    // to be used in the tags collection.
     Tags []string `json:"tags,omitempty"`
 }
 ```

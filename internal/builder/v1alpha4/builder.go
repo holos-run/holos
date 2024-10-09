@@ -56,7 +56,8 @@ func (p *Platform) Build(ctx context.Context, _ holos.ArtifactMap) error {
 					default:
 						start := time.Now()
 						log := logger.FromContext(ctx).With(
-							"path", component.Path,
+							"name", component.Name,
+							"path", component.Component,
 							"cluster", component.Cluster,
 							"environment", component.Environment,
 							"num", idx+1,
@@ -64,8 +65,9 @@ func (p *Platform) Build(ctx context.Context, _ holos.ArtifactMap) error {
 						)
 						log.DebugContext(ctx, "render component")
 
-						tags := make([]string, 0, 2+len(component.Tags))
-						tags = append(tags, "component="+component.Path)
+						tags := make([]string, 0, 3+len(component.Tags))
+						tags = append(tags, "name="+component.Name)
+						tags = append(tags, "component="+component.Component)
 						tags = append(tags, "environment="+component.Environment)
 						tags = append(tags, component.Tags...)
 
@@ -75,7 +77,7 @@ func (p *Platform) Build(ctx context.Context, _ holos.ArtifactMap) error {
 							"component",
 							"--cluster-name", component.Cluster,
 							"--tags", strings.Join(tags, ","),
-							component.Path,
+							component.Component,
 						}
 						result, err := util.RunCmd(ctx, "holos", args...)
 						if err != nil {
@@ -86,7 +88,7 @@ func (p *Platform) Build(ctx context.Context, _ holos.ArtifactMap) error {
 						duration := time.Since(start)
 						msg := fmt.Sprintf(
 							"rendered %s for cluster %s in %s",
-							filepath.Base(component.Path),
+							component.Name,
 							component.Cluster,
 							duration,
 						)

@@ -261,9 +261,18 @@ package v1alpha4
 
 // Component represents the complete context necessary to produce a [BuildPlan]
 // from a [Platform] component.
+//
+// All of these fields are passed to the holos render component command using
+// flags, which in turn are injected to CUE using tags.  Field names should be
+// used consistently through the platform rendering process for readability.
 #Component: {
-	// Path is the path of the component relative to the platform root.
-	path: string @go(Path)
+	// Name represents the name of the component, injected as a tag to set the
+	// BuildPlan metadata.name field.  Necessary for clear user feedback during
+	// platform rendering.
+	name: string @go(Name)
+
+	// Component represents the path of the component relative to the platform root.
+	component: string @go(Component)
 
 	// Cluster is the cluster name to provide when rendering the component.
 	cluster: string @go(Cluster)
@@ -275,6 +284,8 @@ package v1alpha4
 	// PlatformService.GetPlatform rpc method and provides to CUE using a tag.
 	model: {...} @go(Model,map[string]any)
 
-	// Tags represents cue tags to provide when rendering the component.
+	// Tags represents cue tags to inject when rendering the component.  The json
+	// struct tag names of other fields in this struct are reserved tag names not
+	// to be used in the tags collection.
 	tags?: [...string] @go(Tags,[]string)
 }
