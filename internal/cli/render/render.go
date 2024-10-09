@@ -99,6 +99,7 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 			return render.Component(ctx, &builder, art)
 		// Legacy method.
 		case "v1alpha3", "v1alpha2", "v1alpha1":
+			//nolint:staticcheck
 			results, err := build.Run(ctx, config)
 			if err != nil {
 				return errors.Wrap(err)
@@ -202,6 +203,7 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err)
 			}
+			//nolint:staticcheck
 			return render.LegacyPlatform(ctx, concurrency, platform, cmd.ErrOrStderr())
 
 		default:

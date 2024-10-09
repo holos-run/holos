@@ -115,6 +115,7 @@
     "mxcl",
     "myhostname",
     "nameserver",
+    "nolint",
     "organizationconnect",
     "orgid",
     "otelconnect",

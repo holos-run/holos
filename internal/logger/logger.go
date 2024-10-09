@@ -34,7 +34,7 @@ func (s stringSlice) String() string {
 }
 
 func (s stringSlice) Set(value string) error {
-	s = append(s, strings.Split(value, ",")...)
+	_ = append(s, strings.Split(value, ",")...)
 	return nil
 }
 
