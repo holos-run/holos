@@ -84,11 +84,12 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 		decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
 		decoder.DisallowUnknownFields()
 
-		art := artifact.New(artifact.WriteTo(cfg.WriteTo()))
+		art := artifact.New()
 
 		switch version := tm.APIVersion; version {
 		case "v1alpha4":
 			builder := v1alpha4.BuildPlan{
+				WriteTo:     cfg.WriteTo(),
 				Concurrency: concurrency,
 				Stderr:      cmd.ErrOrStderr(),
 			}

@@ -47,7 +47,7 @@ func (p *Platform) Build(ctx context.Context, _ holos.ArtifactMap) error {
 			default:
 				// Capture idx to avoid issues with closure.  Fixed in Go 1.22.
 				idx := idx
-				buildContext := &components[idx]
+				component := &components[idx]
 				// Worker go routine.  Blocks if limit has been reached.
 				g.Go(func() error {
 					select {
@@ -56,26 +56,26 @@ func (p *Platform) Build(ctx context.Context, _ holos.ArtifactMap) error {
 					default:
 						start := time.Now()
 						log := logger.FromContext(ctx).With(
-							"path", buildContext.Path,
-							"cluster", buildContext.Cluster,
-							"environment", buildContext.Environment,
+							"path", component.Path,
+							"cluster", component.Cluster,
+							"environment", component.Environment,
 							"num", idx+1,
 							"total", total,
 						)
 						log.DebugContext(ctx, "render component")
 
-						tags := make([]string, 0, 2+len(buildContext.Tags))
-						tags = append(tags, "component="+buildContext.Path)
-						tags = append(tags, "environment="+buildContext.Environment)
-						tags = append(tags, buildContext.Tags...)
+						tags := make([]string, 0, 2+len(component.Tags))
+						tags = append(tags, "component="+component.Path)
+						tags = append(tags, "environment="+component.Environment)
+						tags = append(tags, component.Tags...)
 
 						// Execute a sub-process to limit CUE memory usage.
 						args := []string{
 							"render",
 							"component",
-							"--cluster-name", buildContext.Cluster,
+							"--cluster-name", component.Cluster,
 							"--tags", strings.Join(tags, ","),
-							buildContext.Path,
+							component.Path,
 						}
 						result, err := util.RunCmd(ctx, "holos", args...)
 						if err != nil {
@@ -86,8 +86,8 @@ func (p *Platform) Build(ctx context.Context, _ holos.ArtifactMap) error {
 						duration := time.Since(start)
 						msg := fmt.Sprintf(
 							"rendered %s for cluster %s in %s",
-							filepath.Base(buildContext.Path),
-							buildContext.Cluster,
+							filepath.Base(component.Path),
+							component.Cluster,
 							duration,
 						)
 						log.InfoContext(ctx, msg, "duration", duration)
@@ -114,6 +114,7 @@ func (p *Platform) Build(ctx context.Context, _ holos.ArtifactMap) error {
 type BuildPlan struct {
 	BuildPlan   v1alpha4.BuildPlan
 	Concurrency int
+	WriteTo     string
 	Stderr      io.Writer
 }
 
@@ -163,9 +164,25 @@ func (b *BuildPlan) Build(ctx context.Context, am holos.ArtifactMap) error {
 				return errors.Format("could not build %s: unsupported kind %s", name, t.Kind)
 			}
 		}
+
+		msg := fmt.Sprintf("could not build %s", name)
+
+		// Write the final artifact
+		data, ok := am.Get(holos.FilePath(a.Artifact))
+		if !ok {
+			return errors.Format("%s: could not get artifact %s", msg, a.Artifact)
+		}
+		path := filepath.Join(b.WriteTo, string(a.Artifact))
+		if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		if err := os.WriteFile(path, data, 0666); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		log.DebugContext(ctx, "wrote: "+path)
 	}
 
-	return errors.NotImplemented()
+	return nil
 }
 
 func (b *BuildPlan) generateResources(

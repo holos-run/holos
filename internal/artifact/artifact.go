@@ -7,33 +7,16 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 )
 
-type Option func(*Artifact)
-
-// WriteTo configures the directory to write artifacts into.
-func WriteTo(path string) Option {
-	return func(a *Artifact) {
-		a.writeTo = path
-	}
-}
-
-func New(options ...Option) *Artifact {
-	a := &Artifact{
-		m:       make(map[holos.FilePath][]byte),
-		writeTo: "deploy",
-	}
-	for _, o := range options {
-		o(a)
-	}
-	return a
+func New() *Artifact {
+	return &Artifact{m: make(map[holos.FilePath][]byte)}
 }
 
 // Artifact represents the fully rendered manifests build from the holos
 // rendering pipeline.  Files are organized by keys representing paths relative
-// to the current working directory.  Values represent the file string content.
+// to the current working directory.  Values represent the file content.
 type Artifact struct {
-	mu      sync.RWMutex
-	m       map[holos.FilePath][]byte
-	writeTo string
+	mu sync.RWMutex
+	m  map[holos.FilePath][]byte
 }
 
 // Set sets an artifact file with write locking.  Set returns an error if the
