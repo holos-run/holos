@@ -8,16 +8,16 @@ import "github.com/holos-run/holos/api/core/v1alpha4"
 
 Package v1alpha4 contains the core API contract between the holos cli and CUE configuration code. Platform designers, operators, and software developers use this API to write configuration in CUE which \`holos\` loads. The overall shape of the API defines imperative actions \`holos\` should carry out to render the complete yaml that represents a Platform.
 
-[Platform](<#Platform>) defines the complete configuration of a platform. With the holos reference platform this takes the shape of one management cluster and at least two workload clusters. Each cluster has multiple \[Component\] resources applied to it.
+[Platform](<#Platform>) defines the complete configuration of a platform. With the holos reference platform this takes the shape of one management cluster and at least two workload clusters.
 
-Each holos component path, e.g. \`components/namespaces\` produces exactly one [BuildPlan](<#BuildPlan>) which produces an \[Artifact\]. An \[Artifact\] is a collection of fully rendered manifest files written to the filesystem.
+Each holos component path, e.g. \`components/namespaces\` produces exactly one [BuildPlan](<#BuildPlan>) which produces an [Artifact](<#Artifact>) collection. An [Artifact](<#Artifact>) is a fully rendered manifest produced from a [Transformer](<#Transformer>) sequence, which transforms a [Generator](<#Generator>) collection.
 
 ## Index
 
+- [type Artifact](<#Artifact>)
 - [type BuildContext](<#BuildContext>)
 - [type BuildPlan](<#BuildPlan>)
 - [type BuildPlanSpec](<#BuildPlanSpec>)
-- [type BuildStep](<#BuildStep>)
 - [type Chart](<#Chart>)
 - [type File](<#File>)
 - [type FileContent](<#FileContent>)
@@ -39,6 +39,24 @@ Each holos component path, e.g. \`components/namespaces\` produces exactly one [
 - [type Transformer](<#Transformer>)
 - [type Values](<#Values>)
 
+
+<a name="Artifact"></a>
+## type Artifact {#Artifact}
+
+Artifact represents one fully rendered manifest produced by a [Transformer](<#Transformer>) sequence, which transforms a [Generator](<#Generator>) collection. A [BuildPlan](<#BuildPlan>) produces an [Artifact](<#Artifact>) collection.
+
+Each [Generator](<#Generator>) may be executed concurrently with other generators in the same collection. Each [Transformer](<#Transformer>) is executed sequentially, the first after all generators have completed.
+
+Each Artifact produces one manifest file artifact. [Generator](<#Generator>) manifests are implicitly joined into one artifact file if there is no [Transformer](<#Transformer>) that would otherwise combine them.
+
+```go
+type Artifact struct {
+    Artifact     FilePath      `json:"artifact,omitempty"`
+    Generators   []Generator   `json:"generators,omitempty"`
+    Transformers []Transformer `json:"transformers,omitempty"`
+    Skip         bool          `json:"skip,omitempty"`
+}
+```
 
 <a name="BuildContext"></a>
 ## type BuildContext {#BuildContext}
@@ -66,6 +84,8 @@ type BuildContext struct {
 
 BuildPlan represents a build plan for holos to execute. Each [Platform](<#Platform>) component produces exactly one BuildPlan.
 
+One or more [Artifact](<#Artifact>) files are produced by a BuildPlan, representing the fully rendered manifests for the Kubernetes API Server.
+
 ```go
 type BuildPlan struct {
     // Kind represents the type of the resource.
@@ -91,26 +111,8 @@ type BuildPlanSpec struct {
     Component string `json:"component"`
     // Disabled causes the holos cli to disregard the build plan.
     Disabled bool `json:"disabled,omitempty"`
-    // Steps represent build steps for holos to execute
-    Steps []BuildStep `json:"steps"`
-}
-```
-
-<a name="BuildStep"></a>
-## type BuildStep {#BuildStep}
-
-BuildStep represents the holos rendering pipeline for a [BuildPlan](<#BuildPlan>).
-
-Each [Generator](<#Generator>) may be executed concurrently with other generators in the same collection. Each [Transformer](<#Transformer>) is executed sequentially, the first after all generators have completed.
-
-Each BuildStep produces one manifest file artifact. [Generator](<#Generator>) manifests are implicitly joined into one artifact file if there is no [Transformer](<#Transformer>) that would otherwise combine them.
-
-```go
-type BuildStep struct {
-    Artifact     FilePath      `json:"artifact,omitempty"`
-    Generators   []Generator   `json:"generators,omitempty"`
-    Transformers []Transformer `json:"transformers,omitempty"`
-    Skip         bool          `json:"skip,omitempty"`
+    // Artifacts represents the artifacts for holos to build.
+    Artifacts []Artifact `json:"artifacts"`
 }
 ```
 
@@ -175,9 +177,9 @@ type FilePath string
 <a name="Generator"></a>
 ## type Generator {#Generator}
 
-Generator generates an intermediate manifest for a [BuildStep](<#BuildStep>).
+Generator generates an intermediate manifest for a [Artifact](<#Artifact>).
 
-Each Generator in a [BuildStep](<#BuildStep>) must have a distinct manifest value for a [Transformer](<#Transformer>) to reference.
+Each Generator in a [Artifact](<#Artifact>) must have a distinct manifest value for a [Transformer](<#Transformer>) to reference.
 
 ```go
 type Generator struct {
@@ -343,7 +345,7 @@ type Resources map[Kind]map[InternalLabel]Resource
 <a name="Transformer"></a>
 ## type Transformer {#Transformer}
 
-Transformer transforms [Generator](<#Generator>) manifests within a [BuildStep](<#BuildStep>).
+Transformer transforms [Generator](<#Generator>) manifests within a [Artifact](<#Artifact>).
 
 ```go
 type Transformer struct {

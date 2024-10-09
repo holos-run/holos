@@ -6,18 +6,21 @@
 //
 // [Platform] defines the complete configuration of a platform.  With the holos
 // reference platform this takes the shape of one management cluster and at
-// least two workload clusters.  Each cluster has multiple [Component] resources
-// applied to it.
+// least two workload clusters.
 //
 // Each holos component path, e.g. `components/namespaces` produces exactly one
-// [BuildPlan] which produces an [Artifact].  An [Artifact] is a collection of
-// fully rendered manifest files written to the filesystem.
+// [BuildPlan] which produces an [Artifact] collection.  An [Artifact] is a
+// fully rendered manifest produced from a [Transformer] sequence, which
+// transforms a [Generator] collection.
 package v1alpha4
 
 //go:generate ../../../hack/gendoc
 
 // BuildPlan represents a build plan for holos to execute.  Each [Platform]
 // component produces exactly one BuildPlan.
+//
+// One or more [Artifact] files are produced by a BuildPlan, representing the
+// fully rendered manifests for the Kubernetes API Server.
 type BuildPlan struct {
 	// Kind represents the type of the resource.
 	Kind string `json:"kind" cue:"\"BuildPlan\""`
@@ -36,29 +39,31 @@ type BuildPlanSpec struct {
 	Component string `json:"component"`
 	// Disabled causes the holos cli to disregard the build plan.
 	Disabled bool `json:"disabled,omitempty"`
-	// Steps represent build steps for holos to execute
-	Steps []BuildStep `json:"steps"`
+	// Artifacts represents the artifacts for holos to build.
+	Artifacts []Artifact `json:"artifacts"`
 }
 
-// BuildStep represents the holos rendering pipeline for a [BuildPlan].
+// Artifact represents one fully rendered manifest produced by a [Transformer]
+// sequence, which transforms a [Generator] collection.  A [BuildPlan] produces
+// an [Artifact] collection.
 //
 // Each [Generator] may be executed concurrently with other generators in the
 // same collection. Each [Transformer] is executed sequentially, the first after
 // all generators have completed.
 //
-// Each BuildStep produces one manifest file artifact.  [Generator] manifests are
+// Each Artifact produces one manifest file artifact.  [Generator] manifests are
 // implicitly joined into one artifact file if there is no [Transformer] that
 // would otherwise combine them.
-type BuildStep struct {
+type Artifact struct {
 	Artifact     FilePath      `json:"artifact,omitempty"`
 	Generators   []Generator   `json:"generators,omitempty"`
 	Transformers []Transformer `json:"transformers,omitempty"`
 	Skip         bool          `json:"skip,omitempty"`
 }
 
-// Generator generates an intermediate manifest for a [BuildStep].
+// Generator generates an intermediate manifest for a [Artifact].
 //
-// Each Generator in a [BuildStep] must have a distinct manifest value for a
+// Each Generator in a [Artifact] must have a distinct manifest value for a
 // [Transformer] to reference.
 type Generator struct {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
@@ -121,7 +126,7 @@ type Repository struct {
 	URL  string `json:"url"`
 }
 
-// Transformer transforms [Generator] manifests within a [BuildStep].
+// Transformer transforms [Generator] manifests within a [Artifact].
 type Transformer struct {
 	// Kind represents the kind of transformer.  Must be Kustomize.
 	Kind string `json:"kind" cue:"\"Kustomize\""`
