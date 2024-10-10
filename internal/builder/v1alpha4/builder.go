@@ -127,7 +127,7 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 	log := logger.FromContext(ctx).With("name", name, "component", component)
 	msg := fmt.Sprintf("could not build %s", name)
 	if b.BuildPlan.Spec.Disabled {
-		log.WarnContext(ctx, fmt.Sprintf("%s: spec.disabled field is true", msg))
+		log.WarnContext(ctx, fmt.Sprintf("%s: disabled", msg))
 		return nil
 	}
 
@@ -138,8 +138,10 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 	// Producer.
 	g.Go(func() error {
 		for _, a := range b.BuildPlan.Spec.Artifacts {
+			msg := fmt.Sprintf("%s artifact %s", msg, a.Artifact)
+			log := log.With("artifact", a.Artifact)
 			if a.Skip {
-				log.WarnContext(ctx, fmt.Sprintf("skipped artifact %s: skip field is true", a.Artifact))
+				log.WarnContext(ctx, fmt.Sprintf("%s: skipped field is true", msg))
 				continue
 			}
 			select {
@@ -161,7 +163,7 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 						case "File":
 							return errors.NotImplemented()
 						default:
-							return errors.Format("%s: %s kind not supported", msg, gen.Kind)
+							return errors.Format("%s: unsupported kind %s", msg, gen.Kind)
 						}
 					}
 
@@ -174,27 +176,27 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 						case "Join":
 							s := make([][]byte, 0, len(t.Inputs))
 							for _, input := range t.Inputs {
-								if data, ok := am.Get(h.FilePath(input)); ok {
+								if data, ok := am.Get(string(input)); ok {
 									s = append(s, data)
 								} else {
 									return errors.Format("%s: missing %s", msg, input)
 								}
 							}
 							data := bytes.Join(s, []byte(t.Join.Separator))
-							if err := am.Set(h.FilePath(t.Output), data); err != nil {
+							if err := am.Set(string(t.Output), data); err != nil {
 								return errors.Format("%s: %w", msg, err)
 							}
 							log.Debug("set artifact: " + string(t.Output))
 						default:
-							return errors.Format("%s: %s kind not supported", msg, t.Kind)
+							return errors.Format("%s: unsupported kind %s", msg, t.Kind)
 						}
 					}
 
 					// Write the final artifact
-					if err := am.Save(h.FilePath(b.WriteTo), h.FilePath(a.Artifact)); err != nil {
+					if err := am.Save(b.WriteTo, string(a.Artifact)); err != nil {
 						return errors.Format("%s: %w", msg, err)
 					}
-					log.DebugContext(ctx, "wrote: "+filepath.Join(b.WriteTo, string(a.Artifact)))
+					log.DebugContext(ctx, "wrote "+filepath.Join(b.WriteTo, string(a.Artifact)))
 
 					return nil
 				})
@@ -231,11 +233,11 @@ func (b *BuildPlan) generateResources(
 		return errors.Format("%s: %w", msg, err)
 	}
 
-	if err := am.Set(h.FilePath(g.Output), buf.Bytes()); err != nil {
+	if err := am.Set(string(g.Output), buf.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
 
-	log.Debug("set artifact: " + string(g.Output))
+	log.Debug("set artifact " + string(g.Output))
 	return nil
 }
 
@@ -246,7 +248,6 @@ func (b *BuildPlan) kustomize(
 	am h.ArtifactMap,
 ) error {
 	tempDir, err := os.MkdirTemp("", "holos.kustomize")
-	dir := h.FilePath(tempDir)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -262,15 +263,15 @@ func (b *BuildPlan) kustomize(
 	if err := os.WriteFile(path, data, 0666); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
-	log.DebugContext(ctx, "wrote: "+path)
+	log.DebugContext(ctx, "wrote "+path)
 
 	// Write the inputs
 	for _, input := range t.Inputs {
-		path := h.FilePath(input)
-		if err := am.Save(dir, path); err != nil {
+		path := string(input)
+		if err := am.Save(tempDir, path); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
-		log.DebugContext(ctx, "wrote: "+filepath.Join(string(dir), string(path)))
+		log.DebugContext(ctx, "wrote "+filepath.Join(tempDir, path))
 	}
 
 	// Execute kustomize
@@ -281,10 +282,10 @@ func (b *BuildPlan) kustomize(
 	}
 
 	// Store the artifact
-	if err := am.Set(h.FilePath(t.Output), result.Stdout.Bytes()); err != nil {
+	if err := am.Set(string(t.Output), result.Stdout.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
-	log.Debug("set artifact: " + string(t.Output))
+	log.Debug("set artifact " + string(t.Output))
 
 	return nil
 }

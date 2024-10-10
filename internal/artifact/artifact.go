@@ -6,12 +6,11 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/holos-run/holos"
 	"github.com/holos-run/holos/internal/errors"
 )
 
 func New() *Artifact {
-	return &Artifact{m: make(map[holos.FilePath][]byte)}
+	return &Artifact{m: make(map[string][]byte)}
 }
 
 // Artifact represents the fully rendered manifests build from the holos
@@ -19,23 +18,23 @@ func New() *Artifact {
 // to the current working directory.  Values represent the file content.
 type Artifact struct {
 	mu sync.RWMutex
-	m  map[holos.FilePath][]byte
+	m  map[string][]byte
 }
 
 // Set sets an artifact file with write locking.  Set returns an error if the
 // artifact was previously set.
-func (a *Artifact) Set(path holos.FilePath, data []byte) error {
+func (a *Artifact) Set(path string, data []byte) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if _, ok := a.m[path]; ok {
-		return errors.Format("could not set artifact %s: already set", path)
+		return errors.Format("%s already set", path)
 	}
 	a.m[path] = data
 	return nil
 }
 
 // Get gets the content of an artifact with read locking.
-func (a *Artifact) Get(path holos.FilePath) (data []byte, ok bool) {
+func (a *Artifact) Get(path string) (data []byte, ok bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	data, ok = a.m[path]
@@ -43,8 +42,8 @@ func (a *Artifact) Get(path holos.FilePath) (data []byte, ok bool) {
 }
 
 // Save writes a file to the filesystem.
-func (a *Artifact) Save(dir, path holos.FilePath) error {
-	fullPath := filepath.Join(string(dir), string(path))
+func (a *Artifact) Save(dir, path string) error {
+	fullPath := filepath.Join(dir, path)
 	msg := fmt.Sprintf("could not save %s", fullPath)
 	data, ok := a.Get(path)
 	if !ok {
@@ -59,10 +58,10 @@ func (a *Artifact) Save(dir, path holos.FilePath) error {
 	return nil
 }
 
-func (a *Artifact) Keys() []holos.FilePath {
+func (a *Artifact) Keys() []string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
-	keys := make([]holos.FilePath, 0, len(a.m))
+	keys := make([]string, 0, len(a.m))
 	for key := range a.m {
 		keys = append(keys, key)
 	}
