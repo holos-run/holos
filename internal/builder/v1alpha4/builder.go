@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/holos-run/holos"
+	h "github.com/holos-run/holos"
 	"github.com/holos-run/holos/api/core/v1alpha4"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
@@ -30,7 +30,7 @@ type Platform struct {
 // Build builds a Platform by concurrently building a BuildPlan for each
 // platform component.  No artifact files are written directly, only indirectly
 // by rendering each component.
-func (p *Platform) Build(ctx context.Context, _ holos.ArtifactMap) error {
+func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
 	parentStart := time.Now()
 	components := p.Platform.Spec.Components
 	total := len(components)
@@ -121,7 +121,7 @@ type BuildPlan struct {
 }
 
 // Build builds a BuildPlan into Artifact files.
-func (b *BuildPlan) Build(ctx context.Context, am holos.ArtifactMap) error {
+func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 	name := b.BuildPlan.Metadata.Name
 	component := b.BuildPlan.Spec.Component
 	log := logger.FromContext(ctx).With("name", name, "component", component)
@@ -150,10 +150,10 @@ func (b *BuildPlan) Build(ctx context.Context, am holos.ArtifactMap) error {
 				a := a
 				// Worker.  Blocks if limit has been reached.
 				g.Go(func() error {
-					for _, g := range a.Generators {
-						switch g.Kind {
+					for _, gen := range a.Generators {
+						switch gen.Kind {
 						case "Resources":
-							if err := b.generateResources(log, g, am); err != nil {
+							if err := b.generateResources(log, gen, am); err != nil {
 								return errors.Wrap(err)
 							}
 						case "Helm":
@@ -161,7 +161,7 @@ func (b *BuildPlan) Build(ctx context.Context, am holos.ArtifactMap) error {
 						case "File":
 							return errors.NotImplemented()
 						default:
-							return errors.Format("%s: unsupported kind %s", msg, g.Kind)
+							return errors.Format("%s: %s kind not supported", msg, gen.Kind)
 						}
 					}
 
@@ -172,25 +172,30 @@ func (b *BuildPlan) Build(ctx context.Context, am holos.ArtifactMap) error {
 								return errors.Wrap(err)
 							}
 						case "Join":
-							return errors.NotImplemented()
+							s := make([][]byte, 0, len(t.Inputs))
+							for _, input := range t.Inputs {
+								if data, ok := am.Get(h.FilePath(input)); ok {
+									s = append(s, data)
+								} else {
+									return errors.Format("%s: could not get %s: not set", msg, input)
+								}
+							}
+							data := bytes.Join(s, []byte(t.Join.Separator))
+							if err := am.Set(h.FilePath(t.Output), data); err != nil {
+								return errors.Format("%s: %w", msg, err)
+							}
+							log.Debug("set artifact: " + string(t.Output))
 						default:
-							return errors.Format("%s: unsupported kind %s", msg, t.Kind)
+							return errors.Format("%s: %s kind not supported", msg, t.Kind)
 						}
 					}
 
 					// Write the final artifact
-					data, ok := am.Get(holos.FilePath(a.Artifact))
-					if !ok {
-						return errors.Format("%s: could not get artifact %s", msg, a.Artifact)
-					}
-					path := filepath.Join(b.WriteTo, string(a.Artifact))
-					if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
+					if err := am.Save(h.FilePath(b.WriteTo), h.FilePath(a.Artifact)); err != nil {
 						return errors.Format("%s: %w", msg, err)
 					}
-					if err := os.WriteFile(path, data, 0666); err != nil {
-						return errors.Format("%s: %w", msg, err)
-					}
-					log.DebugContext(ctx, "wrote: "+path)
+					log.DebugContext(ctx, "wrote: "+filepath.Join(b.WriteTo, string(a.Artifact)))
+
 					return nil
 				})
 			}
@@ -205,7 +210,7 @@ func (b *BuildPlan) Build(ctx context.Context, am holos.ArtifactMap) error {
 func (b *BuildPlan) generateResources(
 	log *slog.Logger,
 	g v1alpha4.Generator,
-	am holos.ArtifactMap,
+	am h.ArtifactMap,
 ) error {
 	var size int
 	for _, m := range g.Resources {
@@ -226,7 +231,7 @@ func (b *BuildPlan) generateResources(
 		return errors.Format("%s: %w", msg, err)
 	}
 
-	if err := am.Set(holos.FilePath(g.Output), buf.Bytes()); err != nil {
+	if err := am.Set(h.FilePath(g.Output), buf.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
 
@@ -238,9 +243,10 @@ func (b *BuildPlan) kustomize(
 	ctx context.Context,
 	log *slog.Logger,
 	t v1alpha4.Transformer,
-	am holos.ArtifactMap,
+	am h.ArtifactMap,
 ) error {
 	tempDir, err := os.MkdirTemp("", "holos.kustomize")
+	dir := h.FilePath(tempDir)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -260,18 +266,11 @@ func (b *BuildPlan) kustomize(
 
 	// Write the inputs
 	for _, input := range t.Inputs {
-		data, ok := am.Get(holos.FilePath(input))
-		if !ok {
-			return errors.Format("%s: could not get artifact %s", msg, input)
-		}
-		path := filepath.Join(tempDir, string(input))
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		path := h.FilePath(input)
+		if err := am.Save(dir, path); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
-		if err := os.WriteFile(path, data, 0666); err != nil {
-			return errors.Format("%s: %w", msg, err)
-		}
-		log.DebugContext(ctx, "wrote: "+path)
+		log.DebugContext(ctx, "wrote: "+filepath.Join(string(dir), string(path)))
 	}
 
 	// Execute kustomize
@@ -282,7 +281,7 @@ func (b *BuildPlan) kustomize(
 	}
 
 	// Store the artifact
-	if err := am.Set(holos.FilePath(t.Output), result.Stdout.Bytes()); err != nil {
+	if err := am.Set(h.FilePath(t.Output), result.Stdout.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
 	log.Debug("set artifact: " + string(t.Output))

@@ -161,7 +161,7 @@ type Transformer struct {
 // Useful for the common case of combining the output of [Helm] and [Resources]
 // [Generator] into one [Artifact] when [Kustomize] is otherwise unnecessary.
 type Join struct {
-	Separator string `json:"separator,omitempty"`
+	Separator string `json:"separator" cue:"string | *\"---\\n\""`
 }
 
 // Kustomize represents a kustomization [Transformer].
