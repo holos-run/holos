@@ -226,7 +226,15 @@ func (b *BuildPlan) file(
 	g v1alpha4.Generator,
 	am h.ArtifactMap,
 ) error {
-	return errors.NotImplemented()
+	data, err := os.ReadFile(filepath.Join(string(b.Path), string(g.File.Source)))
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	if err := am.Set(string(g.Output), data); err != nil {
+		return errors.Wrap(err)
+	}
+	log.Debug("set artifact: " + string(g.Output))
+	return nil
 }
 
 func (b *BuildPlan) helm(
