@@ -181,7 +181,7 @@ package v1alpha4
 // Useful for the common case of combining the output of [Helm] and [Resources]
 // [Generator] into one [Artifact] when [Kustomize] is otherwise unnecessary.
 #Join: {
-	separator?: string @go(Separator)
+	separator: string & (string | *"---\n") @go(Separator)
 }
 
 // Kustomize represents a kustomization [Transformer].

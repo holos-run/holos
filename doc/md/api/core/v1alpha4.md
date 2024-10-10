@@ -248,7 +248,7 @@ Join represents a [Join](<#Join>)\(https://pkg.go.dev/strings#Join\) [Transforme
 
 ```go
 type Join struct {
-    Separator string `json:"separator,omitempty"`
+    Separator string `json:"separator" cue:"string | *\"---\\n\""`
 }
 ```
 

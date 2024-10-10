@@ -48,7 +48,7 @@ func (a *Artifact) Save(dir, path holos.FilePath) error {
 	msg := fmt.Sprintf("could not save %s", fullPath)
 	data, ok := a.Get(path)
 	if !ok {
-		return errors.Format("%s: could not get: not set: %s", msg, path)
+		return errors.Format("%s: could not get %s: not set", msg, path)
 	}
 	if err := os.MkdirAll(filepath.Dir(fullPath), 0777); err != nil {
 		return errors.Format("%s: %w", msg, err)

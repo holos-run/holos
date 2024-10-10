@@ -172,7 +172,19 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 								return errors.Wrap(err)
 							}
 						case "Join":
-							return errors.NotImplemented()
+							s := make([][]byte, 0, len(t.Inputs))
+							for _, input := range t.Inputs {
+								if data, ok := am.Get(h.FilePath(input)); ok {
+									s = append(s, data)
+								} else {
+									return errors.Format("%s: could not get %s: not set", msg, input)
+								}
+							}
+							data := bytes.Join(s, []byte(t.Join.Separator))
+							if err := am.Set(h.FilePath(t.Output), data); err != nil {
+								return errors.Format("%s: %w", msg, err)
+							}
+							log.Debug("set artifact: " + string(t.Output))
 						default:
 							return errors.Format("%s: %s kind not supported", msg, t.Kind)
 						}
