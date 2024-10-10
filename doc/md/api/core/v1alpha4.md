@@ -154,8 +154,7 @@ File represents a simple single file copy [Generator](<#Generator>). Useful with
 
 ```go
 type File struct {
-    // Source represents a file to read relative to the component path, the
-    // [BuildPlanSpec] Component field.
+    // Source represents a file sub-path relative to the component path.
     Source FilePath `json:"source"`
 }
 ```
@@ -192,7 +191,7 @@ type FilePath string
 
 Generator generates an intermediate manifest for a [Artifact](<#Artifact>).
 
-Each Generator in a [Artifact](<#Artifact>) must have a distinct manifest value for a [Transformer](<#Transformer>) to reference.
+Each Generator in a [Artifact](<#Artifact>) must have a distinct Output value for a [Transformer](<#Transformer>) to reference.
 
 Refer to [Resources](<#Resources>), [Helm](<#Helm>), and [File](<#File>).
 

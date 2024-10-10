@@ -72,7 +72,7 @@ type Artifact struct {
 
 // Generator generates an intermediate manifest for a [Artifact].
 //
-// Each Generator in a [Artifact] must have a distinct manifest value for a
+// Each Generator in a [Artifact] must have a distinct Output value for a
 // [Transformer] to reference.
 //
 // Refer to [Resources], [Helm], and [File].
@@ -104,8 +104,7 @@ type Resources map[Kind]map[InternalLabel]Resource
 // component directory.  Multiple File generators may be used to transform
 // multiple resources.
 type File struct {
-	// Source represents a file to read relative to the component path, the
-	// [BuildPlanSpec] Component field.
+	// Source represents a file sub-path relative to the component path.
 	Source FilePath `json:"source"`
 }
 

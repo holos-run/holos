@@ -79,7 +79,7 @@ package v1alpha4
 
 // Generator generates an intermediate manifest for a [Artifact].
 //
-// Each Generator in a [Artifact] must have a distinct manifest value for a
+// Each Generator in a [Artifact] must have a distinct Output value for a
 // [Transformer] to reference.
 //
 // Refer to [Resources], [Helm], and [File].
@@ -115,8 +115,7 @@ package v1alpha4
 // component directory.  Multiple File generators may be used to transform
 // multiple resources.
 #File: {
-	// Source represents a file to read relative to the component path, the
-	// [BuildPlanSpec] Component field.
+	// Source represents a file sub-path relative to the component path.
 	source: #FilePath @go(Source)
 }
 

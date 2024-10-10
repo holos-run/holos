@@ -82,8 +82,11 @@ func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
 							component.Component,
 						}
 						result, err := util.RunCmd(ctx, "holos", args...)
+						// I've lost an hour+ digging into why I couldn't see log output
+						// from sub-processes.  Make sure to surface at least stderr from
+						// sub-processes.
+						_, _ = io.Copy(p.Stderr, result.Stderr)
 						if err != nil {
-							_, _ = io.Copy(p.Stderr, result.Stderr)
 							return errors.Wrap(fmt.Errorf("could not render component: %w", err))
 						}
 
@@ -239,26 +242,17 @@ func (b *BuildPlan) helm(
 		return errors.New("missing chart name")
 	}
 
-	cachedChartPath := filepath.Join(string(b.Path), "vendor", filepath.Base(chartName))
-	if _, err := os.Stat(cachedChartPath); os.IsNotExist(err) {
-		// Add repositories
-		repo := g.Helm.Chart.Repository
-		if repo.URL == "" {
-			// repo update not needed for oci charts so this is debug instead of warn.
-			log.DebugContext(ctx, "skipped helm repo add and update: repo url is empty")
-		} else {
-			if r, err := util.RunCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL); err != nil {
-				_, _ = io.Copy(b.Stderr, r.Stderr)
-				return errors.Format("could not run helm repo add: %w", err)
-			}
-			if r, err := util.RunCmd(ctx, "helm", "repo", "update", repo.Name); err != nil {
-				_, _ = io.Copy(b.Stderr, r.Stderr)
-				return errors.Format("could not run helm repo update: %w", err)
-			}
-		}
+	// Cache the chart by version to pull new versions. (#273)
+	cacheDir := filepath.Join(string(b.Path), "vendor", g.Helm.Chart.Version)
+	cachePath := filepath.Join(cacheDir, filepath.Base(chartName))
 
-		// Cache the chart
-		if err := cacheChart(ctx, log, b.Path, "vendor", g.Helm.Chart); err != nil {
+	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
+		timeout, cancel := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
+		err := onceWithLock(log, timeout, cachePath, func() error {
+			return b.cacheChart(ctx, log, cacheDir, g.Helm.Chart)
+		})
+		if err != nil {
 			return errors.Format("could not cache chart: %w", err)
 		}
 	}
@@ -295,7 +289,7 @@ func (b *BuildPlan) helm(
 		"--kubeconfig", "/dev/null",
 		"--version", g.Helm.Chart.Version,
 		g.Helm.Chart.Release,
-		cachedChartPath,
+		cachePath,
 	)
 	helmOut, err := util.RunCmd(ctx, "helm", args...)
 	if err != nil {
@@ -423,55 +417,116 @@ func marshal(list []v1alpha4.Resource) (buf bytes.Buffer, err error) {
 //
 // TODO(jeff): Break the dependency on v1alpha4, make it work across versions as
 // a utility function.
-func cacheChart(
+func (b *BuildPlan) cacheChart(
 	ctx context.Context,
 	log *slog.Logger,
-	path h.InstancePath,
-	chartDir string,
+	cacheDir string,
 	chart v1alpha4.Chart,
 ) error {
-	cacheTemp, err := os.MkdirTemp(string(path), chartDir)
+	// Add repositories
+	repo := chart.Repository
+	if repo.URL == "" {
+		// repo update not needed for oci charts so this is debug instead of warn.
+		log.DebugContext(ctx, "skipped helm repo add and update: repo url is empty")
+	} else {
+		if r, err := util.RunCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL); err != nil {
+			_, _ = io.Copy(b.Stderr, r.Stderr)
+			return errors.Format("could not run helm repo add: %w", err)
+		}
+		if r, err := util.RunCmd(ctx, "helm", "repo", "update", repo.Name); err != nil {
+			_, _ = io.Copy(b.Stderr, r.Stderr)
+			return errors.Format("could not run helm repo update: %w", err)
+		}
+	}
+
+	cacheTemp, err := os.MkdirTemp(cacheDir, chart.Name)
 	if err != nil {
-		return errors.Wrap(fmt.Errorf("could not make temp dir: %w", err))
+		return errors.Wrap(err)
 	}
 	defer util.Remove(ctx, cacheTemp)
 
-	chartName := chart.Name
+	cn := chart.Name
 	if chart.Repository.Name != "" {
-		chartName = fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
+		cn = fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
 	}
-	helmOut, err := util.RunCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, chartName)
+	helmOut, err := util.RunCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, cn)
 	if err != nil {
 		return errors.Wrap(fmt.Errorf("could not run helm pull: %w", err))
 	}
 	log.Debug("helm pull", "stdout", helmOut.Stdout, "stderr", helmOut.Stderr)
 
-	cachePath := filepath.Join(string(path), chartDir)
-
-	if err := os.MkdirAll(cachePath, 0777); err != nil {
-		return errors.Wrap(fmt.Errorf("could not mkdir: %w", err))
-	}
-
 	items, err := os.ReadDir(cacheTemp)
 	if err != nil {
 		return errors.Wrap(fmt.Errorf("could not read directory: %w", err))
 	}
+	if len(items) != 1 {
+		return errors.Format("want: exactly one item, have: %+v", items)
+	}
+	item := items[0]
 
-	for _, item := range items {
-		src := filepath.Join(cacheTemp, item.Name())
-		dst := filepath.Join(cachePath, item.Name())
-		log.DebugContext(ctx, "rename", "src", src, "dst", dst)
-		if err := os.Rename(src, dst); err != nil {
-			var linkErr *os.LinkError
-			if errors.As(err, &linkErr) && errors.Is(linkErr.Err, syscall.EEXIST) {
-				log.DebugContext(ctx, "cache already exists", "chart", chart.Name, "chart_version", chart.Version, "path", cachePath)
-			} else {
-				return errors.Wrap(fmt.Errorf("could not rename: %w", err))
+	src := filepath.Join(cacheTemp, item.Name())
+	dst := filepath.Join(cacheDir, chart.Name)
+	if err := os.Rename(src, dst); err != nil {
+		var linkErr *os.LinkError
+		if errors.As(err, &linkErr) && errors.Is(linkErr.Err, syscall.EEXIST) {
+			log.DebugContext(ctx, "cache already exists", "chart", chart.Name, "chart_version", chart.Version, "path", dst)
+		} else {
+			return errors.Wrap(fmt.Errorf("could not rename: %w", err))
+		}
+	} else {
+		log.DebugContext(ctx, fmt.Sprintf("renamed %s to %s", src, dst), "src", src, "dst", dst)
+	}
+
+	log.InfoContext(ctx,
+		fmt.Sprintf("cached %s %s", chart.Name, chart.Version),
+		"chart", chart.Name,
+		"chart_version", chart.Version,
+		"path", dst,
+	)
+
+	return nil
+}
+
+// onceWithLock obtains a filesystem lock with mkdir, then executes fn.  If the
+// lock is already locked, onceWithLock waits for it to be released then returns
+// without calling fn.
+func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() error) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
+		return errors.Wrap(err)
+	}
+
+	// Obtain a lock with a timeout.
+	lockDir := path + ".lock"
+	log = log.With("lock", lockDir)
+
+	err := os.Mkdir(lockDir, 0777)
+	if err == nil {
+		log.DebugContext(ctx, fmt.Sprintf("acquired %s", lockDir))
+		defer os.RemoveAll(lockDir)
+		if err := fn(); err != nil {
+			return errors.Wrap(err)
+		}
+		log.DebugContext(ctx, fmt.Sprintf("released %s", lockDir))
+		return nil
+	}
+
+	// Wait until the lock is released then return.
+	if os.IsExist(err) {
+		log.DebugContext(ctx, fmt.Sprintf("blocked %s", lockDir))
+		for {
+			select {
+			case <-ctx.Done():
+				return errors.Wrap(ctx.Err())
+			default:
+				time.Sleep(100 * time.Millisecond)
+				if _, err := os.Stat(lockDir); os.IsNotExist(err) {
+					log.DebugContext(ctx, fmt.Sprintf("unblocked %s", lockDir))
+					return nil
+				}
 			}
 		}
 	}
 
-	log.InfoContext(ctx, "cached", "chart", chart.Name, "chart_version", chart.Version, "path", cachePath)
-
-	return nil
+	// Unexpected error
+	return errors.Wrap(err)
 }
