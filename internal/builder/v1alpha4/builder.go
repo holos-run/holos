@@ -378,14 +378,17 @@ func (b *BuildPlan) kustomize(
 	}
 
 	// Execute kustomize
-	result, err := util.RunCmd(ctx, "kubectl", "kustomize", tempDir)
+	r, err := util.RunCmd(ctx, "kubectl", "kustomize", tempDir)
 	if err != nil {
-		log.ErrorContext(ctx, result.Stderr.String())
-		return errors.Format("%s: could not run kustomize: %w", msg, err)
+		err = errors.Format("%s: could not run kustomize: %w", msg, err)
+		if s := strings.ReplaceAll(r.Stderr.String(), "\n", "\n\t"); s != "" {
+			err = errors.Format("%w\n\t%s", err, s)
+		}
+		return err
 	}
 
 	// Store the artifact
-	if err := am.Set(string(t.Output), result.Stdout.Bytes()); err != nil {
+	if err := am.Set(string(t.Output), r.Stdout.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
 	log.Debug("set artifact " + string(t.Output))
