@@ -177,7 +177,7 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 								if data, ok := am.Get(h.FilePath(input)); ok {
 									s = append(s, data)
 								} else {
-									return errors.Format("%s: could not get %s: not set", msg, input)
+									return errors.Format("%s: missing %s", msg, input)
 								}
 							}
 							data := bytes.Join(s, []byte(t.Join.Separator))
