@@ -131,6 +131,9 @@ package v1alpha4
 
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	enableHooks?: bool @go(EnableHooks)
+
+	// Namespace represents the helm namespace flag
+	namespace?: string @go(Namespace)
 }
 
 // Values represents [Helm] Chart values generated from CUE.

@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	h "github.com/holos-run/holos"
@@ -69,6 +70,7 @@ func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
 						tags = append(tags, "name="+component.Name)
 						tags = append(tags, "component="+component.Component)
 						tags = append(tags, "environment="+component.Environment)
+						// Tags are unified, cue handles conflicts.  We don't bother.
 						tags = append(tags, component.Tags...)
 
 						// Execute a sub-process to limit CUE memory usage.
@@ -116,8 +118,11 @@ func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
 type BuildPlan struct {
 	BuildPlan   v1alpha4.BuildPlan
 	Concurrency int
-	WriteTo     string
 	Stderr      io.Writer
+	// WriteTo --write-to=deploy flag
+	WriteTo string
+	// Path represents the path to the component
+	Path h.InstancePath
 }
 
 // Build builds a BuildPlan into Artifact files.
@@ -155,13 +160,17 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 					for _, gen := range a.Generators {
 						switch gen.Kind {
 						case "Resources":
-							if err := b.generateResources(log, gen, am); err != nil {
-								return errors.Wrap(err)
+							if err := b.resources(log, gen, am); err != nil {
+								return errors.Format("could not generate resources: %w", err)
 							}
 						case "Helm":
-							return errors.NotImplemented()
+							if err := b.helm(ctx, log, gen, am); err != nil {
+								return errors.Format("could not generate helm: %w", err)
+							}
 						case "File":
-							return errors.NotImplemented()
+							if err := b.file(log, gen, am); err != nil {
+								return errors.Format("could not generate file: %w", err)
+							}
 						default:
 							return errors.Format("%s: unsupported kind %s", msg, gen.Kind)
 						}
@@ -209,7 +218,107 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 	return g.Wait()
 }
 
-func (b *BuildPlan) generateResources(
+func (b *BuildPlan) file(
+	log *slog.Logger,
+	g v1alpha4.Generator,
+	am h.ArtifactMap,
+) error {
+	return errors.NotImplemented()
+}
+
+func (b *BuildPlan) helm(
+	ctx context.Context,
+	log *slog.Logger,
+	g v1alpha4.Generator,
+	am h.ArtifactMap,
+) error {
+	chartName := g.Helm.Chart.Name
+	log = log.With("chart", chartName)
+	// Unnecessary? cargo cult copied from internal/cli/render/render.go
+	if chartName == "" {
+		return errors.New("missing chart name")
+	}
+
+	cachedChartPath := filepath.Join(string(b.Path), "vendor", filepath.Base(chartName))
+	if _, err := os.Stat(cachedChartPath); os.IsNotExist(err) {
+		// Add repositories
+		repo := g.Helm.Chart.Repository
+		if repo.URL == "" {
+			// repo update not needed for oci charts so this is debug instead of warn.
+			log.DebugContext(ctx, "skipped helm repo add and update: repo url is empty")
+		} else {
+			if r, err := util.RunCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL); err != nil {
+				_, _ = io.Copy(b.Stderr, r.Stderr)
+				return errors.Format("could not run helm repo add: %w", err)
+			}
+			if r, err := util.RunCmd(ctx, "helm", "repo", "update", repo.Name); err != nil {
+				_, _ = io.Copy(b.Stderr, r.Stderr)
+				return errors.Format("could not run helm repo update: %w", err)
+			}
+		}
+
+		// Cache the chart
+		if err := cacheChart(ctx, log, b.Path, "vendor", g.Helm.Chart); err != nil {
+			return errors.Format("could not cache chart: %w", err)
+		}
+	}
+
+	// Write values file
+	tempDir, err := os.MkdirTemp("", "holos.helm")
+	if err != nil {
+		return errors.Format("could not make temp dir: %w", err)
+	}
+	defer util.Remove(ctx, tempDir)
+
+	data, err := yaml.Marshal(g.Helm.Values)
+	if err != nil {
+		return errors.Format("could not marshal values: %w", err)
+	}
+
+	valuesPath := filepath.Join(tempDir, "values.yaml")
+	if err := os.WriteFile(valuesPath, data, 0666); err != nil {
+		return errors.Wrap(fmt.Errorf("could not write values: %w", err))
+	}
+	log.DebugContext(ctx, "wrote"+valuesPath)
+
+	// Run charts
+	args := []string{"template"}
+	if g.Helm.EnableHooks {
+		args = append(args, "--hooks")
+	} else {
+		args = append(args, "--no-hooks")
+	}
+	args = append(args,
+		"--include-crds",
+		"--values", valuesPath,
+		"--namespace", g.Helm.Namespace,
+		"--kubeconfig", "/dev/null",
+		"--version", g.Helm.Chart.Version,
+		g.Helm.Chart.Release,
+		cachedChartPath,
+	)
+	helmOut, err := util.RunCmd(ctx, "helm", args...)
+	if err != nil {
+		stderr := helmOut.Stderr.String()
+		lines := strings.Split(stderr, "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(line, "Error:") {
+				err = fmt.Errorf("%s: %w", line, err)
+			}
+		}
+		return errors.Format("could not run helm template: %w", err)
+	}
+
+	// Set the artifact
+	if err := am.Set(string(g.Output), helmOut.Stdout.Bytes()); err != nil {
+		return errors.Format("could not store helm output: %w", err)
+	}
+	log.Debug("set artifact: " + string(g.Output))
+
+	return nil
+}
+
+func (b *BuildPlan) resources(
 	log *slog.Logger,
 	g v1alpha4.Generator,
 	am h.ArtifactMap,
@@ -300,4 +409,69 @@ func marshal(list []v1alpha4.Resource) (buf bytes.Buffer, err error) {
 		}
 	}
 	return
+}
+
+// cacheChart stores a cached copy of Chart in the chart subdirectory of path.
+//
+// We assume the only method responsible for writing to chartDir is cacheChart
+// itself.  cacheChart runs concurrently when rendering a platform.
+//
+// We rely on the atomicity of moving temporary directories into place on the
+// same filesystem via os.Rename. If a syscall.EEXIST error occurs during
+// renaming, it indicates that the cached chart already exists, which is
+// expected when this function is called concurrently.
+//
+// TODO(jeff): Break the dependency on v1alpha4, make it work across versions as
+// a utility function.
+func cacheChart(
+	ctx context.Context,
+	log *slog.Logger,
+	path h.InstancePath,
+	chartDir string,
+	chart v1alpha4.Chart,
+) error {
+	cacheTemp, err := os.MkdirTemp(string(path), chartDir)
+	if err != nil {
+		return errors.Wrap(fmt.Errorf("could not make temp dir: %w", err))
+	}
+	defer util.Remove(ctx, cacheTemp)
+
+	chartName := chart.Name
+	if chart.Repository.Name != "" {
+		chartName = fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
+	}
+	helmOut, err := util.RunCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, chartName)
+	if err != nil {
+		return errors.Wrap(fmt.Errorf("could not run helm pull: %w", err))
+	}
+	log.Debug("helm pull", "stdout", helmOut.Stdout, "stderr", helmOut.Stderr)
+
+	cachePath := filepath.Join(string(path), chartDir)
+
+	if err := os.MkdirAll(cachePath, 0777); err != nil {
+		return errors.Wrap(fmt.Errorf("could not mkdir: %w", err))
+	}
+
+	items, err := os.ReadDir(cacheTemp)
+	if err != nil {
+		return errors.Wrap(fmt.Errorf("could not read directory: %w", err))
+	}
+
+	for _, item := range items {
+		src := filepath.Join(cacheTemp, item.Name())
+		dst := filepath.Join(cachePath, item.Name())
+		log.DebugContext(ctx, "rename", "src", src, "dst", dst)
+		if err := os.Rename(src, dst); err != nil {
+			var linkErr *os.LinkError
+			if errors.As(err, &linkErr) && errors.Is(linkErr.Err, syscall.EEXIST) {
+				log.DebugContext(ctx, "cache already exists", "chart", chart.Name, "chart_version", chart.Version, "path", cachePath)
+			} else {
+				return errors.Wrap(fmt.Errorf("could not rename: %w", err))
+			}
+		}
+	}
+
+	log.InfoContext(ctx, "cached", "chart", chart.Name, "chart_version", chart.Version, "path", cachePath)
+
+	return nil
 }

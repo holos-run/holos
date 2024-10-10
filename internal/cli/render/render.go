@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	h "github.com/holos-run/holos"
 	"github.com/holos-run/holos/internal/artifact"
 	"github.com/holos-run/holos/internal/builder"
 	"github.com/holos-run/holos/internal/builder/v1alpha4"
@@ -92,6 +93,7 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 				WriteTo:     cfg.WriteTo(),
 				Concurrency: concurrency,
 				Stderr:      cmd.ErrOrStderr(),
+				Path:        h.InstancePath(args[0]),
 			}
 			if err := decoder.Decode(&builder.BuildPlan); err != nil {
 				return errors.Format("could not decode build plan %s: %w", bd.Dir, err)

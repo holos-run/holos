@@ -118,6 +118,8 @@ type Helm struct {
 	Values Values `json:"values"`
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	EnableHooks bool `json:"enableHooks,omitempty"`
+	// Namespace represents the helm namespace flag
+	Namespace string `json:"namespace,omitempty"`
 }
 
 // Values represents [Helm] Chart values generated from CUE.
