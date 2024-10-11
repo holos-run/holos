@@ -1,17 +1,80 @@
+// # Core API
+//
 // Package v1alpha4 contains the core API contract between the holos cli and CUE
 // configuration code.  Platform designers, operators, and software developers
-// use this API to write configuration in CUE which `holos` loads.  The overall
-// shape of the API defines imperative actions `holos` should carry out to
-// render the complete yaml that represents a Platform.
+// use this API to write configuration in CUE which holos loads.  The Core API
+// is declarative.  Each resource represents a desired state necessary for holos
+// to fully render Kubernetes manifests into plain files.
 //
-// [Platform] defines the complete configuration of a platform.  With the holos
-// reference platform this takes the shape of one management cluster and at
-// least two workload clusters.
+// The following resources provide important context for the Core API.  The
+// [Author API] is intended for component authors as a convenient adapter for
+// the Core API resources Holos expects.
 //
-// Each holos component path, e.g. `components/namespaces` produces exactly one
-// [BuildPlan] which produces an [Artifact] collection.  An [Artifact] is a
-// fully rendered manifest produced from a [Transformer] sequence, which
-// transforms a [Generator] collection.
+//  1. [Technical Overview]
+//  2. [Quickstart]
+//  3. [Author API]
+//
+// # Platform
+//
+// [Platform] defines the complete configuration of a platform.  A platform
+// represents a [Component] collection.
+//
+// Inspect a Platform resource holos would process by executing:
+//
+//	cue export --out yaml ./platform
+//
+// # Component
+//
+// A [Component] is the combination of CUE code along one path relative to the
+// platform root directory plus data injected from the [PlatformSpec] via CUE tags.
+// The platform configuration root is the directory containing cue.mod.
+//
+// A [Component] always produces exactly one [BuildPlan].
+//
+// # BuildPlan
+//
+// A [BuildPlan] contains an [Artifact] collection.  A BuildPlan often produces
+// two artifacts, one containing the fully rendered Kubernetes API resources,
+// the other containing an additional resource to manage the former with GitOps.
+// For example, a BuildPlan for a podinfo component produces a manifest
+// containing a Deployment and a Service, along with a second manifest
+// containing an ArgoCD Application.
+//
+// Inspect a BuildPlan resource holos render component would process by executing:
+//
+//	cue export --out yaml ./projects/platform/components/namespaces
+//
+// # Artifact
+//
+// An [Artifact] is one fully rendered manifest file produced from the final
+// [Transformer] in a sequence of transformers.  An Artifact may also be
+// produced directly from a [Generator], but this use case is uncommon.
+//
+// # Transformer
+//
+// A [Transformer] takes multiple inputs from prior [Generator] or [Transformer]
+// outputs, then transforms the data into one output.  [Kustomize] is the most
+// commonly used transformer, though a simple [Join] is also supported.
+//
+//  1. [Kustomize] - Patch and transform the output from prior generators or
+//     transformers.  See [Introduction to Kustomize].
+//  2. [Join] - Concatenate multiple prior outputs into one output.
+//
+// # Generators
+//
+// A [Generator] generates Kubernetes resources.  [Helm] and [Resources] are the
+// most commonly used, often paired together to mix-in resources to an
+// unmodified Helm chart.  A simple [File] generator is also available for use
+// with the [Kustomize] transformer.
+//
+//  1. [Resources] - Generates resources from CUE code.
+//  2. [Helm] - Generates rendered yaml from a [Chart].
+//  3. [File] - Generates data by reading a file from the component directory.
+//
+// [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
+// [Author API]: https://holos.run/docs/api/author/
+// [Quickstart]: https://holos.run/docs/quickstart/
+// [Technical Overview]: https://holos.run/docs/technical-overview/
 package v1alpha4
 
 //go:generate ../../../hack/gendoc
@@ -21,6 +84,46 @@ package v1alpha4
 //
 // One or more [Artifact] files are produced by a BuildPlan, representing the
 // fully rendered manifests for the Kubernetes API Server.
+//
+// # Example BuildPlan
+//
+// Command:
+//
+//	cue export --out yaml ./projects/platform/components/namespaces
+//
+// Output:
+//
+//	kind: BuildPlan
+//	apiVersion: v1alpha4
+//	metadata:
+//	  name: dev-namespaces
+//	spec:
+//	  component: projects/platform/components/namespaces
+//	  artifacts:
+//	    - artifact: clusters/no-cluster/components/dev-namespaces/dev-namespaces.gen.yaml
+//	      generators:
+//	        - kind: Resources
+//	          output: resources.gen.yaml
+//	          resources:
+//	            Namespace:
+//	              dev-jeff:
+//	                metadata:
+//	                  name: dev-jeff
+//	                  labels:
+//	                    kubernetes.io/metadata.name: dev-jeff
+//	                kind: Namespace
+//	                apiVersion: v1
+//	      transformers:
+//	        - kind: Kustomize
+//	          inputs:
+//	            - resources.gen.yaml
+//	          output: clusters/no-cluster/components/dev-namespaces/dev-namespaces.gen.yaml
+//	          kustomize:
+//	            kustomization:
+//	              commonLabels:
+//	                holos.run/component.name: dev-namespaces
+//	              resources:
+//	                - resources.gen.yaml
 type BuildPlan struct {
 	// Kind represents the type of the resource.
 	Kind string `json:"kind" cue:"\"BuildPlan\""`
@@ -158,9 +261,12 @@ type Transformer struct {
 	Join Join `json:"join,omitempty"`
 }
 
-// Join represents a [Join](https://pkg.go.dev/strings#Join) [Transformer].
-// Useful for the common case of combining the output of [Helm] and [Resources]
-// [Generator] into one [Artifact] when [Kustomize] is otherwise unnecessary.
+// Join represents a [Transformer] using [bytes.Join] to concatenate multiple
+// inputs into one output with a separator.  Useful for combining output from
+// [Helm] and [Resources] together into one [Artifact] when [Kustomize] is
+// otherwise unnecessary.
+//
+// [bytes.Join]: https://pkg.go.dev/bytes#Join
 type Join struct {
 	Separator string `json:"separator" cue:"string | *\"---\\n\""`
 }
@@ -238,12 +344,13 @@ type PlatformSpec struct {
 	Components []Component `json:"components"`
 }
 
-// Component represents the complete context necessary to produce a [BuildPlan]
-// from a [Platform] component.
+// Component represents the complete context necessary to produce a [BuildPlan].
+// Component carries information injected from holos render platform to holos
+// render component to produce each [BuildPlan].
 //
 // All of these fields are passed to the holos render component command using
-// flags, which in turn are injected to CUE using tags.  Field names should be
-// used consistently through the platform rendering process for readability.
+// flags, which in turn are injected to CUE using tags.  For clarity, CUE field
+// and tag names should match the struct json tag names below.
 type Component struct {
 	// Name represents the name of the component, injected as a tag to set the
 	// BuildPlan metadata.name field.  Necessary for clear user feedback during
