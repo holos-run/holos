@@ -398,4 +398,8 @@ package v1alpha4
 	// struct tag names of other fields in this struct are reserved tag names not
 	// to be used in the tags collection.
 	tags?: [...string] @go(Tags,[]string)
+
+	// WriteTo represents the holos render component --write-to flag.  If empty,
+	// the default value for the --write-to flag is used.
+	writeTo?: string @go(WriteTo)
 }
