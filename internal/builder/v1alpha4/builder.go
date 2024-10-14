@@ -74,13 +74,17 @@ func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
 						tags = append(tags, component.Tags...)
 
 						// Execute a sub-process to limit CUE memory usage.
-						args := []string{
+						args := make([]string, 0, 10)
+						args = append(args,
 							"render",
 							"component",
 							"--cluster-name", component.Cluster,
 							"--tags", strings.Join(tags, ","),
-							component.Component,
+						)
+						if component.WriteTo != "" {
+							args = append(args, "--write-to", component.WriteTo)
 						}
+						args = append(args, component.Component)
 						result, err := util.RunCmd(ctx, "holos", args...)
 						// I've lost an hour+ digging into why I couldn't see log output
 						// from sub-processes.  Make sure to surface at least stderr from

@@ -369,4 +369,7 @@ type Component struct {
 	// struct tag names of other fields in this struct are reserved tag names not
 	// to be used in the tags collection.
 	Tags []string `json:"tags,omitempty"`
+	// WriteTo represents the holos render component --write-to flag.  If empty,
+	// the default value for the --write-to flag is used.
+	WriteTo string `json:"writeTo,omitempty"`
 }
