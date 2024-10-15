@@ -92,6 +92,7 @@ See the following resources for additional details:
 - [ArgoConfig](<#ArgoConfig>)
 - [Chart](<https://holos.run/docs/api/core/v1alpha4/#Chart>)
 - [Values](<https://holos.run/docs/api/core/v1alpha4/#Values>)
+- [Kustomization](<https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/>)
 - [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>)
 
 ```go
@@ -120,6 +121,9 @@ type Helm struct {
     // EnableHooks enables helm hooks when executing the `helm template` command.
     EnableHooks bool
 
+    // Kustomization represents the kustomization used to generate resources.
+    Kustomization map[string]any `json:",omitempty"`
+
     // BuildPlan represents the derived BuildPlan produced for the holos render
     // component command.
     BuildPlan core.BuildPlan
@@ -131,7 +135,14 @@ type Helm struct {
 
 Kubernetes provides a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) via the Output field which contains inline API Objects provided directly from CUE in the Resources field.
 
-This definition is a convenient way to produce a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) composed of two [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>) generators with one [Kustomize](<https://holos.run/docs/api/core/v1alpha4/#Kustomize>) transformer. The two generators produce Kubernetes API resources managed by an ArgoCD Application, transformed with Kustomize to consistently manage the metadata.namespace field and common labels.
+This definition is a convenient way to produce a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) composed of two [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>) generators with one [Kustomize](<#Kustomize>) transformer. The two generators produce Kubernetes API resources managed by an ArgoCD Application, transformed with Kustomize to consistently manage the metadata.namespace field and common labels.
+
+See the following resources for additional details:
+
+- [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>)
+- [ArgoConfig](<#ArgoConfig>)
+- [Kustomization](<https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/>)
+- [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>)
 
 ```go
 type Kubernetes struct {

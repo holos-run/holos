@@ -107,9 +107,16 @@ type OrganizationStrict struct {
 // transformed with Kustomize to consistently manage the metadata.namespace
 // field and common labels.
 //
+// See the following resources for additional details:
+//
+//   - [Resources]
+//   - [ArgoConfig]
+//   - [Kustomization]
+//   - [BuildPlan]
+//
 // [BuildPlan]: https://holos.run/docs/api/core/v1alpha4/#BuildPlan
+// [Kustomization]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
 // [Resources]: https://holos.run/docs/api/core/v1alpha4/#Resources
-// [Kustomize]: https://holos.run/docs/api/core/v1alpha4/#Kustomize
 type Kubernetes struct {
 	// Name represents the BuildPlan metadata.name field.  Used to construct the
 	// fully rendered manifest file path.
@@ -146,12 +153,14 @@ type Kubernetes struct {
 //   - [ArgoConfig]
 //   - [Chart]
 //   - [Values]
+//   - [Kustomization]
 //   - [BuildPlan]
 //
-// [Chart]: https://holos.run/docs/api/core/v1alpha4/#Chart
-// [Values]: https://holos.run/docs/api/core/v1alpha4/#Values
 // [BuildPlan]: https://holos.run/docs/api/core/v1alpha4/#BuildPlan
+// [Chart]: https://holos.run/docs/api/core/v1alpha4/#Chart
+// [Kustomization]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
 // [Resources]: https://holos.run/docs/api/core/v1alpha4/#Resources
+// [Values]: https://holos.run/docs/api/core/v1alpha4/#Values
 type Helm struct {
 	// Name represents the BuildPlan metadata.name field.  Used to construct the
 	// fully rendered manifest file path.
@@ -176,6 +185,9 @@ type Helm struct {
 	Values core.Values
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	EnableHooks bool
+
+	// Kustomization represents the kustomization used to generate resources.
+	Kustomization map[string]any `json:",omitempty"`
 
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.
