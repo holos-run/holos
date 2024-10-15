@@ -22,6 +22,7 @@ let ComponentConfig = {
 	Component:  _Tags.component
 	Cluster:    _Tags.cluster
 	ArgoConfig: #ArgoConfig
+	Resources:  #Resources
 }
 
 // https://holos.run/docs/api/author/v1alpha4/#Kubernetes
