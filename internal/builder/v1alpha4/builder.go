@@ -339,7 +339,7 @@ func (b *BuildPlan) resources(
 		}
 	}
 
-	msg := fmt.Sprintf("could not generate %s for %s", g.Output, b.BuildPlan.Metadata.Name)
+	msg := fmt.Sprintf("could not generate %s for %s path %s", g.Output, b.BuildPlan.Metadata.Name, b.BuildPlan.Spec.Component)
 
 	buf, err := marshal(list)
 	if err != nil {
@@ -365,7 +365,7 @@ func (b *BuildPlan) kustomize(
 		return errors.Wrap(err)
 	}
 	defer util.Remove(ctx, tempDir)
-	msg := fmt.Sprintf("could not transform %s for %s", t.Output, b.BuildPlan.Metadata.Name)
+	msg := fmt.Sprintf("could not transform %s for %s path %s", t.Output, b.BuildPlan.Metadata.Name, b.BuildPlan.Spec.Component)
 
 	// Write the kustomization
 	data, err := yaml.Marshal(t.Kustomize.Kustomization)
@@ -390,10 +390,9 @@ func (b *BuildPlan) kustomize(
 	// Execute kustomize
 	r, err := util.RunCmd(ctx, "kubectl", "kustomize", tempDir)
 	if err != nil {
+		kErr := r.Stderr.String()
 		err = errors.Format("%s: could not run kustomize: %w", msg, err)
-		if s := strings.ReplaceAll(r.Stderr.String(), "\n", "\n\t"); s != "" {
-			err = errors.Format("%w\n\t%s", err, s)
-		}
+		log.ErrorContext(ctx, fmt.Sprintf("%s: stderr:\n%s", err.Error(), kErr), "err", err, "stderr", kErr)
 		return err
 	}
 
