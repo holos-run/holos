@@ -249,10 +249,22 @@ import core "github.com/holos-run/holos/api/core/v1alpha4"
 	// ArgoCD Application.
 	Namespace?: string
 
-	// Kustomization represents the kustomization used to transform resources.
-	Kustomization?: {...} @go(,map[string]any)
+	// KustomizeConfig represents the configuration for kustomize.
+	KustomizeConfig: #KustomizeConfig
 
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.
 	BuildPlan: core.#BuildPlan
+}
+
+#KustomizeConfig: {
+	// Kustomization represents the kustomization used to transform resources.
+	// Note the resources field is internally managed from the Files and Resources fields.
+	Kustomization?: {...} @go(,map[string]any)
+
+	// Files represents files to copy from the component directory for kustomization.
+	Files: {[string]: Source: string} & {[NAME=_]: Source: NAME} @go(,map[string]struct{Source string})
+
+	// Resources represents additional entries to included in the resources list.
+	Resources: {[string]: Source: string} & {[NAME=_]: Source: NAME} @go(,map[string]struct{Source string})
 }

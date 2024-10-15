@@ -218,10 +218,20 @@ type Kustomize struct {
 	// ArgoCD Application.
 	Namespace string `json:",omitempty"`
 
-	// Kustomization represents the kustomization used to transform resources.
-	Kustomization map[string]any `json:",omitempty"`
+	// KustomizeConfig represents the configuration for kustomize.
+	KustomizeConfig KustomizeConfig
 
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.
 	BuildPlan core.BuildPlan
+}
+
+type KustomizeConfig struct {
+	// Kustomization represents the kustomization used to transform resources.
+	// Note the resources field is internally managed from the Files and Resources fields.
+	Kustomization map[string]any `json:",omitempty"`
+	// Files represents files to copy from the component directory for kustomization.
+	Files map[string]struct{ Source string } `cue:"{[NAME=_]: Source: NAME}"`
+	// Resources represents additional entries to included in the resources list.
+	Resources map[string]struct{ Source string } `cue:"{[NAME=_]: Source: NAME}"`
 }

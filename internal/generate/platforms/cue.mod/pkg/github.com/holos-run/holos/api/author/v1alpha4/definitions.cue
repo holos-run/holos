@@ -119,15 +119,13 @@ import (
 	CommonLabels: _
 	Namespace?:   _
 
-	Kustomization: ks.#Kustomization & {
-		apiVersion: "kustomize.config.k8s.io/v1beta1"
-		kind:       "Kustomization"
-	}
-
-	// Transformer used as a generator.
-	_Kustomization: core.#Transformer & {
-		kind: "Kustomize"
-		kustomize: kustomization: Kustomization
+	KustomizeConfig: {
+		Files:     _
+		Resources: _
+		Kustomization: ks.#Kustomization & {
+			apiVersion: "kustomize.config.k8s.io/v1beta1"
+			kind:       "Kustomization"
+		}
 	}
 
 	// Kustomize to add custom labels and manage the namespace.  More advanced
@@ -145,20 +143,35 @@ import (
 		component: {
 			_path:    "clusters/\(Cluster)/components/\(Name)"
 			artifact: "\(_path)/\(Name).gen.yaml"
-			let Output = "resources.gen.yaml"
+			generators: [
+				{
+					kind:      "Resources"
+					output:    "resources.gen.yaml"
+					resources: Resources
+				},
+				for x in KustomizeConfig.Files {
+					{
+						kind: "File"
+						file: source: x.Source
+						output: file.source
+					}
+				},
+			]
 			let Intermediate = "intermediate.gen.yaml"
-			generators: [{
-				kind:      "Resources"
-				output:    Output
-				resources: Resources
-			}]
 			transformers: [
-				_Kustomization & {
-					inputs: []
+				core.#Transformer & {
+					kind: "Kustomize"
+					inputs: [for x in generators {x.output}]
 					output: Intermediate
+					kustomize: kustomization: KustomizeConfig.Kustomization & {
+						resources: [
+							for x in inputs {x},
+							for x in KustomizeConfig.Resources {x.Source},
+						]
+					}
 				},
 				_Transformer & {
-					inputs: [Output, Intermediate]
+					inputs: [Intermediate]
 					output: artifact
 					kustomize: kustomization: resources: inputs
 					if Namespace != _|_ {
