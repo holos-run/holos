@@ -152,6 +152,9 @@ import core "github.com/holos-run/holos/api/core/v1alpha4"
 	// ArgoCD Application.
 	Namespace?: string
 
+	// Kustomization represents the kustomization used to transform resources.
+	Kustomization?: {...} @go(,map[string]any)
+
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.
 	BuildPlan: core.#BuildPlan
@@ -211,7 +214,7 @@ import core "github.com/holos-run/holos/api/core/v1alpha4"
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	EnableHooks: bool
 
-	// Kustomization represents the kustomization used to generate resources.
+	// Kustomization represents the kustomization used to transform resources.
 	Kustomization?: {...} @go(,map[string]any)
 
 	// BuildPlan represents the derived BuildPlan produced for the holos render
@@ -246,7 +249,7 @@ import core "github.com/holos-run/holos/api/core/v1alpha4"
 	// ArgoCD Application.
 	Namespace?: string
 
-	// Kustomization represents the kustomization used to generate resources.
+	// Kustomization represents the kustomization used to transform resources.
 	Kustomization?: {...} @go(,map[string]any)
 
 	// BuildPlan represents the derived BuildPlan produced for the holos render

@@ -25,6 +25,11 @@ import (
 	CommonLabels: _
 	Namespace?:   _
 
+	Kustomization: ks.#Kustomization & {
+		apiVersion: "kustomize.config.k8s.io/v1beta1"
+		kind:       "Kustomization"
+	}
+
 	// Kustomize to add custom labels and manage the namespace.  More advanced
 	// functionality than this should use the Core API directly and propose
 	// extending the Author API if the need is common.
@@ -40,20 +45,31 @@ import (
 		component: {
 			_path:    "clusters/\(Cluster)/components/\(Name)"
 			artifact: "\(_path)/\(Name).gen.yaml"
-			let Output = "resources.gen.yaml"
+			let ResourcesOutput = "resources.gen.yaml"
+			let IntermediateOutput = "combined.gen.yaml"
 			generators: [{
 				kind:      "Resources"
-				output:    Output
+				output:    ResourcesOutput
 				resources: Resources
 			}]
-			transformers: [_Transformer & {
-				inputs: [Output]
-				output: artifact
-				kustomize: kustomization: resources: inputs
-				if Namespace != _|_ {
-					kustomize: kustomization: namespace: Namespace
-				}
-			}]
+			transformers: [
+				core.#Transformer & {
+					kind: "Kustomize"
+					inputs: [ResourcesOutput]
+					output: IntermediateOutput
+					kustomize: kustomization: Kustomization & {
+						resources: inputs
+					}
+				},
+				_Transformer & {
+					inputs: [IntermediateOutput]
+					output: artifact
+					kustomize: kustomization: resources: inputs
+					if Namespace != _|_ {
+						kustomize: kustomization: namespace: Namespace
+					}
+				},
+			]
 		}
 
 		if ArgoConfig.Enabled {

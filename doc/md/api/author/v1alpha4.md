@@ -121,7 +121,7 @@ type Helm struct {
     // EnableHooks enables helm hooks when executing the `helm template` command.
     EnableHooks bool
 
-    // Kustomization represents the kustomization used to generate resources.
+    // Kustomization represents the kustomization used to transform resources.
     Kustomization map[string]any `json:",omitempty"`
 
     // BuildPlan represents the derived BuildPlan produced for the holos render
@@ -163,6 +163,9 @@ type Kubernetes struct {
     // ArgoCD Application.
     Namespace string `json:",omitempty"`
 
+    // Kustomization represents the kustomization used to transform resources.
+    Kustomization map[string]any `json:",omitempty"`
+
     // BuildPlan represents the derived BuildPlan produced for the holos render
     // component command.
     BuildPlan core.BuildPlan
@@ -193,7 +196,7 @@ type Kustomize struct {
     // ArgoCD Application.
     Namespace string `json:",omitempty"`
 
-    // Kustomization represents the kustomization used to generate resources.
+    // Kustomization represents the kustomization used to transform resources.
     Kustomization map[string]any `json:",omitempty"`
 
     // BuildPlan represents the derived BuildPlan produced for the holos render
