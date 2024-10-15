@@ -84,7 +84,15 @@ type Fleet struct {
 
 Helm provides a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) via the Output field which generates manifests from a helm chart with optional mix\-in resources provided directly from CUE in the Resources field.
 
-This definition is a convenient way to produce a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) composed of three [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>) generators with one [Kustomize](<https://holos.run/docs/api/core/v1alpha4/#Kustomize>) transformer.
+This definition is a convenient way to produce a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) composed of three [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>) generators with one [Kustomize](<#Kustomize>) transformer.
+
+See the following resources for additional details:
+
+- [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>)
+- [ArgoConfig](<#ArgoConfig>)
+- [Chart](<https://holos.run/docs/api/core/v1alpha4/#Chart>)
+- [Values](<https://holos.run/docs/api/core/v1alpha4/#Values>)
+- [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>)
 
 ```go
 type Helm struct {

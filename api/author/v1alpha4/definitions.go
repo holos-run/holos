@@ -140,9 +140,18 @@ type Kubernetes struct {
 // This definition is a convenient way to produce a [BuildPlan] composed of
 // three [Resources] generators with one [Kustomize] transformer.
 //
+// See the following resources for additional details:
+//
+//   - [Resources]
+//   - [ArgoConfig]
+//   - [Chart]
+//   - [Values]
+//   - [BuildPlan]
+//
+// [Chart]: https://holos.run/docs/api/core/v1alpha4/#Chart
+// [Values]: https://holos.run/docs/api/core/v1alpha4/#Values
 // [BuildPlan]: https://holos.run/docs/api/core/v1alpha4/#BuildPlan
 // [Resources]: https://holos.run/docs/api/core/v1alpha4/#Resources
-// [Kustomize]: https://holos.run/docs/api/core/v1alpha4/#Kustomize
 type Helm struct {
 	// Name represents the BuildPlan metadata.name field.  Used to construct the
 	// fully rendered manifest file path.
