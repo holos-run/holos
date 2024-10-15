@@ -289,9 +289,7 @@ func (b *BuildPlan) helm(
 
 	// Run charts
 	args := []string{"template"}
-	if g.Helm.EnableHooks {
-		args = append(args, "--hooks")
-	} else {
+	if !g.Helm.EnableHooks {
 		args = append(args, "--no-hooks")
 	}
 	args = append(args,

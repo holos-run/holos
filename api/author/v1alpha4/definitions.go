@@ -98,12 +98,12 @@ type OrganizationStrict struct {
 	DisplayName string `cue:"=~ \"^[0-9A-Za-z][0-9A-Za-z ]{2,61}[0-9A-Za-z]$\" & !~ \"  \""`
 }
 
-// Kubernetes provides a BuildPlan via the Output field which contains inline
+// Kubernetes provides a [BuildPlan] via the Output field which contains inline
 // API Objects provided directly from CUE in the Resources field.
 //
-// This definition is a convenient way to produce a [BuildPlan] composed of a
-// two [Resources] generators with one [Kustomize] transformer.  The two
-// generators produce Kubernetes API resources managed by an ArgoCD Application,
+// This definition is a convenient way to produce a [BuildPlan] composed of two
+// [Resources] generators with one [Kustomize] transformer.  The two generators
+// produce Kubernetes API resources managed by an ArgoCD Application,
 // transformed with Kustomize to consistently manage the metadata.namespace
 // field and common labels.
 //
@@ -127,6 +127,75 @@ type Kubernetes struct {
 	// Namespace manages the metadata.namespace field on all resources except the
 	// ArgoCD Application.
 	Namespace string `json:",omitempty"`
+
+	// BuildPlan represents the derived BuildPlan produced for the holos render
+	// component command.
+	BuildPlan core.BuildPlan
+}
+
+// Helm provides a [BuildPlan] via the Output field which generates manifests
+// from a helm chart with optional mix-in resources provided directly from CUE
+// in the Resources field.
+//
+// This definition is a convenient way to produce a [BuildPlan] composed of
+// three [Resources] generators with one [Kustomize] transformer.
+//
+// [BuildPlan]: https://holos.run/docs/api/core/v1alpha4/#BuildPlan
+// [Resources]: https://holos.run/docs/api/core/v1alpha4/#Resources
+// [Kustomize]: https://holos.run/docs/api/core/v1alpha4/#Kustomize
+type Helm struct {
+	// Name represents the BuildPlan metadata.name field.  Used to construct the
+	// fully rendered manifest file path.
+	Name string
+	// Component represents the path to the component producing the BuildPlan.
+	Component string
+	// Cluster represents the name of the cluster this BuildPlan is for.
+	Cluster string
+	// Resources represents kubernetes resources mixed into the rendered manifest.
+	Resources core.Resources
+	// ArgoConfig represents the ArgoCD GitOps configuration for this BuildPlan.
+	ArgoConfig ArgoConfig
+	// CommonLabels represents common labels to manage on all rendered manifests.
+	CommonLabels map[string]string
+	// Namespace manages the metadata.namespace field on all resources except the
+	// ArgoCD Application.  Also used for the Helm namespace flag.
+	Namespace string `json:",omitempty"`
+
+	// Chart represents a Helm chart.
+	Chart core.Chart
+	// Values represents data to marshal into a values.yaml for helm.
+	Values core.Values
+	// EnableHooks enables helm hooks when executing the `helm template` command.
+	EnableHooks bool
+
+	// BuildPlan represents the derived BuildPlan produced for the holos render
+	// component command.
+	BuildPlan core.BuildPlan
+}
+
+// Kustomize provides a [BuildPlan] via the Output field which generates
+// manifests from a kustomize kustomization with optional mix-in resources
+// provided directly from CUE in the Resources field.
+type Kustomize struct {
+	// Name represents the BuildPlan metadata.name field.  Used to construct the
+	// fully rendered manifest file path.
+	Name string
+	// Component represents the path to the component producing the BuildPlan.
+	Component string
+	// Cluster represents the name of the cluster this BuildPlan is for.
+	Cluster string
+	// Resources represents kubernetes resources mixed into the rendered manifest.
+	Resources core.Resources
+	// ArgoConfig represents the ArgoCD GitOps configuration for this BuildPlan.
+	ArgoConfig ArgoConfig
+	// CommonLabels represents common labels to manage on all rendered manifests.
+	CommonLabels map[string]string
+	// Namespace manages the metadata.namespace field on all resources except the
+	// ArgoCD Application.
+	Namespace string `json:",omitempty"`
+
+	// Kustomization represents the kustomization used to generate resources.
+	Kustomization map[string]any `json:",omitempty"`
 
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.
