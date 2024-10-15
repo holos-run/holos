@@ -403,3 +403,32 @@ package v1alpha4
 	// the default value for the --write-to flag is used.
 	writeTo?: string @go(WriteTo)
 }
+
+// Tags represents standardized fields injected into the component [BuildPlan]
+// from the [Platform].
+//
+// Note, tags should have a reasonable default value to easily use cue eval and
+// cue export without needing to make a bunch of decisions about tag values.
+//
+// Example:
+//
+//	import core "github.com/holos-run/holos/api/core/v1alpha4"
+//	_Tags: core.#Tags & {
+//	  cluster:     _ @tag(cluster, type=string)
+//	  environment: _ @tag(environment, type=string)
+//	  component:   _ @tag(component, type=string)
+//	  name:        _ @tag(name, type=string)
+//	}
+#Tags: {
+	// Name represents the BuildPlan metadata.name field injected from the Platform.
+	name: string & (string | *"no-name") @go(Name)
+
+	// Cluster represents the cluster name injected from
+	cluster: string & (string | *"no-cluster") @go(Cluster)
+
+	// Environment represents the build plan environment.
+	environment: string & (string | *"no-environment") @go(Environment)
+
+	// Component represents the path of the component relative to the platform root.
+	component: string & (string | *"no-component") @go(Component)
+}

@@ -373,3 +373,29 @@ type Component struct {
 	// the default value for the --write-to flag is used.
 	WriteTo string `json:"writeTo,omitempty"`
 }
+
+// Tags represents standardized fields injected into the component [BuildPlan]
+// from the [Platform].
+//
+// Note, tags should have a reasonable default value to easily use cue eval and
+// cue export without needing to make a bunch of decisions about tag values.
+//
+// Example:
+//
+//	import core "github.com/holos-run/holos/api/core/v1alpha4"
+//	_Tags: core.#Tags & {
+//	  cluster:     _ @tag(cluster, type=string)
+//	  environment: _ @tag(environment, type=string)
+//	  component:   _ @tag(component, type=string)
+//	  name:        _ @tag(name, type=string)
+//	}
+type Tags struct {
+	// Name represents the BuildPlan metadata.name field injected from the Platform.
+	Name string `json:"name" cue:"string | *\"no-name\""`
+	// Cluster represents the cluster name injected from
+	Cluster string `json:"cluster" cue:"string | *\"no-cluster\""`
+	// Environment represents the build plan environment.
+	Environment string `json:"environment" cue:"string | *\"no-environment\""`
+	// Component represents the path of the component relative to the platform root.
+	Component string `json:"component" cue:"string | *\"no-component\""`
+}

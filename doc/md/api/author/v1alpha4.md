@@ -31,17 +31,14 @@ ArgoConfig represents the ArgoCD GitOps configuration associated with a [BuildPl
 type ArgoConfig struct {
     // Enabled causes holos to render an Application resource when true.
     Enabled bool `cue:"true | *false"`
-    // ClusterName represents the cluster within the platform the Application
-    // resource is intended for.
-    ClusterName string
+    // RepoURL represents the value passed to the Application.spec.source.repoURL
+    // field.
+    RepoURL string
     // Root represents the path from the git repository root to the WriteTo output
     // directory, the behavior of the holos render component --write-to flag and
     // the Core API Component WriteTo field.  Used as a prefix for the
     // Application.spec.source.path field.
     Root string `cue:"string | *\"deploy\""`
-    // RepoURL represents the value passed to the Application.spec.source.repoURL
-    // field.
-    RepoURL string
     // TargetRevision represents the value passed to the
     // Application.spec.source.targetRevision field.  Defaults to the branch named
     // main.
@@ -85,14 +82,30 @@ type Fleet struct {
 
 Kubernetes provides a BuildPlan via the Output field which contains inline API Objects provided directly from CUE in the Resources field.
 
+This definition is a convenient way to produce a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) composed of a two [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>) generators with one [Kustomize](<https://holos.run/docs/api/core/v1alpha4/#Kustomize>) transformer. The two generators produce Kubernetes API resources managed by an ArgoCD Application, transformed with Kustomize to consistently manage the metadata.namespace field and common labels.
+
 ```go
 type Kubernetes struct {
-    // Resources are kubernetes api objects to mix into the output.
+    // Name represents the BuildPlan metadata.name field.  Used to construct the
+    // fully rendered manifest file path.
+    Name string
+    // Component represents the path to the component producing the BuildPlan.
+    Component string
+    // Cluster represents the name of the cluster this BuildPlan is for.
+    Cluster string
+    // Resources represents kubernetes resources mixed into the rendered manifest.
     Resources core.Resources
-    // BuildPlan represents the derived BuildPlan for the Holos cli to render.
-    BuildPlan core.BuildPlan
-    // ArgoConfig represents the ArgoCD GitOps configuration for this Component.
+    // ArgoConfig represents the ArgoCD GitOps configuration for this BuildPlan.
     ArgoConfig ArgoConfig
+    // CommonLabels represents common labels to manage on all rendered manifests.
+    CommonLabels map[string]string
+    // Namespace manages the metadata.namespace field on all resources except the
+    // ArgoCD Application.
+    Namespace string `json:",omitempty"`
+
+    // BuildPlan represents the derived BuildPlan produced for the holos render
+    // component command.
+    BuildPlan core.BuildPlan
 }
 ```
 
