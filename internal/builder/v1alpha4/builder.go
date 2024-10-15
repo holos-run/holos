@@ -525,16 +525,21 @@ func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() 
 	// Wait until the lock is released then return.
 	if os.IsExist(err) {
 		log.DebugContext(ctx, fmt.Sprintf("blocked %s", lockDir))
+		stillBlocked := time.After(5 * time.Second)
+		deadLocked := time.After(10 * time.Second)
 		for {
 			select {
-			case <-ctx.Done():
-				return errors.Wrap(ctx.Err())
-			default:
-				time.Sleep(100 * time.Millisecond)
+			case <-stillBlocked:
+				log.WarnContext(ctx, fmt.Sprintf("waiting for %s to be released", lockDir))
+			case <-deadLocked:
+				log.WarnContext(ctx, fmt.Sprintf("still waiting for %s to be released (dead lock?)", lockDir))
+			case <-time.After(100 * time.Millisecond):
 				if _, err := os.Stat(lockDir); os.IsNotExist(err) {
 					log.DebugContext(ctx, fmt.Sprintf("unblocked %s", lockDir))
 					return nil
 				}
+			case <-ctx.Done():
+				return errors.Wrap(ctx.Err())
 			}
 		}
 	}
