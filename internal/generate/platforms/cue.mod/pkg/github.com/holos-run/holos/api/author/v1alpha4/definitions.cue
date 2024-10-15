@@ -201,7 +201,7 @@ import (
 
 	Chart: name: string | *Name
 	Values:      _
-	EnableHooks: _
+	EnableHooks: true | *false
 
 	Kustomization: ks.#Kustomization & {
 		apiVersion: "kustomize.config.k8s.io/v1beta1"
