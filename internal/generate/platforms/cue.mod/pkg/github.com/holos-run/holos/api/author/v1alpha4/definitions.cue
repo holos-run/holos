@@ -199,7 +199,10 @@ import (
 	CommonLabels: _
 	Namespace?:   _
 
-	Chart: name: string | *Name
+	Chart: {
+		name:    string | *Name
+		release: string | *name
+	}
 	Values:      _
 	EnableHooks: true | *false
 
