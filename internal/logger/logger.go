@@ -157,7 +157,7 @@ func (c *Config) handler(w io.Writer) (h slog.Handler) {
 
 // NewLogger returns a *slog.Logs configured by c *Config which writes to w
 func (c *Config) NewLogger(w io.Writer) *slog.Logger {
-	return slog.New(c.handler(w)).With("version", version.Version)
+	return slog.New(c.handler(w)).With("version", version.Version, "pid", os.Getpid())
 }
 
 // NewConfig returns a new logging Config struct
