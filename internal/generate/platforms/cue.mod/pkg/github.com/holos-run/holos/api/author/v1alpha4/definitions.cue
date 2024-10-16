@@ -25,9 +25,13 @@ import (
 	CommonLabels: _
 	Namespace?:   _
 
-	Kustomization: ks.#Kustomization & {
-		apiVersion: "kustomize.config.k8s.io/v1beta1"
-		kind:       "Kustomization"
+	KustomizeConfig: {
+		Files:     _
+		Resources: _
+		Kustomization: ks.#Kustomization & {
+			apiVersion: "kustomize.config.k8s.io/v1beta1"
+			kind:       "Kustomization"
+		}
 	}
 
 	// Kustomize to add custom labels and manage the namespace.  More advanced
@@ -65,7 +69,7 @@ import (
 					kind: "Kustomize"
 					inputs: [ResourcesOutput]
 					output: IntermediateOutput
-					kustomize: kustomization: Kustomization & {
+					kustomize: kustomization: KustomizeConfig.Kustomization & {
 						resources: inputs
 					}
 				},
@@ -211,9 +215,13 @@ import (
 	Values:      _
 	EnableHooks: true | *false
 
-	Kustomization: ks.#Kustomization & {
-		apiVersion: "kustomize.config.k8s.io/v1beta1"
-		kind:       "Kustomization"
+	KustomizeConfig: {
+		Files:     _
+		Resources: _
+		Kustomization: ks.#Kustomization & {
+			apiVersion: "kustomize.config.k8s.io/v1beta1"
+			kind:       "Kustomization"
+		}
 	}
 
 	// Kustomize to add custom labels and manage the namespace.  More advanced
@@ -266,7 +274,7 @@ import (
 					kind: "Kustomize"
 					inputs: [HelmOutput, ResourcesOutput]
 					output: IntermediateOutput
-					kustomize: kustomization: Kustomization & {
+					kustomize: kustomization: KustomizeConfig.Kustomization & {
 						resources: inputs
 					}
 				},

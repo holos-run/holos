@@ -14,6 +14,7 @@ Package v1alpha4 contains ergonomic CUE definitions for Holos component authors.
 
 - [type ArgoConfig](<#ArgoConfig>)
 - [type Cluster](<#Cluster>)
+- [type ComponentConfig](<#ComponentConfig>)
 - [type Fleet](<#Fleet>)
 - [type Helm](<#Helm>)
 - [type Kubernetes](<#Kubernetes>)
@@ -67,119 +68,24 @@ type Cluster struct {
 }
 ```
 
-<a name="Fleet"></a>
-## type Fleet {#Fleet}
+<a name="ComponentConfig"></a>
+## type ComponentConfig {#ComponentConfig}
 
-Fleet represents a named collection of similarly configured Clusters. Useful to segregate workload clusters from their management cluster.
+ComponentConfig represents the configuration common to all kinds of component.
 
-```go
-type Fleet struct {
-    Name string `json:"name"`
-    // Clusters represents a mapping of Clusters by their name.
-    Clusters map[string]Cluster `json:"clusters" cue:"{[Name=_]: name: Name}"`
-}
-```
-
-<a name="Helm"></a>
-## type Helm {#Helm}
-
-Helm provides a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) via the Output field which generates manifests from a helm chart with optional mix\-in resources provided directly from CUE in the Resources field.
-
-This definition is a convenient way to produce a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) composed of three [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>) generators with one [Kustomize](<#Kustomize>) transformer.
+- [Helm](<#Helm>) charts.
+- [Kubernetes](<#Kubernetes>) resources generated from CUE.
+- [Kustomize](<#Kustomize>) bases.
 
 See the following resources for additional details:
 
 - [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>)
 - [ArgoConfig](<#ArgoConfig>)
-- [Chart](<https://holos.run/docs/api/core/v1alpha4/#Chart>)
-- [Values](<https://holos.run/docs/api/core/v1alpha4/#Values>)
-- [Kustomization](<https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/>)
+- [KustomizeConfig](<#KustomizeConfig>)
 - [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>)
 
 ```go
-type Helm struct {
-    // Name represents the BuildPlan metadata.name field.  Used to construct the
-    // fully rendered manifest file path.
-    Name string
-    // Component represents the path to the component producing the BuildPlan.
-    Component string
-    // Cluster represents the name of the cluster this BuildPlan is for.
-    Cluster string
-    // Resources represents kubernetes resources mixed into the rendered manifest.
-    Resources core.Resources
-    // ArgoConfig represents the ArgoCD GitOps configuration for this BuildPlan.
-    ArgoConfig ArgoConfig
-    // CommonLabels represents common labels to manage on all rendered manifests.
-    CommonLabels map[string]string
-    // Namespace manages the metadata.namespace field on all resources except the
-    // ArgoCD Application.  Also used for the Helm namespace flag.
-    Namespace string `json:",omitempty"`
-
-    // Chart represents a Helm chart.
-    Chart core.Chart
-    // Values represents data to marshal into a values.yaml for helm.
-    Values core.Values
-    // EnableHooks enables helm hooks when executing the `helm template` command.
-    EnableHooks bool
-
-    // Kustomization represents the kustomization used to transform resources.
-    Kustomization map[string]any `json:",omitempty"`
-
-    // BuildPlan represents the derived BuildPlan produced for the holos render
-    // component command.
-    BuildPlan core.BuildPlan
-}
-```
-
-<a name="Kubernetes"></a>
-## type Kubernetes {#Kubernetes}
-
-Kubernetes provides a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) via the Output field which contains inline API Objects provided directly from CUE in the Resources field.
-
-This definition is a convenient way to produce a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) composed of two [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>) generators with one [Kustomize](<#Kustomize>) transformer. The two generators produce Kubernetes API resources managed by an ArgoCD Application, transformed with Kustomize to consistently manage the metadata.namespace field and common labels.
-
-See the following resources for additional details:
-
-- [Resources](<https://holos.run/docs/api/core/v1alpha4/#Resources>)
-- [ArgoConfig](<#ArgoConfig>)
-- [Kustomization](<https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/>)
-- [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>)
-
-```go
-type Kubernetes struct {
-    // Name represents the BuildPlan metadata.name field.  Used to construct the
-    // fully rendered manifest file path.
-    Name string
-    // Component represents the path to the component producing the BuildPlan.
-    Component string
-    // Cluster represents the name of the cluster this BuildPlan is for.
-    Cluster string
-    // Resources represents kubernetes resources mixed into the rendered manifest.
-    Resources core.Resources
-    // ArgoConfig represents the ArgoCD GitOps configuration for this BuildPlan.
-    ArgoConfig ArgoConfig
-    // CommonLabels represents common labels to manage on all rendered manifests.
-    CommonLabels map[string]string
-    // Namespace manages the metadata.namespace field on all resources except the
-    // ArgoCD Application.
-    Namespace string `json:",omitempty"`
-
-    // Kustomization represents the kustomization used to transform resources.
-    Kustomization map[string]any `json:",omitempty"`
-
-    // BuildPlan represents the derived BuildPlan produced for the holos render
-    // component command.
-    BuildPlan core.BuildPlan
-}
-```
-
-<a name="Kustomize"></a>
-## type Kustomize {#Kustomize}
-
-Kustomize provides a \[BuildPlan\] via the Output field which generates manifests from a kustomize kustomization with optional mix\-in resources provided directly from CUE in the Resources field.
-
-```go
-type Kustomize struct {
+type ComponentConfig struct {
     // Name represents the BuildPlan metadata.name field.  Used to construct the
     // fully rendered manifest file path.
     Name string
@@ -199,6 +105,86 @@ type Kustomize struct {
 
     // KustomizeConfig represents the configuration for kustomize.
     KustomizeConfig KustomizeConfig
+}
+```
+
+<a name="Fleet"></a>
+## type Fleet {#Fleet}
+
+Fleet represents a named collection of similarly configured Clusters. Useful to segregate workload clusters from their management cluster.
+
+```go
+type Fleet struct {
+    Name string `json:"name"`
+    // Clusters represents a mapping of Clusters by their name.
+    Clusters map[string]Cluster `json:"clusters" cue:"{[Name=_]: name: Name}"`
+}
+```
+
+<a name="Helm"></a>
+## type Helm {#Helm}
+
+Helm provides a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) via the Output field which generates manifests from a helm chart with optional mix\-in resources provided directly from CUE in the Resources field.
+
+This definition is a convenient way to produce a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) composed of three \[Resources\] generators with one [Kustomize](<#Kustomize>) transformer.
+
+See related:
+
+- [ComponentConfig](<#ComponentConfig>)
+- [Chart](<https://holos.run/docs/api/core/v1alpha4/#Chart>)
+- [Values](<https://holos.run/docs/api/core/v1alpha4/#Values>)
+- [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>)
+
+```go
+type Helm struct {
+    ComponentConfig `json:",inline"`
+
+    // Chart represents a Helm chart.
+    Chart core.Chart
+    // Values represents data to marshal into a values.yaml for helm.
+    Values core.Values
+    // EnableHooks enables helm hooks when executing the `helm template` command.
+    EnableHooks bool
+
+    // BuildPlan represents the derived BuildPlan produced for the holos render
+    // component command.
+    BuildPlan core.BuildPlan
+}
+```
+
+<a name="Kubernetes"></a>
+## type Kubernetes {#Kubernetes}
+
+Kubernetes provides a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>) via the Output field which contains inline API Objects provided directly from CUE in the Resources field of [ComponentConfig](<#ComponentConfig>).
+
+See related:
+
+- [ComponentConfig](<#ComponentConfig>)
+- [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#BuildPlan>)
+
+```go
+type Kubernetes struct {
+    ComponentConfig `json:",inline"`
+
+    // BuildPlan represents the derived BuildPlan produced for the holos render
+    // component command.
+    BuildPlan core.BuildPlan
+}
+```
+
+<a name="Kustomize"></a>
+## type Kustomize {#Kustomize}
+
+Kustomize provides a [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#buildplan>) via the Output field which generates manifests from a kustomize kustomization with optional mix\-in resources provided directly from CUE in the Resources field.
+
+See related:
+
+- [ComponentConfig](<#ComponentConfig>)
+- [BuildPlan](<https://holos.run/docs/api/core/v1alpha4/#buildplan>)
+
+```go
+type Kustomize struct {
+    ComponentConfig `json:",inline"`
 
     // BuildPlan represents the derived BuildPlan produced for the holos render
     // component command.
@@ -209,7 +195,12 @@ type Kustomize struct {
 <a name="KustomizeConfig"></a>
 ## type KustomizeConfig {#KustomizeConfig}
 
+KustomizeConfig represents the configuration for kustomize post processing. The Files field is used to mixing in static manifest files from the component directory. The Resources field is used for mixing in manifests from network locations urls.
 
+See related:
+
+- [ComponentConfig](<#ComponentConfig>)
+- [Kustomization](<https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/>)
 
 ```go
 type KustomizeConfig struct {

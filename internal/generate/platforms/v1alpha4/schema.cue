@@ -17,7 +17,7 @@ import api "github.com/holos-run/holos/api/author/v1alpha4"
 // https://holos.run/docs/api/author/v1alpha4/#ArgoConfig
 #ArgoConfig: api.#ArgoConfig
 
-let ComponentConfig = {
+#ComponentConfig: api.#ComponentConfig & {
 	Name:       _Tags.name
 	Component:  _Tags.component
 	Cluster:    _Tags.cluster
@@ -26,10 +26,19 @@ let ComponentConfig = {
 }
 
 // https://holos.run/docs/api/author/v1alpha4/#Kubernetes
-#Kubernetes: api.#Kubernetes & ComponentConfig
+#Kubernetes: close({
+	#ComponentConfig
+	api.#Kubernetes
+})
 
 // https://holos.run/docs/api/author/v1alpha4/#Kustomize
-#Kustomize: api.#Kustomize & ComponentConfig
+#Kustomize: close({
+	#ComponentConfig
+	api.#Kustomize
+})
 
 // https://holos.run/docs/api/author/v1alpha4/#Helm
-#Helm: api.#Helm & ComponentConfig
+#Helm: close({
+	#ComponentConfig
+	api.#Helm
+})

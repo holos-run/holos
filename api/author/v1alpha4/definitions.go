@@ -99,44 +99,17 @@ type OrganizationStrict struct {
 }
 
 // Kubernetes provides a [BuildPlan] via the Output field which contains inline
-// API Objects provided directly from CUE in the Resources field.
+// API Objects provided directly from CUE in the Resources field of
+// [ComponentConfig].
 //
-// This definition is a convenient way to produce a [BuildPlan] composed of two
-// [Resources] generators with one [Kustomize] transformer.  The two generators
-// produce Kubernetes API resources managed by an ArgoCD Application,
-// transformed with Kustomize to consistently manage the metadata.namespace
-// field and common labels.
+// See related:
 //
-// See the following resources for additional details:
-//
-//   - [Resources]
-//   - [ArgoConfig]
-//   - [Kustomization]
+//   - [ComponentConfig]
 //   - [BuildPlan]
 //
 // [BuildPlan]: https://holos.run/docs/api/core/v1alpha4/#BuildPlan
-// [Kustomization]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
-// [Resources]: https://holos.run/docs/api/core/v1alpha4/#Resources
 type Kubernetes struct {
-	// Name represents the BuildPlan metadata.name field.  Used to construct the
-	// fully rendered manifest file path.
-	Name string
-	// Component represents the path to the component producing the BuildPlan.
-	Component string
-	// Cluster represents the name of the cluster this BuildPlan is for.
-	Cluster string
-	// Resources represents kubernetes resources mixed into the rendered manifest.
-	Resources core.Resources
-	// ArgoConfig represents the ArgoCD GitOps configuration for this BuildPlan.
-	ArgoConfig ArgoConfig
-	// CommonLabels represents common labels to manage on all rendered manifests.
-	CommonLabels map[string]string
-	// Namespace manages the metadata.namespace field on all resources except the
-	// ArgoCD Application.
-	Namespace string `json:",omitempty"`
-
-	// Kustomization represents the kustomization used to transform resources.
-	Kustomization map[string]any `json:",omitempty"`
+	ComponentConfig `json:",inline"`
 
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.
@@ -150,37 +123,18 @@ type Kubernetes struct {
 // This definition is a convenient way to produce a [BuildPlan] composed of
 // three [Resources] generators with one [Kustomize] transformer.
 //
-// See the following resources for additional details:
+// See related:
 //
-//   - [Resources]
-//   - [ArgoConfig]
+//   - [ComponentConfig]
 //   - [Chart]
 //   - [Values]
-//   - [Kustomization]
 //   - [BuildPlan]
 //
 // [BuildPlan]: https://holos.run/docs/api/core/v1alpha4/#BuildPlan
 // [Chart]: https://holos.run/docs/api/core/v1alpha4/#Chart
-// [Kustomization]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
-// [Resources]: https://holos.run/docs/api/core/v1alpha4/#Resources
 // [Values]: https://holos.run/docs/api/core/v1alpha4/#Values
 type Helm struct {
-	// Name represents the BuildPlan metadata.name field.  Used to construct the
-	// fully rendered manifest file path.
-	Name string
-	// Component represents the path to the component producing the BuildPlan.
-	Component string
-	// Cluster represents the name of the cluster this BuildPlan is for.
-	Cluster string
-	// Resources represents kubernetes resources mixed into the rendered manifest.
-	Resources core.Resources
-	// ArgoConfig represents the ArgoCD GitOps configuration for this BuildPlan.
-	ArgoConfig ArgoConfig
-	// CommonLabels represents common labels to manage on all rendered manifests.
-	CommonLabels map[string]string
-	// Namespace manages the metadata.namespace field on all resources except the
-	// ArgoCD Application.  Also used for the Helm namespace flag.
-	Namespace string `json:",omitempty"`
+	ComponentConfig `json:",inline"`
 
 	// Chart represents a Helm chart.
 	Chart core.Chart
@@ -188,9 +142,6 @@ type Helm struct {
 	Values core.Values
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	EnableHooks bool
-
-	// Kustomization represents the kustomization used to transform resources.
-	Kustomization map[string]any `json:",omitempty"`
 
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.
@@ -200,7 +151,38 @@ type Helm struct {
 // Kustomize provides a [BuildPlan] via the Output field which generates
 // manifests from a kustomize kustomization with optional mix-in resources
 // provided directly from CUE in the Resources field.
+//
+// See related:
+//
+//   - [ComponentConfig]
+//   - [BuildPlan]
+//
+// [BuildPlan]: https://holos.run/docs/api/core/v1alpha4/#buildplan
 type Kustomize struct {
+	ComponentConfig `json:",inline"`
+
+	// BuildPlan represents the derived BuildPlan produced for the holos render
+	// component command.
+	BuildPlan core.BuildPlan
+}
+
+// ComponentConfig represents the configuration common to all kinds of
+// component.
+//
+//   - [Helm] charts.
+//   - [Kubernetes] resources generated from CUE.
+//   - [Kustomize] bases.
+//
+// See the following resources for additional details:
+//
+//   - [Resources]
+//   - [ArgoConfig]
+//   - [KustomizeConfig]
+//   - [BuildPlan]
+//
+// [BuildPlan]: https://holos.run/docs/api/core/v1alpha4/#BuildPlan
+// [Resources]: https://holos.run/docs/api/core/v1alpha4/#Resources
+type ComponentConfig struct {
 	// Name represents the BuildPlan metadata.name field.  Used to construct the
 	// fully rendered manifest file path.
 	Name string
@@ -220,12 +202,19 @@ type Kustomize struct {
 
 	// KustomizeConfig represents the configuration for kustomize.
 	KustomizeConfig KustomizeConfig
-
-	// BuildPlan represents the derived BuildPlan produced for the holos render
-	// component command.
-	BuildPlan core.BuildPlan
 }
 
+// KustomizeConfig represents the configuration for kustomize post processing.
+// The Files field is used to mixing in static manifest files from the component
+// directory.  The Resources field is used for mixing in manifests from network
+// locations urls.
+//
+// See related:
+//
+//   - [ComponentConfig]
+//   - [Kustomization]
+//
+// [Kustomization]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
 type KustomizeConfig struct {
 	// Kustomization represents the kustomization used to transform resources.
 	// Note the resources field is internally managed from the Files and Resources fields.
