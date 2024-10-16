@@ -3,9 +3,7 @@ package holos
 import api "github.com/holos-run/holos/api/author/v1alpha4"
 
 // Manage a workload cluster named workload for use with the guides.
-#Fleets: api.#StandardFleets & {
-	workload: clusters: workload: _
-}
+#Fleets: api.#StandardFleets
 
 // Define the default organization name.
 #Organization: api.#OrganizationStrict & {
@@ -14,15 +12,34 @@ import api "github.com/holos-run/holos/api/author/v1alpha4"
 	Domain:      string | *"holos.localhost"
 }
 
+// Projects represents a way to organize components into projects with owners.
+// https://holos.run/docs/api/author/v1alpha4/#Projects
+#Projects: api.#Projects
+
+// The current project for a rendered component
+// TODO(jeff): Should the project name be an injected tag? Probably.
+_CurrentProject: {
+	Name?: string
+}
+
+// ArgoConfig represents the configuration of ArgoCD Application resources for
+// each component.
 // https://holos.run/docs/api/author/v1alpha4/#ArgoConfig
 #ArgoConfig: api.#ArgoConfig
 
 #ComponentConfig: api.#ComponentConfig & {
-	Name:       _Tags.name
-	Component:  _Tags.component
-	Cluster:    _Tags.cluster
-	ArgoConfig: #ArgoConfig
-	Resources:  #Resources
+	Name:      _Tags.name
+	Component: _Tags.component
+	Cluster:   _Tags.cluster
+	ArgoConfig: #ArgoConfig & {
+		if _CurrentProject.Name != _|_ {
+			AppProject: _CurrentProject.Name
+		}
+	}
+	Resources: #Resources
+	if _CurrentProject.Name != _|_ {
+		CommonLabels: #Projects[_CurrentProject.Name].CommonLabels
+	}
 }
 
 // https://holos.run/docs/api/author/v1alpha4/#Kubernetes

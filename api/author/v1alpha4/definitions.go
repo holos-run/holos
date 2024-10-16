@@ -240,6 +240,8 @@ type Project struct {
 	Namespaces map[NameLabel]Namespace
 	// Hostnames represents the host names to expose for this project.
 	Hostnames map[NameLabel]Hostname
+	// CommonLabels represents common labels to manage on all rendered manifests.
+	CommonLabels map[string]string
 }
 
 // Owner represents the owner of a resource.  For example, the name and email

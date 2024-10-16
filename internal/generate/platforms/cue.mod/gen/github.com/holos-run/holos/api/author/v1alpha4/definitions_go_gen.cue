@@ -264,6 +264,9 @@ import core "github.com/holos-run/holos/api/core/v1alpha4"
 
 	// Hostnames represents the host names to expose for this project.
 	Hostnames: {[string]: #Hostname} @go(,map[NameLabel]Hostname)
+
+	// CommonLabels represents common labels to manage on all rendered manifests.
+	CommonLabels: {[string]: string} @go(,map[string]string)
 }
 
 // Owner represents the owner of a resource.  For example, the name and email
