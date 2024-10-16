@@ -17,12 +17,18 @@ Package v1alpha4 contains ergonomic CUE definitions for Holos component authors.
 - [type ComponentConfig](<#ComponentConfig>)
 - [type Fleet](<#Fleet>)
 - [type Helm](<#Helm>)
+- [type Hostname](<#Hostname>)
 - [type Kubernetes](<#Kubernetes>)
 - [type Kustomize](<#Kustomize>)
 - [type KustomizeConfig](<#KustomizeConfig>)
+- [type NameLabel](<#NameLabel>)
+- [type Namespace](<#Namespace>)
 - [type Organization](<#Organization>)
 - [type OrganizationStrict](<#OrganizationStrict>)
+- [type Owner](<#Owner>)
 - [type Platform](<#Platform>)
+- [type Project](<#Project>)
+- [type Projects](<#Projects>)
 - [type StandardFleets](<#StandardFleets>)
 
 
@@ -152,6 +158,26 @@ type Helm struct {
 }
 ```
 
+<a name="Hostname"></a>
+## type Hostname {#Hostname}
+
+Hostname represents the left most dns label of a domain name.
+
+```go
+type Hostname struct {
+    // Name represents the subdomain to expose, e.g. "www"
+    Name string
+    // Namespace represents the namespace metadata.name field of backend object
+    // reference.
+    Namespace string
+    // Service represents the Service metadata.name field of backend object
+    // reference.
+    Service string
+    // Port represents the Service port of the backend object reference.
+    Port int
+}
+```
+
 <a name="Kubernetes"></a>
 ## type Kubernetes {#Kubernetes}
 
@@ -214,6 +240,37 @@ type KustomizeConfig struct {
 }
 ```
 
+<a name="NameLabel"></a>
+## type NameLabel {#NameLabel}
+
+NameLabel signals the common use case of converting a struct to a list where the name field of each value unifies with the field name of the outer struct.
+
+For example:
+
+```
+S: [NameLabel=string]: name: NameLabel
+S: jeff: _
+S: gary: _
+S: nate: _
+L: [for x in S {x}]
+// L is [{name: "jeff"}, {name: "gary"}, {name: "nate"}]
+```
+
+```go
+type NameLabel string
+```
+
+<a name="Namespace"></a>
+## type Namespace {#Namespace}
+
+Namespace represents a Kubernetes namespace.
+
+```go
+type Namespace struct {
+    Name string
+}
+```
+
 <a name="Organization"></a>
 ## type Organization {#Organization}
 
@@ -244,6 +301,18 @@ type OrganizationStrict struct {
 }
 ```
 
+<a name="Owner"></a>
+## type Owner {#Owner}
+
+Owner represents the owner of a resource. For example, the name and email address of an engineering team.
+
+```go
+type Owner struct {
+    Name  string
+    Email string
+}
+```
+
 <a name="Platform"></a>
 ## type Platform {#Platform}
 
@@ -252,9 +321,36 @@ Platform assembles a Core API [Platform](<https://holos.run/docs/api/core/v1alph
 ```go
 type Platform struct {
     Name       string
-    Components map[core.NameLabel]core.Component
+    Components map[NameLabel]core.Component
     Resource   core.Platform
 }
+```
+
+<a name="Project"></a>
+## type Project {#Project}
+
+Project represents logical grouping of components owned by one or more teams. Useful for the platform team to manage resources for project teams to use.
+
+```go
+type Project struct {
+    // Name represents project name.
+    Name string
+    // Owner represents the team who own this project.
+    Owner Owner
+    // Namespaces represents the namespaces assigned to this project.
+    Namespaces map[NameLabel]Namespace
+    // Hostnames represents the host names to expose for this project.
+    Hostnames map[NameLabel]Hostname
+}
+```
+
+<a name="Projects"></a>
+## type Projects {#Projects}
+
+Projects represents projects managed by the platform team for use by other teams using the platform.
+
+```go
+type Projects map[NameLabel]Project
 ```
 
 <a name="StandardFleets"></a>

@@ -21,7 +21,7 @@ import core "github.com/holos-run/holos/api/core/v1alpha4"
 // [Platform]: https://holos.run/docs/api/core/v1alpha4/#Platform
 #Platform: {
 	Name: string
-	Components: {[string]: core.#Component} @go(,map[core.NameLabel]core.Component)
+	Components: {[string]: core.#Component} @go(,map[NameLabel]core.Component)
 	Resource: core.#Platform
 }
 
@@ -245,3 +245,65 @@ import core "github.com/holos-run/holos/api/core/v1alpha4"
 	// Resources represents additional entries to included in the resources list.
 	Resources: {[string]: Source: string} & {[NAME=_]: Source: NAME} @go(,map[string]struct{Source string})
 }
+
+// Projects represents projects managed by the platform team for use by other
+// teams using the platform.
+#Projects: {[string]: #Project}
+
+// Project represents logical grouping of components owned by one or more teams.
+// Useful for the platform team to manage resources for project teams to use.
+#Project: {
+	// Name represents project name.
+	Name: string
+
+	// Owner represents the team who own this project.
+	Owner: #Owner
+
+	// Namespaces represents the namespaces assigned to this project.
+	Namespaces: {[string]: #Namespace} @go(,map[NameLabel]Namespace)
+
+	// Hostnames represents the host names to expose for this project.
+	Hostnames: {[string]: #Hostname} @go(,map[NameLabel]Hostname)
+}
+
+// Owner represents the owner of a resource.  For example, the name and email
+// address of an engineering team.
+#Owner: {
+	Name:  string
+	Email: string
+}
+
+// Namespace represents a Kubernetes namespace.
+#Namespace: {
+	Name: string
+}
+
+// Hostname represents the left most dns label of a domain name.
+#Hostname: {
+	// Name represents the subdomain to expose, e.g. "www"
+	Name: string
+
+	// Namespace represents the namespace metadata.name field of backend object
+	// reference.
+	Namespace: string
+
+	// Service represents the Service metadata.name field of backend object
+	// reference.
+	Service: string
+
+	// Port represents the Service port of the backend object reference.
+	Port: int
+}
+
+// NameLabel signals the common use case of converting a struct to a list where
+// the name field of each value unifies with the field name of the outer struct.
+//
+// For example:
+//
+//	S: [NameLabel=string]: name: NameLabel
+//	S: jeff: _
+//	S: gary: _
+//	S: nate: _
+//	L: [for x in S {x}]
+//	// L is [{name: "jeff"}, {name: "gary"}, {name: "nate"}]
+#NameLabel: string
