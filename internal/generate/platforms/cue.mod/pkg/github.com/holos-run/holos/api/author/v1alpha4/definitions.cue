@@ -33,11 +33,19 @@ import (
 	// Kustomize to add custom labels and manage the namespace.  More advanced
 	// functionality than this should use the Core API directly and propose
 	// extending the Author API if the need is common.
-	_Transformer: core.#Transformer & {
+	_TransformerArgo: core.#Transformer & {
 		kind: "Kustomize"
 		kustomize: kustomization: ks.#Kustomization & {
 			commonLabels: "holos.run/component.name": BuildPlan.metadata.name
 			commonLabels: CommonLabels
+		}
+	}
+
+	// Add the argocd.argoproj.io/instance label to resources, but not to the
+	// argocd Application config.
+	_Transformer: _TransformerArgo & {
+		kustomize: kustomization: commonLabels: {
+			"argocd.argoproj.io/instance": Name
 		}
 	}
 
@@ -72,34 +80,14 @@ import (
 			]
 		}
 
-		if ArgoConfig.Enabled {
-			argocd: {
-				artifact: "clusters/\(Cluster)/gitops/\(Name).gen.yaml"
-				let Output = "application.gen.yaml"
-				generators: [{
-					kind:   "Resources"
-					output: Output
-					resources: Application: (Name): app.#Application & {
-						metadata: name:      Name
-						metadata: namespace: string | *"argocd"
-						spec: {
-							destination: server: string | *"https://kubernetes.default.svc"
-							project: string | *"default"
-							source: {
-								repoURL:        ArgoConfig.RepoURL
-								path:           "\(ArgoConfig.Root)/\(component._path)"
-								targetRevision: ArgoConfig.TargetRevision
-							}
-						}
-					}
-				}]
-				transformers: [_Transformer & {
-					inputs: [Output]
-					output: artifact
-					kustomize: kustomization: resources: inputs
-				}]
-			}
-		}
+		// Mix in the ArgoCD Application gitops artifact.
+		(#ArgoArtifact & {
+			name:        Name
+			cluster:     Cluster
+			config:      ArgoConfig
+			transformer: _TransformerArgo
+			component:   _Artifacts.component._path
+		}).Artifact
 	}
 
 	BuildPlan: {
@@ -131,11 +119,19 @@ import (
 	// Kustomize to add custom labels and manage the namespace.  More advanced
 	// functionality than this should use the Core API directly and propose
 	// extending the Author API if the need is common.
-	_Transformer: core.#Transformer & {
+	_TransformerArgo: core.#Transformer & {
 		kind: "Kustomize"
 		kustomize: kustomization: ks.#Kustomization & {
 			commonLabels: "holos.run/component.name": BuildPlan.metadata.name
 			commonLabels: CommonLabels
+		}
+	}
+
+	// Add the argocd.argoproj.io/instance label to resources, but not to the
+	// argocd Application config.
+	_Transformer: _TransformerArgo & {
+		kustomize: kustomization: commonLabels: {
+			"argocd.argoproj.io/instance": Name
 		}
 	}
 
@@ -181,34 +177,14 @@ import (
 			]
 		}
 
-		if ArgoConfig.Enabled {
-			argocd: {
-				artifact: "clusters/\(Cluster)/gitops/\(Name).gen.yaml"
-				let Output = "application.gen.yaml"
-				generators: [{
-					kind:   "Resources"
-					output: Output
-					resources: Application: (Name): app.#Application & {
-						metadata: name:      Name
-						metadata: namespace: string | *"argocd"
-						spec: {
-							destination: server: string | *"https://kubernetes.default.svc"
-							project: string | *"default"
-							source: {
-								repoURL:        ArgoConfig.RepoURL
-								path:           "\(ArgoConfig.Root)/\(component._path)"
-								targetRevision: ArgoConfig.TargetRevision
-							}
-						}
-					}
-				}]
-				transformers: [_Transformer & {
-					inputs: [Output]
-					output: artifact
-					kustomize: kustomization: resources: inputs
-				}]
-			}
-		}
+		// Mix in the ArgoCD Application gitops artifact.
+		(#ArgoArtifact & {
+			name:        Name
+			cluster:     Cluster
+			config:      ArgoConfig
+			transformer: _TransformerArgo
+			component:   _Artifacts.component._path
+		}).Artifact
 	}
 
 	BuildPlan: {
@@ -243,11 +219,19 @@ import (
 	// Kustomize to add custom labels and manage the namespace.  More advanced
 	// functionality than this should use the Core API directly and propose
 	// extending the Author API if the need is common.
-	_Transformer: core.#Transformer & {
+	_TransformerArgo: core.#Transformer & {
 		kind: "Kustomize"
 		kustomize: kustomization: ks.#Kustomization & {
 			commonLabels: "holos.run/component.name": BuildPlan.metadata.name
 			commonLabels: CommonLabels
+		}
+	}
+
+	// Add the argocd.argoproj.io/instance label to resources, but not to the
+	// argocd Application config.
+	_Transformer: _TransformerArgo & {
+		kustomize: kustomization: commonLabels: {
+			"argocd.argoproj.io/instance": Name
 		}
 	}
 
@@ -297,13 +281,41 @@ import (
 			]
 		}
 
-		if ArgoConfig.Enabled {
-			argocd: {
+		// Mix in the ArgoCD Application gitops artifact.
+		(#ArgoArtifact & {
+			name:        Name
+			cluster:     Cluster
+			config:      ArgoConfig
+			transformer: _TransformerArgo
+			component:   _Artifacts.component._path
+		}).Artifact
+	}
+
+	BuildPlan: {
+		metadata: name:  Name
+		spec: component: Component
+		spec: artifacts: [for x in _Artifacts {x}]
+	}
+}
+
+#ArgoArtifact: {
+	name: string
+	let Name = name
+	cluster: string
+	let Cluster = cluster
+	config: #ArgoConfig
+	let ArgoConfig = config
+	transformer: core.#Transformer
+	component:   string
+
+	Artifact: {}
+	if ArgoConfig.Enabled {
+		Artifact: {
+			argocd: core.#Artifact & {
 				artifact: "clusters/\(Cluster)/gitops/\(Name).gen.yaml"
-				let Output = "application.gen.yaml"
 				generators: [{
 					kind:   "Resources"
-					output: Output
+					output: "application.gen.yaml"
 					resources: Application: (Name): app.#Application & {
 						metadata: name:      Name
 						metadata: namespace: string | *"argocd"
@@ -312,24 +324,18 @@ import (
 							project: string | *"default"
 							source: {
 								repoURL:        ArgoConfig.RepoURL
-								path:           "\(ArgoConfig.Root)/\(component._path)"
+								path:           "\(ArgoConfig.Root)/\(component)"
 								targetRevision: ArgoConfig.TargetRevision
 							}
 						}
 					}
 				}]
-				transformers: [_Transformer & {
-					inputs: [Output]
+				transformers: [transformer & {
+					inputs: [for x in generators {x.output}]
 					output: artifact
 					kustomize: kustomization: resources: inputs
 				}]
 			}
 		}
-	}
-
-	BuildPlan: {
-		metadata: name:  Name
-		spec: component: Component
-		spec: artifacts: [for x in _Artifacts {x}]
 	}
 }
