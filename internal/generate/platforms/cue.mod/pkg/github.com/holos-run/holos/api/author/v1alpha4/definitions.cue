@@ -321,7 +321,7 @@ import (
 						metadata: namespace: string | *"argocd"
 						spec: {
 							destination: server: string | *"https://kubernetes.default.svc"
-							project: string | *"default"
+							project: ArgoConfig.AppProject
 							source: {
 								repoURL:        ArgoConfig.RepoURL
 								path:           "\(ArgoConfig.Root)/\(component)"
