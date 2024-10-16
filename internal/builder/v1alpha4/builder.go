@@ -513,8 +513,8 @@ func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() 
 
 	err := os.Mkdir(lockDir, 0777)
 	if err == nil {
-		log.DebugContext(ctx, fmt.Sprintf("acquired %s", lockDir))
 		defer os.RemoveAll(lockDir)
+		log.DebugContext(ctx, fmt.Sprintf("acquired %s", lockDir))
 		if err := fn(); err != nil {
 			return errors.Wrap(err)
 		}

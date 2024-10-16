@@ -67,16 +67,16 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 			return errors.Wrap(err)
 		}
 
-		tm, err := bd.TypeMeta()
+		typeMeta, err := bd.TypeMeta()
 		if err != nil {
 			return errors.Wrap(err)
 		}
 
-		if tm.Kind != "BuildPlan" {
-			return errors.Format("invalid kind: want: BuildPlan have: %s", tm.Kind)
+		if typeMeta.Kind != "BuildPlan" {
+			return errors.Format("invalid kind: want: BuildPlan have: %s", typeMeta.Kind)
 		}
 
-		log.DebugContext(ctx, "discriminated "+tm.APIVersion+" "+tm.Kind)
+		log.DebugContext(ctx, "discriminated "+typeMeta.APIVersion+" "+typeMeta.Kind)
 
 		jsonBytes, err := bd.Value.MarshalJSON()
 		if err != nil {
@@ -87,7 +87,7 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 
 		art := artifact.New()
 
-		switch version := tm.APIVersion; version {
+		switch version := typeMeta.APIVersion; version {
 		case "v1alpha4":
 			builder := v1alpha4.BuildPlan{
 				WriteTo:     cfg.WriteTo(),
