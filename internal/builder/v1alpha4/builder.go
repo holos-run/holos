@@ -71,7 +71,9 @@ func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
 						tags = append(tags, "component="+component.Component)
 						tags = append(tags, "environment="+component.Environment)
 						// Tags are unified, cue handles conflicts.  We don't bother.
-						tags = append(tags, component.Tags...)
+						for key, value := range component.Tags {
+							tags = append(tags, fmt.Sprintf("%s=%s", key, value))
+						}
 
 						// Execute a sub-process to limit CUE memory usage.
 						args := make([]string, 0, 10)

@@ -397,7 +397,7 @@ package v1alpha4
 	// Tags represents cue tags to inject when rendering the component.  The json
 	// struct tag names of other fields in this struct are reserved tag names not
 	// to be used in the tags collection.
-	tags?: [...string] @go(Tags,[]string)
+	tags?: {[string]: string} @go(Tags,map[string]string)
 
 	// WriteTo represents the holos render component --write-to flag.  If empty,
 	// the default value for the --write-to flag is used.
