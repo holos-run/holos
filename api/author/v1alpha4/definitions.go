@@ -16,7 +16,13 @@ import core "github.com/holos-run/holos/api/core/v1alpha4"
 // with the platform using a struct.  This struct is converted into a list for
 // final output to holos.
 //
+// See related:
+//
+//   - [Component] list of components composing the platform.
+//   - [Platform] resource assembled for holos to process.
+//
 // [Platform]: https://holos.run/docs/api/core/v1alpha4/#Platform
+// [Component]: https://holos.run/docs/api/core/v1alpha4/#Component
 type Platform struct {
 	Name       string
 	Components map[NameLabel]core.Component

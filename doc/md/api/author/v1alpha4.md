@@ -318,6 +318,11 @@ type Owner struct {
 
 Platform assembles a Core API [Platform](<https://holos.run/docs/api/core/v1alpha4/#Platform>) in the Resource field for the holos render platform command. Use the Components field to register components with the platform using a struct. This struct is converted into a list for final output to holos.
 
+See related:
+
+- [Component](<https://holos.run/docs/api/core/v1alpha4/#Component>) list of components composing the platform.
+- [Platform](<https://holos.run/docs/api/core/v1alpha4/#Platform>) resource assembled for holos to process.
+
 ```go
 type Platform struct {
     Name       string
