@@ -320,7 +320,7 @@ Platform assembles a Core API [Platform](<https://holos.run/docs/api/core/v1alph
 
 See related:
 
-- [Component](<https://holos.run/docs/api/core/v1alpha4/#Component>) list of components composing the platform.
+- [Component](<https://holos.run/docs/api/core/v1alpha4/#Component>) collection of components composing the platform.
 - [Platform](<https://holos.run/docs/api/core/v1alpha4/#Platform>) resource assembled for holos to process.
 
 ```go

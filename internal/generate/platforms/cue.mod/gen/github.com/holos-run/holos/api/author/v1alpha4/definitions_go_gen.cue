@@ -20,7 +20,7 @@ import core "github.com/holos-run/holos/api/core/v1alpha4"
 //
 // See related:
 //
-//   - [Component] list of components composing the platform.
+//   - [Component] collection of components composing the platform.
 //   - [Platform] resource assembled for holos to process.
 //
 // [Platform]: https://holos.run/docs/api/core/v1alpha4/#Platform
