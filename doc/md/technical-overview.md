@@ -45,35 +45,33 @@ Go command line tool leveraging [CUE] to fill this gap.
 
 ```mermaid
 ---
-title: Figure 1 - Render Pipeline
+title: Figure 1 - v1alpha4 Render Pipeline
 ---
 graph LR
-    PS[<a href="/docs/api/author/v1alpha3/#Platform">Platform</a>]
-    HC[<a href="/docs/api/author/v1alpha3/#ComponentFields">Components</a>]
-    BP[<a href="/docs/api/core/v1alpha3#BuildPlan">BuildPlan</a>]
+    Platform[<a href="/docs/api/author/v1alpha4/#Platform">Platform</a>]
+    Component[<a href="/docs/api/author/v1alpha4/#ComponentConfig">Components</a>]
 
-    H[<a href="/docs/api/author/v1alpha3/#Helm">Helm</a>]
-    K[<a href="/docs/api/author/v1alpha3/#Kustomize">Kustomize</a>]
-    O[<a href="/docs/api/author/v1alpha3/#Kubernetes">Kubernetes</a>]
+    Helm[<a href="/docs/api/author/v1alpha4/#Helm">Helm</a>]
+    Kustomize[<a href="/docs/api/author/v1alpha4/#Kustomize">Kustomize</a>]
+    Kubernetes[<a href="/docs/api/author/v1alpha4/#Kubernetes">Kubernetes</a>]
 
-    P[<a href="/docs/api/core/v1alpha3#Kustomize">Kustomize</a>]
-    Y[Kubernetes <br/>Resources]
-    G[GitOps <br/>Resource]
-    FS[Local Files]
+    BuildPlan[<a href="/docs/api/core/v1alpha4/#buildplan">BuildPlan</a>]
 
-    C[Kube API Server]
+    ResourcesArtifact[<a href="/docs/api/core/v1alpha4/#artifact">Resources<br/>Artifact</a>]
+    GitOpsArtifact[<a href="/docs/api/core/v1alpha4/#artifact">GitOps<br/>Artifact</a>]
 
-    PS --> HC --> BP
-    BP --> H --> P
-    BP --> K --> P
-    BP --> O --> P
+    Generator[<a href="/docs/api/core/v1alpha4/#generators">Generator</a>]
+    Transformer[<a href="/docs/api/core/v1alpha4/#transformer">Transformer</a>]
 
-    P --> Y --> FS
-    P --> G --> FS
+    Platform --> Component
+    Component --> Helm --> BuildPlan
+    Component --> Kubernetes --> BuildPlan
+    Component --> Kustomize --> BuildPlan
 
-    FS --> ArgoCD --> C
-    FS --> Flux --> C
-    FS --> kubectl --> C
+    BuildPlan --> ResourcesArtifact --> Generator
+    BuildPlan --> GitOpsArtifact --> Generator
+
+    Generator --> Transformer --> Files --> KubeAPI
 ```
 
 ## Use Case
@@ -139,7 +137,7 @@ HTTPRoute and AppProject go into two namespaces managed by the platform team.
 Holos makes it easier for the platform team to organize these resources into
 different components with different owners.
 
-:::tip
+:::important
 Holos supports [CODEOWNERS] by clearly defining the teams responsible for each
 platform component.
 :::
@@ -152,12 +150,13 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt
-rendered namespaces for cluster overview in 93.024042ms
-rendered projects for cluster overview in 96.080667ms
-rendered httproutes for cluster overview in 96.047ms
-rendered platform in 96.805292ms
+rendered httproutes for cluster overview in 177.823625ms
+rendered app-projects for cluster overview in 180.946834ms
+rendered projects for cluster overview in 181.98725ms
+rendered namespaces for cluster overview in 182.30725ms
+rendered platform in 182.31075ms
 ```
-:::note
+:::tip
 If you'd like to try this for yourself, `cd` into [examples/tech-overview] and
 render the platform.
 :::
@@ -170,111 +169,124 @@ by cluster and component for GitOps.
 
 <Tabs groupId="07FBE14E-E9EA-437B-9FA1-C6D8806524AD">
   <TabItem value="deploy/clusters/overview/components/namespaces/namespaces.gen.yaml" label="namespaces">
+```
+cat deploy/clusters/overview/components/namespaces/namespaces.gen.yaml
+```
 ```yaml showLineNumbers
-# deploy/clusters/overview/components/namespaces/namespaces.gen.yaml
----
-metadata:
-  name: experiment
-  labels:
-    kubernetes.io/metadata.name: experiment
-    example.com/project.name: experiment
-    example.com/owner.name: dev-team
-    example.com/owner.email: sg-dev-team@example.com
-kind: Namespace
 apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: namespaces
+    example.com/owner.email: sg-dev-team@example.com
+    example.com/owner.name: dev-team
+    example.com/project.name: experiment
+    holos.run/component.name: namespaces
+    kubernetes.io/metadata.name: experiment
+  name: experiment
 ```
   </TabItem>
   <TabItem value="deploy/clusters/overview/components/projects/projects.gen.yaml" label="projects">
+```
+cat deploy/clusters/overview/components/projects/projects.gen.yaml
+```
 ```yaml showLineNumbers
-# deploy/clusters/overview/components/projects/projects.gen.yaml
----
-apiVersion: gateway.networking.k8s.io/v1beta1
-kind: ReferenceGrant
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
 metadata:
-  name: istio-ingress
-  namespace: experiment
   labels:
-    example.com/project.name: experiment
-    example.com/owner.name: dev-team
+    argocd.argoproj.io/instance: projects
     example.com/owner.email: sg-dev-team@example.com
-spec:
-  from:
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      namespace: istio-ingress
-  to:
-    - group: ""
-      kind: Service
----
-metadata:
+    example.com/owner.name: dev-team
+    example.com/project.name: experiment
+    holos.run/component.name: projects
   name: admin
   namespace: experiment
-  labels:
-    example.com/project.name: experiment
-    example.com/owner.name: dev-team
-    example.com/owner.email: sg-dev-team@example.com
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: admin
 subjects:
-  - apiGroup: rbac.authorization.k8s.io
-    kind: Group
-    name: oidc:sg-dev-team@example.com
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: oidc:sg-dev-team@example.com
 ---
 apiVersion: external-secrets.io/v1beta1
 kind: SecretStore
 metadata:
+  labels:
+    argocd.argoproj.io/instance: projects
+    example.com/owner.email: sg-dev-team@example.com
+    example.com/owner.name: dev-team
+    example.com/project.name: experiment
+    holos.run/component.name: projects
   name: default
   namespace: experiment
-  labels:
-    example.com/project.name: experiment
-    example.com/owner.name: dev-team
-    example.com/owner.email: sg-dev-team@example.com
 spec:
   provider:
     kubernetes:
-      remoteNamespace: experiment
       auth:
         token:
           bearerToken:
             key: token
             name: eso-reader
+      remoteNamespace: experiment
       server:
+        caBundle: LS0tLS1CRUd...QVRFLS0tLS0K
         url: https://management.example.com:6443
-        caBundle: LS0tLS1CRUd...S0tLS0K
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  labels:
+    argocd.argoproj.io/instance: projects
+    example.com/owner.email: sg-dev-team@example.com
+    example.com/owner.name: dev-team
+    example.com/project.name: experiment
+    holos.run/component.name: projects
+  name: istio-ingress
+  namespace: experiment
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: istio-ingress
+  to:
+  - group: ""
+    kind: Service
 ```
   </TabItem>
   <TabItem value="deploy/clusters/overview/components/httproutes/httproutes.gen.yaml" label="httproutes">
+```
+cat deploy/clusters/overview/components/httproutes/httproutes.gen.yaml
+```
 ```yaml showLineNumbers
-# deploy/clusters/overview/components/httproutes/httproutes.gen.yaml
----
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: podinfo.holos.localhost
-  namespace: istio-ingress
   labels:
-    example.com/project.name: experiment
-    example.com/owner.name: dev-team
+    argocd.argoproj.io/instance: httproutes
     example.com/owner.email: sg-dev-team@example.com
+    example.com/owner.name: dev-team
+    example.com/project.name: experiment
+    holos.run/component.name: httproutes
+  name: podinfo.example.com
+  namespace: istio-ingress
 spec:
   hostnames:
-    - podinfo.holos.localhost
+  - podinfo.example.com
   parentRefs:
-    - name: default
-      namespace: istio-ingress
+  - name: default
+    namespace: istio-ingress
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - name: podinfo
-          namespace: experiment
-          port: 9898
+  - backendRefs:
+    - name: podinfo
+      namespace: experiment
+      port: 9898
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
 ```
   </TabItem>
 </Tabs>
@@ -302,16 +314,16 @@ projects/platform/components/namespaces/namespaces.cue
 ```cue showLineNumbers
 package holos
 
-let Objects = {
+_Kubernetes: #Kubernetes & {
   Name: "namespaces"
   Resources: Namespace: #Namespaces
 }
 
 // Produce a kubernetes objects build plan.
-(#Kubernetes & Objects).BuildPlan
+_Kubernetes.BuildPlan
 ```
 
-1. This is the namespaces component which simply manages all of the namespaces derived from the project registration data shown in the second tab.
+1. This is the namespaces component which manages a collection of Namespace resources derived from the project registration data shown in the second tab.
 2. Line 5 manages a Namespace for each value of the `#Namespaces` struct.  See the second tab for how the platform team defines this structure.
   </TabItem>
   <TabItem value="projects/projects.cue" label="#Projects Definition">
@@ -321,7 +333,7 @@ projects/projects.cue
 ```cue showLineNumbers
 package holos
 
-import api "github.com/holos-run/holos/api/author/v1alpha3"
+import api "github.com/holos-run/holos/api/author/v1alpha4"
 
 // Projects defines the structure other teams register with to manage project
 // resources.  The platform team defines the schema, development teams provide
@@ -347,9 +359,7 @@ import api "github.com/holos-run/holos/api/author/v1alpha3"
       Port:      number | *80
     }
 
-    // CommonLabels is not part of the Projects API, so we use a hidden field to
-    // provide common labels to components that render resources from CUE.
-    _CommonLabels: {
+    CommonLabels: {
       "\(#Organization.Domain)/project.name": Name
       "\(#Organization.Domain)/owner.name":   Owner.Name
       "\(#Organization.Domain)/owner.email":  Owner.Email
@@ -361,32 +371,32 @@ for Project in #Projects {
   // Register project namespaces with the namespaces component.
   #Namespaces: {
     for Namespace in Project.Namespaces {
-      (Namespace.Name): metadata: labels: Project._CommonLabels
+      (Namespace.Name): metadata: labels: Project.CommonLabels
     }
   }
 }
 ```
 
-1. On lines 8-37 the platform team derives most fields from the project name (line 9), and the owner name (line 13).  The purpose is to fill in the remaining fields defined by the Author API.
+1. On lines 8-35 the platform team derives most fields from the project name (line 9), and the owner name (line 13).  The purpose is to fill in the remaining fields defined by the Author API.
 2. Line 13 The dev team is expected to provide a concrete owner name, indicated by the `string` value.
 3. Line 17 The platform team provides a default value for the email address.  The project team may define a different value.
 4. Line 19 The Author API allows a project to have many namespaces.  The platform team constrains this down to one namespace per project by closing the struct.  The namespace name must be the same as the project name.
 5. Lines 22-27 The platform team derives values for a Gateway API [BackendObjectReference] from the hostname provided by the project team.  These values are used later to build HTTPRoutes to expose their service.
-6. Lines 31-35 Common labels aren't part of the Author API, so the platform team defines a hidden field to make them available throughout the configuration.
-7. Lines 39-46 The platform team adds a namespace with common labels for each project to the struct we saw in the first tab.
+6. Lines 30-32 Common labels are derived to mix into resources associated with this project.
+7. Lines 37-44 The platform team adds a namespace with common labels for each project to the struct we saw in the first tab.
 
   </TabItem>
 </Tabs>
 
 The RoleBinding, SecretScore, and ReferenceGrant are managed in the
-[projects](https://github.com/holos-run/bank-of-holos/blob/v0.1.1/examples/tech-overview/projects/platform/components/projects/projects.cue)
+[projects](https://github.com/holos-run/bank-of-holos/blob/v0.2.0/examples/tech-overview/projects/platform/components/projects/projects.cue)
 component, similar to the previous namespaces example.
 The HTTPRoute is managed separately in the
-[httproutes](https://github.com/holos-run/bank-of-holos/blob/v0.1.1/examples/tech-overview/projects/platform/components/httproutes/httproutes.cue)
+[httproutes](https://github.com/holos-run/bank-of-holos/blob/v0.2.0/examples/tech-overview/projects/platform/components/httproutes/httproutes.cue)
 component.
 
 All components are registered with the platform in the
-[platform](https://github.com/holos-run/bank-of-holos/tree/v0.1.1/examples/tech-overview/platform)
+[platform](https://github.com/holos-run/bank-of-holos/tree/v0.2.0/examples/tech-overview/platform)
 directory.
 
 :::important
@@ -416,13 +426,17 @@ projects/experiment/components/podinfo/podinfo.cue
 package holos
 
 // Produce a helm chart build plan.
-(#Helm & Chart).BuildPlan
+_HelmChart.BuildPlan
 
-let Chart = {
-  Name:    "podinfo"
-  Version: "6.6.2"
-  Repo: name: "podinfo"
-  Repo: url:  "https://stefanprodan.github.io/podinfo"
+_HelmChart: #Helm & {
+  Name: "podinfo"
+  Chart: {
+    version: "6.6.2"
+    repository: {
+      name: "podinfo"
+      url:  "https://stefanprodan.github.io/podinfo"
+    }
+  }
 }
 ```
 This file represents a Helm chart component to add to the platform.  The second
@@ -437,9 +451,11 @@ package holos
 
 // Manage the component on every workload Cluster, but not management clusters.
 for Cluster in #Fleets.workload.clusters {
-  #Platform: Components: "\(Cluster.name)/podinfo": {
-    path:    "projects/experiment/components/podinfo"
-    cluster: Cluster.name
+  #Platform: Components: "\(Cluster.name):podinfo": {
+    name:      "podinfo"
+    component: "projects/experiment/components/podinfo"
+    cluster:   Cluster.name
+    tags: project: "experiment"
   }
 }
 ```
@@ -448,6 +464,14 @@ rendered the dev team's Helm chart will be rendered on all workload clusters
 across the platform.
   </TabItem>
 </Tabs>
+
+The project tag associates the `#Platform` component with the correct entry in the `#Projects` struct.
+
+:::important
+You can add your own key=value tags in your platform specification to inject
+values into components.  This feature is useful to reuse one component path for
+several environments or customers.
+:::
 
 Once the dev team's component is registered, rendering the platform will render
 their component.
@@ -460,13 +484,13 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt
-rendered app-projects for cluster overview in 92.087042ms
-rendered projects for cluster overview in 95.6325ms
-rendered httproutes for cluster overview in 96.968916ms
-rendered namespaces for cluster overview in 97.610291ms
+rendered namespaces for cluster overview in 185.64075ms
+rendered app-projects for cluster overview in 186.729292ms
+rendered httproutes for cluster overview in 195.222833ms
+rendered projects for cluster overview in 195.217125ms
 // highlight-next-line
-rendered podinfo for cluster overview in 155.410417ms
-rendered platform in 155.470542ms
+rendered podinfo for cluster overview in 195.830042ms
+rendered platform in 195.90275ms
 ```
   </TabItem>
 </Tabs>
@@ -486,12 +510,13 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: podinfo
     app.kubernetes.io/version: 6.6.2
+    argocd.argoproj.io/instance: podinfo
     example.com/owner.email: sg-dev-team@example.com
     example.com/owner.name: dev-team
     example.com/project.name: experiment
     helm.sh/chart: podinfo-6.6.2
+    holos.run/component.name: podinfo
   name: podinfo
-  namespace: experiment
 spec:
   ports:
   - name: http
@@ -504,9 +529,11 @@ spec:
     targetPort: grpc
   selector:
     app.kubernetes.io/name: podinfo
+    argocd.argoproj.io/instance: podinfo
     example.com/owner.email: sg-dev-team@example.com
     example.com/owner.name: dev-team
     example.com/project.name: experiment
+    holos.run/component.name: podinfo
   type: ClusterIP
 ---
 apiVersion: apps/v1
@@ -516,20 +543,23 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: podinfo
     app.kubernetes.io/version: 6.6.2
+    argocd.argoproj.io/instance: podinfo
     example.com/owner.email: sg-dev-team@example.com
     example.com/owner.name: dev-team
     example.com/project.name: experiment
     helm.sh/chart: podinfo-6.6.2
+    holos.run/component.name: podinfo
   name: podinfo
-  namespace: experiment
 spec:
   replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: podinfo
+      argocd.argoproj.io/instance: podinfo
       example.com/owner.email: sg-dev-team@example.com
       example.com/owner.name: dev-team
       example.com/project.name: experiment
+      holos.run/component.name: podinfo
   strategy:
     rollingUpdate:
       maxUnavailable: 1
@@ -541,9 +571,11 @@ spec:
         prometheus.io/scrape: "true"
       labels:
         app.kubernetes.io/name: podinfo
+        argocd.argoproj.io/instance: podinfo
         example.com/owner.email: sg-dev-team@example.com
         example.com/owner.name: dev-team
         example.com/project.name: experiment
+        holos.run/component.name: podinfo
     spec:
       containers:
       - command:
@@ -617,7 +649,8 @@ platform team added a constraint to the project so all Helm charts are post
 processed with Kustomize to add these common labels.  The platform team
 accomplishes this by adding a constraint in the project directory.  This can be
 seen in
-[experiment/components.cue](https://github.com/holos-run/bank-of-holos/blob/v0.1.1/examples/tech-overview/projects/experiment/components.cue)
+[schema.cue](https://github.com/holos-run/bank-of-holos/blob/v0.2.0/schema.cue#L35-L40)
+where the platform team configures all component kinds for the platform.
 
 We've covered how the platform team provides a golden path for development teams
 to register their projects by defining a Projects structure.  We've also covered
@@ -644,7 +677,7 @@ how the development team deploys their existing Helm chart onto the platform.
 [Holos]: https://holos.run/
 [Quickstart]: /docs/quickstart/
 [rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern/
-[examples/tech-overview]: https://github.com/holos-run/bank-of-holos/tree/v0.1.1/examples/tech-overview
+[examples/tech-overview]: https://github.com/holos-run/bank-of-holos/tree/v0.2.0/examples/tech-overview
 [BackendObjectReference]: https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io%2fv1.BackendObjectReference
 [CODEOWNERS]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 [Project]: /docs/api/author/v1alpha3/#Project
