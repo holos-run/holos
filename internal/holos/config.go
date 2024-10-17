@@ -89,7 +89,7 @@ func New(opts ...Option) *Config {
 		ServerConfig:         &ServerConfig{},
 	}
 	writeFlagSet.StringVar(&cfg.writeTo, "write-to", cfg.writeTo, "write to directory")
-	clusterFlagSet.StringVar(&cfg.clusterName, "cluster-name", cfg.clusterName, "cluster name")
+	clusterFlagSet.StringVar(&cfg.clusterName, "cluster-name", cfg.clusterName, "cluster name (deprecated: use --inject holos_cluster=example instead)")
 	kvDefault := ""
 	if home := homedir.HomeDir(); home != "" {
 		kvDefault = filepath.Join(home, ".holos", "kubeconfig.provisioner")

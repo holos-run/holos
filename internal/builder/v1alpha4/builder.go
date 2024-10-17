@@ -60,17 +60,15 @@ func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
 							"name", component.Name,
 							"path", component.Component,
 							"cluster", component.Cluster,
-							"environment", component.Environment,
 							"num", idx+1,
 							"total", total,
 						)
 						log.DebugContext(ctx, "render component")
 
 						tags := make([]string, 0, 3+len(component.Tags))
-						tags = append(tags, "name="+component.Name)
-						tags = append(tags, "component="+component.Component)
-						tags = append(tags, "environment="+component.Environment)
-						// Tags are unified, cue handles conflicts.  We don't bother.
+						tags = append(tags, "holos_name="+component.Name)
+						tags = append(tags, "holos_component="+component.Component)
+						tags = append(tags, "holos_cluster="+component.Cluster)
 						for key, value := range component.Tags {
 							tags = append(tags, fmt.Sprintf("%s=%s", key, value))
 						}
@@ -80,9 +78,10 @@ func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
 						args = append(args,
 							"render",
 							"component",
-							"--cluster-name", component.Cluster,
-							"--tags", strings.Join(tags, ","),
 						)
+						for _, tag := range tags {
+							args = append(args, "--inject", tag)
+						}
 						if component.WriteTo != "" {
 							args = append(args, "--write-to", component.WriteTo)
 						}

@@ -11,12 +11,14 @@ import (
 // _PlatformConfig represents all of the data passed from holos to cue, used to
 // carry the platform and project models.
 _PlatformConfig:     dto.#PlatformConfig & json.Unmarshal(_PlatformConfigJSON)
-_PlatformConfigJSON: string | *"{}" @tag(platform_config, type=string)
+_PlatformConfigJSON: string | *"{}" @tag(holos_platform_config, type=string)
 
 _Tags: {
-	cluster:     string | *"no-cluster"     @tag(cluster, type=string)
+	// Reserved tags
+	name:      string | *"no-name"      @tag(holos_name, type=string)
+	cluster:   string | *"no-cluster"   @tag(holos_cluster, type=string)
+	component: string | *"no-component" @tag(holos_component, type=string)
+	// User defined tags
 	environment: string | *"no-environment" @tag(environment, type=string)
-	component:   string | *"no-component"   @tag(component, type=string)
-	name:        string | *"no-name"        @tag(name, type=string)
 	project:     string | *"no-project"     @tag(project, type=string)
 }

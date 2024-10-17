@@ -1,5 +1,7 @@
 package v1alpha4
 
+#Component: tags?: [_]: !~"^holos_"
+
 #Transformer: {
 	kind: _
 

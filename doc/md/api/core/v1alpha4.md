@@ -221,22 +221,23 @@ All of these fields are passed to the holos render component command using flags
 
 ```go
 type Component struct {
-    // Name represents the name of the component, injected as a tag to set the
-    // BuildPlan metadata.name field.  Necessary for clear user feedback during
-    // platform rendering.
+    // Name represents the name of the component. Injected as the tag variable
+    // "holos_name" to set the BuildPlan metadata.name field.  Necessary for clear
+    // user feedback during platform rendering.
     Name string `json:"name"`
-    // Component represents the path of the component relative to the platform root.
+    // Component represents the path of the component relative to the platform
+    // root.  Injected as the tag variable "holos_component".
     Component string `json:"component"`
     // Cluster is the cluster name to provide when rendering the component.
+    // Injected as the tag variable "holos_cluster".
     Cluster string `json:"cluster"`
-    // Environment for example, dev, test, stage, prod
-    Environment string `json:"environment,omitempty"`
     // Model represents the platform model holos gets from from the
     // PlatformService.GetPlatform rpc method and provides to CUE using a tag.
+    // Injected as the tag "holos_model".
     Model map[string]any `json:"model"`
-    // Tags represents cue tags to inject when rendering the component.  The json
-    // struct tag names of other fields in this struct are reserved tag names not
-    // to be used in the tags collection.
+    // Tags represents cue @tag variables injected into the holos render component
+    // command from the holos render platform command.  Tags with a "holos_"
+    // prefix are reserved for use by the Holos Authors.
     Tags map[string]string `json:"tags,omitempty"`
     // WriteTo represents the holos render component --write-to flag.  If empty,
     // the default value for the --write-to flag is used.
