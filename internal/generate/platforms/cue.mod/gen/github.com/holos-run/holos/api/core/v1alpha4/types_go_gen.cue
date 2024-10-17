@@ -376,26 +376,59 @@ package v1alpha4
 // flags, which in turn are injected to CUE using tags.  For clarity, CUE field
 // and tag names should match the struct json tag names below.
 #Component: {
-	// Name represents the name of the component, injected as a tag to set the
-	// BuildPlan metadata.name field.  Necessary for clear user feedback during
-	// platform rendering.
+	// Name represents the name of the component. Injected as the tag variable
+	// "holos_name" to set the BuildPlan metadata.name field.  Necessary for clear
+	// user feedback during platform rendering.
 	name: string @go(Name)
 
-	// Component represents the path of the component relative to the platform root.
+	// Component represents the path of the component relative to the platform
+	// root.  Injected as the tag variable "holos_component".
 	component: string @go(Component)
 
 	// Cluster is the cluster name to provide when rendering the component.
+	// Injected as the tag variable "holos_cluster".
 	cluster: string @go(Cluster)
-
-	// Environment for example, dev, test, stage, prod
-	environment?: string @go(Environment)
 
 	// Model represents the platform model holos gets from from the
 	// PlatformService.GetPlatform rpc method and provides to CUE using a tag.
+	// Injected as the tag "holos_model".
 	model: {...} @go(Model,map[string]any)
 
-	// Tags represents cue tags to inject when rendering the component.  The json
-	// struct tag names of other fields in this struct are reserved tag names not
-	// to be used in the tags collection.
-	tags?: [...string] @go(Tags,[]string)
+	// Tags represents cue @tag variables injected into the holos render component
+	// command from the holos render platform command.  Tags with a "holos_"
+	// prefix are reserved for use by the Holos Authors.
+	tags?: {[string]: string} @go(Tags,map[string]string)
+
+	// WriteTo represents the holos render component --write-to flag.  If empty,
+	// the default value for the --write-to flag is used.
+	writeTo?: string @go(WriteTo)
+}
+
+// Tags represents standardized fields injected into the component [BuildPlan]
+// from the [Platform].
+//
+// Note, tags should have a reasonable default value to easily use cue eval and
+// cue export without needing to make a bunch of decisions about tag values.
+//
+// Example:
+//
+//	import core "github.com/holos-run/holos/api/core/v1alpha4"
+//	_Tags: core.#Tags & {
+//	  cluster:     _ @tag(cluster, type=string)
+//	  environment: _ @tag(environment, type=string)
+//	  component:   _ @tag(component, type=string)
+//	  name:        _ @tag(name, type=string)
+//	}
+#Tags: {
+	// Name represents the BuildPlan metadata.name field injected from the Platform.
+	name: string & (string | *"no-name") @go(Name)
+
+	// Cluster represents the cluster name injected from
+	cluster: string & (string | *"no-cluster") @go(Cluster)
+
+	// Environment represents the build plan environment.
+	environment: string & (string | *"no-environment") @go(Environment)
+
+	// Component represents the path of the component relative to the platform root.
+	component: string & (string | *"no-component") @go(Component)
 }

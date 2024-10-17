@@ -17,8 +17,8 @@ func NotImplemented() error {
 	return wrap(New("not implemented"), 2)
 }
 
-// Format calls fmt.Format(format, a...) and wraps the error with the caller
-// source location.
+// Format calls fmt.Errorf(format, a...) then wraps the error with the source
+// location of the caller.
 func Format(format string, a ...any) error {
 	return wrap(fmt.Errorf(format, a...), 2)
 }

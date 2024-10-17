@@ -186,32 +186,32 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt
-rendered bank-accounts-db for cluster workload in 142.661334ms
-rendered bank-ledger-db for cluster workload in 144.041417ms
-rendered bank-userservice for cluster workload in 157.828709ms
-rendered bank-ledger-writer for cluster workload in 161.138292ms
-rendered bank-backend-config for cluster workload in 168.923459ms
-rendered bank-balance-reader for cluster workload in 171.877875ms
-rendered bank-secrets for cluster workload in 207.958792ms
-rendered gateway for cluster workload in 123.572583ms
-rendered bank-contacts for cluster workload in 144.466291ms
-rendered bank-transaction-history for cluster workload in 151.520041ms
-rendered httproutes for cluster workload in 139.590834ms
-rendered bank-frontend for cluster workload in 309.679834ms
-rendered app-projects for cluster workload in 107.136083ms
-rendered ztunnel for cluster workload in 160.679791ms
-rendered cni for cluster workload in 238.937625ms
-rendered cert-manager for cluster workload in 178.610834ms
-rendered istiod for cluster workload in 340.953208ms
-rendered argocd for cluster workload in 286.277ms
-rendered local-ca for cluster workload in 98.720208ms
-rendered external-secrets for cluster workload in 141.459708ms
-rendered base for cluster workload in 454.356667ms
-rendered namespaces for cluster workload in 115.401709ms
-rendered gateway-api for cluster workload in 203.5625ms
-rendered external-secrets-crds for cluster workload in 525.180209ms
-rendered crds for cluster workload in 888.406167ms
-rendered platform in 1.182857542s
+rendered app-projects for cluster workload in 206.109166ms
+rendered httproutes for cluster workload in 222.3885ms
+rendered istio-cni for cluster workload in 236.061167ms
+rendered istio-gateway for cluster workload in 238.973167ms
+rendered istio-ztunnel for cluster workload in 240.000042ms
+rendered istiod for cluster workload in 275.385709ms
+rendered bank-accounts-db for cluster workload in 215.252708ms
+rendered bank-backend-config for cluster workload in 245.383333ms
+rendered bank-secrets for cluster workload in 273.477458ms
+rendered bank-userservice for cluster workload in 234.866375ms
+rendered istio-base for cluster workload in 541.965042ms
+rendered argocd for cluster workload in 352.4625ms
+rendered bank-frontend for cluster workload in 374.208084ms
+rendered bank-ledger-db for cluster workload in 224.120125ms
+rendered bank-ledger-writer for cluster workload in 237.136042ms
+rendered bank-balance-reader for cluster workload in 233.804083ms
+rendered bank-transaction-history for cluster workload in 236.114542ms
+rendered bank-contacts for cluster workload in 222.469875ms
+rendered argocd-crds for cluster workload in 812.078042ms
+rendered gateway-api for cluster workload in 173.66425ms
+rendered external-secrets for cluster workload in 231.326958ms
+rendered local-ca for cluster workload in 183.12425ms
+rendered namespaces for cluster workload in 173.256125ms
+rendered cert-manager for cluster workload in 432.088959ms
+rendered external-secrets-crds for cluster workload in 496.282459ms
+rendered platform in 1.106735958s
 ```
   </TabItem>
 </Tabs>
@@ -234,31 +234,31 @@ Your branch is up to date with 'origin/main'.
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
-        modified:   deploy/clusters/workload/gitops/app-projects.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/argocd-crds.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/argocd.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-accounts-db.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-backend-config.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-balance-reader.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-contacts.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-frontend.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-ledger-db.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-ledger-writer.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-secrets.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-transaction-history.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-userservice.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/cert-manager.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/external-secrets-crds.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/external-secrets.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/gateway-api.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/httproutes.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istio-base.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istio-cni.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istio-gateway.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istio-ztunnel.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istiod.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/local-ca.application.gen.yaml
-        modified:   deploy/clusters/workload/gitops/namespaces.application.gen.yaml
+        modified:   deploy/clusters/workload/gitops/app-projects.gen.yaml
+        modified:   deploy/clusters/workload/gitops/argocd-crds.gen.yaml
+        modified:   deploy/clusters/workload/gitops/argocd.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-accounts-db.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-backend-config.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-balance-reader.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-contacts.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-frontend.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-ledger-db.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-ledger-writer.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-secrets.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-transaction-history.gen.yaml
+        modified:   deploy/clusters/workload/gitops/bank-userservice.gen.yaml
+        modified:   deploy/clusters/workload/gitops/cert-manager.gen.yaml
+        modified:   deploy/clusters/workload/gitops/external-secrets-crds.gen.yaml
+        modified:   deploy/clusters/workload/gitops/external-secrets.gen.yaml
+        modified:   deploy/clusters/workload/gitops/gateway-api.gen.yaml
+        modified:   deploy/clusters/workload/gitops/httproutes.gen.yaml
+        modified:   deploy/clusters/workload/gitops/istio-base.gen.yaml
+        modified:   deploy/clusters/workload/gitops/istio-cni.gen.yaml
+        modified:   deploy/clusters/workload/gitops/istio-gateway.gen.yaml
+        modified:   deploy/clusters/workload/gitops/istio-ztunnel.gen.yaml
+        modified:   deploy/clusters/workload/gitops/istiod.gen.yaml
+        modified:   deploy/clusters/workload/gitops/local-ca.gen.yaml
+        modified:   deploy/clusters/workload/gitops/namespaces.gen.yaml
         modified:   projects/argocd-config.cue
 
 no changes added to commit (use "git add" and/or "git commit -a")
@@ -272,19 +272,19 @@ the changed `spec.source.repoURL` field.
 <Tabs groupId="665E5402-FB42-4975-B654-3922EE73EE07">
   <TabItem value="command" label="Command">
 ```bash
-git diff deploy/clusters/workload/gitops/bank-frontend.application.gen.yaml
+git diff deploy/clusters/workload/gitops/bank-frontend.gen.yaml
 ```
   </TabItem>
   <TabItem value="output" label="Output">
 ```diff showLineNumbers
-diff --git a/deploy/clusters/workload/gitops/bank-frontend.application.gen.yaml b/deploy/clusters/workload/gitops/bank-frontend.application.gen.yaml
-index d8ede55..aed4338 100644
---- a/deploy/clusters/workload/gitops/bank-frontend.application.gen.yaml
-+++ b/deploy/clusters/workload/gitops/bank-frontend.application.gen.yaml
-@@ -9,5 +9,5 @@ spec:
-   project: bank-frontend
+diff --git a/deploy/clusters/workload/gitops/bank-frontend.gen.yaml b/deploy/clusters/workload/gitops/bank-frontend.gen.yaml
+index 3a3dec0..22e21bb 100644
+--- a/deploy/clusters/workload/gitops/bank-frontend.gen.yaml
++++ b/deploy/clusters/workload/gitops/bank-frontend.gen.yaml
+@@ -11,5 +11,5 @@ spec:
+   project: default
    source:
-     path: ./deploy/clusters/workload/components/bank-frontend
+     path: deploy/clusters/workload/components/bank-frontend
 -    repoURL: https://github.com/holos-run/bank-of-holos
 +    repoURL: https://github.com/jeffmccune/bank-of-holos
      targetRevision: main
@@ -406,20 +406,20 @@ files for now, they behave the same as these two.
 ```cue showLineNumbers
 package holos
 
-// Manage the component on every cluster in the platform
+// Manage the Component on every Cluster in the Platform
 for Fleet in #Fleets {
-  for Cluster in Fleet.clusters {
-    // highlight-next-line
-    #Platform: Components: "\(Cluster.name)/argocd-crds": {
-      path:    "projects/platform/components/argocd/crds"
-      cluster: Cluster.name
-    }
-    // highlight-next-line
-    #Platform: Components: "\(Cluster.name)/argocd": {
-      path:    "projects/platform/components/argocd/argocd"
-      cluster: Cluster.name
-    }
-  }
+	for Cluster in Fleet.clusters {
+		#Platform: Components: "\(Cluster.name):argocd-crds": {
+			name:      "argocd-crds"
+			component: "projects/platform/components/argocd/crds"
+			cluster:   Cluster.name
+		}
+		#Platform: Components: "\(Cluster.name):argocd": {
+			name:      "argocd"
+			component: "projects/platform/components/argocd/argocd"
+			cluster:   Cluster.name
+		}
+	}
 }
 ```
   </TabItem>
@@ -429,18 +429,18 @@ package holos
 
 // Manage the component on every cluster in the platform
 for Fleet in #Fleets {
-  for Cluster in Fleet.clusters {
-    // highlight-next-line
-    #Platform: Components: "\(Cluster.name)/external-secrets-crds": {
-      path:    "projects/platform/components/external-secrets-crds"
-      cluster: Cluster.name
-    }
-    // highlight-next-line
-    #Platform: Components: "\(Cluster.name)/external-secrets": {
-      path:    "projects/platform/components/external-secrets"
-      cluster: Cluster.name
-    }
-  }
+	for Cluster in Fleet.clusters {
+		#Platform: Components: "\(Cluster.name):external-secrets-crds": {
+			name:      "external-secrets-crds"
+			component: "projects/platform/components/external-secrets-crds"
+			cluster:   Cluster.name
+		}
+		#Platform: Components: "\(Cluster.name):external-secrets": {
+			name:      "external-secrets"
+			component: "projects/platform/components/external-secrets"
+			cluster:   Cluster.name
+		}
+	}
 }
 ```
   </TabItem>
@@ -456,7 +456,7 @@ services we deploy onto the platform.
 manifests for a cluster.
 
 :::important
-On lines 6 and 10 we see a Component being assigned to the Platform.  We also
+On lines 6 and 11 we see a Component being assigned to the Platform.  We also
 start to dive into the syntax of CUE, which we need to understand a little
 before going further.
 :::
@@ -475,75 +475,7 @@ members are called fields, which link their name, or label, to a value.
 
 There are two important things to know about CUE to understand these two files.
 First, the curly braces have been omitted which is item 5 on the list above.
-Second, CUE is all about _unification_.  These files could have been written
-like this:
-
-<Tabs groupId="59FFCCB6-A584-42ED-AC37-1C2BDCF5A523">
-  <TabItem value="argocd" label="platform/argocd.cue">
-```cue showLineNumbers
-package holos
-
-// Manage the component on every cluster in the platform
-for Fleet in #Fleets {
-  for Cluster in Fleet.clusters {
-    #Platform: {
-      // highlight-next-line
-      // Define #Platform.Components
-      // highlight-next-line
-      Components: {
-        "\(Cluster.name)/argocd-crds": {
-          path:    "projects/platform/components/argocd/crds"
-          cluster: Cluster.name
-        }
-      }
-
-      // highlight-next-line
-      // Define #Platform.Components again!? Error?
-      // highlight-next-line
-      Components: {
-        "\(Cluster.name)/argocd": {
-          path:    "projects/platform/components/argocd/argocd"
-          cluster: Cluster.name
-        }
-      }
-    }
-  }
-}
-```
-  </TabItem>
-  <TabItem value="external-secrets" label="platform/external-secrets.cue">
-```cue showLineNumbers
-package holos
-
-// Manage the component on every cluster in the platform
-for Fleet in #Fleets {
-  for Cluster in Fleet.clusters {
-    #Platform: {
-      // highlight-next-line
-      // Define #Platform.Components
-      // highlight-next-line
-      Components: {
-        "\(Cluster.name)/external-secrets-crds": {
-          path:    "projects/platform/components/external-secrets-crds"
-          cluster: Cluster.name
-        }
-      }
-
-      // highlight-next-line
-      // Define #Platform.Components again!? Error?
-      // highlight-next-line
-      Components: {
-        "\(Cluster.name)/external-secrets": {
-          path:    "projects/platform/components/external-secrets"
-          cluster: Cluster.name
-        }
-      }
-    }
-  }
-}
-```
-  </TabItem>
-</Tabs>
+Second, CUE is about _unification_.
 
 :::important
 Unlike most other languages, it is common to declare the same field in multiple
@@ -567,13 +499,20 @@ It looks like this.
 ```cue showLineNumbers
 package holos
 
-#Platform.Output
+import api "github.com/holos-run/holos/api/author/v1alpha4"
+
+#Platform: api.#Platform & {
+	Name: "guide"
+}
+
+// Render a Platform resource for holos to process
+#Platform.Resource
 ```
   </TabItem>
 </Tabs>
 
-This file provides the value of the `#Platform.Output` field, the platform spec,
-to `holos`.
+This file provides the value of the `#Platform.Resource` field, the platform
+spec, to `holos`.
 
 Let's take a look at that Output value:
 
@@ -586,24 +525,31 @@ cue export --out yaml ./platform
   <TabItem value="output" label="Output">
 ```yaml showLineNumbers
 kind: Platform
-apiVersion: v1alpha3
+apiVersion: v1alpha4
 metadata:
   name: guide
 spec:
-  model: {}
   components: # This is a trimmed list for readability.
-    - path: projects/bank-of-holos/security/components/bank-secrets
+    - name: bank-secrets
+      component: projects/bank-of-holos/security/components/bank-secrets
       cluster: workload
-    - path: projects/bank-of-holos/frontend/components/bank-frontend
+      model: {}
+    - name: bank-frontend
+      component: projects/bank-of-holos/frontend/components/bank-frontend
       cluster: workload
-    - path: projects/platform/components/argocd/crds
+      model: {}
+    - name: bank-backend-config
+      component: projects/bank-of-holos/backend/components/bank-backend-config
       cluster: workload
-    - path: projects/platform/components/argocd/argocd
+      model: {}
+    - name: bank-accounts-db
+      component: projects/bank-of-holos/backend/components/bank-accounts-db
       cluster: workload
-    - path: projects/platform/components/external-secrets-crds
+      model: {}
+    - name: bank-userservice
+      component: projects/bank-of-holos/backend/components/bank-userservice
       cluster: workload
-    - path: projects/platform/components/external-secrets
-      cluster: workload
+      model: {}
 ```
   </TabItem>
 </Tabs>
@@ -624,7 +570,7 @@ defining characteristic of CUE that makes it a unique, powerful, and _safe_
 configuration language.
 :::
 
-Holos takes this list of components and builds each one by executing:
+Holos takes this list of components and builds each one by executing the following command.
 
 ```bash
 holos render component --cluster-name="example" "path/to/the/component"
@@ -654,26 +600,24 @@ start working with the cert-manager component.
 package holos
 
 // Produce a helm chart build plan.
-// highlight-next-line
 (#Helm & Chart).BuildPlan
 
-// highlight-next-line
 let Chart = {
-  Name:      "cert-manager"
-  // #CertManager is defined in projects/cert-manager.cue
-  // highlight-next-line
-  Version:   #CertManager.Version
-  // highlight-next-line
-  Namespace: #CertManager.Namespace
+	Name:      "cert-manager"
+	Namespace: #CertManager.Namespace
 
-  Repo: name: "jetstack"
-  Repo: url:  "https://charts.jetstack.io"
+	Chart: {
+		version: #CertManager.Version
+		repository: {
+			name: "jetstack"
+			url:  "https://charts.jetstack.io"
+		}
+	}
 
-  // CUE offers type checking and validation of Helm values.
-  // highlight-next-line
-  Values: installCRDs: true
-  // highlight-next-line
-  Values: startupapicheck: enabled: false
+	Values: {
+		installCRDs: true
+		startupapicheck: enabled: false
+	}
 }
 ```
   </TabItem>
@@ -683,14 +627,11 @@ package holos
 
 // Platform wide configuration
 #CertManager: {
-  // highlight-next-line
-  Version:   "1.15.3"
-  // highlight-next-line
-  Namespace: "cert-manager"
+	Version:   "1.15.3"
+	Namespace: "cert-manager"
 }
 
 // Register the namespace
-// The underscore indicates the value is defined elsewhere in CUE.
 #Namespaces: (#CertManager.Namespace): _
 ```
   </TabItem>
@@ -721,52 +662,88 @@ cue export --out yaml ./projects/platform/components/cert-manager
   <TabItem value="output" label="Output">
 ```yaml showLineNumbers
 kind: BuildPlan
-apiVersion: v1alpha3
+apiVersion: v1alpha4
+metadata:
+  name: cert-manager
 spec:
-  components:
-    resources:
-      gitops/cert-manager:
-        kind: KubernetesObjects
-        apiVersion: v1alpha3
-        metadata:
-          name: gitops/cert-manager
-          namespace: cert-manager
-        deployFiles:
-          clusters/no-name/gitops/cert-manager.application.gen.yaml: |
-            apiVersion: argoproj.io/v1alpha1
-            kind: Application
-            metadata:
+  component: no-component
+  artifacts:
+    - artifact: clusters/no-cluster/components/cert-manager/cert-manager.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
               name: cert-manager
-              namespace: argocd
-            spec:
-              destination:
-                server: https://kubernetes.default.svc
-              project: platform
-              source:
-                path: ./deploy/clusters/no-name/components/cert-manager
-                repoURL: https://github.com/jeffmccune/bank-of-holos
-                targetRevision: main
-        skip: false
-    helmChartList:
-      - kind: HelmChart
-        apiVersion: v1alpha3
-        chart:
-          name: cert-manager
-          version: 1.15.3
-          release: cert-manager
-          repository:
-            name: jetstack
-            url: https://charts.jetstack.io
-        valuesContent: |
-          installCRDs: true
-          startupapicheck:
-            enabled: false
-        enableHooks: false
-        metadata:
-          name: cert-manager
-          namespace: cert-manager
-        apiObjectMap: {}
-        skip: false
+              version: 1.15.3
+              release: cert-manager
+              repository:
+                name: jetstack
+                url: https://charts.jetstack.io
+            values:
+              installCRDs: true
+              startupapicheck:
+                enabled: false
+            enableHooks: false
+            namespace: cert-manager
+        - kind: Resources
+          output: resources.gen.yaml
+          resources: {}
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: combined.gen.yaml
+          kustomize:
+            kustomization:
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+              kind: Kustomization
+              apiVersion: kustomize.config.k8s.io/v1beta1
+        - kind: Kustomize
+          inputs:
+            - combined.gen.yaml
+          output: clusters/no-cluster/components/cert-manager/cert-manager.gen.yaml
+          kustomize:
+            kustomization:
+              namespace: cert-manager
+              commonLabels:
+                holos.run/component.name: cert-manager
+              resources:
+                - combined.gen.yaml
+    - artifact: clusters/no-cluster/gitops/cert-manager.gen.yaml
+      generators:
+        - kind: Resources
+          output: application.gen.yaml
+          resources:
+            Application:
+              cert-manager:
+                apiVersion: argoproj.io/v1alpha1
+                kind: Application
+                metadata:
+                  name: cert-manager
+                  namespace: argocd
+                spec:
+                  destination:
+                    server: https://kubernetes.default.svc
+                  project: default
+                  source:
+                    path: deploy/clusters/no-cluster/components/cert-manager
+                    repoURL: https://github.com/jeffmccune/bank-of-holos
+                    targetRevision: main
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - application.gen.yaml
+          output: clusters/no-cluster/gitops/cert-manager.gen.yaml
+          kustomize:
+            kustomization:
+              commonLabels:
+                holos.run/component.name: cert-manager
+              resources:
+                - application.gen.yaml
 ```
   </TabItem>
 </Tabs>
@@ -785,8 +762,8 @@ The BuildPlan API is flexible enough to write any file into the `deploy/`
 directory.  Holos uses this flexibility to support both Flux and ArgoCD.
 :::
 
-When we run `cue export`, we get back a Core API BuildPlan.  The BuildPlan is
-produced by the `#Helm` definition on line 4 which is part of the Author API.
+When we run `cue export`, we get back a [Core API] BuildPlan.  The BuildPlan is
+produced by the `#Helm` definition on line 4 which is part of the [Author API].
 The Core API is the contract between CUE and `holos`.  As such, it's not as
 friendly as the Author API.  The Author API is the contract component authors
 and platform engineers use to configure and manage the platform.  The Author API
@@ -822,8 +799,9 @@ on how to [Deploy a Service] which explains how to take one of your existing
 Helm charts or Deployments and manage it with Holos.
 
 [application]: https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
-[schema]: /docs/api/schema/v1alpha3/
-[core]: /docs/api/core/v1alpha3/
+[core]: /docs/api/core/v1alpha4/
+[Core API]: /docs/api/core/
+[Author API]: /docs/api/author/
 [Deploy a Service]: /docs/guides/deploy-a-service/
 [Manage a Project]: /docs/guides/manage-a-project/
 [rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern/

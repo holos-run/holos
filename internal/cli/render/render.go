@@ -36,7 +36,7 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("component DIRECTORY")
 	cmd.Args = cobra.ExactArgs(1)
 	cmd.Short = "render specific components"
-	cmd.Example = "  holos render component --cluster-name=aws2 ./components/monitoring/kube-prometheus-stack"
+	cmd.Example = "  holos render component --inject holos_cluster=aws2 ./components/monitoring/kube-prometheus-stack"
 	cmd.Flags().AddGoFlagSet(cfg.WriteFlagSet())
 	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
 
@@ -47,7 +47,8 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
 
 	tagMap := make(tags)
-	flagSet.Var(&tagMap, "tags", "cue tags as comma separated key=value pairs")
+	cmd.PersistentFlags().VarP(&tagMap, "inject", "t", "set the value of a cue @tag field from a key=value pair")
+
 	var concurrency int
 	flagSet.IntVar(&concurrency, "concurrency", min(runtime.NumCPU(), 8), "number of concurrent build steps")
 	cmd.Flags().AddGoFlagSet(flagSet)
@@ -67,16 +68,16 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 			return errors.Wrap(err)
 		}
 
-		tm, err := bd.TypeMeta()
+		typeMeta, err := bd.TypeMeta()
 		if err != nil {
 			return errors.Wrap(err)
 		}
 
-		if tm.Kind != "BuildPlan" {
-			return errors.Format("invalid kind: want: BuildPlan have: %s", tm.Kind)
+		if typeMeta.Kind != "BuildPlan" {
+			return errors.Format("invalid kind: want: BuildPlan have: %s", typeMeta.Kind)
 		}
 
-		log.DebugContext(ctx, "discriminated "+tm.APIVersion+" "+tm.Kind)
+		log.DebugContext(ctx, "discriminated "+typeMeta.APIVersion+" "+typeMeta.Kind)
 
 		jsonBytes, err := bd.Value.MarshalJSON()
 		if err != nil {
@@ -87,7 +88,7 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 
 		art := artifact.New()
 
-		switch version := tm.APIVersion; version {
+		switch version := typeMeta.APIVersion; version {
 		case "v1alpha4":
 			builder := v1alpha4.BuildPlan{
 				WriteTo:     cfg.WriteTo(),
@@ -240,6 +241,10 @@ func (t tags) Set(value string) error {
 		t[parts[0]] = parts[1]
 	}
 	return nil
+}
+
+func (t tags) Type() string {
+	return "strings"
 }
 
 // Deprecated: use render.Artifact instead.

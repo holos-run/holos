@@ -18,8 +18,8 @@ import (
 
 	"github.com/holos-run/holos"
 	core_v1alpha2 "github.com/holos-run/holos/api/core/v1alpha2"
-	coreA3 "github.com/holos-run/holos/api/core/v1alpha3"
-	metaA2 "github.com/holos-run/holos/api/meta/v1alpha2"
+	core_v1alpha3 "github.com/holos-run/holos/api/core/v1alpha3"
+	meta_v1alpha2 "github.com/holos-run/holos/api/meta/v1alpha2"
 	"github.com/holos-run/holos/api/v1alpha1"
 	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
@@ -28,10 +28,10 @@ import (
 )
 
 const (
-	KubernetesObjects = coreA3.KubernetesObjectsKind
+	KubernetesObjects = core_v1alpha3.KubernetesObjectsKind
 	// Helm is the value of the kind field of holos build output indicating helm
 	// values and helm command information.
-	Helm = coreA3.HelmChartKind
+	Helm = core_v1alpha3.HelmChartKind
 	// Skip is the value when the instance should be skipped
 	Skip = "Skip"
 	// KustomizeBuild is the value of the kind field of cue output indicating
@@ -76,7 +76,7 @@ type Builder struct {
 }
 
 type buildPlanWrapper struct {
-	buildPlan *coreA3.BuildPlan
+	buildPlan *core_v1alpha3.BuildPlan
 }
 
 func (b *buildPlanWrapper) validate() error {
@@ -88,7 +88,7 @@ func (b *buildPlanWrapper) validate() error {
 		return fmt.Errorf("invalid BuildPlan: is nil")
 	}
 	errs := make([]string, 0, 2)
-	if bp.Kind != coreA3.BuildPlanKind {
+	if bp.Kind != core_v1alpha3.BuildPlanKind {
 		errs = append(errs, fmt.Sprintf("kind invalid: want: %s have: %s", v1alpha1.BuildPlanKind, bp.Kind))
 	}
 	if len(errs) > 0 {
@@ -162,13 +162,22 @@ func (b *Builder) Unify(ctx context.Context, cfg *client.Config) (bd BuildData, 
 		return bd, errors.Wrap(fmt.Errorf("could not load platform model: %w", err))
 	}
 
+	// TODO(jeff): Changing these tag names breaks backwards compatibility. We
+	// need to refactor this unification into a versioned builder, at least at the
+	// component level.  Right now it's executed when rendering the initial
+	// Platform spec, which should be backwards compatible but isn't because this
+	// package is shared by all versions.
 	tags := make([]string, 0, len(b.cfg.tags)+2)
-	tags = append(tags,
-		"cluster="+cfg.Holos().ClusterName(),
-		// TODO: Use instance.FillPath to fill the platform config.
-		// Refer to https://pkg.go.dev/cuelang.org/go/cue#Value.FillPath
-		"platform_config="+string(platformConfigData),
-	)
+	// TODO: Use instance.FillPath to fill the platform config.
+	// Refer to https://pkg.go.dev/cuelang.org/go/cue#Value.FillPath
+	tags = append(tags, "holos_platform_config="+string(platformConfigData))
+	// TODO(jeff): This is hacky after I switched to reserved holos_ tag names in
+	// v1alpha4.  Could use some serious clean up now that --cluster-name is
+	// deprecated for --inject holos_cluster=foo, but it was kind of nice to have
+	// a required argument.
+	if cluster := cfg.Holos().ClusterName(); cluster != "" {
+		tags = append(tags, "holos_cluster="+cluster)
+	}
 	tags = append(tags, b.cfg.tags...)
 
 	cueConfig := load.Config{
@@ -306,7 +315,7 @@ func (b *Builder) build(ctx context.Context, bd BuildData) (results []*render.Re
 
 	switch tm.Kind {
 	case "BuildPlan":
-		var bp coreA3.BuildPlan
+		var bp core_v1alpha3.BuildPlan
 		if err = decoder.Decode(&bp); err != nil {
 			err = errors.Wrap(fmt.Errorf("could not decode BuildPlan %s: %w", bd.Dir, err))
 			return
@@ -322,7 +331,7 @@ func (b *Builder) build(ctx context.Context, bd BuildData) (results []*render.Re
 	return results, err
 }
 
-func (b *Builder) buildPlan(ctx context.Context, buildPlan *coreA3.BuildPlan, path holos.InstancePath) (results []*render.Result, err error) {
+func (b *Builder) buildPlan(ctx context.Context, buildPlan *core_v1alpha3.BuildPlan, path holos.InstancePath) (results []*render.Result, err error) {
 	log := logger.FromContext(ctx)
 
 	bpw := buildPlanWrapper{buildPlan: buildPlan}
@@ -443,7 +452,7 @@ func (b *Builder) runPlatform(ctx context.Context, bd BuildData) (*core_v1alpha2
 
 	decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
 	// Discriminate the type of build plan.
-	tm := &metaA2.TypeMeta{}
+	tm := &meta_v1alpha2.TypeMeta{}
 	err = decoder.Decode(tm)
 	if err != nil {
 		return nil, errors.Wrap(fmt.Errorf("invalid platform: %s: %w", bd.Dir, err))

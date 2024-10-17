@@ -60,27 +60,32 @@ func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
 							"name", component.Name,
 							"path", component.Component,
 							"cluster", component.Cluster,
-							"environment", component.Environment,
 							"num", idx+1,
 							"total", total,
 						)
 						log.DebugContext(ctx, "render component")
 
 						tags := make([]string, 0, 3+len(component.Tags))
-						tags = append(tags, "name="+component.Name)
-						tags = append(tags, "component="+component.Component)
-						tags = append(tags, "environment="+component.Environment)
-						// Tags are unified, cue handles conflicts.  We don't bother.
-						tags = append(tags, component.Tags...)
+						tags = append(tags, "holos_name="+component.Name)
+						tags = append(tags, "holos_component="+component.Component)
+						tags = append(tags, "holos_cluster="+component.Cluster)
+						for key, value := range component.Tags {
+							tags = append(tags, fmt.Sprintf("%s=%s", key, value))
+						}
 
 						// Execute a sub-process to limit CUE memory usage.
-						args := []string{
+						args := make([]string, 0, 10)
+						args = append(args,
 							"render",
 							"component",
-							"--cluster-name", component.Cluster,
-							"--tags", strings.Join(tags, ","),
-							component.Component,
+						)
+						for _, tag := range tags {
+							args = append(args, "--inject", tag)
 						}
+						if component.WriteTo != "" {
+							args = append(args, "--write-to", component.WriteTo)
+						}
+						args = append(args, component.Component)
 						result, err := util.RunCmd(ctx, "holos", args...)
 						// I've lost an hour+ digging into why I couldn't see log output
 						// from sub-processes.  Make sure to surface at least stderr from
@@ -285,9 +290,7 @@ func (b *BuildPlan) helm(
 
 	// Run charts
 	args := []string{"template"}
-	if g.Helm.EnableHooks {
-		args = append(args, "--hooks")
-	} else {
+	if !g.Helm.EnableHooks {
 		args = append(args, "--no-hooks")
 	}
 	args = append(args,
@@ -337,7 +340,7 @@ func (b *BuildPlan) resources(
 		}
 	}
 
-	msg := fmt.Sprintf("could not generate %s for %s", g.Output, b.BuildPlan.Metadata.Name)
+	msg := fmt.Sprintf("could not generate %s for %s path %s", g.Output, b.BuildPlan.Metadata.Name, b.BuildPlan.Spec.Component)
 
 	buf, err := marshal(list)
 	if err != nil {
@@ -363,7 +366,7 @@ func (b *BuildPlan) kustomize(
 		return errors.Wrap(err)
 	}
 	defer util.Remove(ctx, tempDir)
-	msg := fmt.Sprintf("could not transform %s for %s", t.Output, b.BuildPlan.Metadata.Name)
+	msg := fmt.Sprintf("could not transform %s for %s path %s", t.Output, b.BuildPlan.Metadata.Name, b.BuildPlan.Spec.Component)
 
 	// Write the kustomization
 	data, err := yaml.Marshal(t.Kustomize.Kustomization)
@@ -388,10 +391,9 @@ func (b *BuildPlan) kustomize(
 	// Execute kustomize
 	r, err := util.RunCmd(ctx, "kubectl", "kustomize", tempDir)
 	if err != nil {
+		kErr := r.Stderr.String()
 		err = errors.Format("%s: could not run kustomize: %w", msg, err)
-		if s := strings.ReplaceAll(r.Stderr.String(), "\n", "\n\t"); s != "" {
-			err = errors.Format("%w\n\t%s", err, s)
-		}
+		log.ErrorContext(ctx, fmt.Sprintf("%s: stderr:\n%s", err.Error(), kErr), "err", err, "stderr", kErr)
 		return err
 	}
 
@@ -512,8 +514,8 @@ func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() 
 
 	err := os.Mkdir(lockDir, 0777)
 	if err == nil {
-		log.DebugContext(ctx, fmt.Sprintf("acquired %s", lockDir))
 		defer os.RemoveAll(lockDir)
+		log.DebugContext(ctx, fmt.Sprintf("acquired %s", lockDir))
 		if err := fn(); err != nil {
 			return errors.Wrap(err)
 		}
@@ -524,16 +526,21 @@ func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() 
 	// Wait until the lock is released then return.
 	if os.IsExist(err) {
 		log.DebugContext(ctx, fmt.Sprintf("blocked %s", lockDir))
+		stillBlocked := time.After(5 * time.Second)
+		deadLocked := time.After(10 * time.Second)
 		for {
 			select {
-			case <-ctx.Done():
-				return errors.Wrap(ctx.Err())
-			default:
-				time.Sleep(100 * time.Millisecond)
+			case <-stillBlocked:
+				log.WarnContext(ctx, fmt.Sprintf("waiting for %s to be released", lockDir))
+			case <-deadLocked:
+				log.WarnContext(ctx, fmt.Sprintf("still waiting for %s to be released (dead lock?)", lockDir))
+			case <-time.After(100 * time.Millisecond):
 				if _, err := os.Stat(lockDir); os.IsNotExist(err) {
 					log.DebugContext(ctx, fmt.Sprintf("unblocked %s", lockDir))
 					return nil
 				}
+			case <-ctx.Done():
+				return errors.Wrap(ctx.Err())
 			}
 		}
 	}
