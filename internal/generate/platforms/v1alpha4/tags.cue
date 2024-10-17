@@ -18,4 +18,5 @@ _Tags: {
 	environment: string | *"no-environment" @tag(environment, type=string)
 	component:   string | *"no-component"   @tag(component, type=string)
 	name:        string | *"no-name"        @tag(name, type=string)
+	project:     string | *"no-project"     @tag(project, type=string)
 }

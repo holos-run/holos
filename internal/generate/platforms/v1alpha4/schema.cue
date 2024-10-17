@@ -16,12 +16,6 @@ import api "github.com/holos-run/holos/api/author/v1alpha4"
 // https://holos.run/docs/api/author/v1alpha4/#Projects
 #Projects: api.#Projects
 
-// The current project for a rendered component
-// TODO(jeff): Should the project name be an injected tag? Probably.
-_CurrentProject: {
-	Name?: string
-}
-
 // ArgoConfig represents the configuration of ArgoCD Application resources for
 // each component.
 // https://holos.run/docs/api/author/v1alpha4/#ArgoConfig
@@ -32,13 +26,15 @@ _CurrentProject: {
 	Component: _Tags.component
 	Cluster:   _Tags.cluster
 	ArgoConfig: #ArgoConfig & {
-		if _CurrentProject.Name != _|_ {
-			AppProject: _CurrentProject.Name
+		if _Tags.project != "no-project" {
+			AppProject: _Tags.project
 		}
 	}
 	Resources: #Resources
-	if _CurrentProject.Name != _|_ {
-		CommonLabels: #Projects[_CurrentProject.Name].CommonLabels
+
+	// Mix in project labels if the project is defined by the platform.
+	if _Tags.project != "no-project" {
+		CommonLabels: #Projects[_Tags.project].CommonLabels
 	}
 }
 
