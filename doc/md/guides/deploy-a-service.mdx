@@ -94,8 +94,8 @@ an ArgoCD Application or Flux Kustomization.
 consistently add common labels.
 
 :::tip
-[ComponentFields] in the Author API describes the fields common to all kinds of
-component.
+[ComponentConfig] in the Author API describes the fields common to all kinds of
+components.
 :::
 
 We'll start with a [Helm] component to deploy the service, then compare it to a
@@ -356,9 +356,16 @@ import ks "sigs.k8s.io/kustomize/api/types"
 let Chart = {
   // highlight-next-line
   Name:    "podinfo"
-  Version: "6.6.2"
   // highlight-next-line
   Namespace: #Migration.Namespace
+
+  Chart: {
+      version: "6.6.2"
+      repository: {
+        name: "podinfo"
+        url: "https://stefanprodan.github.io/podinfo"
+      }
+  }
 
   // Necessary to ensure the resources go to the correct namespace.
   // highlight-next-line
@@ -367,9 +374,6 @@ let Chart = {
   KustomizeFiles: "kustomization.yaml": ks.#Kustomization & {
     namespace: Namespace
   }
-
-  Repo: name: "podinfo"
-  Repo: url:  "https://stefanprodan.github.io/podinfo"
 
   // Allow the platform team to route traffic into our namespace.
   // highlight-next-line
@@ -396,19 +400,19 @@ Name as the sub-directory name when it writes the rendered manifest into
 `deploy/`.  Normally this name also matches the directory and file name of the
 component, `podinfo/podinfo.cue`, but `holos` doesn't enforce this convention.
 
-**Line 11**: We use the same namespace we registered with the `namespaces`
+**Line 10**: We use the same namespace we registered with the `namespaces`
 component as the value we pass to Helm.  This is a good example of Holos
 offering safety and consistency with CUE, if we change the value of
 `#Migration.Namespace`, multiple components stay consistent.
 
-**Lines 14-15**: Unfortunately, the Helm chart doesn't set the
+**Lines 20-21**: Unfortunately, the Helm chart doesn't set the
 `metadata.namespace` field for the resources it generates, which creates a
 security problem.  The resources will be created in the wrong namespace.  We
 don't want to modify the upstream chart because it creates a maintenance burden.
 We solve the problem by having Holos post-process the Helm output with
 Kustomize.  This ensures all resources go into the correct namespace.
 
-**Lines 23**: The migration team grants the platform team permission to route
+**Lines 27**: The migration team grants the platform team permission to route
 traffic into the `migration` Namespace using a [ReferenceGrant].
 
 :::note
@@ -780,7 +784,7 @@ the bank to register with. The `#HTTPRoutes` struct is similar to the
 As a member of the migration team, we'll add the file
 `projects/migration-routes.cue` to expose the service we're migrating.
 
-Go ahead and create this file with the following content.
+Go ahead and create this file (if it hasn't been created previously) with the following content.
 
 <Tabs groupId="6F9044EC-1737-4926-BD07-455536BA6573">
   <TabItem value="projects/migration-routes.cue" label="projects/migration-routes.cue">
@@ -810,34 +814,34 @@ import v1 "gateway.networking.k8s.io/httproute/v1"
 // resources are managed in the istio-ingress namespace.  Other components
 // define the routes they need close to the root of configuration.
 #HTTPRoutes: {
-  // For the guides, we simplify this down to a flat namespace.
+	// For the guides, we simplify this down to a flat namespace.
   // highlight-next-line
-  [Name=string]: v1.#HTTPRoute & {
-    let HOST = Name + "." + #Platform.Domain
+	[Name=string]: v1.#HTTPRoute & {
+		let HOST = Name + "." + #Organization.Domain
 
     // highlight-next-line
-    _backendRefs: [NAME=string]: {
-      name:      NAME
-      namespace: string
-      port:      number | *80
-    }
+		_backendRefs: [NAME=string]: {
+			name:      NAME
+			namespace: string
+			port:      number | *80
+		}
 
-    metadata: name:      Name
-    metadata: namespace: #Istio.Gateway.Namespace
-    metadata: labels: app: Name
-    spec: hostnames: [HOST]
-    spec: parentRefs: [{
-      name:      "default"
-      namespace: metadata.namespace
-    }]
-    spec: rules: [
-      {
-        matches: [{path: {type: "PathPrefix", value: "/"}}]
+		metadata: name:      Name
+		metadata: namespace: #Istio.Gateway.Namespace
+		metadata: labels: app: Name
+		spec: hostnames: [HOST]
+		spec: parentRefs: [{
+			name:      "default"
+			namespace: metadata.namespace
+		}]
+		spec: rules: [
+			{
+				matches: [{path: {type: "PathPrefix", value: "/"}}]
         // highlight-next-line
-        backendRefs: [for x in _backendRefs {x}]
-      },
-    ]
-  }
+				backendRefs: [for x in _backendRefs {x}]
+			},
+		]
+	}
 }
 ```
   </TabItem>
@@ -925,37 +929,38 @@ git diff
   <TabItem value="output" label="Output">
 ```diff
 diff --git a/deploy/clusters/workload/components/httproutes/httproutes.gen.yaml b/deploy/clusters/workload/components/httproutes/httproutes.gen.yaml
-index 4b476da..a150015 100644
+index 06f7c91..349e070 100644
 --- a/deploy/clusters/workload/components/httproutes/httproutes.gen.yaml
 +++ b/deploy/clusters/workload/components/httproutes/httproutes.gen.yaml
-@@ -46,3 +46,27 @@ spec:
-         - name: frontend
-           namespace: bank-frontend
-           port: 80
+@@ -47,3 +47,28 @@ spec:
+     - path:
+         type: PathPrefix
+         value: /
 +---
-+# Source: CUE apiObjects.HTTPRoute.migration-podinfo
 +apiVersion: gateway.networking.k8s.io/v1
 +kind: HTTPRoute
 +metadata:
-+  name: migration-podinfo
-+  namespace: istio-ingress
 +  labels:
 +    app: migration-podinfo
++    argocd.argoproj.io/instance: httproutes
++    holos.run/component.name: httproutes
++  name: migration-podinfo
++  namespace: istio-ingress
 +spec:
 +  hostnames:
-+    - migration-podinfo.holos.localhost
++  - migration-podinfo.holos.localhost
 +  parentRefs:
-+    - name: default
-+      namespace: istio-ingress
++  - name: default
++    namespace: istio-ingress
 +  rules:
-+    - matches:
-+        - path:
-+            type: PathPrefix
-+            value: /
-+      backendRefs:
-+        - name: podinfo
-+          port: 9898
-+          namespace: migration
++  - backendRefs:
++    - name: podinfo
++      namespace: migration
++      port: 9898
++    matches:
++    - path:
++        type: PathPrefix
++        value: /
 
 ```
   </TabItem>
@@ -1428,10 +1433,10 @@ for some time.
 
 [Quickstart]: /docs/quickstart/
 [Change a Service]: /docs/guides/change-a-service/
-[Helm]: /docs/api/author/v1alpha3/#Helm
-[Kubernetes]: /docs/api/author/v1alpha3/#Kubernetes
-[Kustomize]: /docs/api/author/v1alpha3/#Kustomize
-[ComponentFields]: /docs/api/author/v1alpha3/#ComponentFields
+[Helm]: /docs/api/author/v1alpha4/#Helm
+[Kubernetes]: /docs/api/author/v1alpha4/#Kubernetes
+[Kustomize]: /docs/api/author/v1alpha4/#Kustomize
+[ComponentConfig]: /docs/api/author/v1alpha4/#ComponentConfig
 [platform-files]: /docs/quickstart/#how-platform-rendering-works
 [AppProject]: https://argo-cd.readthedocs.io/en/stable/user-guide/projects/
 [unification operator]: https://cuelang.org/docs/reference/spec/#unification
