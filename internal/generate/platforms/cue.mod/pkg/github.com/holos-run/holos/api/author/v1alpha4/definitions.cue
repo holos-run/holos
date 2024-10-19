@@ -59,18 +59,33 @@ import (
 			artifact: "\(_path)/\(Name).gen.yaml"
 			let ResourcesOutput = "resources.gen.yaml"
 			let IntermediateOutput = "combined.gen.yaml"
-			generators: [{
-				kind:      "Resources"
-				output:    ResourcesOutput
-				resources: Resources
-			}]
+			generators: [
+				{
+					kind:      "Resources"
+					output:    ResourcesOutput
+					resources: Resources
+				},
+				for x in KustomizeConfig.Files {
+					kind:   "File"
+					output: x.Source
+					file: source: x.Source
+				},
+				for x in KustomizeConfig.Resources {
+					kind:   "File"
+					output: x.Source
+					file: source: x.Source
+				},
+			]
 			transformers: [
 				core.#Transformer & {
 					kind: "Kustomize"
-					inputs: [ResourcesOutput]
+					inputs: [for x in generators {x.output}]
 					output: IntermediateOutput
 					kustomize: kustomization: KustomizeConfig.Kustomization & {
-						resources: inputs
+						resources: [
+							ResourcesOutput,
+							for x in KustomizeConfig.Resources {x.Source},
+						]
 					}
 				},
 				_Transformer & {
