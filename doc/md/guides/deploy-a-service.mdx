@@ -814,34 +814,34 @@ import v1 "gateway.networking.k8s.io/httproute/v1"
 // resources are managed in the istio-ingress namespace.  Other components
 // define the routes they need close to the root of configuration.
 #HTTPRoutes: {
-	// For the guides, we simplify this down to a flat namespace.
+  // For the guides, we simplify this down to a flat namespace.
   // highlight-next-line
-	[Name=string]: v1.#HTTPRoute & {
-		let HOST = Name + "." + #Organization.Domain
+  [Name=string]: v1.#HTTPRoute & {
+    let HOST = Name + "." + #Organization.Domain
 
     // highlight-next-line
-		_backendRefs: [NAME=string]: {
-			name:      NAME
-			namespace: string
-			port:      number | *80
-		}
+    _backendRefs: [NAME=string]: {
+      name:      NAME
+      namespace: string
+      port:      number | *80
+    }
 
-		metadata: name:      Name
-		metadata: namespace: #Istio.Gateway.Namespace
-		metadata: labels: app: Name
-		spec: hostnames: [HOST]
-		spec: parentRefs: [{
-			name:      "default"
-			namespace: metadata.namespace
-		}]
-		spec: rules: [
-			{
-				matches: [{path: {type: "PathPrefix", value: "/"}}]
+    metadata: name:      Name
+    metadata: namespace: #Istio.Gateway.Namespace
+    metadata: labels: app: Name
+    spec: hostnames: [HOST]
+    spec: parentRefs: [{
+      name:      "default"
+      namespace: metadata.namespace
+    }]
+    spec: rules: [
+      {
+        matches: [{path: {type: "PathPrefix", value: "/"}}]
         // highlight-next-line
-				backendRefs: [for x in _backendRefs {x}]
-			},
-		]
-	}
+        backendRefs: [for x in _backendRefs {x}]
+      },
+    ]
+  }
 }
 ```
   </TabItem>
