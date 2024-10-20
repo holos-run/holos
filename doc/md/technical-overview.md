@@ -45,7 +45,7 @@ Go command line tool leveraging [CUE] to fill this gap.
 
 ```mermaid
 ---
-title: Figure 1 - v1alpha4 Render Pipeline
+title: Figure 1 - v1alpha4 Rendered Manifest Pipeline
 ---
 graph LR
     Platform[<a href="/docs/api/author/v1alpha4/#Platform">Platform</a>]
@@ -60,18 +60,19 @@ graph LR
     ResourcesArtifact[<a href="/docs/api/core/v1alpha4/#artifact">Resources<br/>Artifact</a>]
     GitOpsArtifact[<a href="/docs/api/core/v1alpha4/#artifact">GitOps<br/>Artifact</a>]
 
-    Generator[<a href="/docs/api/core/v1alpha4/#generators">Generator</a>]
-    Transformer[<a href="/docs/api/core/v1alpha4/#transformer">Transformer</a>]
+    Generators[<a href="/docs/api/core/v1alpha4/#generators">Generators</a>]
+    Transformers[<a href="/docs/api/core/v1alpha4/#transformer">Transformers</a>]
+    Files[Manifest<br/>Files]
 
     Platform --> Component
     Component --> Helm --> BuildPlan
     Component --> Kubernetes --> BuildPlan
     Component --> Kustomize --> BuildPlan
 
-    BuildPlan --> ResourcesArtifact --> Generator
-    BuildPlan --> GitOpsArtifact --> Generator
+    BuildPlan --> ResourcesArtifact --> Generators
+    BuildPlan --> GitOpsArtifact --> Generators
 
-    Generator --> Transformer --> Files --> KubeAPI
+    Generators --> Transformers --> Files
 ```
 
 ## Use Case
