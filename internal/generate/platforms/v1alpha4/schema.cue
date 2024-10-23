@@ -2,9 +2,6 @@ package holos
 
 import api "github.com/holos-run/holos/api/author/v1alpha4"
 
-// Manage a workload cluster named workload for use with the guides.
-#Fleets: api.#StandardFleets
-
 // Define the default organization name.
 #Organization: api.#OrganizationStrict & {
 	DisplayName: string | *"Bank of Holos"
