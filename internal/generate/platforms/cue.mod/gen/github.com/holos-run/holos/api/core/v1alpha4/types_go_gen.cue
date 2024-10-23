@@ -392,7 +392,7 @@ package v1alpha4
 	// Model represents the platform model holos gets from from the
 	// PlatformService.GetPlatform rpc method and provides to CUE using a tag.
 	// Injected as the tag "holos_model".
-	model: {...} @go(Model,map[string]any)
+	model?: {...} @go(Model,map[string]any)
 
 	// Tags represents cue @tag variables injected into the holos render component
 	// command from the holos render platform command.  Tags with a "holos_"

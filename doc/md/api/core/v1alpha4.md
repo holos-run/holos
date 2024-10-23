@@ -234,7 +234,7 @@ type Component struct {
     // Model represents the platform model holos gets from from the
     // PlatformService.GetPlatform rpc method and provides to CUE using a tag.
     // Injected as the tag "holos_model".
-    Model map[string]any `json:"model"`
+    Model map[string]any `json:"model,omitempty"`
     // Tags represents cue @tag variables injected into the holos render component
     // command from the holos render platform command.  Tags with a "holos_"
     // prefix are reserved for use by the Holos Authors.
