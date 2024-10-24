@@ -8,7 +8,7 @@ sidebar_position: 900
 
 ## Community Support
 
-You can ask questions in our community forums in [GitHub Discussions](https://github.com/holos-run/holos/discussions) or [Google Groups](https://groups.google.com/g/holos-discuss).
+You can ask questions in our community forums in [GitHub Discussions](https://github.com/holos-run/holos/discussions), [Discord](https://discord.gg/JgDVbNpye7), or [Google Groups](https://groups.google.com/g/holos-discuss).
 
 ## Commercial Support and Services
 

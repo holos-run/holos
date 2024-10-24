@@ -150,8 +150,8 @@ const config: Config = {
               href: '/docs/support',
             },
             {
-              label: 'Announcements List',
-              href: 'https://groups.google.com/g/holos-announce',
+              label: 'Discord',
+              href: 'https://discord.gg/JgDVbNpye7',
             },
             {
               label: 'Discussion List',
