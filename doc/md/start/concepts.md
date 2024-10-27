@@ -42,9 +42,9 @@ graph TB
     Kustomize[<a href="#component">Kustomize</a>]
     CUE[<a href="#component">CUE</a>]
 
-    Cluster --> Platform
-    Fleet --> Cluster
-    Component --> Fleet
+    Fleet --> Platform
+    Cluster --> Fleet
+    Component --> Cluster
     Helm --> Component
     Kustomize --> Component
     CUE --> Component
