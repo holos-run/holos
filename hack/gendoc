@@ -1,5 +1,12 @@
 #! /bin/bash
 #
+
+tmpdir="$(mktemp -d)"
+finish() {
+  rm -rf "$tmpdir"
+}
+trap finish EXIT
+
 set -euo pipefail
 
 # Generate the documentation for the package the calls go:generate
@@ -10,8 +17,5 @@ gomarkdoc --output "doc/md/${package%/}.md" "./${package}"
 
 # Fix heading anchors by making them explicit
 # Refer to https://docusaurus.io/docs/markdown-features/toc#heading-ids
-stamp=$RANDOM
-# sed 's/^## type /## /' "doc/md/${package%/}.md" > "doc/md/${package%/}.md.${stamp}"
-
-sed -E 's/## type ([A-Za-z0-9_]+)/## type \1 {#\1}/' "doc/md/${package%/}.md" > "doc/md/${package%/}.md.${stamp}"
-mv "doc/md/${package%/}.md.${stamp}" "doc/md/${package%/}.md"
+sed -E 's/## type ([A-Za-z0-9_]+)/## type \1 {#\1}/' "doc/md/${package%/}.md" > "${tmpdir}/doc.md"
+cat "./${package%%/}/header.yaml" "${tmpdir}/doc.md" > "doc/md/${package%/}.md"
