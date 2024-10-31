@@ -461,8 +461,9 @@ values into both charts to configure them in lock step.
 
 <Tabs groupId="740ABBEB-7A03-4B53-9CD5-4B8C5680172F">
   <TabItem value="projects/blackbox.schema.cue" label="Blackbox Schema">
-```txt
-projects/blackbox.schema.cue
+```bash
+mkdir -p projects
+touch projects/blackbox.schema.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -498,9 +499,7 @@ Add the CUE configuration to manage the prometheus Helm Chart component.
 
 ```bash
 mkdir -p projects/platform/components/prometheus
-```
-```txt
-projects/platform/components/prometheus/prometheus.cue
+touch projects/platform/components/prometheus/prometheus.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -527,8 +526,9 @@ the platform directory.
 
 <Tabs groupId="FF5FF6C6-181D-4071-8BCF-5C8E0663C028">
   <TabItem value="platform/prometheus.cue" label="Platform">
-```txt
-platform/prometheus.cue
+```bash
+mkdir -p platform
+touch platform/prometheus.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -553,8 +553,8 @@ holos render platform ./platform
   <TabItem value="output" label="Output">
 ```txt
 cached prometheus 25.27.0
-rendered prometheus for cluster local in 1.900449291s
-rendered platform in 1.900581125s
+rendered prometheus for cluster local in 1.600449291s
+rendered platform in 1.600581125s
 ```
   </TabItem>
   <TabItem value="deploy/clusters/local/components/prometheus/prometheus.gen.yaml" label="prometheus.gen.yaml">
@@ -2041,9 +2041,7 @@ Add the CUE configuration to manage the blackbox Helm Chart component.
 
 ```bash
 mkdir -p projects/platform/components/blackbox
-```
-```txt
-projects/platform/components/blackbox/blackbox.cue
+touch projects/platform/components/blackbox/blackbox.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -2070,8 +2068,9 @@ _Helm: #Helm & {
 Register the blackbox chart with the platform by adding the following file to
 the platform directory.
 
-```txt
-platform/blackbox.cue
+```bash
+mkdir -p platform
+touch platform/blackbox.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -4168,12 +4167,8 @@ lock step.
 
 <Tabs groupId="B3A011D0-2D13-4DA8-B963-92115E734085">
   <TabItem value="command" label="Command">
-```bash
-git diff
-```
-  </TabItem>
-  <TabItem value="output" label="Output" default>
 ```diff
+patch -p1 <<EOF
 --- a/projects/platform/components/blackbox/values.cue
 +++ b/projects/platform/components/blackbox/values.cue
 @@ -2,6 +2,9 @@ package holos
@@ -4186,15 +4181,15 @@ git diff
  		global: {
  			//# Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...)
  			//#
-@@ -196,7 +196,7 @@ _Helm: {
-                        annotations: {}
-                        labels: {}
-                        type: "ClusterIP"
--                       port: 9115
-+                       port: _blackbox.port
-                        ipDualStack: {
-                                enabled: false
-                                ipFamilies: ["IPv6", "IPv4"]
+@@ -193,7 +196,7 @@ _Helm: {
+ 			annotations: {}
+ 			labels: {}
+ 			type: "ClusterIP"
+-			port: 9115
++			port: _blackbox.port
+ 			ipDualStack: {
+ 				enabled: false
+ 				ipFamilies: ["IPv6", "IPv4"]
 --- a/projects/platform/components/prometheus/values.cue
 +++ b/projects/platform/components/prometheus/values.cue
 @@ -1084,7 +1084,7 @@ _Helm: {
@@ -4206,6 +4201,13 @@ git diff
  					}, {
  						source_labels: ["__param_target"]
  						target_label: "instance"
+EOF
+```
+  </TabItem>
+  <TabItem value="output" label="Output" default>
+```txt
+patching file 'projects/platform/components/blackbox/values.cue'
+patching file 'projects/platform/components/prometheus/values.cue'
 ```
   </TabItem>
 </Tabs>
@@ -4498,12 +4500,8 @@ render platform` command fails immediately with a clear validation error.
 
 <Tabs groupId="BFCF4FCA-33EB-45D8-8D36-CDD80E54C819">
   <TabItem value="command" label="Command">
-```bash
-git diff
-```
-  </TabItem>
-  <TabItem value="output" label="Output">
 ```diff
+patch -p1 <<EOF
 --- a/projects/blackbox.schema.cue
 +++ b/projects/blackbox.schema.cue
 @@ -10,6 +10,6 @@ package holos
@@ -4514,7 +4512,12 @@ git diff
 +	host: "this is not valid"
  	port: 6115
  }
-
+EOF
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+patching file 'projects/blackbox.schema.cue'
 ```
   </TabItem>
 </Tabs>
@@ -4539,6 +4542,13 @@ could not run: could not render component: exit status 1 at builder/v1alpha4/bui
 
 ![VS Code out of bound error](img/helm-editor-constraints.png)
 
+Undo the invalid change.
+
+```bash
+git restore projects/blackbox.schema.cue
+rm -f projects/blackbox.schema.cue.orig
+```
+
 ### Httpbin Kustomization
 
 We need to manage [httpbin] so we can achieve the goal of probing a simple
@@ -4556,10 +4566,7 @@ components.
   <TabItem value="projects/platform/components/httpbin/httpbin.cue" label="Component">
 ```bash
 mkdir -p projects/platform/components/httpbin
-```
-
-```txt
-projects/platform/components/httpbin/httpbin.cue
+touch projects/platform/components/httpbin/httpbin.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -4595,7 +4602,8 @@ Register the component with the platform.
 <Tabs groupId="CBD42BC2-38C3-46E2-9F4D-B21D8E909BAC">
   <TabItem value="platform/httpbin.cue" label="Platform">
 ```txt
-platform/httpbin.cue
+mkdir -p platform
+touch platform/httpbin.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -4765,6 +4773,7 @@ deployment.apps/httpbin created
 Port forward to the prometheus web interface.
 
 ```bash
+kubectl wait --for=condition=Available deployment/prometheus-server --timeout=300s
 kubectl -n default port-forward svc/prometheus-server 8081:80
 ```
 
