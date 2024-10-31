@@ -80,33 +80,62 @@ The bank front end web service is managed by the
 refers to the organization display name in `schema.gen.cue`.
 
 <Tabs groupId="F5B546EB-566F-4B83-84C3-C55B40F55555">
-  <TabItem value="schema.gen.cue" label="schema.gen.cue">
+  <TabItem value="schema.cue" label="schema.cue">
 ```cue showLineNumbers
 package holos
 
-import api "github.com/holos-run/holos/api/author/v1alpha3"
+import api "github.com/holos-run/holos/api/author/v1alpha4"
 
-// Define the default organization name
-// highlight-next-line
-#Organization: DisplayName: string | *"Bank of Holos"
-#Organization: Name:        string | *"bank-of-holos"
-
-#Organization: api.#OrganizationStrict
-#Platform:     api.#Platform
-#Fleets:       api.#StandardFleets
-
-_ComponentConfig: {
-  Resources:  #Resources
-  ArgoConfig: #ArgoConfig
+// Define the default organization name.
+_Organization: api.#OrganizationStrict & {
+	DisplayName: string | *"Bank of Holos"
+	Name:        string | *"bank-of-holos"
+	Domain:      string | *"holos.localhost"
 }
 
-#Helm:       api.#Helm & _ComponentConfig
-#Kustomize:  api.#Kustomize & _ComponentConfig
-#Kubernetes: api.#Kubernetes & _ComponentConfig
+// Projects represents a way to organize components into projects with owners.
+// https://holos.run/docs/api/author/v1alpha4/#Projects
+_Projects: api.#Projects
 
-#ArgoConfig: api.#ArgoConfig & {
-  ClusterName: _ClusterName
+// ArgoConfig represents the configuration of ArgoCD Application resources for
+// each component.
+// https://holos.run/docs/api/author/v1alpha4/#ArgoConfig
+_ArgoConfig: api.#ArgoConfig
+
+#ComponentConfig: api.#ComponentConfig & {
+	Name:      _Tags.name
+	Component: _Tags.component
+	Cluster:   _Tags.cluster
+	ArgoConfig: _ArgoConfig & {
+		if _Tags.project != "no-project" {
+			AppProject: _Tags.project
+		}
+	}
+	Resources: #Resources
+
+	// Mix in project labels if the project is defined by the platform.
+	if _Tags.project != "no-project" {
+		CommonLabels: _Projects[_Tags.project].CommonLabels
+	}
 }
+
+// https://holos.run/docs/api/author/v1alpha4/#Kubernetes
+#Kubernetes: close({
+	#ComponentConfig
+	api.#Kubernetes
+})
+
+// https://holos.run/docs/api/author/v1alpha4/#Kustomize
+#Kustomize: close({
+	#ComponentConfig
+	api.#Kustomize
+})
+
+// https://holos.run/docs/api/author/v1alpha4/#Helm
+#Helm: close({
+	#ComponentConfig
+	api.#Helm
+})
 ```
   </TabItem>
   <TabItem value="projects/bank-of-holos/frontend/components/bank-frontend/bank-frontend.cue" label="projects/bank-of-holos/frontend/components/bank-frontend/bank-frontend.cue">
@@ -117,215 +146,214 @@ package holos
 (#Kubernetes & Objects).BuildPlan
 
 let Objects = {
-  Name:      "bank-frontend"
-  Namespace: #BankOfHolos.Frontend.Namespace
+	Name:      "bank-frontend"
+	Namespace: _BankOfHolos.Frontend.Namespace
 
-  // Ensure resources go in the correct namespace
-  Resources: [_]: [_]: metadata: namespace: Namespace
+	// Ensure resources go in the correct namespace
+	Resources: [_]: [_]: metadata: namespace: Namespace
 
-  // https://github.com/GoogleCloudPlatform/bank-of-anthos/blob/release/v0.6.5/kubernetes-manifests/frontend.yaml
-  Resources: {
-    Service: frontend: {
-      metadata: name: "frontend"
-      metadata: labels: {
-        application: "bank-of-holos"
-        environment: "development"
-        team:        "frontend"
-        tier:        "web"
-      }
-      spec: {
-        selector: {
-          app:         "frontend"
-          application: "bank-of-holos"
-          environment: "development"
-          team:        "frontend"
-          tier:        "web"
-        }
-        _ports: http: {
-          name:       "http"
-          port:       80
-          targetPort: 8080
-          protocol:   "TCP"
-        }
-        ports: [for x in _ports {x}]
-      }
-    }
+	// https://github.com/GoogleCloudPlatform/bank-of-anthos/blob/release/v0.6.5/kubernetes-manifests/frontend.yaml
+	Resources: {
+		Service: frontend: {
+			metadata: name: "frontend"
+			metadata: labels: {
+				application: "bank-of-holos"
+				environment: "development"
+				team:        "frontend"
+				tier:        "web"
+			}
+			spec: {
+				selector: {
+					app:         "frontend"
+					application: "bank-of-holos"
+					environment: "development"
+					team:        "frontend"
+					tier:        "web"
+				}
+				_ports: http: {
+					name:       "http"
+					port:       80
+					targetPort: 8080
+					protocol:   "TCP"
+				}
+				ports: [for x in _ports {x}]
+			}
+		}
 
-    Deployment: frontend: {
-      metadata: name: "frontend"
-      metadata: labels: {
-        application: "bank-of-holos"
-        environment: "development"
-        team:        "frontend"
-        tier:        "web"
-      }
-      spec: {
-        selector: matchLabels: {
-          app:         "frontend"
-          application: "bank-of-holos"
-          environment: "development"
-          team:        "frontend"
-          tier:        "web"
-        }
-        template: {
-          metadata: labels: {
-            app:         "frontend"
-            application: "bank-of-holos"
-            environment: "development"
-            team:        "frontend"
-            tier:        "web"
-          }
-          spec: {
-            securityContext: {
-              seccompProfile: type: "RuntimeDefault"
-              fsGroup:      1000
-              runAsGroup:   1000
-              runAsNonRoot: true
-              runAsUser:    1000
-            }
-            serviceAccountName:            "bank-of-holos"
-            terminationGracePeriodSeconds: 5
-            containers: [{
-              env: [{
-                name:  "BANK_NAME"
-                // highlight-next-line
-                value: #Organization.DisplayName
-              }, {
-                name:  "ENV_PLATFORM"
-                value: "local"
-              }, {
-                name:  "VERSION"
-                value: "v0.6.5"
-              }, {
-                name:  "PORT"
-                value: "8080"
-              }, {
-                name:  "ENABLE_TRACING"
-                value: "false"
-              }, {
-                name:  "SCHEME"
-                value: "https"
-              }, {
-                name:  "LOG_LEVEL"
-                value: "info"
-              }, {
-                name: "DEFAULT_USERNAME"
-                valueFrom: configMapKeyRef: {
-                  key:  "DEMO_LOGIN_USERNAME"
-                  name: "demo-data-config"
-                }
-              }, {
-                name: "DEFAULT_PASSWORD"
-                valueFrom: configMapKeyRef: {
-                  key:  "DEMO_LOGIN_PASSWORD"
-                  name: "demo-data-config"
-                }
-              }, {
-                name: "REGISTERED_OAUTH_CLIENT_ID"
-                valueFrom: configMapKeyRef: {
-                  key:      "DEMO_OAUTH_CLIENT_ID"
-                  name:     "oauth-config"
-                  optional: true
-                }
-              }, {
-                name: "ALLOWED_OAUTH_REDIRECT_URI"
-                valueFrom: configMapKeyRef: {
-                  key:      "DEMO_OAUTH_REDIRECT_URI"
-                  name:     "oauth-config"
-                  optional: true
-                }
-              }]
-              envFrom: [{
-                configMapRef: name: "environment-config"
-              }, {
-                configMapRef: name: "service-api-config"
-              }]
-              image: "us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/frontend:v0.6.5@sha256:d72050f70d12383e4434ad04d189b681dc625f696087ddf0b5df641645c9dafa"
-              livenessProbe: {
-                httpGet: {
-                  path: "/ready"
-                  port: 8080
-                }
-                initialDelaySeconds: 60
-                periodSeconds:       15
-                timeoutSeconds:      30
-              }
-              name: "front"
-              readinessProbe: {
-                httpGet: {
-                  path: "/ready"
-                  port: 8080
-                }
-                initialDelaySeconds: 10
-                periodSeconds:       5
-                timeoutSeconds:      10
-              }
-              resources: {
-                limits: {
-                  cpu:    "250m"
-                  memory: "128Mi"
-                }
-                requests: {
-                  cpu:    "100m"
-                  memory: "64Mi"
-                }
-              }
-              securityContext: {
-                allowPrivilegeEscalation: false
-                capabilities: drop: ["all"]
-                privileged:             false
-                readOnlyRootFilesystem: true
-              }
-              volumeMounts: [{
-                mountPath: "/tmp"
-                name:      "tmp"
-              }, {
-                mountPath: "/tmp/.ssh"
-                name:      "publickey"
-                readOnly:  true
-              }]
-            }]
-            volumes: [
-              {
-                emptyDir: {}
-                name: "tmp"
-              },
-              {
-                name: "publickey"
-                secret: {
-                  items: [{key: "jwtRS256.key.pub", path: "publickey"}]
-                  secretName: "jwt-key"
-                }
-              },
-            ]
-          }
-        }
-      }
-    }
+		Deployment: frontend: {
+			metadata: name: "frontend"
+			metadata: labels: {
+				application: "bank-of-holos"
+				environment: "development"
+				team:        "frontend"
+				tier:        "web"
+			}
+			spec: {
+				selector: matchLabels: {
+					app:         "frontend"
+					application: "bank-of-holos"
+					environment: "development"
+					team:        "frontend"
+					tier:        "web"
+				}
+				template: {
+					metadata: labels: {
+						app:         "frontend"
+						application: "bank-of-holos"
+						environment: "development"
+						team:        "frontend"
+						tier:        "web"
+					}
+					spec: {
+						securityContext: {
+							seccompProfile: type: "RuntimeDefault"
+							fsGroup:      1000
+							runAsGroup:   1000
+							runAsNonRoot: true
+							runAsUser:    1000
+						}
+						serviceAccountName:            "bank-of-holos"
+						terminationGracePeriodSeconds: 5
+						containers: [{
+							env: [{
+								name:  "BANK_NAME"
+								value: _Organization.DisplayName
+							}, {
+								name:  "ENV_PLATFORM"
+								value: "local"
+							}, {
+								name:  "VERSION"
+								value: "v0.6.5"
+							}, {
+								name:  "PORT"
+								value: "8080"
+							}, {
+								name:  "ENABLE_TRACING"
+								value: "false"
+							}, {
+								name:  "SCHEME"
+								value: "https"
+							}, {
+								name:  "LOG_LEVEL"
+								value: "info"
+							}, {
+								name: "DEFAULT_USERNAME"
+								valueFrom: configMapKeyRef: {
+									key:  "DEMO_LOGIN_USERNAME"
+									name: "demo-data-config"
+								}
+							}, {
+								name: "DEFAULT_PASSWORD"
+								valueFrom: configMapKeyRef: {
+									key:  "DEMO_LOGIN_PASSWORD"
+									name: "demo-data-config"
+								}
+							}, {
+								name: "REGISTERED_OAUTH_CLIENT_ID"
+								valueFrom: configMapKeyRef: {
+									key:      "DEMO_OAUTH_CLIENT_ID"
+									name:     "oauth-config"
+									optional: true
+								}
+							}, {
+								name: "ALLOWED_OAUTH_REDIRECT_URI"
+								valueFrom: configMapKeyRef: {
+									key:      "DEMO_OAUTH_REDIRECT_URI"
+									name:     "oauth-config"
+									optional: true
+								}
+							}]
+							envFrom: [{
+								configMapRef: name: "environment-config"
+							}, {
+								configMapRef: name: "service-api-config"
+							}]
+							image: "us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/frontend:v0.6.5@sha256:d72050f70d12383e4434ad04d189b681dc625f696087ddf0b5df641645c9dafa"
+							livenessProbe: {
+								httpGet: {
+									path: "/ready"
+									port: 8080
+								}
+								initialDelaySeconds: 60
+								periodSeconds:       15
+								timeoutSeconds:      30
+							}
+							name: "front"
+							readinessProbe: {
+								httpGet: {
+									path: "/ready"
+									port: 8080
+								}
+								initialDelaySeconds: 10
+								periodSeconds:       5
+								timeoutSeconds:      10
+							}
+							resources: {
+								limits: {
+									cpu:    "250m"
+									memory: "128Mi"
+								}
+								requests: {
+									cpu:    "100m"
+									memory: "64Mi"
+								}
+							}
+							securityContext: {
+								allowPrivilegeEscalation: false
+								capabilities: drop: ["all"]
+								privileged:             false
+								readOnlyRootFilesystem: true
+							}
+							volumeMounts: [{
+								mountPath: "/tmp"
+								name:      "tmp"
+							}, {
+								mountPath: "/tmp/.ssh"
+								name:      "publickey"
+								readOnly:  true
+							}]
+						}]
+						volumes: [
+							{
+								emptyDir: {}
+								name: "tmp"
+							},
+							{
+								name: "publickey"
+								secret: {
+									items: [{key: "jwtRS256.key.pub", path: "publickey"}]
+									secretName: "jwt-key"
+								}
+							},
+						]
+					}
+				}
+			}
+		}
 
-    // Allow HTTPRoutes in the ingress gateway namespace to reference Services
-    // in this namespace.
-    ReferenceGrant: grant: #ReferenceGrant & {
-      metadata: namespace: Namespace
-    }
+		// Allow HTTPRoutes in the ingress gateway namespace to reference Services
+		// in this namespace.
+		ReferenceGrant: grant: _ReferenceGrant & {
+			metadata: namespace: Namespace
+		}
 
-    // Include shared resources
-    #BankOfHolos.Resources
-  }
+		// Include shared resources
+		_BankOfHolos.Resources
+	}
 }
 ```
   </TabItem>
 </Tabs>
 
-Line 6 of the `schema.gen.cue` file defines the _default_ value for
-`#Organization.DisplayName` by using `string | *"..."`.  In CUE, the `*`
+Line 7 of the `schema.cue` file defines the _default_ value for
+`_Organization.DisplayName` by using `string | *"..."`.  In CUE, the `*`
 asterisk character denotes a [default value].
 
-Line 78 of the `bank-frontend.cue` file refers to `#Organization.DisplayName` to
+Line 78 of the `bank-frontend.cue` file refers to `_Organization.DisplayName` to
 configure the front end web container.
 
 Let's change the name of the bank by defining a new value for
-`#Organization.DisplayName` at the root of the configuration.  Create
+`_Organization.DisplayName` at the root of the configuration.  Create
 `projects/organization.cue` with the following content.
 
 <Tabs groupId="B386181F-EBE7-469D-8CB5-37631067669B">
@@ -333,7 +361,7 @@ Let's change the name of the bank by defining a new value for
 ```cue showLineNumbers
 package holos
 
-#Organization: DisplayName: "The Holistic-Bank"
+_Organization: DisplayName: "The Holistic-Bank"
 ```
   </TabItem>
 </Tabs>
@@ -348,18 +376,11 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt
-#Organization.DisplayName: 2 errors in empty disjunction:
-#Organization.DisplayName: conflicting values "Bank of Holos" and "The Holistic-Bank":
-    /bank-of-holos/projects/organization.cue:3:29
-    /bank-of-holos/schema.gen.cue:6:39
-// highlight-next-line
-#Organization.DisplayName: invalid value "The Holistic-Bank" (out of bound =~"^[0-9A-Za-z][0-9A-Za-z ]{2,61}[0-9A-Za-z]$"):
-    /bank-of-holos/cue.mod/gen/github.com/holos-run/holos/api/author/v1alpha3/definitions_go_gen.cue:203:25
-    /bank-of-holos/cue.mod/gen/github.com/holos-run/holos/api/author/v1alpha3/definitions_go_gen.cue:188:15
-    /bank-of-holos/cue.mod/gen/github.com/holos-run/holos/api/author/v1alpha3/definitions_go_gen.cue:203:15
-    /bank-of-holos/projects/organization.cue:3:29
-    /bank-of-holos/schema.gen.cue:6:29
-could not run: could not render component: exit status 1 at internal/render/platform.go:50
+could not run: could not marshal json projects/platform/components/istio/cni: cue: marshal error: _Organization.DisplayName: 2 errors in empty disjunction: (and 2 more errors) at internal/builder/builder.go:63
+_Organization.DisplayName: _Organization.DisplayName: 2 errors in empty disjunction: (and 2 more errors)
+could not run: could not marshal json projects/platform/components/argocd/crds: cue: marshal error: _Organization.DisplayName: 2 errors in empty disjunction: (and 2 more errors) at internal/builder/builder.go:63
+_Organization.DisplayName: _Organization.DisplayName: 2 errors in empty disjunction: (and 2 more errors)
+could not run: could not render component: exit status 1 at builder/v1alpha4/builder.go:95
 ```
   </TabItem>
 </Tabs>
@@ -386,7 +407,7 @@ Let's try again, this time replacing the hyphen with a space.
 ```cue showLineNumbers
 package holos
 
-#Organization: DisplayName: "The Holistic Bank"
+_Organization: DisplayName: "The Holistic Bank"
 ```
   </TabItem>
 </Tabs>
