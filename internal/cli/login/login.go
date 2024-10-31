@@ -13,8 +13,9 @@ import (
 )
 
 // New returns a new login command.
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("login")
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.Short = "log in by caching credentials"
 	var printClaims bool
 

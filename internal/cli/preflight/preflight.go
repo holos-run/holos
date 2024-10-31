@@ -25,10 +25,10 @@ func newConfig() (*config, *flag.FlagSet) {
 }
 
 // New returns the preflight command for the root command.
-func New(hc *holos.Config) *cobra.Command {
+func New(hc *holos.Config, feature holos.Flagger) *cobra.Command {
 	cfg, flagSet := newConfig()
-
 	cmd := command.New("preflight")
+	cmd.Hidden = !feature.Flag(holos.PreflightFeature)
 	cmd.Short = "run holos preflight checks"
 	cmd.Flags().AddGoFlagSet(flagSet)
 	cmd.RunE = makePreflightRunFunc(hc, cfg)

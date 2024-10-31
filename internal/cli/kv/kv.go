@@ -10,8 +10,9 @@ import (
 )
 
 // New returns the kv root command for the cli
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("kv")
+	cmd.Hidden = !feature.Flag(holos.SecretsFeature)
 	cmd.Short = "work with secrets in the provisioner cluster"
 	cmd.Flags().SortFlags = false
 	cmd.RunE = func(c *cobra.Command, args []string) error {

@@ -11,8 +11,9 @@ import (
 )
 
 // New returns the command for the cli
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("delete")
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.Aliases = []string{"destroy"}
 	cmd.Short = "delete resources"
 	cmd.Flags().SortFlags = false

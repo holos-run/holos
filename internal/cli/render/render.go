@@ -22,10 +22,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("render")
 	cmd.Args = cobra.NoArgs
-	cmd.Short = "render platforms and components into the deploy/ directory"
+	cmd.Short = "render platforms and components to manifest files"
 	cmd.AddCommand(NewComponent(cfg))
 	cmd.AddCommand(NewPlatform(cfg))
 	return cmd
@@ -35,7 +35,7 @@ func New(cfg *holos.Config) *cobra.Command {
 func NewComponent(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("component DIRECTORY")
 	cmd.Args = cobra.ExactArgs(1)
-	cmd.Short = "render specific components"
+	cmd.Short = "render a platform component"
 	cmd.Example = "  holos render component --inject holos_cluster=aws2 ./components/monitoring/kube-prometheus-stack"
 	cmd.Flags().AddGoFlagSet(cfg.WriteFlagSet())
 	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())

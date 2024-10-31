@@ -2,6 +2,7 @@ package holos
 
 import (
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -24,4 +25,24 @@ func (i *StringSlice) Set(value string) error {
 		*i = append(*i, str)
 	}
 	return nil
+}
+
+type feature string
+
+const BuildFeature = feature("BUILD")
+const ServerFeature = feature("SERVER")
+const PreflightFeature = feature("PREFLIGHT")
+const GenerateComponentFeature = feature("GENERATE_COMPONENT")
+const SecretsFeature = feature("SECRETS")
+
+// Flagger is the interface to check if an experimental feature is enabled.
+type Flagger interface {
+	Flag(name feature) bool
+}
+
+type EnvFlagger struct{}
+
+func (e *EnvFlagger) Flag(name feature) bool {
+	envVar := "HOLOS_FEATURE_" + strings.ToUpper(string(name))
+	return os.Getenv(envVar) != ""
 }

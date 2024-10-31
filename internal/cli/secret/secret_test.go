@@ -77,7 +77,7 @@ func cmdHolos(ts *testscript.TestScript, neg bool, args []string) {
 		holos.Stderr(ts.Stderr()),
 	)
 
-	cmd := cli.New(cfg)
+	cmd := cli.New(cfg, &holos.EnvFlagger{})
 	cmd.SetArgs(args)
 	err := cmd.Execute()
 

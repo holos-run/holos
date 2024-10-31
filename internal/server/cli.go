@@ -26,11 +26,12 @@ import (
 var helpLong string
 
 // New builds a root cobra command with flags linked to the Config field.
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "server",
-		Short: "run the holos server",
-		Long:  helpLong,
+		Use:    "server",
+		Short:  "run the holos server",
+		Hidden: !feature.Flag(holos.ServerFeature),
+		Long:   helpLong,
 		// We handle our own errors.
 		SilenceUsage:  true,
 		SilenceErrors: true,

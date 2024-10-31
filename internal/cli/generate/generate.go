@@ -14,14 +14,14 @@ import (
 )
 
 // New returns a new generate command.
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("generate")
 	cmd.Aliases = []string{"gen"}
 	cmd.Short = "generate local resources"
 	cmd.Args = cobra.NoArgs
 
 	cmd.AddCommand(NewPlatform(cfg))
-	cmd.AddCommand(NewComponent())
+	cmd.AddCommand(NewComponent(feature))
 
 	return cmd
 }
@@ -48,9 +48,10 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 }
 
 // NewComponent returns a command to generate a holos component
-func NewComponent() *cobra.Command {
+func NewComponent(feature holos.Flagger) *cobra.Command {
 	cmd := command.New("component")
 	cmd.Short = "generate a component from an embedded schematic"
+	cmd.Hidden = !feature.Flag(holos.GenerateComponentFeature)
 
 	for _, name := range generate.Components("v1alpha3") {
 		cmd.AddCommand(makeSchematicCommand("v1alpha3", name))

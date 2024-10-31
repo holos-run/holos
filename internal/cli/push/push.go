@@ -14,9 +14,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("push")
 	cmd.Short = "push resources to holos server"
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.Args = cobra.NoArgs
 
 	config := client.NewConfig(cfg)

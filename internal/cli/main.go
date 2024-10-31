@@ -18,7 +18,8 @@ func MakeMain(options ...holos.Option) func() int {
 		cfg := holos.New(options...)
 		slog.SetDefault(cfg.Logger())
 		ctx := context.Background()
-		if err := New(cfg).ExecuteContext(ctx); err != nil {
+		feature := &holos.EnvFlagger{}
+		if err := New(cfg, feature).ExecuteContext(ctx); err != nil {
 			return HandleError(ctx, err, cfg)
 		}
 		return 0

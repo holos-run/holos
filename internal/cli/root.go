@@ -35,7 +35,7 @@ import (
 var helpLong string
 
 // New returns a new root *cobra.Command for command line execution.
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     "holos",
 		Short:   "holos manages a holistic integrated software development platform",
@@ -67,36 +67,37 @@ func New(cfg *holos.Config) *cobra.Command {
 	rootCmd.PersistentFlags().AddGoFlagSet(cfg.LogFlagSet())
 
 	// subcommands
-	rootCmd.AddCommand(build.New(cfg))
-	rootCmd.AddCommand(render.New(cfg))
-	rootCmd.AddCommand(get.New(cfg))
-	rootCmd.AddCommand(create.New(cfg))
-	rootCmd.AddCommand(destroy.New(cfg))
-	rootCmd.AddCommand(preflight.New(cfg))
-	rootCmd.AddCommand(login.New(cfg))
-	rootCmd.AddCommand(logout.New(cfg))
-	rootCmd.AddCommand(token.New(cfg))
-	rootCmd.AddCommand(generate.New(cfg))
-	rootCmd.AddCommand(register.New(cfg))
-	rootCmd.AddCommand(pull.New(cfg))
-	rootCmd.AddCommand(push.New(cfg))
-	rootCmd.AddCommand(newOrgCmd())
+	rootCmd.AddCommand(build.New(cfg, feature))
+	rootCmd.AddCommand(render.New(cfg, feature))
+	rootCmd.AddCommand(get.New(cfg, feature))
+	rootCmd.AddCommand(create.New(cfg, feature))
+	rootCmd.AddCommand(destroy.New(cfg, feature))
+	rootCmd.AddCommand(preflight.New(cfg, feature))
+	rootCmd.AddCommand(login.New(cfg, feature))
+	rootCmd.AddCommand(logout.New(cfg, feature))
+	rootCmd.AddCommand(token.New(cfg, feature))
+	rootCmd.AddCommand(generate.New(cfg, feature))
+	rootCmd.AddCommand(register.New(cfg, feature))
+	rootCmd.AddCommand(pull.New(cfg, feature))
+	rootCmd.AddCommand(push.New(cfg, feature))
+	rootCmd.AddCommand(newOrgCmd(feature))
 
 	// Maybe not needed?
 	rootCmd.AddCommand(txtar.New(cfg))
 
 	// Deprecated, remove?
-	rootCmd.AddCommand(kv.New(cfg))
+	rootCmd.AddCommand(kv.New(cfg, feature))
 
 	// Server
-	rootCmd.AddCommand(server.New(cfg))
+	rootCmd.AddCommand(server.New(cfg, feature))
 
 	return rootCmd
 }
 
-func newOrgCmd() (cmd *cobra.Command) {
+func newOrgCmd(feature holos.Flagger) (cmd *cobra.Command) {
 	cmd = command.New("orgid")
 	cmd.Short = "print the current context org id."
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
 		cc := holos.NewClientContext(ctx)

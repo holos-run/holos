@@ -11,8 +11,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("logout")
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.Short = "log out by deleting cached credentials"
 	cmd.RunE = func(c *cobra.Command, args []string) error {
 		if err := os.RemoveAll(token.CacheDir); err != nil {

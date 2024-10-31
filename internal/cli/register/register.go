@@ -10,8 +10,9 @@ import (
 )
 
 // New returns a new register command.
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("register")
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.Short = "rpc UserService.RegisterUser"
 	cmd.Long = "register with holos server"
 	cmd.Args = cobra.NoArgs

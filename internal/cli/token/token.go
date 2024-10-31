@@ -13,8 +13,9 @@ import (
 )
 
 // New returns a new login command.
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("token")
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.Short = "write id token to stdout"
 	cmd.Long = "Useful with curl / grpcurl -H $(holos token)"
 

@@ -12,9 +12,10 @@ import (
 )
 
 // New returns the create command for the cli
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("create")
 	cmd.Short = "create resources"
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.Flags().SortFlags = false
 	cmd.RunE = func(c *cobra.Command, args []string) error {
 		return c.Usage()

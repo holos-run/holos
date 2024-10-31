@@ -14,8 +14,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func New(cfg *holos.Config) *cobra.Command {
+func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("pull")
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.Short = "pull resources from holos server"
 	cmd.Args = cobra.NoArgs
 

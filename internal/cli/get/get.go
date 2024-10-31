@@ -16,8 +16,10 @@ import (
 )
 
 // New returns the get command for the cli.
-func New(hc *holos.Config) *cobra.Command {
+func New(hc *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("get")
+	// not supported as of v0.97
+	cmd.Hidden = !feature.Flag(holos.ServerFeature)
 	cmd.Short = "get resources"
 	cmd.Aliases = []string{"list"}
 	cmd.Flags().SortFlags = false
