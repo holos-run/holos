@@ -1,7 +1,13 @@
 ---
 slug: technical-overview
 title: Technical Overview
+description: Learn how Holos makes it easier for platform teams to integrate software into their platform.
 ---
+
+<head>
+  <meta property="og:title" content="Technical Overview | Holos" />
+  <meta property="og:image" content="/img/cards/technical-overview.png" />
+</head>
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -169,9 +175,9 @@ The fully rendered manifests are written into the `deploy/` directory organized
 by cluster and component for GitOps.
 
 <Tabs groupId="07FBE14E-E9EA-437B-9FA1-C6D8806524AD">
-  <TabItem value="deploy/clusters/overview/components/namespaces/namespaces.gen.yaml" label="namespaces">
+  <TabItem value="deploy/clusters/local/components/namespaces/namespaces.gen.yaml" label="namespaces">
 ```
-cat deploy/clusters/overview/components/namespaces/namespaces.gen.yaml
+cat deploy/clusters/local/components/namespaces/namespaces.gen.yaml
 ```
 ```yaml showLineNumbers
 apiVersion: v1
@@ -187,9 +193,9 @@ metadata:
   name: experiment
 ```
   </TabItem>
-  <TabItem value="deploy/clusters/overview/components/projects/projects.gen.yaml" label="projects">
+  <TabItem value="deploy/clusters/local/components/projects/projects.gen.yaml" label="projects">
 ```
-cat deploy/clusters/overview/components/projects/projects.gen.yaml
+cat deploy/clusters/local/components/projects/projects.gen.yaml
 ```
 ```yaml showLineNumbers
 apiVersion: rbac.authorization.k8s.io/v1
@@ -257,9 +263,9 @@ spec:
     kind: Service
 ```
   </TabItem>
-  <TabItem value="deploy/clusters/overview/components/httproutes/httproutes.gen.yaml" label="httproutes">
+  <TabItem value="deploy/clusters/local/components/httproutes/httproutes.gen.yaml" label="httproutes">
 ```
-cat deploy/clusters/overview/components/httproutes/httproutes.gen.yaml
+cat deploy/clusters/local/components/httproutes/httproutes.gen.yaml
 ```
 ```yaml showLineNumbers
 apiVersion: gateway.networking.k8s.io/v1
@@ -295,7 +301,7 @@ spec:
 The rendered manifests are derived from the project registration information by
 definitions implemented by the platform team.  The [Author API] provides a
 [Project] schema, but does not define an implementation.  The platform team
-implements the [Project] schema by writing a `#Projects` definition to manage
+implements the [Project] schema by adding a `_Projects` struct to manage
 resources according to bank policies.
 
 :::important
@@ -303,7 +309,7 @@ The Author API is intended as a convenient, ergonomic reference for component
 authors.  Definitions **are not** confined to the Author API.
 :::
 
-The following example shows how the platform team wrote the `#Projects`
+The following example shows how the platform team wrote the `_Projects`
 definition to derive the Namespace from the project registration provided by the
 dev team.
 
@@ -316,8 +322,8 @@ projects/platform/components/namespaces/namespaces.cue
 package holos
 
 _Kubernetes: #Kubernetes & {
-  Name: "namespaces"
-  Resources: Namespace: #Namespaces
+	Name: "namespaces"
+	Resources: Namespace: _Namespaces
 }
 
 // Produce a kubernetes objects build plan.
@@ -327,7 +333,7 @@ _Kubernetes.BuildPlan
 1. This is the namespaces component which manages a collection of Namespace resources derived from the project registration data shown in the second tab.
 2. Line 5 manages a Namespace for each value of the `#Namespaces` struct.  See the second tab for how the platform team defines this structure.
   </TabItem>
-  <TabItem value="projects/projects.cue" label="#Projects Definition">
+  <TabItem value="projects/projects.cue" label="Projects Definition">
 ```txt
 projects/projects.cue
 ```
@@ -339,42 +345,42 @@ import api "github.com/holos-run/holos/api/author/v1alpha4"
 // Projects defines the structure other teams register with to manage project
 // resources.  The platform team defines the schema, development teams provide
 // the values.
-#Projects: api.#Projects & {
-  [NAME=string]: {
-    Name: NAME
-    // The platform team requires the development teams to indicate an owner of
-    // the project.
-    Owner: Name: string
-    // The default value for the owner email address is derived from the owner
-    // name, but development teams can provide a different email address if
-    // needed.
-    Owner: Email: string | *"sg-\(Owner.Name)@\(#Organization.Domain)"
-    // The platform team constrains the project to a single namespace.
-    Namespaces: close({(NAME): Name: NAME})
-    // The platform team constrains the exposed services to the project
-    // namespace.
-    Hostnames: [HOST=string]: {
-      Name:      HOST
-      Namespace: Namespaces[NAME].Name
-      Service:   HOST
-      Port:      number | *80
-    }
+_Projects: api.#Projects & {
+	[NAME=string]: {
+		Name: NAME
+		// The platform team requires the development teams to indicate an owner of
+		// the project.
+		Owner: Name: string
+		// The default value for the owner email address is derived from the owner
+		// name, but development teams can provide a different email address if
+		// needed.
+		Owner: Email: string | *"sg-\(Owner.Name)@\(_Organization.Domain)"
+		// The platform team constrains the project to a single namespace.
+		Namespaces: close({(NAME): Name: NAME})
+		// The platform team constrains the exposed services to the project
+		// namespace.
+		Hostnames: [HOST=string]: {
+			Name:      HOST
+			Namespace: Namespaces[NAME].Name
+			Service:   HOST
+			Port:      number | *80
+		}
 
-    CommonLabels: {
-      "\(#Organization.Domain)/project.name": Name
-      "\(#Organization.Domain)/owner.name":   Owner.Name
-      "\(#Organization.Domain)/owner.email":  Owner.Email
-    }
-  }
+		CommonLabels: {
+			"\(_Organization.Domain)/project.name": Name
+			"\(_Organization.Domain)/owner.name":   Owner.Name
+			"\(_Organization.Domain)/owner.email":  Owner.Email
+		}
+	}
 }
 
-for Project in #Projects {
-  // Register project namespaces with the namespaces component.
-  #Namespaces: {
-    for Namespace in Project.Namespaces {
-      (Namespace.Name): metadata: labels: Project.CommonLabels
-    }
-  }
+for Project in _Projects {
+	// Register project namespaces with the namespaces component.
+	_Namespaces: {
+		for Namespace in Project.Namespaces {
+			(Namespace.Name): metadata: labels: Project.CommonLabels
+		}
+	}
 }
 ```
 
@@ -390,20 +396,20 @@ for Project in #Projects {
 </Tabs>
 
 The RoleBinding, SecretScore, and ReferenceGrant are managed in the
-[projects](https://github.com/holos-run/bank-of-holos/blob/v0.2.0/examples/tech-overview/projects/platform/components/projects/projects.cue)
+[projects](https://github.com/holos-run/bank-of-holos/blob/v0.4.1/examples/tech-overview/projects/platform/components/projects/projects.cue)
 component, similar to the previous namespaces example.
 The HTTPRoute is managed separately in the
-[httproutes](https://github.com/holos-run/bank-of-holos/blob/v0.2.0/examples/tech-overview/projects/platform/components/httproutes/httproutes.cue)
+[httproutes](https://github.com/holos-run/bank-of-holos/blob/v0.4.1/examples/tech-overview/projects/platform/components/httproutes/httproutes.cue)
 component.
 
 All components are registered with the platform in the
-[platform](https://github.com/holos-run/bank-of-holos/tree/v0.2.0/examples/tech-overview/platform)
+[platform](https://github.com/holos-run/bank-of-holos/tree/v0.4.1/examples/tech-overview/platform)
 directory.
 
 :::important
 Multiple components, potentially owned by different teams, derive fully rendered
 resources from the same three project values.  The dev team added these three
-values to the `#Projects` definition.  The platform team wrote the definition to
+values to the `_Projects` struct.  The platform team wrote the definition to
 integrate software according to bank policies.  CUE powers this _unified_
 platform configuration model.
 :::
@@ -430,14 +436,14 @@ package holos
 _HelmChart.BuildPlan
 
 _HelmChart: #Helm & {
-  Name: "podinfo"
-  Chart: {
-    version: "6.6.2"
-    repository: {
-      name: "podinfo"
-      url:  "https://stefanprodan.github.io/podinfo"
-    }
-  }
+	Name: "podinfo"
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
 }
 ```
 This file represents a Helm chart component to add to the platform.  The second
@@ -451,13 +457,13 @@ platform/podinfo.cue
 package holos
 
 // Manage the component on every workload Cluster, but not management clusters.
-for Cluster in #Fleets.workload.clusters {
-  #Platform: Components: "\(Cluster.name):podinfo": {
-    name:      "podinfo"
-    component: "projects/experiment/components/podinfo"
-    cluster:   Cluster.name
-    tags: project: "experiment"
-  }
+for Cluster in _Fleets.workload.clusters {
+	_Platform: Components: "\(Cluster.name):podinfo": {
+		name:      "podinfo"
+		component: "projects/experiment/components/podinfo"
+		cluster:   Cluster.name
+		tags: project: "experiment"
+	}
 }
 ```
 This file registers the component with the platform.  When the platform is
@@ -466,7 +472,7 @@ across the platform.
   </TabItem>
 </Tabs>
 
-The project tag associates the `#Platform` component with the correct entry in the `#Projects` struct.
+The project tag links the component to the same field of the `_Projects` struct.
 
 :::important
 You can add your own key=value tags in your platform specification to inject
@@ -499,7 +505,7 @@ rendered platform in 195.90275ms
 <Tabs groupId="77BF500B-105A-4AB4-A615-DEC19F501AE1">
   <TabItem value="command" label="Command">
 ```bash
-cat deploy/clusters/overview/components/podinfo/podinfo.gen.yaml
+cat deploy/clusters/local/components/podinfo/podinfo.gen.yaml
 ```
   </TabItem>
   <TabItem value="output" label="Output">
@@ -650,7 +656,7 @@ platform team added a constraint to the project so all Helm charts are post
 processed with Kustomize to add these common labels.  The platform team
 accomplishes this by adding a constraint in the project directory.  This can be
 seen in
-[schema.cue](https://github.com/holos-run/bank-of-holos/blob/v0.2.0/schema.cue#L35-L40)
+[schema.cue](https://github.com/holos-run/bank-of-holos/blob/v0.4.1/schema.cue#L35-L38)
 where the platform team configures all component kinds for the platform.
 
 We've covered how the platform team provides a golden path for development teams
