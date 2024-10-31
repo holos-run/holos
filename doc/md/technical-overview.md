@@ -107,7 +107,7 @@ The development team registers their experimental project, creatively named
 package holos
 
 // The development team registers a project name.
-#Projects: experiment: {
+_Projects: experiment: {
   // The project owner must be named.
   Owner: Name: "dev-team"
   // Expose Service podinfo at https://podinfo.example.com

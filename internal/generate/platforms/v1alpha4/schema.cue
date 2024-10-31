@@ -3,7 +3,7 @@ package holos
 import api "github.com/holos-run/holos/api/author/v1alpha4"
 
 // Define the default organization name.
-#Organization: api.#OrganizationStrict & {
+_Organization: api.#OrganizationStrict & {
 	DisplayName: string | *"Bank of Holos"
 	Name:        string | *"bank-of-holos"
 	Domain:      string | *"holos.localhost"
@@ -11,7 +11,7 @@ import api "github.com/holos-run/holos/api/author/v1alpha4"
 
 // Projects represents a way to organize components into projects with owners.
 // https://holos.run/docs/api/author/v1alpha4/#Projects
-#Projects: api.#Projects
+_Projects: api.#Projects
 
 // ArgoConfig represents the configuration of ArgoCD Application resources for
 // each component.
@@ -31,7 +31,7 @@ import api "github.com/holos-run/holos/api/author/v1alpha4"
 
 	// Mix in project labels if the project is defined by the platform.
 	if _Tags.project != "no-project" {
-		CommonLabels: #Projects[_Tags.project].CommonLabels
+		CommonLabels: _Projects[_Tags.project].CommonLabels
 	}
 }
 
