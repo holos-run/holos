@@ -16,13 +16,13 @@ _Projects: api.#Projects
 // ArgoConfig represents the configuration of ArgoCD Application resources for
 // each component.
 // https://holos.run/docs/api/author/v1alpha4/#ArgoConfig
-#ArgoConfig: api.#ArgoConfig
+_ArgoConfig: api.#ArgoConfig
 
 #ComponentConfig: api.#ComponentConfig & {
 	Name:      _Tags.name
 	Component: _Tags.component
 	Cluster:   _Tags.cluster
-	ArgoConfig: #ArgoConfig & {
+	ArgoConfig: _ArgoConfig & {
 		if _Tags.project != "no-project" {
 			AppProject: _Tags.project
 		}

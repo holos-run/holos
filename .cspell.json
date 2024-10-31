@@ -5,6 +5,7 @@
     "mdx"
   ],
   "words": [
+    "acmesolver",
     "acraccesstokens",
     "admissionregistration",
     "alertmanager",
@@ -207,6 +208,7 @@
     "poddisruptionbudget",
     "poddisruptionbudgets",
     "podinfo",
+    "podmonitor",
     "portmapping",
     "postgrescluster",
     "privs",

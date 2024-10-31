@@ -72,7 +72,7 @@ go install github.com/holos-run/holos/cmd/holos@latest
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt
-go: downloading github.com/holos-run/holos v0.95.1
+go: downloading github.com/holos-run/holos v0.97.2
 ```
   </TabItem>
 </Tabs>
@@ -138,12 +138,10 @@ workflow.
 ```cue showLineNumbers
 package holos
 
-#ArgoConfig: {
-  Enabled: true
-  // highlight-next-line
-  RepoURL: "https://github.com/holos-run/bank-of-holos"
+_ArgoConfig: {
+	Enabled: true
+	RepoURL: "https://github.com/jeffmccune/bank-of-holos"
 }
-
 ```
   </TabItem>
 </Tabs>
@@ -154,16 +152,17 @@ Change the RepoURL to the URL of your fork.  For example:
   <TabItem value="command" label="projects/argocd-config.cue">
 ```diff showLineNumbers
 diff --git a/projects/argocd-config.cue b/projects/argocd-config.cue
-index 5264f48..0214e99 100644
+index 1291a31..ff3bbfb 100644
 --- a/projects/argocd-config.cue
 +++ b/projects/argocd-config.cue
 @@ -2,5 +2,5 @@ package holos
-
- #ArgoConfig: {
-        Enabled: true
--       RepoURL: "https://github.com/holos-run/bank-of-holos"
-+       RepoURL: "https://github.com/jeffmccune/bank-of-holos"
+ 
+ _ArgoConfig: {
+ 	Enabled: true
+-	RepoURL: "https://github.com/holos-run/bank-of-holos"
++	RepoURL: "https://github.com/jeffmccune/bank-of-holos"
  }
+
 ```
   </TabItem>
 </Tabs>
@@ -228,38 +227,36 @@ git status
   </TabItem>
   <TabItem value="output" label="Output">
 ```txt
-On branch main
-Your branch is up to date with 'origin/main'.
-
+On branch jeff/291-consistent-fields
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
-        modified:   deploy/clusters/workload/gitops/app-projects.gen.yaml
-        modified:   deploy/clusters/workload/gitops/argocd-crds.gen.yaml
-        modified:   deploy/clusters/workload/gitops/argocd.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-accounts-db.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-backend-config.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-balance-reader.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-contacts.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-frontend.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-ledger-db.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-ledger-writer.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-secrets.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-transaction-history.gen.yaml
-        modified:   deploy/clusters/workload/gitops/bank-userservice.gen.yaml
-        modified:   deploy/clusters/workload/gitops/cert-manager.gen.yaml
-        modified:   deploy/clusters/workload/gitops/external-secrets-crds.gen.yaml
-        modified:   deploy/clusters/workload/gitops/external-secrets.gen.yaml
-        modified:   deploy/clusters/workload/gitops/gateway-api.gen.yaml
-        modified:   deploy/clusters/workload/gitops/httproutes.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istio-base.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istio-cni.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istio-gateway.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istio-ztunnel.gen.yaml
-        modified:   deploy/clusters/workload/gitops/istiod.gen.yaml
-        modified:   deploy/clusters/workload/gitops/local-ca.gen.yaml
-        modified:   deploy/clusters/workload/gitops/namespaces.gen.yaml
-        modified:   projects/argocd-config.cue
+	modified:   deploy/clusters/local/gitops/app-projects.gen.yaml
+	modified:   deploy/clusters/local/gitops/argocd-crds.gen.yaml
+	modified:   deploy/clusters/local/gitops/argocd.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-accounts-db.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-backend-config.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-balance-reader.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-contacts.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-frontend.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-ledger-db.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-ledger-writer.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-secrets.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-transaction-history.gen.yaml
+	modified:   deploy/clusters/local/gitops/bank-userservice.gen.yaml
+	modified:   deploy/clusters/local/gitops/cert-manager.gen.yaml
+	modified:   deploy/clusters/local/gitops/external-secrets-crds.gen.yaml
+	modified:   deploy/clusters/local/gitops/external-secrets.gen.yaml
+	modified:   deploy/clusters/local/gitops/gateway-api.gen.yaml
+	modified:   deploy/clusters/local/gitops/httproutes.gen.yaml
+	modified:   deploy/clusters/local/gitops/istio-base.gen.yaml
+	modified:   deploy/clusters/local/gitops/istio-cni.gen.yaml
+	modified:   deploy/clusters/local/gitops/istio-gateway.gen.yaml
+	modified:   deploy/clusters/local/gitops/istio-ztunnel.gen.yaml
+	modified:   deploy/clusters/local/gitops/istiod.gen.yaml
+	modified:   deploy/clusters/local/gitops/local-ca.gen.yaml
+	modified:   deploy/clusters/local/gitops/namespaces.gen.yaml
+	modified:   projects/argocd-config.cue
 
 no changes added to commit (use "git add" and/or "git commit -a")
 ```
@@ -272,22 +269,23 @@ the changed `spec.source.repoURL` field.
 <Tabs groupId="665E5402-FB42-4975-B654-3922EE73EE07">
   <TabItem value="command" label="Command">
 ```bash
-git diff deploy/clusters/workload/gitops/bank-frontend.gen.yaml
+git diff deploy/clusters/local/gitops/bank-frontend.gen.yaml
 ```
   </TabItem>
   <TabItem value="output" label="Output">
 ```diff showLineNumbers
-diff --git a/deploy/clusters/workload/gitops/bank-frontend.gen.yaml b/deploy/clusters/workload/gitops/bank-frontend.gen.yaml
-index 3a3dec0..22e21bb 100644
---- a/deploy/clusters/workload/gitops/bank-frontend.gen.yaml
-+++ b/deploy/clusters/workload/gitops/bank-frontend.gen.yaml
+diff --git a/deploy/clusters/local/gitops/bank-frontend.gen.yaml b/deploy/clusters/local/gitops/bank-frontend.gen.yaml
+index e07d5ea..14cc71c 100644
+--- a/deploy/clusters/local/gitops/bank-frontend.gen.yaml
++++ b/deploy/clusters/local/gitops/bank-frontend.gen.yaml
 @@ -11,5 +11,5 @@ spec:
-   project: default
+   project: bank-frontend
    source:
-     path: deploy/clusters/workload/components/bank-frontend
+     path: deploy/clusters/local/components/bank-frontend
 -    repoURL: https://github.com/holos-run/bank-of-holos
 +    repoURL: https://github.com/jeffmccune/bank-of-holos
      targetRevision: main
+
 ```
   </TabItem>
 </Tabs>
@@ -407,14 +405,14 @@ files for now, they behave the same as these two.
 package holos
 
 // Manage the Component on every Cluster in the Platform
-for Fleet in #Fleets {
+for Fleet in _Fleets {
 	for Cluster in Fleet.clusters {
-		#Platform: Components: "\(Cluster.name):argocd-crds": {
+		_Platform: Components: "\(Cluster.name):argocd-crds": {
 			name:      "argocd-crds"
 			component: "projects/platform/components/argocd/crds"
 			cluster:   Cluster.name
 		}
-		#Platform: Components: "\(Cluster.name):argocd": {
+		_Platform: Components: "\(Cluster.name):argocd": {
 			name:      "argocd"
 			component: "projects/platform/components/argocd/argocd"
 			cluster:   Cluster.name
@@ -428,14 +426,14 @@ for Fleet in #Fleets {
 package holos
 
 // Manage the component on every cluster in the platform
-for Fleet in #Fleets {
+for Fleet in _Fleets {
 	for Cluster in Fleet.clusters {
-		#Platform: Components: "\(Cluster.name):external-secrets-crds": {
+		_Platform: Components: "\(Cluster.name):external-secrets-crds": {
 			name:      "external-secrets-crds"
 			component: "projects/platform/components/external-secrets-crds"
 			cluster:   Cluster.name
 		}
-		#Platform: Components: "\(Cluster.name):external-secrets": {
+		_Platform: Components: "\(Cluster.name):external-secrets": {
 			name:      "external-secrets"
 			component: "projects/platform/components/external-secrets"
 			cluster:   Cluster.name
@@ -488,7 +486,7 @@ understand how the rest of the CUE files in the platform directory behave.
 
 :::tip
 Each CUE file in the platform directory adds components to the
-`#Platform.Components` struct.
+`_Platform.Components` struct.
 :::
 
 The final file in the directory is responsible for producing the Platform spec.
@@ -501,17 +499,17 @@ package holos
 
 import api "github.com/holos-run/holos/api/author/v1alpha4"
 
-#Platform: api.#Platform & {
-	Name: "guide"
+_Platform: api.#Platform & {
+	Name: "default"
 }
 
 // Render a Platform resource for holos to process
-#Platform.Resource
+_Platform.Resource
 ```
   </TabItem>
 </Tabs>
 
-This file provides the value of the `#Platform.Resource` field, the platform
+This file provides the value of the `_Platform.Resource` field, the platform
 spec, to `holos`.
 
 Let's take a look at that Output value:
@@ -527,29 +525,84 @@ cue export --out yaml ./platform
 kind: Platform
 apiVersion: v1alpha4
 metadata:
-  name: guide
+  name: default
 spec:
-  components: # This is a trimmed list for readability.
+  components:
+    - name: httproutes
+      component: projects/platform/components/httproutes
+      cluster: local
+    - name: istio-gateway
+      component: projects/platform/components/istio/gateway
+      cluster: local
+    - name: istio-base
+      component: projects/platform/components/istio/base
+      cluster: local
+    - name: istiod
+      component: projects/platform/components/istio/istiod
+      cluster: local
+    - name: istio-cni
+      component: projects/platform/components/istio/cni
+      cluster: local
+    - name: istio-ztunnel
+      component: projects/platform/components/istio/ztunnel
+      cluster: local
+    - name: app-projects
+      component: projects/platform/components/app-projects
+      cluster: local
+    - name: argocd-crds
+      component: projects/platform/components/argocd/crds
+      cluster: local
+    - name: argocd
+      component: projects/platform/components/argocd/argocd
+      cluster: local
     - name: bank-secrets
       component: projects/bank-of-holos/security/components/bank-secrets
-      cluster: workload
-      model: {}
+      cluster: local
     - name: bank-frontend
       component: projects/bank-of-holos/frontend/components/bank-frontend
-      cluster: workload
-      model: {}
+      cluster: local
     - name: bank-backend-config
       component: projects/bank-of-holos/backend/components/bank-backend-config
-      cluster: workload
-      model: {}
+      cluster: local
     - name: bank-accounts-db
       component: projects/bank-of-holos/backend/components/bank-accounts-db
-      cluster: workload
-      model: {}
+      cluster: local
     - name: bank-userservice
       component: projects/bank-of-holos/backend/components/bank-userservice
-      cluster: workload
-      model: {}
+      cluster: local
+    - name: bank-ledger-db
+      component: projects/bank-of-holos/backend/components/bank-ledger-db
+      cluster: local
+    - name: bank-ledger-writer
+      component: projects/bank-of-holos/backend/components/bank-ledger-writer
+      cluster: local
+    - name: bank-balance-reader
+      component: projects/bank-of-holos/backend/components/bank-balance-reader
+      cluster: local
+    - name: bank-transaction-history
+      component: projects/bank-of-holos/backend/components/bank-transaction-history
+      cluster: local
+    - name: bank-contacts
+      component: projects/bank-of-holos/backend/components/bank-contacts
+      cluster: local
+    - name: cert-manager
+      component: projects/platform/components/cert-manager
+      cluster: local
+    - name: external-secrets-crds
+      component: projects/platform/components/external-secrets-crds
+      cluster: local
+    - name: external-secrets
+      component: projects/platform/components/external-secrets
+      cluster: local
+    - name: gateway-api
+      component: projects/platform/components/gateway-api
+      cluster: local
+    - name: local-ca
+      component: projects/platform/components/local-ca
+      cluster: local
+    - name: namespaces
+      component: projects/platform/components/namespaces
+      cluster: local
 ```
   </TabItem>
 </Tabs>
@@ -600,23 +653,26 @@ start working with the cert-manager component.
 package holos
 
 // Produce a helm chart build plan.
-(#Helm & Chart).BuildPlan
+_HelmChart.BuildPlan
 
-let Chart = {
+_HelmChart: #Helm & {
 	Name:      "cert-manager"
-	Namespace: #CertManager.Namespace
+	Namespace: _CertManager.Namespace
 
 	Chart: {
-		version: #CertManager.Version
+		version: _CertManager.Version
 		repository: {
 			name: "jetstack"
 			url:  "https://charts.jetstack.io"
 		}
 	}
+	EnableHooks: true
 
-	Values: {
-		installCRDs: true
+	Values: #Values & {
+		crds: enabled:            true
 		startupapicheck: enabled: false
+		// https://github.com/cert-manager/cert-manager/issues/6716
+		global: leaderElection: namespace: Namespace
 	}
 }
 ```
@@ -625,14 +681,19 @@ let Chart = {
 ```cue showLineNumbers
 package holos
 
-// Platform wide configuration
 #CertManager: {
-	Version:   "1.15.3"
+	Version:   string
+	Namespace: string
+}
+
+// Platform wide configuration
+_CertManager: {
+	Version:   "v1.16.1"
 	Namespace: "cert-manager"
 }
 
 // Register the namespace
-#Namespaces: (#CertManager.Namespace): _
+_Namespaces: (_CertManager.Namespace): _
 ```
   </TabItem>
 </Tabs>
@@ -640,15 +701,13 @@ package holos
 This file introduces a few new concepts.
 
 1. Line 4 indicates this component produces a BuildPlan that wraps a Helm Chart.
-2. On line 6 `let` binds a name to an expression for the current scope.  The
-current file in this case.
-3. Notice Chart is referenced on line 4 before it's bound on line 6.  **Order is
-irrelevant in CUE**.  Complex changes are simpler and easier when we don't have
-to think about order.
-4. The chart version and namespace are defined in a different file closer to the
-root, `projects/cert-manager.cue`
-5. We define Helm values in CUE to take advantage of strong type checking and
-manage multiple Helm charts consistently with platform wide values.
+2. Notice `_HelmChart` is referenced on line 4 before it's defined on line 6.
+**Order is irrelevant in CUE**.  Complex changes are simpler and easier when we
+don't have to think about order.
+3. Line 8 and 11: The chart version and namespace are defined in a different
+file closer to the root, `projects/cert-manager.cue`
+4. Line 19: Helm values are defined in CUE to take advantage of strong type
+checking and manage multiple Helm charts consistently with the same values.
 
 Let's take a look at the BuildPlan that results from the CUE configuration
 described above.
@@ -675,16 +734,280 @@ spec:
           helm:
             chart:
               name: cert-manager
-              version: 1.15.3
+              version: v1.16.1
               release: cert-manager
               repository:
                 name: jetstack
                 url: https://charts.jetstack.io
             values:
-              installCRDs: true
+              global:
+                imagePullSecrets: []
+                commonLabels: {}
+                priorityClassName: ""
+                rbac:
+                  create: true
+                  aggregateClusterRoles: true
+                podSecurityPolicy:
+                  enabled: false
+                  useAppArmor: true
+                logLevel: 2
+                leaderElection:
+                  namespace: cert-manager
+              installCRDs: false
+              crds:
+                enabled: true
+                keep: true
+              replicaCount: 1
+              strategy: {}
+              podDisruptionBudget:
+                enabled: false
+              featureGates: ""
+              maxConcurrentChallenges: 60
+              image:
+                repository: quay.io/jetstack/cert-manager-controller
+                pullPolicy: IfNotPresent
+              clusterResourceNamespace: ""
+              namespace: ""
+              serviceAccount:
+                create: true
+                automountServiceAccountToken: true
+              enableCertificateOwnerRef: false
+              config: {}
+              dns01RecursiveNameservers: ""
+              dns01RecursiveNameserversOnly: false
+              disableAutoApproval: false
+              approveSignerNames:
+                - issuers.cert-manager.io/*
+                - clusterissuers.cert-manager.io/*
+              extraArgs: []
+              extraEnv: []
+              resources: {}
+              securityContext:
+                runAsNonRoot: true
+                seccompProfile:
+                  type: RuntimeDefault
+              containerSecurityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: true
+              volumes: []
+              volumeMounts: []
+              podLabels: {}
+              hostAliases: []
+              nodeSelector:
+                kubernetes.io/os: linux
+              ingressShim: {}
+              affinity: {}
+              tolerations: []
+              topologySpreadConstraints: []
+              livenessProbe:
+                enabled: true
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                timeoutSeconds: 15
+                successThreshold: 1
+                failureThreshold: 8
+              enableServiceLinks: false
+              prometheus:
+                enabled: true
+                servicemonitor:
+                  enabled: false
+                  prometheusInstance: default
+                  targetPort: 9402
+                  path: /metrics
+                  interval: 60s
+                  scrapeTimeout: 30s
+                  labels: {}
+                  annotations: {}
+                  honorLabels: false
+                  endpointAdditionalProperties: {}
+                podmonitor:
+                  enabled: false
+                  prometheusInstance: default
+                  path: /metrics
+                  interval: 60s
+                  scrapeTimeout: 30s
+                  labels: {}
+                  annotations: {}
+                  honorLabels: false
+                  endpointAdditionalProperties: {}
+              webhook:
+                replicaCount: 1
+                timeoutSeconds: 30
+                config: {}
+                strategy: {}
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
+                    type: RuntimeDefault
+                containerSecurityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                      - ALL
+                  readOnlyRootFilesystem: true
+                podDisruptionBudget:
+                  enabled: false
+                validatingWebhookConfiguration:
+                  namespaceSelector:
+                    matchExpressions:
+                      - key: cert-manager.io/disable-validation
+                        operator: NotIn
+                        values:
+                          - "true"
+                mutatingWebhookConfiguration:
+                  namespaceSelector: {}
+                extraArgs: []
+                extraEnv: []
+                featureGates: ""
+                resources: {}
+                livenessProbe:
+                  failureThreshold: 3
+                  initialDelaySeconds: 60
+                  periodSeconds: 10
+                  successThreshold: 1
+                  timeoutSeconds: 1
+                readinessProbe:
+                  failureThreshold: 3
+                  initialDelaySeconds: 5
+                  periodSeconds: 5
+                  successThreshold: 1
+                  timeoutSeconds: 1
+                nodeSelector:
+                  kubernetes.io/os: linux
+                affinity: {}
+                tolerations: []
+                topologySpreadConstraints: []
+                podLabels: {}
+                serviceLabels: {}
+                serviceIPFamilyPolicy: ""
+                serviceIPFamilies: []
+                image:
+                  repository: quay.io/jetstack/cert-manager-webhook
+                  pullPolicy: IfNotPresent
+                serviceAccount:
+                  create: true
+                  automountServiceAccountToken: true
+                securePort: 10250
+                hostNetwork: false
+                serviceType: ClusterIP
+                url: {}
+                networkPolicy:
+                  enabled: false
+                  ingress:
+                    - from:
+                        - ipBlock:
+                            cidr: 0.0.0.0/0
+                  egress:
+                    - ports:
+                        - port: 80
+                          protocol: TCP
+                        - port: 443
+                          protocol: TCP
+                        - port: 53
+                          protocol: TCP
+                        - port: 53
+                          protocol: UDP
+                        - port: 6443
+                          protocol: TCP
+                      to:
+                        - ipBlock:
+                            cidr: 0.0.0.0/0
+                volumes: []
+                volumeMounts: []
+                enableServiceLinks: false
+              cainjector:
+                enabled: true
+                replicaCount: 1
+                config: {}
+                strategy: {}
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
+                    type: RuntimeDefault
+                containerSecurityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                      - ALL
+                  readOnlyRootFilesystem: true
+                podDisruptionBudget:
+                  enabled: false
+                extraArgs: []
+                extraEnv: []
+                featureGates: ""
+                resources: {}
+                nodeSelector:
+                  kubernetes.io/os: linux
+                affinity: {}
+                tolerations: []
+                topologySpreadConstraints: []
+                podLabels: {}
+                serviceLabels: {}
+                image:
+                  repository: quay.io/jetstack/cert-manager-cainjector
+                  pullPolicy: IfNotPresent
+                serviceAccount:
+                  create: true
+                  automountServiceAccountToken: true
+                volumes: []
+                volumeMounts: []
+                enableServiceLinks: false
+              acmesolver:
+                image:
+                  repository: quay.io/jetstack/cert-manager-acmesolver
+                  pullPolicy: IfNotPresent
               startupapicheck:
                 enabled: false
-            enableHooks: false
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
+                    type: RuntimeDefault
+                containerSecurityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                      - ALL
+                  readOnlyRootFilesystem: true
+                timeout: 1m
+                backoffLimit: 4
+                jobAnnotations:
+                  helm.sh/hook: post-install
+                  helm.sh/hook-weight: "1"
+                  helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+                extraArgs:
+                  - -v
+                extraEnv: []
+                resources: {}
+                nodeSelector:
+                  kubernetes.io/os: linux
+                affinity: {}
+                tolerations: []
+                podLabels: {}
+                image:
+                  repository: quay.io/jetstack/cert-manager-startupapicheck
+                  pullPolicy: IfNotPresent
+                rbac:
+                  annotations:
+                    helm.sh/hook: post-install
+                    helm.sh/hook-weight: "-5"
+                    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+                serviceAccount:
+                  create: true
+                  annotations:
+                    helm.sh/hook: post-install
+                    helm.sh/hook-weight: "-5"
+                    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+                  automountServiceAccountToken: true
+                volumes: []
+                volumeMounts: []
+                enableServiceLinks: false
+              extraObjects: []
+              creator: helm
+              enabled: true
+            enableHooks: true
             namespace: cert-manager
         - kind: Resources
           output: resources.gen.yaml
@@ -711,6 +1034,7 @@ spec:
               namespace: cert-manager
               commonLabels:
                 holos.run/component.name: cert-manager
+                argocd.argoproj.io/instance: cert-manager
               resources:
                 - combined.gen.yaml
     - artifact: clusters/no-cluster/gitops/cert-manager.gen.yaml
@@ -728,7 +1052,7 @@ spec:
                 spec:
                   destination:
                     server: https://kubernetes.default.svc
-                  project: default
+                  project: platform
                   source:
                     path: deploy/clusters/no-cluster/components/cert-manager
                     repoURL: https://github.com/jeffmccune/bank-of-holos
