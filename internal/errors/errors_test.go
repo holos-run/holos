@@ -12,7 +12,7 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 )
 
-const prefix = "errors_test.go:"
+const prefix = "internal/errors/errors_test.go:"
 
 type record struct {
 	Source errors.Source `json:"source"`

@@ -103,5 +103,8 @@ func TestSecrets(t *testing.T) {
 		Cmds: map[string]func(ts *testscript.TestScript, neg bool, args []string){
 			"holos": cmdHolos,
 		},
+		UpdateScripts:      false,
+		RequireUniqueNames: false,
+		// WorkdirRoot:        "/Users/jeff/Holos/workdir",
 	})
 }

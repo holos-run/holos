@@ -3,6 +3,7 @@ package holos
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -77,8 +78,8 @@ func (cc *ClientContext) configFile() string {
 	config := "client-context.json"
 	if home := homedir.HomeDir(); home != "" {
 		dir := filepath.Join(home, ".holos")
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			slog.Warn("could not mkdir", "path", dir, "err", err)
+		if err := os.MkdirAll(dir, os.ModePerm); err != nil && home != "/no-home" {
+			slog.Warn(fmt.Sprintf("could not %s", err.Error()), "path", dir, "err", err)
 		}
 		config = filepath.Join(home, ".holos", config)
 	}

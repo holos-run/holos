@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: gha-rs
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
         uses: azure/setup-helm@v4
 
       - name: Set up Kubectl
-        uses: azure/setup-kubectl@v3
+        uses: azure/setup-kubectl@v4
 
       - name: Install Tools
         run: |
