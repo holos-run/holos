@@ -326,35 +326,34 @@ like this.
 
 ```mermaid
 ---
-title: Figure 1 - Render Pipeline
+title: Figure 1 - v1alpha4 Rendered Manifest Pipeline
 ---
 graph LR
-    PS[<a href="/docs/api/author/v1alpha3/#Platform">Platform</a>]
-    HC[<a href="/docs/api/author/v1alpha3/#ComponentFields">Components</a>]
-    BP[<a href="/docs/api/core/v1alpha3#BuildPlan">BuildPlan</a>]
+    Platform[<a href="/docs/api/author/v1alpha4/#Platform">Platform</a>]
+    Component[<a href="/docs/api/author/v1alpha4/#ComponentConfig">Components</a>]
 
-    H[<a href="/docs/api/author/v1alpha3/#Helm">Helm</a>]
-    K[<a href="/docs/api/author/v1alpha3/#Kustomize">Kustomize</a>]
-    O[<a href="/docs/api/author/v1alpha3/#Kubernetes">Kubernetes</a>]
+    Helm[<a href="/docs/api/author/v1alpha4/#Helm">Helm</a>]
+    Kustomize[<a href="/docs/api/author/v1alpha4/#Kustomize">Kustomize</a>]
+    Kubernetes[<a href="/docs/api/author/v1alpha4/#Kubernetes">Kubernetes</a>]
 
-    P[<a href="/docs/api/core/v1alpha3#Kustomize">Kustomize</a>]
-    Y[Kubernetes <br/>Resources]
-    G[GitOps <br/>Resource]
-    FS[Local Files]
+    BuildPlan[<a href="/docs/api/core/v1alpha4/#buildplan">BuildPlan</a>]
 
-    C[Kube API Server]
+    ResourcesArtifact[<a href="/docs/api/core/v1alpha4/#artifact">Resources<br/>Artifact</a>]
+    GitOpsArtifact[<a href="/docs/api/core/v1alpha4/#artifact">GitOps<br/>Artifact</a>]
 
-    PS --> HC --> BP
-    BP --> H --> P
-    BP --> K --> P
-    BP --> O --> P
+    Generators[<a href="/docs/api/core/v1alpha4/#generators">Generators</a>]
+    Transformers[<a href="/docs/api/core/v1alpha4/#transformer">Transformers</a>]
+    Files[Manifest<br/>Files]
 
-    P --> Y --> FS
-    P --> G --> FS
+    Platform --> Component
+    Component --> Helm --> BuildPlan
+    Component --> Kubernetes --> BuildPlan
+    Component --> Kustomize --> BuildPlan
 
-    FS --> ArgoCD --> C
-    FS --> Flux --> C
-    FS --> kubectl --> C
+    BuildPlan --> ResourcesArtifact --> Generators
+    BuildPlan --> GitOpsArtifact --> Generators
+
+    Generators --> Transformers --> Files
 ```
 
 ### Why do we render the platform? {#why-render-the-platform}
