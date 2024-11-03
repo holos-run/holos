@@ -13,6 +13,7 @@ import (
 	"github.com/holos-run/holos/internal/artifact"
 	"github.com/holos-run/holos/internal/builder"
 	"github.com/holos-run/holos/internal/builder/v1alpha4"
+	"github.com/holos-run/holos/internal/builder/v1alpha5"
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
@@ -89,6 +90,17 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 		art := artifact.New()
 
 		switch version := typeMeta.APIVersion; version {
+		case "v1alpha5":
+			builder := v1alpha5.BuildPlan{
+				WriteTo:     cfg.WriteTo(),
+				Concurrency: concurrency,
+				Stderr:      cmd.ErrOrStderr(),
+				Path:        h.InstancePath(args[0]),
+			}
+			if err := decoder.Decode(&builder.BuildPlan); err != nil {
+				return errors.Format("could not decode build plan %s: %w", bd.Dir, err)
+			}
+			return render.Component(ctx, &builder, art)
 		case "v1alpha4":
 			builder := v1alpha4.BuildPlan{
 				WriteTo:     cfg.WriteTo(),
@@ -190,6 +202,15 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 		decoder.DisallowUnknownFields()
 
 		switch version := tm.APIVersion; version {
+		case "v1alpha5":
+			builder := v1alpha5.Platform{
+				Concurrency: concurrency,
+				Stderr:      cmd.ErrOrStderr(),
+			}
+			if err := decoder.Decode(&builder.Platform); err != nil {
+				return errors.Format("could not decode platform %s: %w", bd.Dir, err)
+			}
+			return render.Platform(ctx, &builder)
 		case "v1alpha4":
 			builder := v1alpha4.Platform{
 				Concurrency: concurrency,

@@ -17,8 +17,11 @@ func TestMain(m *testing.M) {
 	}))
 }
 
-func TestGuides(t *testing.T) {
+func TestGuides_v1alpha4(t *testing.T) {
 	testscript.Run(t, params(filepath.Join("v1alpha4", "guides")))
+}
+func TestGuides_v1alpha5(t *testing.T) {
+	testscript.Run(t, params(filepath.Join("v1alpha5", "guides")))
 }
 
 func TestCLI(t *testing.T) {
