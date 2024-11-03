@@ -13,6 +13,16 @@ package v1alpha5
 
 import core "github.com/holos-run/holos/api/core/v1alpha5"
 
+// Aspects represent user defined features of a resource.  Intended for
+// exclusive use by users to compose their own functionality and data into the
+// schema.  The Holos Authors will not pass data or define the structure of
+// Aspects fields.
+//
+// An open question is how publicly published reusable components will or should
+// use Aspects.  We plan to explore this question when we work on reusable
+// components as published CUE modules.
+#Aspects: {...}
+
 // Platform assembles a Core API [Platform] in the Resource field for the holos
 // render platform command.  Use the Components field to register components
 // with the platform using a struct.  This struct is converted into a list for
@@ -26,8 +36,10 @@ import core "github.com/holos-run/holos/api/core/v1alpha5"
 // [Platform]: https://holos.run/docs/api/core/v1alpha5/#Platform
 // [Component]: https://holos.run/docs/api/core/v1alpha5/#Component
 #Platform: {
+	// Name represents the platform name
 	Name: string
 	Components: {[string]: core.#Component} @go(,map[NameLabel]core.Component)
+	Aspects:  #Aspects
 	Resource: core.#Platform
 }
 
@@ -40,6 +52,9 @@ import core "github.com/holos-run/holos/api/core/v1alpha5"
 	// Primary represents if the cluster is marked as the primary among a set of
 	// candidate clusters.  Useful for promotion of database leaders.
 	primary: bool & (true | *false) @go(Primary)
+
+	// Aspects represents user defined data structures for composition.
+	aspects: #Aspects @go(Aspects)
 }
 
 // Fleet represents a named collection of similarly configured Clusters.  Useful
@@ -49,6 +64,9 @@ import core "github.com/holos-run/holos/api/core/v1alpha5"
 
 	// Clusters represents a mapping of Clusters by their name.
 	clusters: {[string]: #Cluster} & {[Name=_]: name: Name} @go(Clusters,map[string]Cluster)
+
+	// Aspects represents user defined data structures for composition.
+	aspects: #Aspects @go(Aspects)
 }
 
 // StandardFleets represents the standard set of Clusters in a Platform
@@ -98,6 +116,7 @@ import core "github.com/holos-run/holos/api/core/v1alpha5"
 	Name:        string
 	DisplayName: string
 	Domain:      string
+	Aspects:     #Aspects
 }
 
 // OrganizationStrict represents organizational metadata useful across the
@@ -227,6 +246,9 @@ import core "github.com/holos-run/holos/api/core/v1alpha5"
 
 	// KustomizeConfig represents the configuration for kustomize.
 	KustomizeConfig: #KustomizeConfig
+
+	// Aspects represents user defined data structures for composition.
+	Aspects: #Aspects
 }
 
 // KustomizeConfig represents the configuration for kustomize post processing.
@@ -273,6 +295,9 @@ import core "github.com/holos-run/holos/api/core/v1alpha5"
 
 	// CommonLabels represents common labels to manage on all rendered manifests.
 	CommonLabels: {[string]: string} @go(,map[string]string)
+
+	// Aspects represents user defined data structures for composition.
+	Aspects: #Aspects
 }
 
 // Owner represents the owner of a resource.  For example, the name and email

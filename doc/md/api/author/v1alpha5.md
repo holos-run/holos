@@ -17,6 +17,7 @@ Package v1alpha5 contains ergonomic CUE definitions for Holos component authors.
 ## Index
 
 - [type ArgoConfig](<#ArgoConfig>)
+- [type Aspects](<#Aspects>)
 - [type Cluster](<#Cluster>)
 - [type ComponentConfig](<#ComponentConfig>)
 - [type Fleet](<#Fleet>)
@@ -62,6 +63,17 @@ type ArgoConfig struct {
 }
 ```
 
+<a name="Aspects"></a>
+## type Aspects {#Aspects}
+
+Aspects represent user defined features of a resource. Intended for exclusive use by users to compose their own functionality and data into the schema. The Holos Authors will not pass data or define the structure of Aspects fields.
+
+An open question is how publicly published reusable components will or should use Aspects. We plan to explore this question when we work on reusable components as published CUE modules.
+
+```go
+type Aspects map[string]any
+```
+
 <a name="Cluster"></a>
 ## type Cluster {#Cluster}
 
@@ -75,6 +87,8 @@ type Cluster struct {
     // Primary represents if the cluster is marked as the primary among a set of
     // candidate clusters.  Useful for promotion of database leaders.
     Primary bool `json:"primary" cue:"true | *false"`
+    // Aspects represents user defined data structures for composition.
+    Aspects Aspects `json:"aspects"`
 }
 ```
 
@@ -115,6 +129,8 @@ type ComponentConfig struct {
 
     // KustomizeConfig represents the configuration for kustomize.
     KustomizeConfig KustomizeConfig
+    // Aspects represents user defined data structures for composition.
+    Aspects Aspects
 }
 ```
 
@@ -128,6 +144,8 @@ type Fleet struct {
     Name string `json:"name"`
     // Clusters represents a mapping of Clusters by their name.
     Clusters map[string]Cluster `json:"clusters" cue:"{[Name=_]: name: Name}"`
+    // Aspects represents user defined data structures for composition.
+    Aspects Aspects `json:"aspects"`
 }
 ```
 
@@ -285,6 +303,7 @@ type Organization struct {
     Name        string
     DisplayName string
     Domain      string
+    Aspects     Aspects
 }
 ```
 
@@ -329,8 +348,10 @@ See related:
 
 ```go
 type Platform struct {
+    // Name represents the platform name
     Name       string
     Components map[NameLabel]core.Component
+    Aspects    Aspects
     Resource   core.Platform
 }
 ```
@@ -352,6 +373,8 @@ type Project struct {
     Hostnames map[NameLabel]Hostname
     // CommonLabels represents common labels to manage on all rendered manifests.
     CommonLabels map[string]string
+    // Aspects represents user defined data structures for composition.
+    Aspects Aspects
 }
 ```
 

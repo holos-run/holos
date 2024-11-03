@@ -9,6 +9,16 @@ package v1alpha5
 
 import core "github.com/holos-run/holos/api/core/v1alpha5"
 
+// Aspects represent user defined features of a resource.  Intended for
+// exclusive use by users to compose their own functionality and data into the
+// schema.  The Holos Authors will not pass data or define the structure of
+// Aspects fields.
+//
+// An open question is how publicly published reusable components will or should
+// use Aspects.  We plan to explore this question when we work on reusable
+// components as published CUE modules.
+type Aspects map[string]any
+
 //go:generate ../../../hack/gendoc
 
 // Platform assembles a Core API [Platform] in the Resource field for the holos
@@ -24,8 +34,10 @@ import core "github.com/holos-run/holos/api/core/v1alpha5"
 // [Platform]: https://holos.run/docs/api/core/v1alpha5/#Platform
 // [Component]: https://holos.run/docs/api/core/v1alpha5/#Component
 type Platform struct {
+	// Name represents the platform name
 	Name       string
 	Components map[NameLabel]core.Component
+	Aspects    Aspects
 	Resource   core.Platform
 }
 
@@ -37,6 +49,8 @@ type Cluster struct {
 	// Primary represents if the cluster is marked as the primary among a set of
 	// candidate clusters.  Useful for promotion of database leaders.
 	Primary bool `json:"primary" cue:"true | *false"`
+	// Aspects represents user defined data structures for composition.
+	Aspects Aspects `json:"aspects"`
 }
 
 // Fleet represents a named collection of similarly configured Clusters.  Useful
@@ -45,6 +59,8 @@ type Fleet struct {
 	Name string `json:"name"`
 	// Clusters represents a mapping of Clusters by their name.
 	Clusters map[string]Cluster `json:"clusters" cue:"{[Name=_]: name: Name}"`
+	// Aspects represents user defined data structures for composition.
+	Aspects Aspects `json:"aspects"`
 }
 
 // StandardFleets represents the standard set of Clusters in a Platform
@@ -89,6 +105,7 @@ type Organization struct {
 	Name        string
 	DisplayName string
 	Domain      string
+	Aspects     Aspects
 }
 
 // OrganizationStrict represents organizational metadata useful across the
@@ -208,6 +225,8 @@ type ComponentConfig struct {
 
 	// KustomizeConfig represents the configuration for kustomize.
 	KustomizeConfig KustomizeConfig
+	// Aspects represents user defined data structures for composition.
+	Aspects Aspects
 }
 
 // KustomizeConfig represents the configuration for kustomize post processing.
@@ -248,6 +267,8 @@ type Project struct {
 	Hostnames map[NameLabel]Hostname
 	// CommonLabels represents common labels to manage on all rendered manifests.
 	CommonLabels map[string]string
+	// Aspects represents user defined data structures for composition.
+	Aspects Aspects
 }
 
 // Owner represents the owner of a resource.  For example, the name and email
