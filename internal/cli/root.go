@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log/slog"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -29,6 +30,8 @@ import (
 	"github.com/holos-run/holos/internal/cli/render"
 	"github.com/holos-run/holos/internal/cli/token"
 	"github.com/holos-run/holos/internal/cli/txtar"
+
+	cue "cuelang.org/go/cmd/cue/cmd"
 )
 
 //go:embed help.txt
@@ -91,6 +94,9 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	// Server
 	rootCmd.AddCommand(server.New(cfg, feature))
 
+	// CUE
+	rootCmd.AddCommand(newCueCmd())
+
 	return rootCmd
 }
 
@@ -105,4 +111,10 @@ func newOrgCmd(feature holos.Flagger) (cmd *cobra.Command) {
 		return err
 	}
 	return cmd
+}
+
+func newCueCmd() (cmd *cobra.Command) {
+	cueCmd, _ := cue.New(os.Args[2:])
+	cmd = cueCmd.Command
+	return
 }

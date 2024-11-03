@@ -17,8 +17,15 @@ func TestMain(m *testing.M) {
 	}))
 }
 
-func TestGuides(t *testing.T) {
+func TestGuides_v1alpha4(t *testing.T) {
 	testscript.Run(t, params(filepath.Join("v1alpha4", "guides")))
+}
+func TestGuides_v1alpha5(t *testing.T) {
+	testscript.Run(t, params(filepath.Join("v1alpha5", "guides")))
+}
+
+func TestSchemas_v1alpha5(t *testing.T) {
+	testscript.Run(t, params(filepath.Join("v1alpha5", "schemas")))
 }
 
 func TestCLI(t *testing.T) {
@@ -29,7 +36,9 @@ func params(dir string) testscript.Params {
 	return testscript.Params{
 		Dir:                 filepath.Join("tests", dir),
 		RequireExplicitExec: true,
-		RequireUniqueNames:  true,
+		RequireUniqueNames:  os.Getenv("HOLOS_WORKDIR_ROOT") == "",
+		WorkdirRoot:         os.Getenv("HOLOS_WORKDIR_ROOT"),
+		UpdateScripts:       os.Getenv("HOLOS_UPDATE_SCRIPTS") != "",
 		Setup: func(env *testscript.Env) error {
 			// Just like cmd/cue/cmd.TestScript, set up separate cache and config dirs per test.
 			env.Setenv("CUE_CACHE_DIR", filepath.Join(env.WorkDir, "tmp/cachedir"))

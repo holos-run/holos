@@ -48,28 +48,6 @@ type config struct {
 	tags    []string
 }
 
-// BuildData represents the data necessary to produce a build plan.  It is a
-// convenience wrapper to store relevant fields to inform the user.
-type BuildData struct {
-	Value        cue.Value
-	ModuleRoot   string
-	InstancePath holos.InstancePath
-	Dir          string
-}
-
-func (bd *BuildData) TypeMeta() (tm holos.TypeMeta, err error) {
-	jsonBytes, err := bd.Value.MarshalJSON()
-	if err != nil {
-		err = errors.Format("could not marshal json %s: %w", bd.Dir, err)
-		return
-	}
-	err = json.NewDecoder(bytes.NewReader(jsonBytes)).Decode(&tm)
-	if err != nil {
-		err = errors.Format("could not decode type meta %s: %w", bd.Dir, err)
-	}
-	return
-}
-
 type Builder struct {
 	cfg config
 	ctx *cue.Context
@@ -142,11 +120,59 @@ func (b *Builder) Cluster() string {
 	return b.cfg.cluster
 }
 
+func (b *Builder) Discriminate(ctx context.Context) (tm holos.TypeMeta, err error) {
+	cueModDir, err := b.findCueMod()
+	if err != nil {
+		err = errors.Wrap(err)
+		return
+	}
+
+	cueConfig := load.Config{
+		Dir:        string(cueModDir),
+		ModuleRoot: string(cueModDir),
+	}
+	bd := &holos.BuildData{ModuleRoot: string(cueModDir)}
+
+	if len(b.cfg.args) > 1 {
+		return tm, errors.Wrap(errors.New("cannot provide more than one argument"))
+	}
+
+	// Make args relative to the module directory
+	args := make([]string, 0, len(b.cfg.args)+2)
+	for _, path := range b.cfg.args {
+		target, err := filepath.Abs(path)
+		if err != nil {
+			return tm, errors.Wrap(fmt.Errorf("could not find absolute path: %w", err))
+		}
+		relPath, err := filepath.Rel(bd.ModuleRoot, target)
+		if err != nil {
+			return tm, errors.Wrap(fmt.Errorf("invalid argument, must be relative to cue.mod: %w", err))
+		}
+
+		bd.InstancePath = holos.InstancePath(target)
+		bd.Dir = relPath
+
+		relPath = "./" + relPath
+		args = append(args, relPath)
+	}
+
+	instances := load.Instances(args, &cueConfig)
+	values, err := b.ctx.BuildInstances(instances)
+	if err != nil {
+		return tm, errors.Wrap(err)
+	}
+	bd.Value = values[0]
+	tm, err = bd.TypeMeta()
+	return
+}
+
 // Unify returns a cue.Value representing the kind of build holos is meant to
 // execute. This function unifies a cue package entrypoint with
 // platform.config.json and user data json files located recursively within the
 // userdata directory at the cue module root.
-func (b *Builder) Unify(ctx context.Context, cfg *client.Config) (bd BuildData, err error) {
+//
+// Deprecated: use Discriminate instead.
+func (b *Builder) Unify(ctx context.Context, cfg *client.Config) (bd holos.BuildData, err error) {
 	// Ensure the value is from the same runtime, otherwise cue panics.
 	bd.Value = b.ctx.CompileString("")
 
@@ -276,7 +302,7 @@ func (b *Builder) Run(ctx context.Context, cfg *client.Config) (results []*rende
 	return b.build(ctx, bd)
 }
 
-func (b *Builder) build(ctx context.Context, bd BuildData) (results []*render.Result, err error) {
+func (b *Builder) build(ctx context.Context, bd holos.BuildData) (results []*render.Result, err error) {
 	log := logger.FromContext(ctx).With("dir", bd.InstancePath)
 	value := bd.Value
 
@@ -430,7 +456,7 @@ func (b *Builder) Platform(ctx context.Context, cfg *client.Config) (*core_v1alp
 	return b.runPlatform(ctx, bd)
 }
 
-func (b *Builder) runPlatform(ctx context.Context, bd BuildData) (*core_v1alpha2.Platform, error) {
+func (b *Builder) runPlatform(ctx context.Context, bd holos.BuildData) (*core_v1alpha2.Platform, error) {
 	path := holos.InstancePath(bd.Dir)
 	log := logger.FromContext(ctx).With("dir", path)
 

@@ -42,7 +42,7 @@ type Flagger interface {
 
 type EnvFlagger struct{}
 
+// Flag returns true if feature name is enabled.
 func (e *EnvFlagger) Flag(name feature) bool {
-	envVar := "HOLOS_FEATURE_" + strings.ToUpper(string(name))
-	return os.Getenv(envVar) != ""
+	return os.Getenv(fmt.Sprintf("HOLOS_FEATURE_%s", name)) != ""
 }

@@ -4,7 +4,7 @@
 cd $WORK
 
 # Generate the directory structure we're going to work in.
-exec holos generate platform v1alpha4
+exec holos generate platform v1alpha5
 
 # Platforms are empty by default.
 exec holos render platform ./platform
@@ -23,9 +23,9 @@ mv platform/prometheus.cue.disabled platform/prometheus.cue
 
 # Render the platform to render the prometheus chart.
 exec holos render platform ./platform
-stderr -count=1 '^rendered prometheus for cluster local'
+stderr -count=1 '^rendered prometheus'
 stderr -count=1 '^rendered platform'
-cmp deploy/clusters/local/components/prometheus/prometheus.gen.yaml want/1.prometheus.gen.yaml
+cmp deploy/components/prometheus/prometheus.gen.yaml want/1.prometheus.gen.yaml
 
 # Add the CUE configuration to manage the blackbox Helm Chart component.
 mv projects/platform/components/blackbox/blackbox.cue.disabled projects/platform/components/blackbox/blackbox.cue
@@ -34,10 +34,10 @@ mv platform/blackbox.cue.disabled platform/blackbox.cue
 
 # Render the platform to render both the prometheus and blackbox charts.
 exec holos render platform ./platform
-stderr -count=1 '^rendered prometheus for cluster local'
-stderr -count=1 '^rendered blackbox for cluster local'
+stderr -count=1 '^rendered prometheus'
+stderr -count=1 '^rendered blackbox'
 stderr -count=1 '^rendered platform'
-cmp deploy/clusters/local/components/blackbox/blackbox.gen.yaml want/1.blackbox.gen.yaml
+cmp deploy/components/blackbox/blackbox.gen.yaml want/1.blackbox.gen.yaml
 
 # Import helm values
 exec cue import --package holos --path '_Helm: Values:' --outfile projects/platform/components/prometheus/values.cue projects/platform/components/prometheus/vendor/25.27.0/prometheus/values.yaml
@@ -54,12 +54,20 @@ mv platform/httpbin.cue.disabled platform/httpbin.cue
 
 # Render the platform with httpbin
 exec holos render platform ./platform
-stderr -count=1 '^rendered httpbin for cluster'
-cmp deploy/clusters/local/components/httpbin/httpbin.gen.yaml want/1.httpbin.gen.yaml
+stderr -count=1 '^rendered httpbin'
+cmp deploy/components/httpbin/httpbin.gen.yaml want/1.httpbin.gen.yaml
 
+-- projects/output.cue --
+package holos
+
+import "github.com/holos-run/holos/api/core/v1alpha5:core"
+
+core.#BuildPlan & {
+	metadata: name: _Tags.component.name
+}
 -- want/1.platform_spec.yaml --
 kind: Platform
-apiVersion: v1alpha4
+apiVersion: v1alpha5
 metadata:
   name: default
 spec:
@@ -74,9 +82,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alertmanager
     app.kubernetes.io/version: v0.27.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: alertmanager-1.12.0
-    holos.run/component.name: prometheus
   name: prometheus-alertmanager
   namespace: default
 ---
@@ -91,9 +97,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.13.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: kube-state-metrics-5.25.1
-    holos.run/component.name: prometheus
   name: prometheus-kube-state-metrics
   namespace: default
 ---
@@ -108,9 +112,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/version: 1.8.2
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-node-exporter-4.39.0
-    holos.run/component.name: prometheus
   name: prometheus-prometheus-node-exporter
   namespace: default
 ---
@@ -123,9 +125,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: prometheus-pushgateway
     app.kubernetes.io/version: v1.9.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-pushgateway-2.14.0
-    holos.run/component.name: prometheus
   name: prometheus-prometheus-pushgateway
   namespace: default
 ---
@@ -139,9 +139,7 @@ metadata:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: prometheus
     app.kubernetes.io/version: v2.54.1
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-25.27.0
-    holos.run/component.name: prometheus
   name: prometheus-server
   namespace: default
 ---
@@ -155,9 +153,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.13.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: kube-state-metrics-5.25.1
-    holos.run/component.name: prometheus
   name: prometheus-kube-state-metrics
 rules:
 - apiGroups:
@@ -371,9 +367,7 @@ metadata:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: prometheus
     app.kubernetes.io/version: v2.54.1
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-25.27.0
-    holos.run/component.name: prometheus
   name: prometheus-server
 rules:
 - apiGroups:
@@ -424,9 +418,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.13.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: kube-state-metrics-5.25.1
-    holos.run/component.name: prometheus
   name: prometheus-kube-state-metrics
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -447,9 +439,7 @@ metadata:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: prometheus
     app.kubernetes.io/version: v2.54.1
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-25.27.0
-    holos.run/component.name: prometheus
   name: prometheus-server
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -480,9 +470,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alertmanager
     app.kubernetes.io/version: v0.27.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: alertmanager-1.12.0
-    holos.run/component.name: prometheus
   name: prometheus-alertmanager
   namespace: default
 ---
@@ -836,9 +824,7 @@ metadata:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: prometheus
     app.kubernetes.io/version: v2.54.1
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-25.27.0
-    holos.run/component.name: prometheus
   name: prometheus-server
   namespace: default
 ---
@@ -850,9 +836,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alertmanager
     app.kubernetes.io/version: v0.27.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: alertmanager-1.12.0
-    holos.run/component.name: prometheus
   name: prometheus-alertmanager
   namespace: default
 spec:
@@ -864,8 +848,6 @@ spec:
   selector:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: alertmanager
-    argocd.argoproj.io/instance: prometheus
-    holos.run/component.name: prometheus
   type: ClusterIP
 ---
 apiVersion: v1
@@ -876,9 +858,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alertmanager
     app.kubernetes.io/version: v0.27.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: alertmanager-1.12.0
-    holos.run/component.name: prometheus
   name: prometheus-alertmanager-headless
   namespace: default
 spec:
@@ -891,8 +871,6 @@ spec:
   selector:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: alertmanager
-    argocd.argoproj.io/instance: prometheus
-    holos.run/component.name: prometheus
 ---
 apiVersion: v1
 kind: Service
@@ -906,9 +884,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.13.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: kube-state-metrics-5.25.1
-    holos.run/component.name: prometheus
   name: prometheus-kube-state-metrics
   namespace: default
 spec:
@@ -920,8 +896,6 @@ spec:
   selector:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: kube-state-metrics
-    argocd.argoproj.io/instance: prometheus
-    holos.run/component.name: prometheus
   type: ClusterIP
 ---
 apiVersion: v1
@@ -936,9 +910,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/version: 1.8.2
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-node-exporter-4.39.0
-    holos.run/component.name: prometheus
   name: prometheus-prometheus-node-exporter
   namespace: default
 spec:
@@ -950,8 +922,6 @@ spec:
   selector:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: prometheus-node-exporter
-    argocd.argoproj.io/instance: prometheus
-    holos.run/component.name: prometheus
   type: ClusterIP
 ---
 apiVersion: v1
@@ -964,9 +934,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: prometheus-pushgateway
     app.kubernetes.io/version: v1.9.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-pushgateway-2.14.0
-    holos.run/component.name: prometheus
   name: prometheus-prometheus-pushgateway
   namespace: default
 spec:
@@ -978,8 +946,6 @@ spec:
   selector:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: prometheus-pushgateway
-    argocd.argoproj.io/instance: prometheus
-    holos.run/component.name: prometheus
   type: ClusterIP
 ---
 apiVersion: v1
@@ -992,9 +958,7 @@ metadata:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: prometheus
     app.kubernetes.io/version: v2.54.1
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-25.27.0
-    holos.run/component.name: prometheus
   name: prometheus-server
   namespace: default
 spec:
@@ -1007,8 +971,6 @@ spec:
     app.kubernetes.io/component: server
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: prometheus
-    argocd.argoproj.io/instance: prometheus
-    holos.run/component.name: prometheus
   sessionAffinity: None
   type: ClusterIP
 ---
@@ -1022,9 +984,7 @@ metadata:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: prometheus
     app.kubernetes.io/version: v2.54.1
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-25.27.0
-    holos.run/component.name: prometheus
   name: prometheus-server
   namespace: default
 spec:
@@ -1044,9 +1004,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/part-of: kube-state-metrics
     app.kubernetes.io/version: 2.13.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: kube-state-metrics-5.25.1
-    holos.run/component.name: prometheus
   name: prometheus-kube-state-metrics
   namespace: default
 spec:
@@ -1056,8 +1014,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: prometheus
       app.kubernetes.io/name: kube-state-metrics
-      argocd.argoproj.io/instance: prometheus
-      holos.run/component.name: prometheus
   strategy:
     type: RollingUpdate
   template:
@@ -1069,9 +1025,7 @@ spec:
         app.kubernetes.io/name: kube-state-metrics
         app.kubernetes.io/part-of: kube-state-metrics
         app.kubernetes.io/version: 2.13.0
-        argocd.argoproj.io/instance: prometheus
         helm.sh/chart: kube-state-metrics-5.25.1
-        holos.run/component.name: prometheus
     spec:
       automountServiceAccountToken: true
       containers:
@@ -1131,9 +1085,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: prometheus-pushgateway
     app.kubernetes.io/version: v1.9.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-pushgateway-2.14.0
-    holos.run/component.name: prometheus
   name: prometheus-prometheus-pushgateway
   namespace: default
 spec:
@@ -1142,8 +1094,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: prometheus
       app.kubernetes.io/name: prometheus-pushgateway
-      argocd.argoproj.io/instance: prometheus
-      holos.run/component.name: prometheus
   strategy:
     type: Recreate
   template:
@@ -1153,9 +1103,7 @@ spec:
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: prometheus-pushgateway
         app.kubernetes.io/version: v1.9.0
-        argocd.argoproj.io/instance: prometheus
         helm.sh/chart: prometheus-pushgateway-2.14.0
-        holos.run/component.name: prometheus
     spec:
       automountServiceAccountToken: true
       containers:
@@ -1201,9 +1149,7 @@ metadata:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/part-of: prometheus
     app.kubernetes.io/version: v2.54.1
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-25.27.0
-    holos.run/component.name: prometheus
   name: prometheus-server
   namespace: default
 spec:
@@ -1214,8 +1160,6 @@ spec:
       app.kubernetes.io/component: server
       app.kubernetes.io/instance: prometheus
       app.kubernetes.io/name: prometheus
-      argocd.argoproj.io/instance: prometheus
-      holos.run/component.name: prometheus
   strategy:
     rollingUpdate: null
     type: Recreate
@@ -1228,9 +1172,7 @@ spec:
         app.kubernetes.io/name: prometheus
         app.kubernetes.io/part-of: prometheus
         app.kubernetes.io/version: v2.54.1
-        argocd.argoproj.io/instance: prometheus
         helm.sh/chart: prometheus-25.27.0
-        holos.run/component.name: prometheus
     spec:
       containers:
       - args:
@@ -1323,9 +1265,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: alertmanager
     app.kubernetes.io/version: v0.27.0
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: alertmanager-1.12.0
-    holos.run/component.name: prometheus
   name: prometheus-alertmanager
   namespace: default
 spec:
@@ -1336,8 +1276,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: prometheus
       app.kubernetes.io/name: alertmanager
-      argocd.argoproj.io/instance: prometheus
-      holos.run/component.name: prometheus
   serviceName: prometheus-alertmanager-headless
   template:
     metadata:
@@ -1346,8 +1284,6 @@ spec:
       labels:
         app.kubernetes.io/instance: prometheus
         app.kubernetes.io/name: alertmanager
-        argocd.argoproj.io/instance: prometheus
-        holos.run/component.name: prometheus
     spec:
       automountServiceAccountToken: true
       containers:
@@ -1397,9 +1333,6 @@ spec:
         name: config
   volumeClaimTemplates:
   - metadata:
-      labels:
-        argocd.argoproj.io/instance: prometheus
-        holos.run/component.name: prometheus
       name: storage
     spec:
       accessModes:
@@ -1418,9 +1351,7 @@ metadata:
     app.kubernetes.io/name: prometheus-node-exporter
     app.kubernetes.io/part-of: prometheus-node-exporter
     app.kubernetes.io/version: 1.8.2
-    argocd.argoproj.io/instance: prometheus
     helm.sh/chart: prometheus-node-exporter-4.39.0
-    holos.run/component.name: prometheus
   name: prometheus-prometheus-node-exporter
   namespace: default
 spec:
@@ -1429,8 +1360,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: prometheus
       app.kubernetes.io/name: prometheus-node-exporter
-      argocd.argoproj.io/instance: prometheus
-      holos.run/component.name: prometheus
   template:
     metadata:
       annotations:
@@ -1442,9 +1371,7 @@ spec:
         app.kubernetes.io/name: prometheus-node-exporter
         app.kubernetes.io/part-of: prometheus-node-exporter
         app.kubernetes.io/version: 1.8.2
-        argocd.argoproj.io/instance: prometheus
         helm.sh/chart: prometheus-node-exporter-4.39.0
-        holos.run/component.name: prometheus
     spec:
       automountServiceAccountToken: false
       containers:
@@ -1536,8 +1463,6 @@ metadata:
     prometheus.io/probe: "true"
   labels:
     app.kubernetes.io/name: httpbin
-    argocd.argoproj.io/instance: httpbin
-    holos.run/component.name: httpbin
   name: httpbin
 spec:
   ports:
@@ -1548,29 +1473,21 @@ spec:
     targetPort: http
   selector:
     app.kubernetes.io/name: httpbin
-    argocd.argoproj.io/instance: httpbin
-    holos.run/component.name: httpbin
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: httpbin
-    argocd.argoproj.io/instance: httpbin
-    holos.run/component.name: httpbin
   name: httpbin
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: httpbin
-      argocd.argoproj.io/instance: httpbin
-      holos.run/component.name: httpbin
   template:
     metadata:
       labels:
         app.kubernetes.io/name: httpbin
-        argocd.argoproj.io/instance: httpbin
-        holos.run/component.name: httpbin
     spec:
       containers:
       - image: mccutchen/go-httpbin
@@ -1597,9 +1514,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: prometheus-blackbox-exporter
     app.kubernetes.io/version: v0.25.0
-    argocd.argoproj.io/instance: blackbox
     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
-    holos.run/component.name: blackbox
   name: prometheus-blackbox-exporter
   namespace: default
 ---
@@ -1623,9 +1538,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: prometheus-blackbox-exporter
     app.kubernetes.io/version: v0.25.0
-    argocd.argoproj.io/instance: blackbox
     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
-    holos.run/component.name: blackbox
   name: prometheus-blackbox-exporter
   namespace: default
 ---
@@ -1637,9 +1550,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: prometheus-blackbox-exporter
     app.kubernetes.io/version: v0.25.0
-    argocd.argoproj.io/instance: blackbox
     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
-    holos.run/component.name: blackbox
   name: prometheus-blackbox-exporter
   namespace: default
 spec:
@@ -1651,8 +1562,6 @@ spec:
   selector:
     app.kubernetes.io/instance: prometheus-blackbox-exporter
     app.kubernetes.io/name: prometheus-blackbox-exporter
-    argocd.argoproj.io/instance: blackbox
-    holos.run/component.name: blackbox
   type: ClusterIP
 ---
 apiVersion: apps/v1
@@ -1663,9 +1572,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: prometheus-blackbox-exporter
     app.kubernetes.io/version: v0.25.0
-    argocd.argoproj.io/instance: blackbox
     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
-    holos.run/component.name: blackbox
   name: prometheus-blackbox-exporter
   namespace: default
 spec:
@@ -1674,8 +1581,6 @@ spec:
     matchLabels:
       app.kubernetes.io/instance: prometheus-blackbox-exporter
       app.kubernetes.io/name: prometheus-blackbox-exporter
-      argocd.argoproj.io/instance: blackbox
-      holos.run/component.name: blackbox
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -1688,8 +1593,6 @@ spec:
       labels:
         app.kubernetes.io/instance: prometheus-blackbox-exporter
         app.kubernetes.io/name: prometheus-blackbox-exporter
-        argocd.argoproj.io/instance: blackbox
-        holos.run/component.name: blackbox
     spec:
       automountServiceAccountToken: false
       containers:
@@ -1766,17 +1669,15 @@ spec:
 package holos
 
 _Platform: Components: httpbin: {
-	name:      "httpbin"
-	component: "projects/platform/components/httpbin"
-	cluster:   "local"
+	name: "httpbin"
+	path: "projects/platform/components/httpbin"
 }
 -- platform/blackbox.cue.disabled --
 package holos
 
 _Platform: Components: blackbox: {
-	name:      "blackbox"
-	component: "projects/platform/components/blackbox"
-	cluster:   "local"
+	name: "blackbox"
+	path: "projects/platform/components/blackbox"
 }
 -- projects/platform/components/blackbox/blackbox.cue.disabled --
 package holos
@@ -1830,9 +1731,8 @@ _Helm.BuildPlan
 package holos
 
 _Platform: Components: prometheus: {
-	name:      "prometheus"
-	component: "projects/platform/components/prometheus"
-	cluster:   "local"
+	name: "prometheus"
+	path: "projects/platform/components/prometheus"
 }
 -- projects/platform/components/prometheus/vendor/25.27.0/prometheus/.helmignore --
 # Patterns to ignore when building packages.
@@ -14983,6 +14883,9 @@ package holos
 
 import "encoding/yaml"
 
+// Produce a Kustomize BuildPlan for Holos
+_Kustomize.BuildPlan
+
 // https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/README.md
 _Kustomize: #Kustomize & {
 	KustomizeConfig: Files: "resources.yaml": _
@@ -15001,9 +14904,6 @@ _Kustomize: #Kustomize & {
 		patches: [for x in _patches {x}]
 	}
 }
-
-// Produce a Kustomize BuildPlan for Holos
-_Kustomize.BuildPlan
 -- projects/platform/components/httpbin/resources.yaml --
 apiVersion: apps/v1
 kind: Deployment

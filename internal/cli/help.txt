@@ -1,3 +1,3 @@
 Enable completion with:
 
-  source <(holos-server completion ${SHELL##*/})
+  source <(holos completion ${SHELL##*/})

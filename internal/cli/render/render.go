@@ -9,10 +9,12 @@ import (
 	"runtime"
 	"strings"
 
+	"cuelang.org/go/cue/cuecontext"
 	h "github.com/holos-run/holos"
 	"github.com/holos-run/holos/internal/artifact"
 	"github.com/holos-run/holos/internal/builder"
 	"github.com/holos-run/holos/internal/builder/v1alpha4"
+	"github.com/holos-run/holos/internal/builder/v1alpha5"
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
@@ -55,29 +57,60 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
-		build := builder.New(
+		log := logger.FromContext(ctx)
+
+		build := builder.New(builder.Entrypoints(args))
+		tm, err := build.Discriminate(ctx)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
+		if tm.Kind != "BuildPlan" {
+			return errors.Format("invalid kind: want: BuildPlan have: %s", tm.Kind)
+		}
+		log.DebugContext(ctx, fmt.Sprintf("discriminated %s %s", tm.APIVersion, tm.Kind))
+
+		path := args[0]
+
+		switch tm.APIVersion {
+		case "v1alpha5":
+			builder := v1alpha5.BuildPlan{
+				Concurrency: concurrency,
+				Stderr:      cmd.ErrOrStderr(),
+				WriteTo:     cfg.WriteTo(),
+				Path:        h.InstancePath(path),
+			}
+			bd, err := v1alpha5.Unify(cuecontext.New(), path, tagMap.Tags())
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			jsonBytes, err := bd.Value.MarshalJSON()
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
+			decoder.DisallowUnknownFields()
+			if err := decoder.Decode(&builder.BuildPlan); err != nil {
+				return errors.Format("could not decode build plan %s: %w", bd.Dir, err)
+			}
+			// Process the BuildPlan.
+			return render.Component(ctx, &builder, artifact.New())
+		}
+
+		// This is the old way of doing it prior to v1alpha5 and should be removed
+		// before v1.
+		build = builder.New(
 			builder.Entrypoints(args),
 			builder.Cluster(cfg.ClusterName()),
 			builder.Tags(tagMap.Tags()),
 		)
-		log := logger.FromContext(ctx)
 
 		log.DebugContext(ctx, "cue: building component instance")
+		//nolint:staticcheck
 		bd, err := build.Unify(ctx, config)
 		if err != nil {
 			return errors.Wrap(err)
 		}
-
-		typeMeta, err := bd.TypeMeta()
-		if err != nil {
-			return errors.Wrap(err)
-		}
-
-		if typeMeta.Kind != "BuildPlan" {
-			return errors.Format("invalid kind: want: BuildPlan have: %s", typeMeta.Kind)
-		}
-
-		log.DebugContext(ctx, "discriminated "+typeMeta.APIVersion+" "+typeMeta.Kind)
 
 		jsonBytes, err := bd.Value.MarshalJSON()
 		if err != nil {
@@ -86,9 +119,7 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 		decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
 		decoder.DisallowUnknownFields()
 
-		art := artifact.New()
-
-		switch version := typeMeta.APIVersion; version {
+		switch tm.APIVersion {
 		case "v1alpha4":
 			builder := v1alpha4.BuildPlan{
 				WriteTo:     cfg.WriteTo(),
@@ -99,7 +130,7 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 			if err := decoder.Decode(&builder.BuildPlan); err != nil {
 				return errors.Format("could not decode build plan %s: %w", bd.Dir, err)
 			}
-			return render.Component(ctx, &builder, art)
+			return render.Component(ctx, &builder, artifact.New())
 		// Legacy method.
 		case "v1alpha3", "v1alpha2", "v1alpha1":
 			//nolint:staticcheck
@@ -139,7 +170,7 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 			}
 
 		default:
-			return errors.Format("component version not supported: %s", version)
+			return errors.Format("component version not supported: %s", tm.APIVersion)
 		}
 
 		return nil
@@ -162,16 +193,12 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
-		build := builder.New(builder.Entrypoints(args))
 		log := logger.FromContext(ctx)
 
-		log.DebugContext(ctx, "cue: building platform instance")
-		bd, err := build.Unify(ctx, config)
-		if err != nil {
-			return errors.Wrap(err)
-		}
+		log.DebugContext(ctx, "cue: discriminating platform instance")
+		build := builder.New(builder.Entrypoints(args))
 
-		tm, err := bd.TypeMeta()
+		tm, err := build.Discriminate(ctx)
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -179,8 +206,28 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 		if tm.Kind != "Platform" {
 			return errors.Format("invalid kind: want: Platform have: %s", tm.Kind)
 		}
+		log.DebugContext(ctx, fmt.Sprintf("discriminated %s %s", tm.APIVersion, tm.Kind))
 
-		log.DebugContext(ctx, "discriminated "+tm.APIVersion+" "+tm.Kind)
+		switch version := tm.APIVersion; version {
+		case "v1alpha5":
+			builder, err := v1alpha5.LoadPlatform(args[0], nil)
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			builder.Concurrency = concurrency
+			builder.Stderr = cmd.ErrOrStderr()
+			return render.Platform(ctx, builder)
+		}
+
+		// Prior to v1alpha5 we fully unified and injected tags, which was a bad
+		// idea because it assumed certain tags would always be passed, like
+		// cluster, which we made optional in v1alpha5.
+		log.DebugContext(ctx, "cue: building platform instance")
+		//nolint:staticcheck
+		bd, err := build.Unify(ctx, config)
+		if err != nil {
+			return errors.Wrap(err)
+		}
 
 		jsonBytes, err := bd.Value.MarshalJSON()
 		if err != nil {

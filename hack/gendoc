@@ -35,5 +35,8 @@ gomarkdoc --output "${tmpdir}/doc.md" "./${package}"
 
 # Fix heading anchors by making them explicit
 # Refer to https://docusaurus.io/docs/markdown-features/toc#heading-ids
-sed -E 's/## type ([A-Za-z0-9_]+)/## type \1 {#\1}/' "${tmpdir}/doc.md" > "${tmpdir}/fixed.md"
+sed -E 's/## type ([A-Za-z0-9_]+)/## type \1 {#\1}/' "${tmpdir}/doc.md" > "${tmpdir}/with-header.md"
+# Remove the annoying package h1 header, docusaurus will use the title front
+# matter for the page h1 header.
+grep -v "^# $(basename "${schema}")" "${tmpdir}/with-header.md" > "${tmpdir}/fixed.md"
 cat "./${package%%/}/header.yaml" "${tmpdir}/fixed.md" > "${base}.md"

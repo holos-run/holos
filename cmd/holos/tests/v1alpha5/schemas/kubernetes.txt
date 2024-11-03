@@ -1,0 +1,52 @@
+# author.#Kubernetes
+
+# Start in an empty directory.
+cd $WORK
+
+# Generate the directory structure we're going to work in.
+exec holos generate platform v1alpha5
+
+# Platforms are empty by default.
+exec holos render platform ./platform
+stderr -count=1 '^rendered platform'
+
+# When author.#Kubernetes is empty
+exec cue export --out=yaml ./components/empty
+cmp stdout want.txt
+
+-- components/empty/empty.cue --
+package holos
+
+_Kubernetes: #Kubernetes & {}
+_Kubernetes.BuildPlan
+-- want.txt --
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: no-name
+spec:
+  artifacts:
+    - artifact: components/no-name/no-name.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+          resources: {}
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/no-name/no-name.gen.yaml
+          kustomize:
+            kustomization:
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+              kind: Kustomization
+              apiVersion: kustomize.config.k8s.io/v1beta1
+source:
+  component:
+    name: no-name
+    path: no-path
+    parameters: {}

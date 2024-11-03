@@ -190,6 +190,7 @@
     "oauthproxy",
     "objectmap",
     "objectmeta",
+    "omitempty",
     "organizationconnect",
     "orgid",
     "otelconnect",
