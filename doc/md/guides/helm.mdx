@@ -2291,9 +2291,10 @@ First for prometheus.
 <Tabs groupId="5062EB93-F5AA-4038-9CF8-67A5ECA085FD">
   <TabItem value="command" label="Command">
 ```bash
-cue import -p holos -o- -l '_Helm: Values:' \
-  projects/platform/components/prometheus/vendor/25.27.0/prometheus/values.yaml \
-  > projects/platform/components/prometheus/values.cue
+cue import --package holos \
+  --path '_Helm: Values:' \
+  --outfile projects/platform/components/prometheus/values.cue \
+  projects/platform/components/prometheus/vendor/25.27.0/prometheus/values.yaml
 ```
   </TabItem>
   <TabItem value="output" label="values.cue">
@@ -3647,9 +3648,10 @@ Then for blackbox.
 <Tabs groupId="843D706B-5BE0-46FE-978F-EA17BC1AD932">
   <TabItem value="command" label="Command">
 ```bash
-cue import -p holos -o- -l '_Helm: Values:' \
-  projects/platform/components/blackbox/vendor/9.0.1/prometheus-blackbox-exporter/values.yaml \
-  > projects/platform/components/blackbox/values.cue
+cue import --package holos \
+  --path '_Helm: Values:' \
+  --outfile projects/platform/components/blackbox/values.cue
+  projects/platform/components/blackbox/vendor/9.0.1/prometheus-blackbox-exporter/values.yaml
 ```
   </TabItem>
   <TabItem value="output" label="values.cue">
@@ -4577,9 +4579,10 @@ _Kustomize.BuildPlan
 
 // https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/README.md
 _Kustomize: #Kustomize & {
-	KustomizeConfig: Resources: "github.com/mccutchen/go-httpbin/kustomize": _
+	KustomizeConfig: Files: "resources.yaml": _
 	KustomizeConfig: Kustomization: {
 		commonLabels: "app.kubernetes.io/name": "httpbin"
+		images: [{name: "mccutchen/go-httpbin"}]
 		_patches: probe: {
 			target: kind: "Service"
 			target: name: "httpbin"
@@ -4612,6 +4615,50 @@ _Platform: Components: httpbin: {
 	component: "projects/platform/components/httpbin"
 	cluster:   "local"
 }
+```
+  </TabItem>
+  <TabItem value="platform/resources.yaml" label="Plain YAML">
+```txt
+mkdir -p platform
+touch platform/resources.yaml
+```
+```yaml showLineNumbers
+# https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+spec:
+  template:
+    spec:
+      containers:
+        - name: httpbin
+          image: mccutchen/go-httpbin
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+          resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+      appProtocol: http
 ```
   </TabItem>
 </Tabs>

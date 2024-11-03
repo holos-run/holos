@@ -99,6 +99,7 @@ func New(opts ...Option) *Config {
 	ns := getenv("HOLOS_PROVISIONER_NAMESPACE", DefaultProvisionerNamespace)
 	cfg.kvNamespace = kvFlagSet.String("provisioner-namespace", ns, "namespace in the provisioner cluster")
 	cfg.txtarIndex = txFlagSet.Int("index", 0, "file number to print if not 0")
+	cfg.txtarQuote = txFlagSet.Bool("quote", true, "quote necessary files for use with testscript unquote")
 	return cfg
 }
 
@@ -118,6 +119,7 @@ type Config struct {
 	kvNamespace          *string
 	kvFlagSet            *flag.FlagSet
 	txtarIndex           *int
+	txtarQuote           *bool
 	txtarFlagSet         *flag.FlagSet
 	provisionerClientset kubernetes.Interface
 	ClientConfig         *ClientConfig
@@ -272,6 +274,13 @@ func (c *Config) KVNamespace() string {
 		return DefaultProvisionerNamespace
 	}
 	return *c.kvNamespace
+}
+
+func (c *Config) TxtarQuote() bool {
+	if c == nil || c.txtarIndex == nil {
+		return false
+	}
+	return *c.txtarQuote
 }
 
 // TxtarIndex returns the

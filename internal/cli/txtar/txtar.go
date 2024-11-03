@@ -8,13 +8,14 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/util"
+	"github.com/rogpeppe/go-internal/txtar"
 	"github.com/spf13/cobra"
-	"golang.org/x/tools/txtar"
 )
 
 //go:embed long.txt
@@ -44,6 +45,22 @@ func makeRunFunc(cfg *holos.Config) command.RunFunc {
 		for _, name := range args {
 			if err := filepath.WalkDir(name, util.MakeWalkFunc(a)); err != nil {
 				return errors.Wrap(err)
+			}
+		}
+		if cfg.TxtarQuote() {
+			names := make([]string, 0, len(a.Files))
+			for _, file := range a.Files {
+				if txtar.NeedsQuote(file.Data) {
+					data, err := txtar.Quote(file.Data)
+					if err != nil {
+						return errors.Wrap(err)
+					}
+					file.Data = data
+					names = append(names, file.Name)
+				}
+			}
+			if len(names) > 0 {
+				a.Comment = []byte(fmt.Sprintf("unquote %s\n", strings.Join(names, " ")))
 			}
 		}
 		if _, err := cfg.Stdout().Write(txtar.Format(a)); err != nil {
