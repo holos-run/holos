@@ -4597,30 +4597,15 @@ _Kustomize: #Kustomize & {
 }
 ```
   </TabItem>
-</Tabs>
-
-Register the component with the platform.
-
-<Tabs groupId="CBD42BC2-38C3-46E2-9F4D-B21D8E909BAC">
-  <TabItem value="platform/httpbin.cue" label="Platform">
-```txt
-mkdir -p platform
-touch platform/httpbin.cue
-```
-```cue showLineNumbers
-package holos
-
-_Platform: Components: httpbin: {
-	name:      "httpbin"
-	component: "projects/platform/components/httpbin"
-	cluster:   "local"
-}
-```
-  </TabItem>
-  <TabItem value="platform/resources.yaml" label="Plain YAML">
-```txt
-mkdir -p platform
-touch platform/resources.yaml
+  <TabItem value="projects/platform/components/httpbin/resources.yaml" label="resources.yaml">
+Add a plain `resources.yaml` file containing resources for kustomize to process.
+:::important
+Holos knows this file is part of the BuildPlan from the `KustomizeConfig:
+Files: "resources.yaml": _` line in the Component.
+:::
+```bash
+mkdir -p projects/platform/components/httpbin
+touch projects/platform/components/httpbin/resources.yaml
 ```
 ```yaml showLineNumbers
 # https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/resources.yaml
@@ -4659,6 +4644,26 @@ spec:
       protocol: TCP
       name: http
       appProtocol: http
+```
+  </TabItem>
+</Tabs>
+
+Register the component with the platform.
+
+<Tabs groupId="CBD42BC2-38C3-46E2-9F4D-B21D8E909BAC">
+  <TabItem value="platform/httpbin.cue" label="Platform">
+```txt
+mkdir -p platform
+touch platform/httpbin.cue
+```
+```cue showLineNumbers
+package holos
+
+_Platform: Components: httpbin: {
+	name:      "httpbin"
+	component: "projects/platform/components/httpbin"
+	cluster:   "local"
+}
 ```
   </TabItem>
 </Tabs>
