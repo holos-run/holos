@@ -1,0 +1,18 @@
+#! /bin/bash
+#
+
+set -euo pipefail
+
+export HOLOS_CLUSTER_NAME=$1
+export PROJECT_ID="$(gcloud config get-value project)"
+export PROJECT_NUMBER="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')"
+
+gcloud iam workload-identity-pools create-cred-config \
+    projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/holos/providers/k8s-$HOLOS_CLUSTER_NAME \
+    --service-account=eso-creds-refresher@$PROJECT_ID.iam.gserviceaccount.com \
+    --credential-source-file=/var/run/service-account/token \
+    --credential-source-type=text \
+    --output-file=gcloud/credential-configuration.json
+
+envsubst < gcloud/pod.template.yaml > gcloud/pod.yaml
+envsubst < gcloud/rolebinding.template.yaml > gcloud/rolebinding.yaml

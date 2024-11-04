@@ -1,0 +1,106 @@
+---
+description: Self service platform resource management for project teams.
+slug: /archive/guides/2024-09-17-manage-a-project
+sidebar_position: 250
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import Admonition from '@theme/Admonition';
+
+# Manage a Project
+
+In this guide we'll explore how Holos easily, safely, and consistently manages
+platform resources for teams to develop the projects they're working on.
+
+Intended Audience: Platform Engineers and Software Engineers.
+
+Goal is to demonstrate how the platform team can consistently, easily, and
+safely provide platform resources to software engineers.
+
+Assumption is software engineers have a container they want to deploy onto the
+platform and make accessible.  We'll use httpbin as a stand-in for the dev
+team's container.
+
+Project is roughly equivalent to Dev Team for the purpose of this guide, but in
+practice multiple teams work on a given project over the lifetime of the
+project, so we structure the files into projects instead of teams.
+
+## What you'll need {#requirements}
+
+You'll need the following tools installed to complete this guide.
+
+1. [holos](/docs/install) - to build the Platform.
+2. [helm](https://helm.sh/docs/intro/install/) - to render Helm Components.
+3. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to render Kustomize Components.
+
+If you'd like to apply the manifests we render in this guide complete the
+following optional, but recommended, steps.
+
+a. Complete the [Local Cluster] guide to set up a local cluster to work with.
+b. You'll need a GitHub account to fork the repository associated with this
+guide.
+
+## Fork the Guide Repository
+
+<Tabs groupId="fork">
+  <TabItem value="command" label="Command">
+```bash
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt showLineNumbers
+```
+  </TabItem>
+</Tabs>
+
+This guide assumes you will run commands from the root directory of this
+repository unless stated otherwise.
+
+[Quickstart]: /docs/quickstart
+[Local Cluster]: /docs/guides/local-cluster
+
+## Render the Platform
+
+So we can build the basic platform.  Don't dwell on the platform bits.
+
+## Apply the Manifests
+
+Deploy ArgoCD, but not any of the Application resources.
+
+## Browse to ArgoCD
+
+Note there is nothing here yet.
+
+## Switch to your Fork
+
+Note all of the Applications change consistently.
+
+## Apply the Applications
+
+Note how ArgoCD takes over management, no longer need to k apply.
+
+## Create a Project
+
+Project is a conceptual, not technical, thing in Holos.  Mainly about how components are laid out in the filesystem tree.
+
+We use a schematic built into holos as an example, the platform team could use the same or provide a similar template and instructions for development teams to self-serve.
+
+## Render the Platform
+
+Notice:
+
+1. Project is registered with the platform at the root.
+2. HTTPRoute and Namespace resources are added close to the root in `projects`
+3. Deployment and Service resources are added at the leaf in `projects/httpbin/backend`
+
+## Update the image tag
+
+Add a basic schematic to demonstrate this.  May need to add two new flags for image url and image tag to the generate subcommand, but should just be two new fields on the struct.
+
+## Dive Deeper
+
+Set the stage for constraints.  Ideas: Limit what resources can be added,
+namespaces can be operated in, enforce labels, etc...
+
+Simple, consistent, easy constraints.
