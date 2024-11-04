@@ -7,6 +7,7 @@ sidebar_position: 100
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Admonition from '@theme/Admonition';
+import RenderingPipeline from '@site/src/components/_rendering-pipeline.mdx';
 
 # Quickstart
 
@@ -324,37 +325,7 @@ So what happens when we run `holos render platform`?  We saw `holos` write plain
 manifest files, let's dive into how and why we implemented platform rendering
 like this.
 
-```mermaid
----
-title: Figure 1 - v1alpha4 Rendered Manifest Pipeline
----
-graph LR
-    Platform[<a href="/docs/api/author/v1alpha4/#Platform">Platform</a>]
-    Component[<a href="/docs/api/author/v1alpha4/#ComponentConfig">Components</a>]
-
-    Helm[<a href="/docs/api/author/v1alpha4/#Helm">Helm</a>]
-    Kustomize[<a href="/docs/api/author/v1alpha4/#Kustomize">Kustomize</a>]
-    Kubernetes[<a href="/docs/api/author/v1alpha4/#Kubernetes">Kubernetes</a>]
-
-    BuildPlan[<a href="/docs/api/core/v1alpha4/#buildplan">BuildPlan</a>]
-
-    ResourcesArtifact[<a href="/docs/api/core/v1alpha4/#artifact">Resources<br/>Artifact</a>]
-    GitOpsArtifact[<a href="/docs/api/core/v1alpha4/#artifact">GitOps<br/>Artifact</a>]
-
-    Generators[<a href="/docs/api/core/v1alpha4/#generators">Generators</a>]
-    Transformers[<a href="/docs/api/core/v1alpha4/#transformer">Transformers</a>]
-    Files[Manifest<br/>Files]
-
-    Platform --> Component
-    Component --> Helm --> BuildPlan
-    Component --> Kubernetes --> BuildPlan
-    Component --> Kustomize --> BuildPlan
-
-    BuildPlan --> ResourcesArtifact --> Generators
-    BuildPlan --> GitOpsArtifact --> Generators
-
-    Generators --> Transformers --> Files
-```
+<RenderingPipeline />
 
 ### Why do we render the platform? {#why-render-the-platform}
 
