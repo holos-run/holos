@@ -5,6 +5,7 @@ sidebar_position: 200
 ---
 
 import RenderingPipeline from '@site/src/components/_rendering-pipeline.mdx';
+import SequenceDiagram from '@site/src/components/_sequence-diagram.mdx';
 
 # Concepts
 
@@ -34,56 +35,7 @@ platform engineers.
 - [Cluster](<#cluster>) - A Kubernetes cluster.  Components are rendered for and applied to a Cluster.
 - [Fleet](<#fleet>) - A collection of Clusters with a similar purpose.  A Platform is typically composed of two Fleets, one for management the second for workloads.
 
-```mermaid
-graph TB
-    Platform[<a href="#platform">Platform</a>]
-    Cluster[<a href="#cluster">Cluster</a>]
-    Fleet[<a href="#fleet">Fleet</a>]
-    Component[<a href="#component">Component</a>]
-    Helm[<a href="#component">Helm</a>]
-    Kustomize[<a href="#component">Kustomize</a>]
-    CUE[<a href="#component">CUE</a>]
-
-    Fleet --> Platform
-    Cluster --> Fleet
-    Component --> Cluster
-    Helm --> Component
-    Kustomize --> Component
-    CUE --> Component
-```
-
-:::tip
-This graph is organized as a tree.  We often say configuration at the root
-defines the broad Platform.  Configuration at a leaf defines a Component of the
-Platform.  The concept of a tree also reflects the filesystem organization of
-the configuration.
-:::
-
-<!--
-
-```mermaid
----
-title: Figure 1 - Holos Concepts
----
-mindmap
-  root((Holos))
-    Platform
-      Components
-        HelmChart
-        KustomizeBuild
-        KubernetesObjects
-      Model
-        name: Example Org
-        domain: example.com
-    Renders
-      YAML Files
-        Kubernetes Manifests
-        ArgoCD Application
-        FluxCD Kustomization
-```
-
--->
-
+<SequenceDiagram />
 
 ## Component
 
