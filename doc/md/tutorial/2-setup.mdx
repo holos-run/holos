@@ -1,1 +1,85 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Setup
+
+This tutorial will guide you through the installation of Holos and its
+dependencies, as well as the initialization of a minimal Platform that you can
+extend to meet your specific needs.
+
+# Prerequisites
+
+Holos integrates with the following tools that should be installed to enable
+their functionality.
+
+* [Helm][helm] to fetch and render Helm chart Components
+* [Kubectl][kubectl] to [kustomize][kustomize] components.
+
+# Install Holos
+
+Holos is distributed as a single file executable that can be installed in a couple of ways.
+
+### Releases
+
+Download `holos` from the [releases](https://github.com/holos-run/holos/releases) page and place the executable into your shell path.
+
+### Go install
+
+Alternatively, install directly into your go bin path using:
+
+```shell
+go install github.com/holos-run/holos/cmd/holos@latest
+```
+
+# Do I need a Kubernetes cluster?
+
+Holos only generates rendered Kubernetes manifests, so you don't need a
+Kubernetes cluster to start using the tool or understand its workflow. However,
+you will need a cluster eventually to apply the rendered manifests and verify
+that they achieve the desired end state.
+
+We recommend using [k3d](https://k3d.io/) to set up a minimal Kubernetes cluster with
+[Orbstack](https://docs.orbstack.dev/install) or
+[Docker](https://docs.docker.com/get-started/get-docker/). To simplify this,
+we've created [the Local Cluster guide](../topics/4-local-cluster.mdx) which
+automates the process, ensuring proper DNS and TLS certificates, and includes a
+script to reset the cluster to a known good state.
+
+When you're ready to experiment with a live Kubernetes cluster, refer to [the
+Local Cluster guide](../topics/4-local-cluster.mdx).
+
+# Initialize a new Platform
+
+Use Holos to generate a minimal platform using the recommended directory structure
+by creating an empty directory and then using the `holos generate platform` subcommand:
+
+<Tabs groupId="holos generate platform v1alpha4">
+  <TabItem value="command" label="Command">
+```bash
+mkdir holos_platform
+cd holos_platform
+holos generate platform v1alpha4
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+no output
+```
+  </TabItem>
+</Tabs>
+
+Holos creates a `platform` directory with a `platform.gen.cue` file that serves
+as the foundation for your newly initialized Holos Platform. For each Holos
+Component you model, you'll add a new CUE file to the platform directory,
+mapping it to the location of the Component's CUE code, and extending the
+capabilities of your platform.
+
+# Next Steps
+
+Now that you've got Holos and its prerequisites installed, continue on to the
+[Hello Holos page](./3-hello-holos.mdx) where we will guide you through the
+process of creating your first Component and modeling a Helm chart.
+
+[helm]: https://github.com/helm/helm/releases
+[kubectl]: https://kubernetes.io/docs/tasks/tools/
+[kustomize]: https://kustomize.io/
