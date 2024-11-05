@@ -1,1 +1,56 @@
-# Overview
+---
+title: Overview
+description: Learn how Holos integrates software into a holistic platform.
+---
+
+import RenderingOverview from '../diagrams/rendering-overview.mdx';
+
+# Tutorial
+
+Holos is a configuration management tool for Kubernetes resources.  It provides
+the building blocks needed for implementing the [rendered manifests pattern].
+It gives the flexibility to manage a wide range of configurations, from large
+software delivery platforms spanning multiple clusters and regions to generating
+a single resource on your local device.
+
+{/* truncate */}
+
+At a high level, Holos provides a few major components:
+
+- A Platform schema for specifying how components integrate together into a platform.
+- Component building blocks for Helm, Kustomize, and Kubernetes to unify configuration with CUE.
+- A BuildPlan orchestrating generators, transformers, and validators to produce manifest files.
+
+<RenderingOverview />
+
+## Holos' role in your organization
+
+## Advantages of Holos
+
+This section outlines some advantages of Holos.
+
+### Safe
+
+### Reliable
+
+### Easy
+
+### Flexible
+
+## When not to use Holos
+
+Although Holos is useful for many organizations that need to do manage
+configuration, there are also some use-cases where Holos is not a good fit.
+
+TODO
+
+## Getting Help
+
+If you get stuck, you can get help on [Discord] or [GitHub discussions].  Don't
+worry about asking "beginner" questions, configuration is often complex even for
+the most experienced among us.  We all start somewhere and are happy to help.
+
+[rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern
+[CUE]: https://cuelang.org/
+[Discord]: https://discord.gg/JgDVbNpye7
+[GitHub discussions]: https://github.com/holos-run/holos/discussions
