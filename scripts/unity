@@ -1,0 +1,5 @@
+#! /bin/bash
+# For https://cuelabs.dev/unity/
+# Talk to Jeff, or mvdan in the CUE Slack about this if needed.
+set -xeuo pipefail
+go test -timeout 30s github.com/holos-run/holos/cmd/holos
