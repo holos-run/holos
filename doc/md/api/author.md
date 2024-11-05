@@ -1,5 +1,3 @@
-import DocCardList from '@theme/DocCardList';
+# Author Schema
 
-# Author API
-
-<DocCardList />
+v1alpha5

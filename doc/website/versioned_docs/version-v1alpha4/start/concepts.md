@@ -366,5 +366,5 @@ A Fleet represents a group of Clusters that share a similar purpose.  A Platform
 typically has two Fleets, one for management and one for workloads.
 
 [krm]: https://docs.google.com/document/d/1RmHXdLhNbyOWPW_AtnnowaRfGejw-qlKQIuLKQWlwzs/view#heading=h.sa6p0aye4ide
-[Platform]: /docs/api/core/v1alpha2/#Platform
-[BuildPlan]: /docs/api/core/v1alpha2/#BuildPlan
+[Platform]: ../api/core.md#Platform
+[BuildPlan]: ../api/core.md#BuildPlan

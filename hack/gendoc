@@ -11,11 +11,29 @@ set -euo pipefail
 
 # Generate the documentation for the package the calls go:generate
 package="$(git rev-parse --show-prefix)"
+# e.g. v1alpha4
+version="$(basename "${package}")"
+version="${version%/}"
+# e.g. api/core or api/author
+schema="$(dirname "${package}")"
+
+# Move to the repo root
 cd "$(git rev-parse --show-toplevel)"
-mkdir -p "doc/md/$(dirname "${package}")"
-gomarkdoc --output "doc/md/${package%/}.md" "./${package}"
+
+# Check if the version is released
+if [[ -d "doc/website/versioned_docs/version-${version}" ]]; then
+  # released version
+  base="doc/website/versioned_docs/version-${version}/${schema}"
+else
+  # next version
+  base="doc/md/${schema}"
+fi
+
+mkdir -p "$(dirname "${base}")"
+
+gomarkdoc --output "${tmpdir}/doc.md" "./${package}"
 
 # Fix heading anchors by making them explicit
 # Refer to https://docusaurus.io/docs/markdown-features/toc#heading-ids
-sed -E 's/## type ([A-Za-z0-9_]+)/## type \1 {#\1}/' "doc/md/${package%/}.md" > "${tmpdir}/doc.md"
-cat "./${package%%/}/header.yaml" "${tmpdir}/doc.md" > "doc/md/${package%/}.md"
+sed -E 's/## type ([A-Za-z0-9_]+)/## type \1 {#\1}/' "${tmpdir}/doc.md" > "${tmpdir}/fixed.md"
+cat "./${package%%/}/header.yaml" "${tmpdir}/fixed.md" > "${base}.md"

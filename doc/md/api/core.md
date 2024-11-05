@@ -1,5 +1,3 @@
-import DocCardList from '@theme/DocCardList';
+# Core Schema
 
-# Core API
-
-<DocCardList />
+v1alpha5

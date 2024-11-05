@@ -672,19 +672,19 @@ how the development team deploys their existing Helm chart onto the platform.
 5. Community and commercial [Support] is available.
 6. [Discussions Forum](https://github.com/holos-run/holos/discussions)
 
-[Support]: /docs/support/
-[Guides]: /docs/guides/
-[API Reference]: /docs/api/
-[Quickstart]: /docs/quickstart/
+[Support]: ./start/support.md
+[Guides]: ./guides.md
+[API Reference]: ./api.md
+[Quickstart]: ./guides/quickstart.mdx
+[Author API]: ./api/author.md
+[Core API]: ./api/core.md
+[Project]: ./api/author.md#Project
+
 [CUE]: https://cuelang.org/
-[Author API]: /docs/api/author/
-[Core API]: /docs/api/core/
 [Open Infrastructure Services]: https://openinfrastructure.co/
 [Why are we templating YAML]: https://hn.algolia.com/?dateRange=all&page=0&prefix=false&query=https%3A%2F%2Fleebriggs.co.uk%2Fblog%2F2019%2F02%2F07%2Fwhy-are-we-templating-yaml&sort=byDate&type=story
 [Holos]: https://holos.run/
-[Quickstart]: /docs/quickstart/
 [rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern/
 [examples/tech-overview]: https://github.com/holos-run/bank-of-holos/tree/v0.2.0/examples/tech-overview
 [BackendObjectReference]: https://gateway-api.sigs.k8s.io/reference/spec/#gateway.networking.k8s.io%2fv1.BackendObjectReference
 [CODEOWNERS]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
-[Project]: /docs/api/author/v1alpha3/#Project
