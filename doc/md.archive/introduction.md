@@ -1,6 +1,5 @@
 ---
-description: Holos Documentation
-slug: /
+description: Introduction
 ---
 
 # Introduction
