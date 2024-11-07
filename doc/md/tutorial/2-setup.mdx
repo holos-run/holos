@@ -21,7 +21,7 @@ Holos is distributed as a single file executable that can be installed in a coup
 
 ### Releases
 
-Download `holos` from the [releases](https://github.com/holos-run/holos/releases) page and place the executable into your shell path.
+Download `holos` from the [releases] page and place the executable into your shell path.
 
 ### Go install
 
@@ -38,15 +38,13 @@ Kubernetes cluster to start using the tool or understand its workflow. However,
 you will need a cluster eventually to apply the rendered manifests and verify
 that they achieve the desired end state.
 
-We recommend using [k3d](https://k3d.io/) to set up a minimal Kubernetes cluster with
-[Orbstack](https://docs.orbstack.dev/install) or
-[Docker](https://docs.docker.com/get-started/get-docker/). To simplify this,
-we've created [the Local Cluster guide](../topics/4-local-cluster.mdx) which
-automates the process, ensuring proper DNS and TLS certificates, and includes a
-script to reset the cluster to a known good state.
+We recommend using [K3d] to set up a minimal Kubernetes cluster with [Orbstack]
+or [Docker]. To simplify this, we've created [the K3d local cluster
+guide][localcluster] which automates the process, ensuring proper DNS and TLS
+certificates, and includes a script to reset the cluster to a known good state.
 
 When you're ready to experiment with a live Kubernetes cluster, refer to [the
-Local Cluster guide](../topics/4-local-cluster.mdx).
+k3d local cluster guide][localcluster].
 
 # Initialize a new Platform
 
@@ -77,9 +75,15 @@ capabilities of your platform.
 # Next Steps
 
 Now that you've got Holos and its prerequisites installed, continue on to the
-[Hello Holos page](./3-hello-holos.mdx) where we will guide you through the
+[Hello Holos page][helloholos] where we will guide you through the
 process of creating your first Component and modeling a Helm chart.
 
+[K3d]: https://k3d.io/
+[Orbstack]: https://docs.orbstack.dev/install
+[Docker]: https://docs.docker.com/get-started/get-docker/
+[localcluster]: ../topics/4-local-cluster.mdx
+[helloholos]: ./3-hello-holos.mdx
 [helm]: https://github.com/helm/helm/releases
 [kubectl]: https://kubernetes.io/docs/tasks/tools/
+[releases]: https://github.com/holos-run/holos/releases
 [kustomize]: https://kustomize.io/

@@ -1,1 +1,70 @@
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Hello Holos
+
+One of the first exercises you perform when learning a new programming language
+is to print out the "Hello World!" greeting. For Holos, our "Hello Holos"
+exercise involves modeling the [podinfo Helm chart][podinfo] that produces a
+similar greeting message from a Kubernetes Pod.
+
+By the end of this tutorial you will gain the understanding of how to model
+an individual Holos Component using a Helm chart as its source.
+
+# The code
+
+### Podinfo Helm Chart
+
+Let's start by creating a directory for `podinfo`, touching an empty CUE file,
+and then populating it with the CUE code below:
+
+<Tabs groupId="tutorial-hello-podinfo-helm-cue-code">
+  <TabItem value="projects/tutorial/components/podinfo/podinfo.cue" label="Podinfo Helm Chart">
+```bash
+mkdir -p projects/tutorial/components/podinfo
+touch projects/tutorial/components/podinfo/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+// Produce a helm chart build plan.
+holos: HelmChart.BuildPlan
+
+HelmChart: #Helm & {
+	Name: "podinfo"
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+}
+```
+  </TabItem>
+</Tabs>
+
+### Register the podinfo component
+
+Now let's register the code modeling the `podinfo` Helm chart as a Holos
+Component and assign it to a cluser. For this we will need a create new file in
+the `platform` directory with the following contents:
+
+<Tabs groupId="tutorial-hello-register-podinfo-component">
+  <TabItem value="platform/podinfo.cue" label="Register Podinfo">
+```bash
+touch plaform/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+Platform: Components: podinfo: {
+	name: "podinfo"
+	path: "projects/tutorial/components/podinfo"
+}
+```
+  </TabItem>
+</Tabs>
+
+
+[podinfo]: https://github.com/stefanprodan/podinfo
