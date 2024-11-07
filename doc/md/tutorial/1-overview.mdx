@@ -9,11 +9,10 @@ import RenderComponentDiagram from '../diagrams/render-component-sequence.mdx';
 
 # Tutorial
 
-Holos is a configuration management tool for Kubernetes resources.  It provides
-the building blocks needed for implementing the [rendered manifests pattern].
-It gives the flexibility to manage a wide range of configurations, from large
-software delivery platforms spanning multiple clusters and regions to generating
-a single resource on your local device.
+Holos is an open-source configuration management tool for Kubernetes resources,
+designed to simplify software integration for platform teams. It supports a wide range of
+configurations, from managing large, multi-cluster platforms across regions to
+generating a single resource on a local device.
 
 {/* truncate */}
 
@@ -27,18 +26,21 @@ At a high level, Holos provides a few major components:
 
 ## Holos' role in your organization
 
-Platform engineers run the `holos render platform` command locally and in CI to
-produce Kubernetes manifests which are committed to version control.  GitOps
-tools like ArgoCD or Flux deploy the manifests produced by Holos.
+Platform engineers use the `holos render platform` command locally or in CI to
+generate Kubernetes manifests, which are then committed to version control.
+GitOps tools like ArgoCD or Flux handle the deployment of these manifests.
 
-Other tools focus on individual applications.  Holos focuses holistically on the
-integration of applications into a whole platform.  In this way a single one
-line configuration change, like changing the domain name, is clearly visible
-across the whole platform.
+Unlike most Kubernetes tools that focus solely on application management, Holos
+takes a holistic approach, targeting the integration layer where applications
+and organizational data converge. Its well-defined, typed structures ensure
+consistent validation, reducing errors, streamlining integration, and providing
+clear pathways for teams to integrate their services.
 
-Rendering a platform may produce a single ConfigMap resource or produce millions
-of lines of fully rendered manifests configuring multiple environments,
-clusters, and regions.
+Holos focuses on the platform as a whole rather than individual applications,
+making it easy to see the impact of a single configuration change, like updating
+a domain name, across the entire system. Whether generating a single ConfigMap
+or producing millions of lines of manifests for multiple environments, clusters,
+and regions, Holos ensures platform-wide consistency and visibility.
 
 <RenderPlatformDiagram />
 
@@ -48,26 +50,34 @@ This section outlines some advantages of Holos.
 
 ### Safe
 
-Holos uses [CUE] to provide strong typing and constraints to configuration data.
-Additionally, holos adds strong validation to verify the output produced by Helm
-and other tools.
+* [CUE] provides strong typing and constraints for Holos Components that surface
+validation errors early in the development process, reducing the number of
+failed deployments and the time spent troubleshooting them.
+* Holos natively provides a "blast radius" to code
+changes by identifying the rendered manifests across your fleet of Kubernetes
+clusters that will be affected by the change.
+* [CUE's][CUE] unification strategy allows multiples teams to contribute to the desired
+state of a service:
+    * The Platform team provides definitions for shared resources.
+    * Engineering teams populate definitions with service-specific data.
+    * The Security team provides concrete values that cannot be changed to harden the company's security posture.
 
 ### Consistent
 
-Holos offers a consistent way to incorporate a wide variety of tools into a well
-defined data pipeline.  Configuration produced from CUE, Helm, and Kustomize are
-all handled with the same consistent process.
-
-### Easy
-
-Holos makes it easy to define configuration data once, then safely use the data
-in multiple Helm charts, Kustomize bases, or any other supported component kind.
+* Holos manages the execution context for Helm and Kustomize, ensuring that
+rendered manifests are consistently and reliably reproducible, no matter where
+Holos is run.
+* CUE constraints ensure that data abstractions include the required information
+in the expected format, triggering early failures if any required data is
+missing.
 
 ### Flexible
 
-Holos is designed to be flexible.  Holos offers flexible building blocks for
-data generation, transformation, validation, and integration.  Find the perfect
-fit for your team by assembling these building blocks to your unique needs.
+* [CUE] is adept at modeling variation and organizational complexity at scale,
+while Holos enables seamless integration of [CUE] data with native Kubernetes
+tools such as [Helm] and [Kustomize].
+* Holos is extensible, allowing Holos Components to be modeled from any tool that
+generates (e.g. `helm`) or transforms (e.g.  `kustomize`) manifest data.
 
 Holos does not have an opinion on many common aspects of platform configuration.
 For example, environments and clusters are explicitly kept out of the core and
@@ -116,6 +126,8 @@ the most experienced among us.  We all start somewhere and are happy to help.
 
 [rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern
 [CUE]: https://cuelang.org/
+[Helm]: https://helm.sh/
+[Kustomize]: https://kustomize.io/
 [Discord]: https://discord.gg/JgDVbNpye7
 [GitHub discussions]: https://github.com/holos-run/holos/discussions
 [Why CUE for Configuration]: https://holos.run/blog/why-cue-for-configuration/
