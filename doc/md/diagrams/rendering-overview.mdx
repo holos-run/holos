@@ -17,6 +17,7 @@ graph LR
 
     Generators[<a href="/docs/api/core/v1alpha4/#generators">Generators</a>]
     Transformers[<a href="/docs/api/core/v1alpha4/#transformer">Transformers</a>]
+    Validators[Validators<br/>TBD]
     Files[Manifest<br/>Files]
 
     Platform --> Component
@@ -27,5 +28,5 @@ graph LR
     BuildPlan --> ResourcesArtifact --> Generators
     BuildPlan --> GitOpsArtifact --> Generators
 
-    Generators --> Transformers --> Files
+    Generators --> Transformers --> Validators --> Files
 ```
