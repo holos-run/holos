@@ -4,21 +4,21 @@
 cd $WORK
 
 # Generate the directory structure we're going to work in.
-exec holos generate platform v1alpha5
+exec holos generate platform v1alpha5 --force
 
 # Platforms are empty by default.
 exec holos render platform ./platform
 stderr -count=1 '^rendered platform'
 
 # When author.#Kubernetes is empty
-exec cue export --out=yaml ./components/empty
+exec holos cue export --expression holos --out=yaml ./components/empty
 cmp stdout want.txt
 
 -- components/empty/empty.cue --
 package holos
 
-_Kubernetes: #Kubernetes & {}
-_Kubernetes.BuildPlan
+Kubernetes: #Kubernetes & {}
+holos: Kubernetes.BuildPlan
 -- want.txt --
 kind: BuildPlan
 apiVersion: v1alpha5

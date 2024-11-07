@@ -3,6 +3,7 @@ package generate
 import (
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -27,13 +28,28 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 }
 
 func NewPlatform(cfg *holos.Config) *cobra.Command {
+	var force bool
+
 	cmd := command.New("platform [flags] PLATFORM")
 	cmd.Short = "generate a platform from an embedded schematic"
 	cmd.Long = fmt.Sprintf("Embedded platforms available to generate:\n\n  %s", strings.Join(generate.Platforms(), "\n  "))
 	cmd.Example = "  holos generate platform k3d"
 	cmd.Args = cobra.ExactArgs(1)
+
+	cmd.Flags().BoolVarP(&force, "force", "", force, "force generation")
+
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
+
+		if !force {
+			files, err := os.ReadDir(".")
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			if len(files) > 0 {
+				return errors.Format("could not generate: directory not empty and --force=false")
+			}
+		}
 
 		for _, name := range args {
 			if err := generate.GeneratePlatform(ctx, name); err != nil {

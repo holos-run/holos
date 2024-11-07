@@ -4,7 +4,7 @@
 cd $WORK
 
 # Generate the directory structure we're going to work in.
-exec holos generate platform v1alpha4
+exec holos generate platform v1alpha4 --force
 
 # Platforms are empty by default.
 exec holos render platform ./platform
