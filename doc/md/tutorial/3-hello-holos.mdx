@@ -47,8 +47,7 @@ HelmChart: #Helm & {
 ### Register the podinfo component
 
 Now let's register the code modeling the `podinfo` Helm chart as a Holos
-Component and assign it to a cluser. For this we will need a create new file in
-the `platform` directory with the following contents:
+Component. Create a new file in the `platform` directory with this CUE code:
 
 <Tabs groupId="tutorial-hello-register-podinfo-component">
   <TabItem value="platform/podinfo.cue" label="Register Podinfo">
@@ -65,6 +64,150 @@ Platform: Components: podinfo: {
 ```
   </TabItem>
 </Tabs>
+
+### Render the podinfo manifest file
+
+Finally we're ready to render the podinfo Kubernetes manifest using the
+`holos render platform` subcommand, targeting the `platform` directory.
+
+<Tabs groupId="tutorial-hello-render-manifests">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```
+rendered podinfo in 116.142583ms
+rendered platform in 116.204042ms
+```
+  </TabItem>
+  <TabItem value="manifest" label="Manifest Data">
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: podinfo
+    app.kubernetes.io/version: 6.6.2
+    helm.sh/chart: podinfo-6.6.2
+  name: podinfo
+spec:
+  ports:
+  - name: http
+    port: 9898
+    protocol: TCP
+    targetPort: http
+  - name: grpc
+    port: 9999
+    protocol: TCP
+    targetPort: grpc
+  selector:
+    app.kubernetes.io/name: podinfo
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: podinfo
+    app.kubernetes.io/version: 6.6.2
+    helm.sh/chart: podinfo-6.6.2
+  name: podinfo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: podinfo
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "9898"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/name: podinfo
+    spec:
+      containers:
+      - command:
+        - ./podinfo
+        - --port=9898
+        - --cert-path=/data/cert
+        - --port-metrics=9797
+        - --grpc-port=9999
+        - --grpc-service-name=podinfo
+        - --level=info
+        - --random-delay=false
+        - --random-error=false
+        env:
+        - name: PODINFO_UI_COLOR
+          value: '#34577c'
+        image: ghcr.io/stefanprodan/podinfo:6.6.2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/healthz
+          failureThreshold: 3
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: podinfo
+        ports:
+        - containerPort: 9898
+          name: http
+          protocol: TCP
+        - containerPort: 9797
+          name: http-metrics
+          protocol: TCP
+        - containerPort: 9999
+          name: grpc
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/readyz
+          failureThreshold: 3
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits: null
+          requests:
+            cpu: 1m
+            memory: 16Mi
+        volumeMounts:
+        - mountPath: /data
+          name: data
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: data
+```
+  </TabItem>
+</Tabs>
+
+Success! Holos generated the `deploy/components/podinfo/podinfo.gen.yaml` file
+containing manifest data from the `podinfo` Helm chart.
+
+# Breaking it down
+
+Let's take some time to review what we just did.
+
+
 
 
 [podinfo]: https://github.com/stefanprodan/podinfo
