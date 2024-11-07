@@ -2,7 +2,12 @@
 package holos
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"strings"
 
 	"cuelang.org/go/cue"
 	"github.com/holos-run/holos/internal/errors"
@@ -66,7 +71,12 @@ type BuildData struct {
 }
 
 func (bd *BuildData) TypeMeta() (tm TypeMeta, err error) {
-	kind := bd.Value.LookupPath(cue.ParsePath("kind"))
+	v, err := bd.value()
+	if err != nil {
+		return tm, errors.Wrap(err)
+	}
+
+	kind := v.LookupPath(cue.ParsePath("kind"))
 	if err := kind.Err(); err != nil {
 		return tm, errors.Wrap(err)
 	}
@@ -74,7 +84,7 @@ func (bd *BuildData) TypeMeta() (tm TypeMeta, err error) {
 		return tm, errors.Wrap(err)
 	}
 
-	version := bd.Value.LookupPath(cue.ParsePath("apiVersion"))
+	version := v.LookupPath(cue.ParsePath("apiVersion"))
 	if err := version.Err(); err != nil {
 		return tm, errors.Wrap(err)
 	}
@@ -82,5 +92,34 @@ func (bd *BuildData) TypeMeta() (tm TypeMeta, err error) {
 		return tm, errors.Wrap(err)
 	}
 
+	return
+}
+
+func (bd *BuildData) Decoder() (*json.Decoder, error) {
+	v, err := bd.value()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	jsonBytes, err := v.MarshalJSON()
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
+	decoder.DisallowUnknownFields()
+	return decoder, nil
+}
+
+func (bd *BuildData) value() (v cue.Value, err error) {
+	v = bd.Value.LookupPath(cue.ParsePath("holos"))
+	if err := v.Err(); err != nil {
+		if strings.HasPrefix(err.Error(), "field not found") {
+			slog.Warn(fmt.Sprintf("%s: deprecated usage: nest output under holos: %s", err, bd.Dir), "err", err)
+			v = bd.Value
+			return v, nil
+		}
+		err = errors.Wrap(err)
+		return v, err
+	}
 	return
 }

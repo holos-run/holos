@@ -84,12 +84,10 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			jsonBytes, err := bd.Value.MarshalJSON()
+			decoder, err := bd.Decoder()
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
-			decoder.DisallowUnknownFields()
 			if err := decoder.Decode(&builder.BuildPlan); err != nil {
 				return errors.Format("could not decode build plan %s: %w", bd.Dir, err)
 			}

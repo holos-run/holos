@@ -3,7 +3,6 @@ package v1alpha5
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -43,7 +42,7 @@ func Unify(cueCtx *cue.Context, path string, tags []string) (bd holos.BuildData,
 		return bd, errors.Wrap(err)
 	}
 	bd.Value = v
-	// Unify into a single Value
+
 	return
 }
 
@@ -53,12 +52,10 @@ func LoadPlatform(path string, tags []string) (*Platform, error) {
 		return nil, errors.Wrap(err)
 	}
 
-	jsonBytes, err := bd.Value.MarshalJSON()
+	decoder, err := bd.Decoder()
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	decoder := json.NewDecoder(bytes.NewReader(jsonBytes))
-	decoder.DisallowUnknownFields()
 
 	var platform Platform
 	if err := decoder.Decode(&platform.Platform); err != nil {

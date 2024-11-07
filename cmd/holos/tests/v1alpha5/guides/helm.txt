@@ -11,7 +11,7 @@ exec holos render platform ./platform
 stderr -count=1 '^rendered platform'
 
 # Holos uses CUE to build a platform specification.
-exec cue export --out=yaml ./platform
+exec cue export --expression holos --out=yaml ./platform
 cmp stdout want/1.platform_spec.yaml
 
 # Define the host and port in projects/blackbox.schema.cue
@@ -40,8 +40,8 @@ stderr -count=1 '^rendered platform'
 cmp deploy/components/blackbox/blackbox.gen.yaml want/1.blackbox.gen.yaml
 
 # Import helm values
-exec cue import --package holos --path '_Helm: Values:' --outfile projects/platform/components/prometheus/values.cue projects/platform/components/prometheus/vendor/25.27.0/prometheus/values.yaml
-exec cue import --package holos --path '_Helm: Values:' --outfile projects/platform/components/blackbox/values.cue projects/platform/components/blackbox/vendor/9.0.1/prometheus-blackbox-exporter/values.yaml
+exec cue import --package holos --path 'Helm: Values:' --outfile projects/platform/components/prometheus/values.cue projects/platform/components/prometheus/vendor/25.27.0/prometheus/values.yaml
+exec cue import --package holos --path 'Helm: Values:' --outfile projects/platform/components/blackbox/values.cue projects/platform/components/blackbox/vendor/9.0.1/prometheus-blackbox-exporter/values.yaml
 # Patch imported values
 stdin values.patch
 exec patch -p1
@@ -56,6 +56,13 @@ mv platform/httpbin.cue.disabled platform/httpbin.cue
 exec holos render platform ./platform
 stderr -count=1 '^rendered httpbin'
 cmp deploy/components/httpbin/httpbin.gen.yaml want/1.httpbin.gen.yaml
+
+# Verify the labels are correct
+grep 'replacement: blackbox:9115' deploy/components/prometheus/prometheus.gen.yaml
+# Check the blackbox fullnameOverride
+grep -count=4 '^  name: blackbox$' deploy/components/blackbox/blackbox.gen.yaml
+# Check the blackbox Service port
+grep -count=1 '^    port: 9115$' deploy/components/blackbox/blackbox.gen.yaml
 
 -- projects/output.cue --
 package holos
@@ -1633,56 +1640,60 @@ spec:
           name: prometheus-blackbox-exporter
         name: config
 -- values.patch --
+diff --git a/projects/platform/components/blackbox/values.cue b/projects/platform/components/blackbox/values.cue
+index 6e29043..e3fa9ce 100644
 --- a/projects/platform/components/blackbox/values.cue
 +++ b/projects/platform/components/blackbox/values.cue
-@@ -2,6 +2,9 @@ package holos
+@@ -1,6 +1,8 @@
+ package holos
  
- _Helm: {
- 	Values: {
-+		// the upstream chart authors forgot to add the fullnameOverride value used in the service template.
-+		fullnameOverride: _blackbox.host
+ Helm: Values: {
++	fullnameOverride: _blackbox.host
 +
- 		global: {
- 			//# Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...)
- 			//#
-@@ -193,7 +196,7 @@ _Helm: {
- 			annotations: {}
- 			labels: {}
- 			type: "ClusterIP"
--			port: 9115
-+			port: _blackbox.port
- 			ipDualStack: {
- 				enabled: false
- 				ipFamilies: ["IPv6", "IPv4"]
+ 	global: {
+ 		//# Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...)
+ 		//#
+@@ -192,7 +194,7 @@ Helm: Values: {
+ 		annotations: {}
+ 		labels: {}
+ 		type: "ClusterIP"
+-		port: 9115
++		port: _blackbox.port
+ 		ipDualStack: {
+ 			enabled: false
+ 			ipFamilies: ["IPv6", "IPv4"]
+diff --git a/projects/platform/components/prometheus/values.cue b/projects/platform/components/prometheus/values.cue
+index 869b11d..119c608 100644
 --- a/projects/platform/components/prometheus/values.cue
 +++ b/projects/platform/components/prometheus/values.cue
-@@ -1084,7 +1084,7 @@ _Helm: {
- 						target_label: "__param_target"
- 					}, {
- 						target_label: "__address__"
--						replacement:  "blackbox"
-+						replacement:  "\(_blackbox.host):\(_blackbox.port)"
- 					}, {
- 						source_labels: ["__param_target"]
- 						target_label: "instance"
+@@ -1083,7 +1083,7 @@ Helm: Values: {
+ 					target_label: "__param_target"
+ 				}, {
+ 					target_label: "__address__"
+-					replacement:  "blackbox"
++					replacement:  "\(_blackbox.host):\(_blackbox.port)"
+ 				}, {
+ 					source_labels: ["__param_target"]
+ 					target_label: "instance"
+
 -- platform/httpbin.cue.disabled --
 package holos
 
-_Platform: Components: httpbin: {
+Platform: Components: httpbin: {
 	name: "httpbin"
 	path: "projects/platform/components/httpbin"
 }
 -- platform/blackbox.cue.disabled --
 package holos
 
-_Platform: Components: blackbox: {
+Platform: Components: blackbox: {
 	name: "blackbox"
 	path: "projects/platform/components/blackbox"
 }
 -- projects/platform/components/blackbox/blackbox.cue.disabled --
 package holos
 
-_Helm: #Helm & {
+Helm: #Helm & {
 	Chart: {
 		name:    "prometheus-blackbox-exporter"
 		version: "9.0.1"
@@ -1694,7 +1705,7 @@ _Helm: #Helm & {
 }
 
 // Produce a helm chart build plan.
-_Helm.BuildPlan
+holos: Helm.BuildPlan
 -- projects/blackbox.schema.cue.disabled --
 package holos
 
@@ -1714,7 +1725,7 @@ _blackbox: #blackbox & {
 -- projects/platform/components/prometheus/prometheus.cue.disabled --
 package holos
 
-_Helm: #Helm & {
+Helm: #Helm & {
 	Chart: {
 		name:    "prometheus"
 		version: "25.27.0"
@@ -1726,11 +1737,11 @@ _Helm: #Helm & {
 }
 
 // Produce a helm chart build plan.
-_Helm.BuildPlan
+holos: Helm.BuildPlan
 -- platform/prometheus.cue.disabled --
 package holos
 
-_Platform: Components: prometheus: {
+Platform: Components: prometheus: {
 	name: "prometheus"
 	path: "projects/platform/components/prometheus"
 }
@@ -14883,11 +14894,8 @@ package holos
 
 import "encoding/yaml"
 
-// Produce a Kustomize BuildPlan for Holos
-_Kustomize.BuildPlan
-
 // https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/README.md
-_Kustomize: #Kustomize & {
+Kustomize: #Kustomize & {
 	KustomizeConfig: Files: "resources.yaml": _
 	KustomizeConfig: Kustomization: {
 		commonLabels: "app.kubernetes.io/name": "httpbin"
@@ -14904,6 +14912,9 @@ _Kustomize: #Kustomize & {
 		patches: [for x in _patches {x}]
 	}
 }
+
+// Produce a Kustomize BuildPlan for Holos
+holos: Kustomize.BuildPlan
 -- projects/platform/components/httpbin/resources.yaml --
 apiVersion: apps/v1
 kind: Deployment
