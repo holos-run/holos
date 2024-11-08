@@ -35,7 +35,7 @@ in lock step going forward.
 
 ## The Code
 
-### Generate a Platform
+### Generating the structure
 
 Use `holos` to generate a minimal platform directory structure.  First, create
 and cd into a blank directory. Then use the `holos generate platform` command.
@@ -52,7 +52,7 @@ Make a commit to track changes.
 git init . && git add . && git commit -m initial
 ```
 
-### Create the Components
+### Managing the Components
 
 Create the `prometheus` and `blackbox` component directories, then add each of
 the following file contents.
@@ -110,7 +110,7 @@ Helm: #Helm & {
   </TabItem>
 </Tabs>
 
-### Integrate the Components
+### Integrating the Components
 
 Integrate the components with the platform by adding the following file to the
 platform directory.
@@ -174,7 +174,7 @@ git add . && git commit -m 'add blackbox and prometheus'
   </TabItem>
 </Tabs>
 
-### Import Values
+### Importing Helm Values
 
 Holos is rendering the helm charts with default values.  We can import these
 default values into CUE so we can easily work with them.
@@ -233,7 +233,7 @@ git add . && git commit -m 'import values'
   </TabItem>
 </Tabs>
 
-### Add the Common Configuration
+### Managing Common Configuration
 
 Define a structure to hold the configuration values we want both helm charts to
 use.  We add this configuration to the `components` directory so it's in scope
@@ -286,7 +286,7 @@ git add . && git commit -m 'add blackbox configuration'
   </TabItem>
 </Tabs>
 
-### Reference the Common Configuration
+### Referring to Common Configuration
 
 Referencing common configuration from multiple components is easy and safe with
 Holos and CUE.
@@ -367,7 +367,7 @@ git add . && git commit -m 'integrate blackbox and prometheus together'
   </TabItem>
 </Tabs>
 
-## Review the Changes
+## Reviewing Changes
 
 Holos makes it easy to see and review platform wide changes.  Render the
 platform to see how both prometheus and blackbox change in lock step.
@@ -494,7 +494,7 @@ git add . && git commit -m 'render integrated blackbox and prometheus manifests'
   </TabItem>
 </Tabs>
 
-## Try Locally
+## Trying Locally
 
 Optionally apply the manifests Holos rendered to a [Local Cluster].
 

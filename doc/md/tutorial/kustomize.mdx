@@ -1,0 +1,386 @@
+---
+slug: kustomize
+title: Kustomize
+description: Holos makes it easy to Kustomize configuration.
+sidebar_position: 45
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Kustomize
+
+## Overview
+
+In the previous tutorial we learned how Holos makes it easier to holistically
+integrate the [prometheus] and [blackbox] charts so they're configured in lock
+step with each other.
+
+This tutorial goes further, integrating the [httpbin] service with prometheus
+and blackbox to automatically probe for availability.
+
+We'll explore how Holos manages Kustomize bases as a kind of component along
+side the Helm component kind we've already covered.
+
+## The Code
+
+### Generating the structure
+
+:::note Optional
+Skip this step if you completed the previous tutorial.
+:::
+
+Use `holos` to generate a minimal platform directory structure.  First, create
+and cd into a blank directory. Then use the `holos generate platform` command.
+
+```shell
+mkdir holos-kustomize-tutorial
+cd holos-kustomize-tutorial
+holos generate platform v1alpha5
+```
+
+Make a commit to track changes.
+
+```bash
+git init . && git add . && git commit -m initial
+```
+
+### Managing the Component
+
+Create the `httpbin` component directory and add the `httpbin.cue` and
+`httpbin.yaml` files to it.
+
+<Tabs groupId="800C3AE7-E7F8-4AFC-ABF1-6AFECD945958">
+  <TabItem value="setup" label="Setup">
+```bash
+mkdir -p components/httpbin
+touch components/httpbin/httpbin.cue
+touch components/httpbin/httpbin.yaml
+```
+  </TabItem>
+  <TabItem value="components/httpbin/httpbin.cue" label="httpbin.cue">
+```cue showLineNumbers
+package holos
+
+// Produce a Kustomize BuildPlan for Holos
+holos: Kustomize.BuildPlan
+
+// https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/README.md
+Kustomize: #Kustomize & {
+	KustomizeConfig: {
+		// Files tells Holos to copy the file from the component path to the
+		// temporary directory Holos uses for BuildPlan execution.
+		Files: {
+			"httpbin.yaml": _
+		}
+		CommonLabels: {
+			"app.kubernetes.io/name": "httpbin"
+		}
+		// Kustomization represents a kustomization.yaml file in CUE.  Holos
+		// marshals this field into a `kustomization.yaml` while processing a
+		// BuildPlan.  See
+		// https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
+		Kustomization: {
+			images: [{name: "mccutchen/go-httpbin"}]
+			// Use a hidden field to compose patches easily with a struct.  Hidden
+			// fields are not included in exported structures.
+			_patches: {}
+			// Convert the hidden struct to a list.
+			patches: [for x in _patches {x}]
+		}
+	}
+}
+```
+  </TabItem>
+  <TabItem value="components/httpbin/httpbin.yaml" label="httpbin.yaml">
+```yaml showLineNumbers
+# https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+spec:
+  template:
+    spec:
+      containers:
+        - name: httpbin
+          image: mccutchen/go-httpbin
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+          resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+      appProtocol: http
+```
+  </TabItem>
+</Tabs>
+
+Holos knows the `httpbin.yaml` file is part of the BuildPlan because of the
+`KustomizeConfig: Files: "httpbin.yaml": _` line in the `httpbin.cue`.
+
+### Integrating the Components
+
+Integrate `httpbin` with the platform by adding the following file to the
+platform directory.
+
+```bash
+touch platform/httpbin.cue
+```
+
+```cue showLineNumbers
+package holos
+
+Platform: Components: {
+	httpbin: {
+		name: "httpbin"
+		path: "components/httpbin"
+	}
+}
+```
+
+Render the platform.
+
+<Tabs groupId="B120D5D1-0EAB-41E0-AD21-15526EBDD53D">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+rendered httpbin in 707.554666ms
+rendered platform in 707.9845ms
+```
+  </TabItem>
+</Tabs>
+
+Commit the results.
+
+<Tabs groupId="446CC550-A634-45C0-BEC7-992E5C56D4FA">
+  <TabItem value="command" label="Command">
+```bash
+git add . && git commit -m 'add httpbin'
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+[main c05f9ef] add httpbin
+ 4 files changed, 118 insertions(+)
+ create mode 100644 components/httpbin/httpbin.cue
+ create mode 100644 components/httpbin/httpbin.yaml
+ create mode 100644 deploy/components/httpbin/httpbin.gen.yaml
+ create mode 100644 platform/httpbin.cue
+```
+  </TabItem>
+</Tabs>
+
+### Inspecting the BuildPlan
+
+We can see the [BuildPlan] exported to `holos` by the `holos:
+Kustomize.BuildPlan` line in `httpbin.cue`.  Holos processes this build plan to
+produce the fully rendered manifests.
+
+<Tabs groupId="DD697D65-5BEC-4B92-BB33-59BE4FEC112F">
+  <TabItem value="command" label="Command">
+```bash
+holos cue export --expression holos --out=yaml ./components/httpbin
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```yaml showLineNumbers
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: no-name
+spec:
+  artifacts:
+    - artifact: components/no-name/no-name.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+          resources: {}
+        - kind: File
+          output: httpbin.yaml
+          file:
+            source: httpbin.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+            - httpbin.yaml
+          output: components/no-name/no-name.gen.yaml
+          kustomize:
+            kustomization:
+              labels:
+                - includeSelectors: false
+                  pairs:
+                    app.kubernetes.io/name: httpbin
+              patches: []
+              images:
+                - name: mccutchen/go-httpbin
+              resources:
+                - resources.gen.yaml
+                - httpbin.yaml
+              kind: Kustomization
+              apiVersion: kustomize.config.k8s.io/v1beta1
+source:
+  component:
+    name: no-name
+    path: no-path
+    parameters: {}
+```
+  </TabItem>
+</Tabs>
+
+### Transforming manifests
+
+Reviewing the BuildPlan exported in the previous command:
+
+1. The [File Generator] copies the plain `httpbin.yaml` file into the build.
+2. The [Kustomize Transformer] uses `httpbin.yaml` as an input resource.
+3. The final artifact is the output from Kustomize.
+
+This BuildPlan transforms the raw yaml by labeling all of the resources with
+`"app.kubernetes.io/name": "httpbin"` using the [KustomizeConfig] `CommonLabels`
+field.  We still need to integrate `httpbin` with `prometheus`.   Annotate the
+Service with `prometheus.io/probe: "true"` to complete the integration.  Holos
+makes this easier with CUE.  We don't need to edit any yaml files.
+
+Add a new `patches.cue` file to the `httpbin` component with the following
+content.
+
+<Tabs groupId="104D40FD-ED59-4F66-8B91-435436084743">
+  <TabItem value="touch" label="touch">
+```bash
+touch components/httpbin/patches.cue
+```
+  </TabItem>
+  <TabItem value="patches.cue" label="patches.cue">
+```cue showLineNumbers
+package holos
+
+import "encoding/yaml"
+
+// Mix in a Kustomize patch to the configuration.
+Kustomize: KustomizeConfig: Kustomization: _patches: {
+	probe: {
+		target: kind: "Service"
+		target: name: "httpbin"
+		patch: yaml.Marshal([{
+			op:    "add"
+			path:  "/metadata/annotations/prometheus.io~1probe"
+			value: "true"
+		}])
+	}
+}
+```
+  </TabItem>
+</Tabs>
+
+:::note
+We use a hidden `_patches` field to easily unify data into a struct, then
+convert the struct into a list for export.
+:::
+
+## Reviewing Changes
+
+Render the platform to see the result of the kustomization patch.
+
+<Tabs groupId="5D1812DD-8E7B-4F97-B349-275214F38B6E">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+rendered httpbin in 197.030208ms
+rendered platform in 197.416416ms
+```
+  </TabItem>
+</Tabs>
+
+Holos is configuring Kustomize to patch the plain `httpbin.yaml` file with the
+annotation.
+
+<Tabs groupId="3D80279E-8EDE-4B3E-9269-50F5D1C1CA42">
+  <TabItem value="command" label="Command">
+```bash
+git diff
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```diff
+diff --git a/deploy/components/httpbin/httpbin.gen.yaml b/deploy/components/httpbin/httpbin.gen.yaml
+index 298b9a8..a16bd1a 100644
+--- a/deploy/components/httpbin/httpbin.gen.yaml
++++ b/deploy/components/httpbin/httpbin.gen.yaml
+@@ -1,6 +1,8 @@
+ apiVersion: v1
+ kind: Service
+ metadata:
++  annotations:
++    prometheus.io/probe: "true"
+   labels:
+     app.kubernetes.io/name: httpbin
+   name: httpbin
+
+```
+  </TabItem>
+</Tabs>
+
+Add and commit the final changes.
+
+<Tabs groupId="54C335C8-B382-4277-AE87-0D6556921955">
+  <TabItem value="command" label="Command">
+```bash
+git add . && git commit -m 'annotate httpbin for prometheus probes'
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+[main 6eeeadb] annotate httpbin for prometheus probes
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+```
+  </TabItem>
+</Tabs>
+
+## Trying Locally
+
+Optionally apply the manifests Holos rendered to a [Local Cluster].
+
+## Next Steps
+
+We learned how Holos makes it easier to manage [httpbin], distributed as a
+Kustomize base, using a kustomize Component similar to the helm component we saw
+previously.  Holos offers a clear way to kustomize any component, patching an
+annotation onto the `httpbin` Service in this example.
+
+Continue on with the tutorial to explore how Holos makes it easier to manage
+certificates and make services accessible outside of a cluster.
+
+[httpbin]: https://github.com/mccutchen/go-httpbin/tree/v2.15.0
+[Helm Values]: ./helm-values.mdx
+[File Generator]: ../api/core.md#File
+[Kustomize Transformer]: ../api/core.md#Kustomize
+[BuildPlan]: ../api/core.md#BuildPlan
+[KustomizeConfig]: ../api/author.md#KustomizeConfig
