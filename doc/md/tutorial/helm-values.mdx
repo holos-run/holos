@@ -1,0 +1,516 @@
+---
+slug: helm-values
+title: Helm Values
+description: Holos provides values to multiple charts easily and safely.
+sidebar_position: 40
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<head>
+  <meta property="og:title" content="Helm Values | Holos" />
+  <meta property="og:image" content="https://holos.run/img/cards/guides-helm-2.png" />
+</head>
+
+# Helm Values
+
+## Overview
+
+This tutorial demonstrates how Holos makes it easier to integrate multiple Helm
+charts together with strong type checking and validation.  Holos adds valuable
+capabilities to Helm and Kustomize:
+
+1. Inject the same value into two or more charts to integrate them safer than Helm alone.
+2. Add strong type checking and validation of constraints for Helm input values.
+3. Easily implement the [rendered manifests pattern].
+
+This tutorial works through managing the [prometheus] and [blackbox] Helm
+Charts.  Unfortunately the upstream maintainers provide default `values.yaml`
+files that misconfigure the two services.  Prometheus tries to connect to
+Blackbox at the wrong host and port.
+
+Holos and CUE makes it easy to integrate them correctly and keep them configured
+in lock step going forward.
+
+## The Code
+
+### Generate a Platform
+
+Use `holos` to generate a minimal platform directory structure.  First, create
+and cd into a blank directory. Then use the `holos generate platform` command.
+
+```shell
+mkdir holos-helm-values-tutorial
+cd holos-helm-values-tutorial
+holos generate platform v1alpha5
+```
+
+Make a commit to track changes.
+
+```bash
+git init . && git add . && git commit -m initial
+```
+
+### Create the Components
+
+Create the `prometheus` and `blackbox` component directories, then add each of
+the following file contents.
+
+```bash
+mkdir -p components/prometheus components/blackbox
+touch components/prometheus/prometheus.cue
+touch components/blackbox/blackbox.cue
+```
+
+<Tabs groupId="D15A3008-1EFC-4D34-BED1-15BC0C736CC3">
+  <TabItem value="prometheus.cue" label="prometheus.cue">
+```txt
+components/prometheus/prometheus.cue
+```
+```cue showLineNumbers
+package holos
+
+// Produce a helm chart build plan.
+holos: Helm.BuildPlan
+
+Helm: #Helm & {
+	Chart: {
+		name:    "prometheus"
+		version: "25.27.0"
+		repository: {
+			name: "prometheus-community"
+			url:  "https://prometheus-community.github.io/helm-charts"
+		}
+	}
+}
+```
+  </TabItem>
+  <TabItem value="blackbox.cue" label="blackbox.cue">
+```txt
+components/blackbox/blackbox.cue
+```
+```cue showLineNumbers
+package holos
+
+// Produce a helm chart build plan.
+holos: Helm.BuildPlan
+
+Helm: #Helm & {
+	Chart: {
+		name:    "prometheus-blackbox-exporter"
+		version: "9.0.1"
+		repository: {
+			name: "prometheus-community"
+			url:  "https://prometheus-community.github.io/helm-charts"
+		}
+	}
+}
+```
+  </TabItem>
+</Tabs>
+
+### Integrate the Components
+
+Integrate the components with the platform by adding the following file to the
+platform directory.
+
+```bash
+touch platform/prometheus.cue
+```
+
+```cue showLineNumbers
+package holos
+
+Platform: Components: {
+	prometheus: {
+		name: "prometheus"
+		path: "components/prometheus"
+	}
+	blackbox: {
+		name: "blackbox"
+		path: "components/blackbox"
+	}
+}
+```
+
+Render the platform.
+
+<Tabs groupId="33D6BFED-62D8-4A42-A26A-F3121D57C4E5">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+cached prometheus-blackbox-exporter 9.0.1
+rendered blackbox in 3.825430417s
+cached prometheus 25.27.0
+rendered prometheus in 4.840089667s
+rendered platform in 4.840137792s
+```
+  </TabItem>
+</Tabs>
+
+Commit the results.
+
+<Tabs groupId="446CC550-A634-45C0-BEC7-992E5C56D4FA">
+  <TabItem value="command" label="Command">
+```bash
+git add . && git commit -m 'add blackbox and prometheus'
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+[main b5df111] add blackbox and prometheus
+ 5 files changed, 1550 insertions(+)
+ create mode 100644 components/blackbox/blackbox.cue
+ create mode 100644 components/prometheus/prometheus.cue
+ create mode 100644 deploy/components/blackbox/blackbox.gen.yaml
+ create mode 100644 deploy/components/prometheus/prometheus.gen.yaml
+ create mode 100644 platform/prometheus.cue
+```
+  </TabItem>
+</Tabs>
+
+### Import Values
+
+Holos is rendering the helm charts with default values.  We can import these
+default values into CUE so we can easily work with them.
+
+```bash
+holos cue import \
+  --package holos \
+  --path 'Helm: Values:' \
+  --outfile components/prometheus/values.cue \
+  components/prometheus/vendor/25.27.0/prometheus/values.yaml 
+```
+
+```bash
+holos cue import \
+  --package holos \
+  --path 'Helm: Values:' \
+  --outfile components/blackbox/values.cue \
+  components/blackbox/vendor/9.0.1/prometheus-blackbox-exporter/values.yaml
+```
+
+These command convert the YAML data into CUE code and nest the values under the
+`Values` field of the `Holos` struct.  CUE unifies this `values.cue` file with
+the other `*.cue` files in the same directory, so each of the components now
+have a `Holos.Values` field defined.
+
+Render the platform and commit the results.
+
+<Tabs groupId="BDDCD65A-2E9D-4BA6-AAE2-8099494D5E4B">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+rendered blackbox in 365.936792ms
+rendered prometheus in 371.855875ms
+rendered platform in 372.109916ms
+```
+  </TabItem>
+</Tabs>
+
+<Tabs groupId="1636C619-258E-4D49-8052-F64B588C9177">
+  <TabItem value="command" label="Command">
+```bash
+git add . && git commit -m 'import values'
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+[main 52e90ea] import values
+ 2 files changed, 1815 insertions(+)
+ create mode 100644 components/blackbox/values.cue
+ create mode 100644 components/prometheus/values.cue
+```
+  </TabItem>
+</Tabs>
+
+### Add the Common Configuration
+
+Define a structure to hold the configuration values we want both helm charts to
+use.  We add this configuration to the `components` directory so it's in scope
+for all components.
+
+```bash
+touch components/blackbox.cue
+```
+
+```cue showLineNumbers
+package holos
+
+// Schema Definition
+#Blackbox: {
+	// host constrained to a lower case dns label
+	host: string & =~"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$"
+	// port constrained to a valid range
+	port: int & >0 & <=65535
+}
+
+// Concrete values must validate against the schema.
+Blackbox: #Blackbox & {
+	host: "blackbox"
+	port: 9115
+}
+```
+
+:::important
+CUE loads and unifies all `*.cue` files from the component path to the directory containing
+`cue.mod`.
+
+CUE also validates types _and_ constraints.  Validation with CUE is better than
+general purpose languages which are limited to type checking only.
+:::
+
+Add and commit the configuration.
+
+<Tabs groupId="A738CCE4-F0C6-4CC7-BE1F-2B92F0E86FDC">
+  <TabItem value="command" label="Command">
+```bash
+git add . && git commit -m 'add blackbox configuration'
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+[main 1adcd08] add blackbox configuration
+ 1 file changed, 15 insertions(+)
+ create mode 100644 components/blackbox.cue
+```
+  </TabItem>
+</Tabs>
+
+### Reference the Common Configuration
+
+Referencing common configuration from multiple components is easy and safe with
+Holos and CUE.
+
+Patch the two `values.cue` files, or edit them by hand, to reference
+`Blackbox.host` and `Blackbox.port`.
+
+<Tabs groupId="5FFCE892-B8D4-4F5B-B2E2-39EC9E9F87A4">
+  <TabItem value="command" label="Command">
+```bash
+patch -p1 < values.patch
+```
+  </TabItem>
+  <TabItem value="patch" label="values.patch">
+```diff
+--- a/components/blackbox/values.cue
++++ b/components/blackbox/values.cue
+@@ -1,6 +1,8 @@
+ package holos
+ 
+ Helm: Values: {
++	fullnameOverride: Blackbox.host
++
+ 	global: {
+ 		//# Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...)
+ 		//#
+@@ -192,7 +194,7 @@ Helm: Values: {
+ 		annotations: {}
+ 		labels: {}
+ 		type: "ClusterIP"
+-		port: 9115
++		port: Blackbox.port
+ 		ipDualStack: {
+ 			enabled: false
+ 			ipFamilies: ["IPv6", "IPv4"]
+--- a/components/prometheus/values.cue
++++ b/components/prometheus/values.cue
+@@ -1083,7 +1083,7 @@ Helm: Values: {
+ 					target_label: "__param_target"
+ 				}, {
+ 					target_label: "__address__"
+-					replacement:  "blackbox"
++					replacement:  "\(Blackbox.host):\(Blackbox.port)"
+ 				}, {
+ 					source_labels: ["__param_target"]
+ 					target_label: "instance"
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+patching file 'components/blackbox/values.cue'
+patching file 'components/prometheus/values.cue'
+```
+  </TabItem>
+</Tabs>
+
+:::important
+Both charts now use the same values in lock step.  Holos and CUE integrate them
+safely and easily.
+:::
+
+Remove the patch file, then commit the changes.
+
+<Tabs groupId="6498B00E-FADA-4EB2-885C-808F1D22E04D">
+  <TabItem value="command" label="Command">
+```bash
+rm values.patch
+```
+```bash
+git add . && git commit -m 'integrate blackbox and prometheus together'
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+[main 4221803] integrate blackbox and prometheus together
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+```
+  </TabItem>
+</Tabs>
+
+## Review the Changes
+
+Holos makes it easy to see and review platform wide changes.  Render the
+platform to see how both prometheus and blackbox change in lock step.
+
+<Tabs groupId="E7F6D8B1-22FA-4075-9B44-D9F2815FE0D3">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+rendered blackbox in 374.810666ms
+rendered prometheus in 382.899334ms
+rendered platform in 383.270625ms
+```
+  </TabItem>
+</Tabs>
+
+Changes are easily visible with version control.
+
+<Tabs groupId="9789A0EF-24D4-4FB9-978A-3895C2778789">
+  <TabItem value="command" label="Command">
+```bash
+git diff
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```diff
+diff --git a/deploy/components/blackbox/blackbox.gen.yaml b/deploy/components/blackbox/blackbox.gen.yaml
+index 3db20cd..5336f44 100644
+--- a/deploy/components/blackbox/blackbox.gen.yaml
++++ b/deploy/components/blackbox/blackbox.gen.yaml
+@@ -7,7 +7,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ ---
+ apiVersion: v1
+@@ -31,7 +31,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ ---
+ apiVersion: v1
+@@ -43,7 +43,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ spec:
+   ports:
+@@ -65,7 +65,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ spec:
+   replicas: 1
+@@ -119,8 +119,8 @@ spec:
+           name: config
+       hostNetwork: false
+       restartPolicy: Always
+-      serviceAccountName: prometheus-blackbox-exporter
++      serviceAccountName: blackbox
+       volumes:
+       - configMap:
+-          name: prometheus-blackbox-exporter
++          name: blackbox
+         name: config
+diff --git a/deploy/components/prometheus/prometheus.gen.yaml b/deploy/components/prometheus/prometheus.gen.yaml
+index 9e02bce..ab638f0 100644
+--- a/deploy/components/prometheus/prometheus.gen.yaml
++++ b/deploy/components/prometheus/prometheus.gen.yaml
+@@ -589,7 +589,7 @@ data:
+       - source_labels:
+         - __address__
+         target_label: __param_target
+-      - replacement: blackbox
++      - replacement: blackbox:9115
+         target_label: __address__
+       - source_labels:
+         - __param_target
+
+```
+  </TabItem>
+</Tabs>
+
+From the diff we know this change will:
+
+1. Reconfigure the blackbox exporter host from `prometheus-blackbox-exporter` to `blackbox`.
+2. Have no effect on the blackbox service port.  It was already using the default 9115.
+3. Reconfigure prometheus to query the blackbox exporter at the correct host and
+port, `blackbox:9115`.
+
+Without this change prometheus incorrectly assumed blackbox was listening at
+`blackbox` on port `80` when it was actually listening at
+`prometheus-blackbox-exporter` port `9115`.  Going forward, changing the
+blackbox host or port will reconfigure both charts correctly.
+
+Commit the changes and move on to deploying them.
+
+<Tabs groupId="F8C9A98D-DE1E-4EF6-92C1-017A9166F6C7">
+  <TabItem value="command" label="Command">
+```bash
+git add . && git commit -m 'render integrated blackbox and prometheus manifests'
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+[main 67efe0d] render integrated blackbox and prometheus manifests
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+```
+  </TabItem>
+</Tabs>
+
+## Try Locally
+
+Optionally apply the manifests Holos rendered to a [Local Cluster].
+
+## Next Steps
+
+In this tutorial we learned how Holos makes it easier to holistically integrate
+the [prometheus] and [blackbox] charts so they're configured in lock step with
+each other.  If we relied on Helm alone, there is no good way to configure both
+charts to use the same service endpoint.
+
+[rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern
+[prometheus]: https://github.com/prometheus-community/helm-charts/tree/prometheus-25.27.0/charts/prometheus
+[blackbox]: https://github.com/prometheus-community/helm-charts/tree/prometheus-blackbox-exporter-9.0.1/charts/prometheus-blackbox-exporter
+[httpbin]: https://github.com/mccutchen/go-httpbin/tree/v2.15.0
+
+[Config Schema]: #config-schema
+
+[Technical Overview]: ./overview.mdx
+[Local Cluster]: ../topics/local-cluster.mdx

@@ -1,10 +1,349 @@
 ---
 slug: kustomize-transformer
 title: Kustomize Transformer
-description: Holos makes it easy to Kustomize a Helm chart.
-sidebar_position: 60
+description: Holos makes it easy to Kustomize configuration.
+sidebar_position: 45
 ---
 
-# Helm Kustomization
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-Introduce Kustomization transformer.
+# Kustomize Transformer
+
+## Overview
+
+In the previous tutorial we learned how Holos makes it easier to holistically
+integrate the [prometheus] and [blackbox] charts so they're configured in lock
+step with each other.
+
+This tutorial goes further, integrating the [httpbin] service with prometheus
+and blackbox to automatically probe for availability.
+
+We'll explore how Holos manages Kustomize bases as a kind of component along
+with the Helm component kind we've already covered.
+
+## The Code
+
+### Generate a Platform
+
+:::note Optional
+Skip this step if you completed the previous tutorial.
+:::
+
+Use `holos` to generate a minimal platform directory structure.  First, create
+and cd into a blank directory. Then use the `holos generate platform` command.
+
+```shell
+mkdir holos-helm-values-tutorial
+cd holos-helm-values-tutorial
+holos generate platform v1alpha5
+```
+
+Make a commit to track changes.
+
+```bash
+git init . && git add . && git commit -m initial
+```
+
+## Deploy the Configuration
+
+:::note Optional
+Feel free to skip to the end of this tutorial.
+:::
+
+Let's deploy the configuration change along with a simple `httpbin` service to
+see it on a live cluster.
+
+### Httpbin Kustomization
+
+We need to manage [httpbin] so we can achieve the goal of probing a simple
+service with prometheus.  The maintainers provide a Kustomize base in lieu of a
+Helm chart.  Holos makes it easy to integrate software regardless of the
+distribution method.
+
+We'll use Holos and CUE to add the `prometheus.io/probe: "true"` annotation
+using Kustomize without having to write any YAML, only well structured CUE.
+
+Create the httpbin component similar to how we did the prometheus and blackbox
+components.
+
+<Tabs groupId="800C3AE7-E7F8-4AFC-ABF1-6AFECD945958">
+  <TabItem value="projects/platform/components/httpbin/httpbin.cue" label="Component">
+```bash
+mkdir -p projects/platform/components/httpbin
+touch projects/platform/components/httpbin/httpbin.cue
+```
+```cue showLineNumbers
+package holos
+
+import "encoding/yaml"
+
+// Produce a Kustomize BuildPlan for Holos
+_Kustomize.BuildPlan
+
+// https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/README.md
+_Kustomize: #Kustomize & {
+	KustomizeConfig: Files: "resources.yaml": _
+	KustomizeConfig: Kustomization: {
+		commonLabels: "app.kubernetes.io/name": "httpbin"
+		images: [{name: "mccutchen/go-httpbin"}]
+		_patches: probe: {
+			target: kind: "Service"
+			target: name: "httpbin"
+			patch: yaml.Marshal([{
+				op:    "add"
+				path:  "/metadata/annotations/prometheus.io~1probe"
+				value: "true"
+			}])
+		}
+		patches: [for x in _patches {x}]
+	}
+}
+```
+  </TabItem>
+  <TabItem value="projects/platform/components/httpbin/resources.yaml" label="resources.yaml">
+Add a plain `resources.yaml` file containing resources for kustomize to process.
+:::important
+Holos knows this file is part of the BuildPlan from the `KustomizeConfig:
+Files: "resources.yaml": _` line in the Component.
+:::
+```bash
+mkdir -p projects/platform/components/httpbin
+touch projects/platform/components/httpbin/resources.yaml
+```
+```yaml showLineNumbers
+# https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+spec:
+  template:
+    spec:
+      containers:
+        - name: httpbin
+          image: mccutchen/go-httpbin
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+          resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+      appProtocol: http
+```
+  </TabItem>
+</Tabs>
+
+Register the component with the platform.
+
+<Tabs groupId="CBD42BC2-38C3-46E2-9F4D-B21D8E909BAC">
+  <TabItem value="platform/httpbin.cue" label="Platform">
+```txt
+mkdir -p platform
+touch platform/httpbin.cue
+```
+```cue showLineNumbers
+package holos
+
+_Platform: Components: httpbin: {
+	name:      "httpbin"
+	component: "projects/platform/components/httpbin"
+	cluster:   "local"
+}
+```
+  </TabItem>
+</Tabs>
+
+Render the platform to render the prometheus chart.
+
+<Tabs groupId="6D7CBF37-95CA-4C4A-BE31-624D90EA4157">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+rendered blackbox for cluster local in 174.441667ms
+rendered prometheus for cluster local in 217.698875ms
+rendered httpbin for cluster local in 1.632421292s
+rendered platform in 1.632495s
+```
+  </TabItem>
+  <TabItem value="deploy/clusters/local/components/httpbin/httpbin.gen.yaml" label="httpbin.gen.yaml">
+```txt
+deploy/clusters/local/components/httpbin/httpbin.gen.yaml
+```
+```yaml showLineNumbers
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+# highlight-next-line
+    prometheus.io/probe: "true"
+  labels:
+    app.kubernetes.io/name: httpbin
+    argocd.argoproj.io/instance: httpbin
+    holos.run/component.name: httpbin
+  name: httpbin
+spec:
+  ports:
+  - appProtocol: http
+    name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+  selector:
+    app.kubernetes.io/name: httpbin
+    argocd.argoproj.io/instance: httpbin
+    holos.run/component.name: httpbin
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: httpbin
+    argocd.argoproj.io/instance: httpbin
+    holos.run/component.name: httpbin
+  name: httpbin
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: httpbin
+      argocd.argoproj.io/instance: httpbin
+      holos.run/component.name: httpbin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: httpbin
+        argocd.argoproj.io/instance: httpbin
+        holos.run/component.name: httpbin
+    spec:
+      containers:
+      - image: mccutchen/go-httpbin
+        livenessProbe:
+          httpGet:
+            path: /status/200
+            port: http
+        name: httpbin
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        readinessProbe:
+          httpGet:
+            path: /status/200
+            port: http
+        resources: {}
+
+```
+  </TabItem>
+</Tabs>
+
+<Tabs groupId="2C00BA41-32FC-41C8-8D88-34EB367ACBB1">
+  <TabItem value="command" label="Command">
+```bash
+git add .
+git commit -m 'add httpbin'
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+[main ee6e1df] add httpbin
+ 3 files changed, 90 insertions(+)
+ create mode 100644 deploy/clusters/local/components/httpbin/httpbin.gen.yaml
+ create mode 100644 platform/httpbin.cue
+ create mode 100644 projects/platform/components/httpbin/httpbin.cue
+```
+  </TabItem>
+</Tabs>
+
+## Local Cluster
+
+Let's apply the fully rendered manifests `holos` produces for prometheus,
+blackbox, and httpbin.  Refer to the [Local Cluster] guide to follow along.
+
+<Tabs groupId="86CDC5B2-C472-45AB-B843-A2219B11F5DA">
+  <TabItem value="command" label="Command">
+```bash
+kubectl apply \
+  -f deploy/clusters/local/components/prometheus \
+  -f deploy/clusters/local/components/blackbox \
+  -f deploy/clusters/local/components/httpbin
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+serviceaccount/prometheus-alertmanager created
+serviceaccount/prometheus-kube-state-metrics created
+serviceaccount/prometheus-prometheus-node-exporter created
+serviceaccount/prometheus-prometheus-pushgateway created
+serviceaccount/prometheus-server created
+clusterrole.rbac.authorization.k8s.io/prometheus-kube-state-metrics created
+clusterrole.rbac.authorization.k8s.io/prometheus-server created
+clusterrolebinding.rbac.authorization.k8s.io/prometheus-kube-state-metrics created
+clusterrolebinding.rbac.authorization.k8s.io/prometheus-server created
+configmap/prometheus-alertmanager created
+configmap/prometheus-server created
+service/prometheus-alertmanager created
+service/prometheus-alertmanager-headless created
+service/prometheus-kube-state-metrics created
+service/prometheus-prometheus-node-exporter created
+service/prometheus-prometheus-pushgateway created
+service/prometheus-server created
+persistentvolumeclaim/prometheus-server created
+deployment.apps/prometheus-kube-state-metrics created
+deployment.apps/prometheus-prometheus-pushgateway created
+deployment.apps/prometheus-server created
+statefulset.apps/prometheus-alertmanager created
+daemonset.apps/prometheus-prometheus-node-exporter created
+serviceaccount/blackbox created
+configmap/blackbox created
+service/blackbox created
+deployment.apps/blackbox created
+service/httpbin created
+deployment.apps/httpbin created
+```
+  </TabItem>
+</Tabs>
+
+Port forward to the prometheus web interface.
+
+```bash
+kubectl wait --for=condition=Available deployment/prometheus-server --timeout=300s
+kubectl -n default port-forward svc/prometheus-server 8081:80
+```
+
+Then browse to http://localhost:8081/targets?search=httpbin
+
+Prometheus should report `httpbin.default.svc:80` is UP:
+
+![Prometheus httpbin probe is UP](/img/tutorials/helm-prometheus-httpbin.png)
+
+## Next Steps
+
+We learned how Holos makes it easier to manage [httpbin], distributed as a
+Kustomize base, using the same component abstraction we use for Helm charts.
+Holos offers a clear way to kustomize any component, patching an annotation onto
+the `httpbin` Service in this example.
+
+[Helm Values]: ./helm-values.mdx
+[httpbin]: https://github.com/mccutchen/go-httpbin/tree/v2.15.0
