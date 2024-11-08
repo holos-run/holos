@@ -16,20 +16,24 @@ In the previous tutorial we learned how Holos makes it easier to holistically
 integrate the [prometheus] and [blackbox] charts so they're configured in lock
 step with each other.
 
-This tutorial goes further, integrating the [httpbin] service with prometheus
+This tutorial goes further by integrating the [httpbin] service with prometheus
 and blackbox to automatically probe for availability.
 
-We'll explore how Holos manages Kustomize bases as a kind of component along
-side the Helm component kind we've already covered.
+We'll explore how Holos manages [kustomize] bases similar to the Helm kind
+covered in the [Helm Values] tutorial.
 
 ## The Code
 
 ### Generating the structure
 
-:::note Optional
-Skip this step if you completed the previous tutorial.
-:::
+<Tabs>
+  <TabItem value="optional" label="Optional">
+:::note Skip this step if you completed the [Helm Values] tutorial.
 
+Otherwise click the **Generate** tab to generate a blank platform now.
+:::
+  </TabItem>
+  <TabItem value="generate" label="Generate">
 Use `holos` to generate a minimal platform directory structure.  First, create
 and cd into a blank directory. Then use the `holos generate platform` command.
 
@@ -44,6 +48,9 @@ Make a commit to track changes.
 ```bash
 git init . && git add . && git commit -m initial
 ```
+
+  </TabItem>
+</Tabs>
 
 ### Managing the Component
 
@@ -379,6 +386,10 @@ Continue on with the tutorial to explore how Holos makes it easier to manage
 certificates and make services accessible outside of a cluster.
 
 [httpbin]: https://github.com/mccutchen/go-httpbin/tree/v2.15.0
+[prometheus]: https://github.com/prometheus-community/helm-charts/tree/prometheus-25.27.0/charts/prometheus
+[blackbox]: https://github.com/prometheus-community/helm-charts/tree/prometheus-blackbox-exporter-9.0.1/charts/prometheus-blackbox-exporter
+[kustomize]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
+
 [Helm Values]: ./helm-values.mdx
 [File Generator]: ../api/core.md#File
 [Kustomize Transformer]: ../api/core.md#Kustomize

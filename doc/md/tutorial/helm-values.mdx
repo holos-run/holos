@@ -17,21 +17,21 @@ import TabItem from '@theme/TabItem';
 
 ## Overview
 
-This tutorial demonstrates how Holos makes it easier to integrate multiple Helm
-charts together with strong type checking and validation.  Holos adds valuable
-capabilities to Helm and Kustomize:
+Holos makes it easier to integrate multiple Helm charts together.  Holos adds
+valuable capabilities to Helm and Kustomize.
 
 1. Inject the same value into two or more charts to integrate them safer than Helm alone.
 2. Add strong type checking and validation of constraints for Helm input values.
-3. Easily implement the [rendered manifests pattern].
+3. Implementation of the [rendered manifests pattern].
 
-This tutorial works through managing the [prometheus] and [blackbox] Helm
-Charts.  Unfortunately the upstream maintainers provide default `values.yaml`
-files that misconfigure the two services.  Prometheus tries to connect to
-Blackbox at the wrong host and port.
+We'll manage the [prometheus] and [blackbox] Helm Charts in this tutorial.
+Unfortunately, the upstream `values.yaml` files are misconfigured by default.
+Prometheus tries to connect to Blackbox at the wrong host and port.
 
-Holos and CUE makes it easy to integrate them correctly and keep them configured
-in lock step going forward.
+:::tip
+Holos and CUE makes it easy to fix this problem by integrating them correctly.
+The integrated charts will stay in lock step over time.
+:::
 
 ## The Code
 
@@ -176,8 +176,9 @@ git add . && git commit -m 'add blackbox and prometheus'
 
 ### Importing Helm Values
 
-Holos is rendering the helm charts with default values.  We can import these
-default values into CUE so we can easily work with them.
+Holos renders the helm charts with their default values.  We can import these
+default values into CUE so we can easily work with them as structured data
+instead of text markup.
 
 ```bash
 holos cue import \
@@ -196,9 +197,11 @@ holos cue import \
 ```
 
 These command convert the YAML data into CUE code and nest the values under the
-`Values` field of the `Holos` struct.  CUE unifies this `values.cue` file with
-the other `*.cue` files in the same directory, so each of the components now
-have a `Holos.Values` field defined.
+`Values` field of the `Holos` struct.
+
+:::important
+CUE unifies `values.cue` with the other `*.cue` files in the same directory.
+:::
 
 Render the platform and commit the results.
 
@@ -262,11 +265,10 @@ Blackbox: #Blackbox & {
 ```
 
 :::important
-CUE loads and unifies all `*.cue` files from the component path to the directory containing
-`cue.mod`.
-
-CUE also validates types _and_ constraints.  Validation with CUE is better than
-general purpose languages which are limited to type checking only.
+1. CUE loads and unifies all `*.cue` files from the root directory containing
+`cue.mod` to the leaf component path directory.
+2. CUE validates types _and_ constraints.  Validation with CUE is better than
+languages with only type checking.
 :::
 
 Add and commit the configuration.

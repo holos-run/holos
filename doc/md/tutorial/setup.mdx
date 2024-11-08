@@ -11,36 +11,37 @@ import RenderPlatformDiagram from '../diagrams/render-platform-sequence.mdx';
 
 # Setup
 
+## Overview
+
 This tutorial will guide you through the installation of Holos and its
 dependencies, as well as the initialization of a minimal Platform that you can
 extend to meet your specific needs.
 
-## Prerequisites
+## Installing Holos
 
-Holos integrates with the following tools that should be installed to enable
-their functionality.
-
-* [Helm] to fetch and render Helm chart Components [Kubectl] to [kustomize]
-* components.
-
-## Install Holos
-
-Holos is distributed as a single file executable that can be installed in a couple of ways.
+Holos is distributed as a single file executable that can be installed in a
+couple of ways.
 
 ### Releases
 
 Download `holos` from the [releases] page and place the executable into your
 shell path.
 
-### Go install
-
-Alternatively, install directly into your go bin path using:
+### Go Install
 
 ```shell
 go install github.com/holos-run/holos/cmd/holos@latest
 ```
 
-## Generate a new Platform
+### Dependencies
+
+Holos integrates with the following tools that should be installed to enable
+their functionality.
+
+- [Helm] to fetch and render Helm chart Components.
+- [Kubectl] to [kustomize] components.
+
+## Generating a Platform
 
 Use `holos` to generate a minimal platform using the recommended directory
 structure.  First, create and cd into a blank directory. Then use the `holos
@@ -57,7 +58,7 @@ serving as the entry point for your new platform configuration.  You'll register
 software components with the platform using the CUE code in this `platform`
 directory.
 
-## Render the Platform
+## Rendering the Platform
 
 We usually make configuration changes with holos in the following loop:
 
@@ -128,7 +129,6 @@ You might like our [Local Cluster] guide because it:
 
 1. Includes a script to quickly reset the cluster to a known good state.
 2. Configures proper DNS and TLS certificates.
-
 
 [Helm]: https://github.com/helm/helm/releases
 [Kubectl]: https://kubernetes.io/docs/tasks/tools/
