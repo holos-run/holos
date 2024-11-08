@@ -5,4 +5,264 @@ description: Configure a simple Hello World service with Holos.
 sidebar_position: 30
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import RenderingOverview from '../diagrams/rendering-overview.mdx';
+
 # Hello Holos
+
+One of the first exercises you perform when learning a new programming language
+is to print out the "Hello World!" greeting. For Holos, our "Hello Holos"
+exercise involves modeling the [podinfo Helm chart][podinfo] that produces a
+similar greeting message from a Kubernetes Pod.
+
+By the end of this tutorial you will gain the understanding of how to model
+an individual Holos Component using a Helm chart as its source.
+
+# The code
+
+### Podinfo Helm chart
+
+Start by creating a directory for `podinfo`, touching an empty CUE file,
+and then populating it with the CUE code below:
+
+<Tabs groupId="tutorial-hello-podinfo-helm-cue-code">
+  <TabItem value="projects/tutorial/components/podinfo/podinfo.cue" label="Podinfo Helm Chart">
+```bash
+mkdir -p projects/tutorial/components/podinfo
+touch projects/tutorial/components/podinfo/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+// Produce a helm chart build plan.
+holos: HelmChart.BuildPlan
+
+HelmChart: #Helm & {
+	Name: "podinfo"
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+}
+```
+  </TabItem>
+</Tabs>
+
+### Register the podinfo component
+
+Now let's register the code modeling the `podinfo` Helm chart as a Holos
+Component. Create a new file in the `platform` directory with this CUE code:
+
+<Tabs groupId="tutorial-hello-register-podinfo-component">
+  <TabItem value="platform/podinfo.cue" label="Register Podinfo">
+```bash
+touch platform/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+Platform: Components: podinfo: {
+	name: "podinfo"
+	path: "projects/tutorial/components/podinfo"
+}
+```
+  </TabItem>
+</Tabs>
+
+### Render the podinfo manifest file
+
+Finally we're ready to render the podinfo Kubernetes manifest using the
+`holos render platform` subcommand, targeting the `platform` directory.
+
+<Tabs groupId="tutorial-hello-render-manifests">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```
+rendered podinfo in 116.142583ms
+rendered platform in 116.204042ms
+```
+  </TabItem>
+  <TabItem value="manifest" label="Manifest Data">
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: podinfo
+    app.kubernetes.io/version: 6.6.2
+    helm.sh/chart: podinfo-6.6.2
+  name: podinfo
+spec:
+  ports:
+  - name: http
+    port: 9898
+    protocol: TCP
+    targetPort: http
+  - name: grpc
+    port: 9999
+    protocol: TCP
+    targetPort: grpc
+  selector:
+    app.kubernetes.io/name: podinfo
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: podinfo
+    app.kubernetes.io/version: 6.6.2
+    helm.sh/chart: podinfo-6.6.2
+  name: podinfo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: podinfo
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "9898"
+        prometheus.io/scrape: "true"
+      labels:
+        app.kubernetes.io/name: podinfo
+    spec:
+      containers:
+      - command:
+        - ./podinfo
+        - --port=9898
+        - --cert-path=/data/cert
+        - --port-metrics=9797
+        - --grpc-port=9999
+        - --grpc-service-name=podinfo
+        - --level=info
+        - --random-delay=false
+        - --random-error=false
+        env:
+        - name: PODINFO_UI_COLOR
+          value: '#34577c'
+        image: ghcr.io/stefanprodan/podinfo:6.6.2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/healthz
+          failureThreshold: 3
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: podinfo
+        ports:
+        - containerPort: 9898
+          name: http
+          protocol: TCP
+        - containerPort: 9797
+          name: http-metrics
+          protocol: TCP
+        - containerPort: 9999
+          name: grpc
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/readyz
+          failureThreshold: 3
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        resources:
+          limits: null
+          requests:
+            cpu: 1m
+            memory: 16Mi
+        volumeMounts:
+        - mountPath: /data
+          name: data
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: data
+```
+  </TabItem>
+</Tabs>
+
+Success! Holos generated the `deploy/components/podinfo/podinfo.gen.yaml` file
+containing manifest data from the `podinfo` Helm chart.
+
+# Breaking it down
+
+Here’s a quick review of the files we created and their purpose:
+
+| File | Purpose
+| - | - |
+`projects/tutorial/components/podinfo/podinfo.cue` | Identifies and configures the `podinfo` Helm chart.
+`platform/podinfo.cue` | Adds the `podinfo` Helm chart to the list of Components that will be rendered by Holos.
+
+We run `holos render platform` against the `platform` directory because that
+directory contains the `#Platform` definition and the data Holos needs to kick
+off the rendering process:
+
+<RenderingOverview />
+
+Components are the building blocks for a Platform, and without them `holos
+render platform` does nothing. The `platform/podinfo.cue` file registers the
+`podinfo` Component with the Platform, and provides the path to the directory
+where the Component's CUE files are located.
+
+
+The `projects/tutorial/components/podinfo/podinfo.cue` file unifies the `#Helm`
+definition, indicating that we're configuring a Helm chart, along with the
+`podinfo` chart's version and repository information.  If we wanted to customize
+the `podinfo` chart and change any of the chart's values, we would make those
+changes here.  For example, we could change the message being displayed by
+passing the `ui.message` value to the chart:
+
+```cue
+HelmChart: #Helm & {
+	Name: "podinfo"
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+	Values: {
+	    ui: message: "Hello Holos from Podinfo!"
+	}
+}
+```
+
+Holos repeats this process for every Component added to the Platform, and since `podinfo`
+is the only Component, we're done!
+
+# Next Steps
+
+We've shown how to add a single Helm chart to the Platform, but what if you have
+more than one Helm chart and they all need to access the same data? Check
+out the [Helm Generator tutorial][nexthelm] to learn more.
+
+[podinfo]: https://github.com/stefanprodan/podinfo
+[nexthelm]: ./helm-generator.mdx
