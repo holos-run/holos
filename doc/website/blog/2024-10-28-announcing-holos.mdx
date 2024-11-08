@@ -7,6 +7,9 @@ image: /img/cards/announcing-holos.png
 description: Holistically manage Helm and Kustomize with CUE
 ---
 
+import RenderingOverview from '@site/src/diagrams/rendering-overview.mdx';
+import RenderPlatformDiagram from '@site/src/diagrams/render-platform-sequence.mdx';
+
 <head>
   <title>Announcing Holos</title>
   <meta property="og:title" content="Announcing Holos" />
@@ -21,39 +24,10 @@ manifests pattern as a data pipeline to fully render manifests generated from
 [Kustomize]: https://kustomize.io/
 [CUE]: https://cuelang.org/
 
-```mermaid
----
-title: Rendered Manifest Pipeline
----
-graph LR
-    Platform[<a href="/docs/api/author/v1alpha4/#Platform">Platform</a>]
-    Component[<a href="/docs/api/author/v1alpha4/#ComponentConfig">Components</a>]
+<RenderingOverview />
 
-    Helm[<a href="/docs/api/author/v1alpha4/#Helm">Helm</a>]
-    Kustomize[<a href="/docs/api/author/v1alpha4/#Kustomize">Kustomize</a>]
-    Kubernetes[<a href="/docs/api/author/v1alpha4/#Kubernetes">Kubernetes</a>]
+{/* truncate */}
 
-    BuildPlan[<a href="/docs/api/core/v1alpha4/#buildplan">BuildPlan</a>]
-
-    ResourcesArtifact[<a href="/docs/api/core/v1alpha4/#artifact">Resources<br/>Artifact</a>]
-    GitOpsArtifact[<a href="/docs/api/core/v1alpha4/#artifact">GitOps<br/>Artifact</a>]
-
-    Generators[<a href="/docs/api/core/v1alpha4/#generators">Generators</a>]
-    Transformers[<a href="/docs/api/core/v1alpha4/#transformer">Transformers</a>]
-    Files[Manifest<br/>Files]
-
-    Platform --> Component
-    Component --> Helm --> BuildPlan
-    Component --> Kubernetes --> BuildPlan
-    Component --> Kustomize --> BuildPlan
-
-    BuildPlan --> ResourcesArtifact --> Generators
-    BuildPlan --> GitOpsArtifact --> Generators
-
-    Generators --> Transformers --> Files
-```
-
-<!-- truncate -->
 
 At the start of the pandemic I was migrating our platform from VMs managed by
 Puppet to Kubernetes.  My primary goal was to build an observability system
@@ -84,6 +58,8 @@ manifests pattern, but we couldn’t find an agreed upon implementation.  We bui
 a Go command line tool to implement the pattern as a data pipeline.  I’d been
 thinking about the comments from the [Why are we templating YAML] posts and
 wondering what an answer to this question would look like.
+
+<RenderPlatformDiagram />
 
 The Go command line tool was an incremental improvement over the CI scripts, but
 we still didn’t have a good way to handle the data values.  We were still
