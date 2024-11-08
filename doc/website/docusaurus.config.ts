@@ -59,6 +59,14 @@ const config: Config = {
           showLastUpdateAuthor: true,
           showLastUpdateTime: true,
           sidebarPath: './sidebars.ts',
+          // https://docusaurus.io/docs/versioning#configuring-versioning-behavior
+          // lastVersion: 'current',
+          // versions: {
+          //   current: {
+          //     label: 'v1alpha6',
+          //     path: 'v1alpha6',
+          //   }
+          // }
         },
         blog: {
           path: "blog",
@@ -96,20 +104,7 @@ const config: Config = {
         srcDark: 'img/logo-dark.svg',
       },
       items: [
-        {
-          type: 'doc',
-          docId: 'guides/quickstart',
-          position: 'left',
-          label: 'Quickstart',
-        },
-        { to: '/docs/technical-overview', label: 'Docs', position: 'left' },
-        { to: '/docs/guides', label: 'Guides', position: 'left' },
-        {
-          type: 'doc',
-          docId: 'api',
-          position: 'left',
-          label: 'API',
-        },
+        { to: '/docs', label: 'Docs', position: 'left' },
         { to: '/blog', label: 'Blog', position: 'left' },
         {
           href: 'https://github.com/holos-run',
@@ -130,20 +125,12 @@ const config: Config = {
           title: 'Docs',
           items: [
             {
-              label: 'Quickstart',
-              to: '/docs/quickstart',
+              label: 'Tutorial',
+              to: '/docs/tutorial/overview',
             },
             {
-              label: 'Concepts',
-              to: '/docs/concepts',
-            },
-            {
-              label: 'Documentation',
-              to: '/docs',
-            },
-            {
-              label: 'API Reference',
-              to: '/docs/api',
+              label: 'Topics',
+              to: '/docs/topics',
             },
           ],
         },

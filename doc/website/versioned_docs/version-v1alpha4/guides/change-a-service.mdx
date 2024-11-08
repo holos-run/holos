@@ -18,12 +18,11 @@ This guide builds on the concepts covered in the [Quickstart] and [Deploy a Serv
 
 Like our other guides, this guide is intended to be useful without needing to
 run each command.  If you'd like to apply the manifests to a real Cluster,
-complete the [Local Cluster Guide](/docs/guides/local-cluster) before this
-guide.
+complete the [Local Cluster Guide] before this guide.
 
 You'll need the following tools installed to run the commands in this guide.
 
-1. [holos](/docs/install) - to build the Platform.
+1. [holos] - to build the Platform.
 2. [helm](https://helm.sh/docs/intro/install/) - to render Holos Components that
 wrap Helm charts.
 3. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to render Holos
@@ -706,14 +705,17 @@ Thanks for taking the time to work through this guide which covered:
 value is defined, making it faster and easier to troubleshoot problems.
 
 
-[Quickstart]: /docs/quickstart/
-[Deploy a Service]: /docs/guides/deploy-a-service/
-[Change a Service]: /docs/guides/change-a-service/
-[Helm]: /docs/api/author/v1alpha3/#Helm
-[Kubernetes]: /docs/api/author/v1alpha3/#Kubernetes
-[Kustomize]: /docs/api/author/v1alpha3/#Kustomize
-[ComponentFields]: /docs/api/author/v1alpha3/#ComponentFields
-[platform-files]: /docs/quickstart/#how-platform-rendering-works
+[Quickstart]: ./quickstart.mdx
+[Local Cluster Guide]: ./local-cluster.mdx
+[platform-files]: ./quickstart.mdx#how-platform-rendering-works
+[Deploy a Service]: ./deploy-a-service.mdx
+[Change a Service]: ./change-a-service.mdx
+[Helm]: ../api/author.md#Helm
+[Kubernetes]: ../api/author.md#Kubernetes
+[Kustomize]: ../api/author.md#Kustomize
+[ComponentFields]: ../api/author.md#ComponentFields
+[holos]: ../start/install.md
+
 [AppProject]: https://argo-cd.readthedocs.io/en/stable/user-guide/projects/
 [unification operator]: https://cuelang.org/docs/reference/spec/#unification
 [code-owners]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
@@ -727,7 +729,6 @@ value is defined, making it faster and easier to troubleshoot problems.
 [comprehension]: https://cuelang.org/docs/reference/spec/#comprehensions
 [code owners]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 [ReferenceGrant]: https://gateway-api.sigs.k8s.io/api-types/referencegrant/
-[Local Cluster Guide]: /docs/guides/local-cluster
 [Bank of Holos]: https://github.com/holos-run/bank-of-holos
 [default value]: https://cuelang.org/docs/tour/types/defaults/
 [constrain]: https://cuelang.org/docs/tour/basics/constraints/

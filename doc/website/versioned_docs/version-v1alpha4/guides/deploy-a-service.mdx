@@ -30,8 +30,7 @@ platform team.
 
 Like our other guides, this guide is intended to be useful without needing to
 run the commands.  If you'd like to render the platform and apply the manifests
-to a real Cluster, complete the [Local Cluster
-Guide](/docs/guides/local-cluster) before this guide.
+to a real Cluster, complete the [Local Cluster Guide] before this guide.
 
 :::important
 This guide relies on the concepts we covered in the [Quickstart] guide.
@@ -39,7 +38,7 @@ This guide relies on the concepts we covered in the [Quickstart] guide.
 
 You'll need the following tools installed to run the commands in this guide.
 
-1. [holos](/docs/install) - to build the Platform.
+1. [holos] - to build the Platform.
 2. [helm](https://helm.sh/docs/intro/install/) - to render Holos Components that
 wrap Helm charts.
 3. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to render Holos
@@ -469,8 +468,7 @@ for Cluster in _Fleets.workload.clusters {
 
 :::tip
 The behavior of files in the `platform/` directory is covered in detail in the
-[how platform rendering works](/docs/quickstart/#how-platform-rendering-works)
-section of the Quickstart guide.
+[how platform rendering works] section of the Quickstart guide.
 :::
 
 Before we render the platform, we want to make sure our podinfo component, and
@@ -1451,6 +1449,7 @@ configuration change a team needs to roll out after a service has been deployed
 for some time.
 
 [Quickstart]: ./quickstart.mdx
+[how platform rendering works]: ./quickstart.mdx#how-platform-rendering-works
 [Change a Service]: ./change-a-service.mdx
 [Helm]: ../api/author.md#Helm
 [Kubernetes]: ../api/author.md#Kubernetes
@@ -1472,3 +1471,4 @@ for some time.
 [code owners]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 [ReferenceGrant]: https://gateway-api.sigs.k8s.io/api-types/referencegrant/
 [Bank of Holos]: https://github.com/holos-run/bank-of-holos
+[holos]: ../start/install.md

@@ -10,4 +10,4 @@ These documents provide additional context to supplement the [Quickstart] guide.
 
 <DocCardList />
 
-[Quickstart]: /docs/quickstart/
+[Quickstart]: ./guides/quickstart.mdx

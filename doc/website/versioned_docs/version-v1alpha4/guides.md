@@ -23,7 +23,7 @@ deployed services safely and consistently.
 
 <DocCardList />
 
-[Quickstart]: /docs/quickstart/
-[Deploy a Service]: /docs/guides/deploy-a-service/
-[Change a Service]: /docs/guides/change-a-service/
-[Technical Overview]: /docs/technical-overview/
+[Quickstart]: ./guides/quickstart.mdx
+[Deploy a Service]: ./guides/deploy-a-service.mdx
+[Change a Service]: ./guides/change-a-service.mdx
+[Technical Overview]: ./technical-overview.md

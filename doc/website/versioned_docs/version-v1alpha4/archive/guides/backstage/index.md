@@ -1,3 +1,0 @@
-# Backstage
-
-Coming soon.

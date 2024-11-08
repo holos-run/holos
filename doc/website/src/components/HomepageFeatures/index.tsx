@@ -22,7 +22,7 @@ const FeatureList: FeatureItem[] = [
             <li>Reuse your existing Helm charts and Kustomize bases.</li>
           </ul>
         </p>
-        <a href="/docs/technical-overview">Learn More</a>
+        <a href="/docs/">Learn More</a>
       </>
     ),
   },
@@ -38,7 +38,7 @@ const FeatureList: FeatureItem[] = [
             <li>Spend more time developing software and fewer cycles fighting infrastructure challenges.</li>
           </ul>
         </p>
-        <a href="/docs/technical-overview">Learn More</a>
+        <a href="/docs/">Learn More</a>
       </>
     ),
   },
@@ -54,7 +54,7 @@ const FeatureList: FeatureItem[] = [
             <li>Ensure a consistent security posture cross-platform with fewer code changes.</li>
           </ul>
         </p>
-        <a href="/docs/technical-overview">Learn More</a>
+        <a href="/docs/">Learn More</a>
       </>
     ),
   }

@@ -43,11 +43,11 @@ I rewrote our scripts and charts using CUE and Go, replacing the glue layer. The
 
 Thanks for reading. Take Holos for a spin on your local machine with our [Quickstart] guide.
 
-[Guides]: /docs/guides/
-[API Reference]: /docs/api/
-[Quickstart]: /docs/quickstart/
+[Guides]: ./guides.md
+[API Reference]: ./api.md
+[Quickstart]: ./guides/quickstart.mdx
 [CUE]: https://cuelang.org/
-[Author API]: /docs/api/author/
-[Core API]: /docs/api/core/
+[Author API]: ./api/author.md
+[Core API]: ./api/core.md
 [Open Infrastructure Services]: https://openinfrastructure.co/
 [Why are we templating YAML]: https://hn.algolia.com/?dateRange=all&page=0&prefix=false&query=https%3A%2F%2Fleebriggs.co.uk%2Fblog%2F2019%2F02%2F07%2Fwhy-are-we-templating-yaml&sort=byDate&type=story

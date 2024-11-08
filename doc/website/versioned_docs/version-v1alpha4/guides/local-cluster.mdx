@@ -16,8 +16,7 @@ have a standard Kubernetes API server with proper DNS and TLS certificates.
 You'll be able to easily reset the cluster to a known good state to iterate on
 your own Platform.
 
-The [Concepts](/docs/concepts) page defines capitalized terms such as Platform
-and Component.
+The [Concepts] page defines capitalized terms such as Platform and Component.
 
 ## Reset the Cluster
 
@@ -105,7 +104,7 @@ You're back to the same state as the first time you completed this guide.
 
 You'll need the following tools installed to complete this guide.
 
-1. [holos](/docs/install) - to build the platform.
+1. [holos] - to build the platform.
 2. [helm](https://helm.sh/docs/intro/install/) - to render Holos components that wrap upstream Helm charts.
 3. [k3d](https://k3d.io/#installation) - to provide a k8s api server.
 4. [OrbStack](https://docs.orbstack.dev/install) or [Docker](https://docs.docker.com/get-docker/) - to use k3d.
@@ -274,4 +273,8 @@ k3d cluster delete workload
 ## Next Steps
 
 Now that you have a real cluster, apply and explore the manifests Holos renders
-in the [Quickstart](/docs/quickstart) guide.
+in the [Quickstart] guide.
+
+[Concepts]: ../start/concepts.md
+[Quickstart]: ./quickstart.mdx
+[holos]: ../start/install.md

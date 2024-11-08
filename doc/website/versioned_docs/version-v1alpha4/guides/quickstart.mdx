@@ -47,12 +47,11 @@ of Holos.
 
 This guide is intended to be informative without needing to run the commands.
 If you'd like to render the platform and apply the manifests to a real Cluster,
-complete the [Local Cluster Guide](/docs/guides/local-cluster) before this
-guide.
+complete the [Local Cluster Guide] before this guide.
 
 You'll need the following tools installed to run the commands in this guide.
 
-1. [holos](/docs/install) - to build the Platform.
+1. [holos][Installation] - to build the Platform.
 2. [helm](https://helm.sh/docs/intro/install/) - to render Holos Components that
 wrap Helm charts.
 3. [kubectl](https://kubernetes.io/docs/tasks/tools/) - to render Holos
@@ -61,8 +60,7 @@ Components that render with Kustomize.
 ## Install Holos
 
 Start by installing the `holos` command line tool with the following command.
-If you don't have Go, refer to [Installation](/docs/install/) to download the
-executable.
+If you don't have Go, refer to [Installation] to download the executable.
 
 <Tabs groupId="go-install">
   <TabItem value="command" label="Command">
@@ -1121,11 +1119,12 @@ Thank you for finishing the Quickstart guide.  Dive deeper with the next guide
 on how to [Deploy a Service] which explains how to take one of your existing
 Helm charts or Deployments and manage it with Holos.
 
-[application]: https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
-[core]: /docs/api/core/v1alpha4/
-[Core API]: /docs/api/core/
-[Author API]: /docs/api/author/
-[Deploy a Service]: /docs/guides/deploy-a-service/
-[Manage a Project]: /docs/guides/manage-a-project/
 [rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern/
+[application]: https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
+[core]: ../api/core.md
+[Core API]: ../api/core.md
+[Author API]: ../api/author.md
+[Deploy a Service]: ./deploy-a-service.mdx
+[Local Cluster Guide]: ./local-cluster.mdx
+[Installation]: ../start/install.md
 [^1]: [The Basics of CUE](https://cuelang.org/docs/tour/basics/json-superset/)
