@@ -23,10 +23,25 @@ an individual Holos Component using a Helm chart as its source.
 
 ## The Code
 
+### Generate a Platform
+
+Use `holos` to generate a minimal platform directory structure.  First, create
+and cd into a blank directory. Then use the `holos generate platform` command to
+generate a minimal platform.
+
+```shell
+mkdir holos-tutorial
+cd holos-tutorial
+holos generate platform v1alpha5
+```
+
+Holos creates a `platform` directory containing a `platform.gen.cue` file.  This
+file is the entry point for your new platform configuration.  You'll integrate
+components into the platform using the CUE code in this `platform` directory.
 
 ### Create a Component
 
-Start by creating a directory for our `podinfo` component.  Create an empty file
+Start by creating a directory for the `podinfo` component.  Create an empty file
 and then add the following CUE configuration to it.
 
 <Tabs groupId="tutorial-hello-podinfo-helm-cue-code">
@@ -76,7 +91,7 @@ Platform: Components: podinfo: {
   </TabItem>
 </Tabs>
 
-### Render the Manifests
+## Render the Manifests
 
 Render a manifest for `podinfo` using the `holos render platform ./platform`
 command.
@@ -89,12 +104,16 @@ holos render platform ./platform
   </TabItem>
   <TabItem value="output" label="Output">
 ```
-rendered podinfo in 116.142583ms
-rendered platform in 116.204042ms
+cached podinfo 6.6.2
+rendered podinfo in 1.938665041s
+rendered platform in 1.938759417s
 ```
   </TabItem>
   <TabItem value="manifest" label="Manifest Data">
-```yaml
+```txt
+deploy/components/podinfo/podinfo.gen.yaml
+```
+```yaml showLineNumbers
 apiVersion: v1
 kind: Service
 metadata:
@@ -211,8 +230,8 @@ spec:
   </TabItem>
 </Tabs>
 
-Success! Holos generated the `deploy/components/podinfo/podinfo.gen.yaml` file
-containing manifest data from the `podinfo` Helm chart.
+Holos rendered the `deploy/components/podinfo/podinfo.gen.yaml` file by
+executing `helm template` after caching `podinfo` locally.
 
 ## Breaking it down
 
@@ -220,20 +239,21 @@ Here’s a quick review of the files we created and their purpose:
 
 | File | Purpose |
 | - | - |
-| `components/podinfo/podinfo.cue` | Configures the `podinfo` Helm chart. |
+| `components/podinfo/podinfo.cue` | Configures the `podinfo` Helm chart as a holos component. |
 | `platform/podinfo.cue` | Adds the `podinfo` Helm chart to the list of Components that will be rendered by Holos. |
 
 We run `holos render platform` against the `platform` directory because that
 directory exports a [Platform] resource to `holos`.
 
 <Tabs groupId="67C1EE71-3EA8-4568-9F6D-0072BA09FF12">
+  <TabItem value="overview" label="Rendering Overview">
+    Take a look at the other tabs for more detailed sequence diagrams.
+    <RenderingOverview />
+  </TabItem>
   <TabItem value="platform" label="Platform Sequence">
     <PlatformSequence />
   </TabItem>
   <TabItem value="component" label="Component Sequence">
-    <ComponentSequence />
-  </TabItem>
-  <TabItem value="overview" label="Rendering Overview">
     <ComponentSequence />
   </TabItem>
 </Tabs>
@@ -242,6 +262,18 @@ Components are the building blocks for a Platform, and without them `holos
 render platform` does nothing. The `platform/podinfo.cue` file registers the
 `podinfo` Component with the Platform, and provides the path to the directory
 where the Component's CUE files are located.
+
+:::important
+Components can be parameterized.
+:::
+
+The Platform spec can re-use the same component path providing it varying input
+parameters.  This is covered in the [Component Parameters] topic.
+
+:::tip
+Holos makes it easy to re-use a Helm chart with multiple customers and
+environments.  This is not well supported by Helm alone.
+:::
 
 The `components/podinfo/podinfo.cue` file unifies the `#Helm`
 definition, indicating that we're configuring a Helm chart, along with the
@@ -278,3 +310,4 @@ out the [Helm Generator] tutorial to learn more.
 [podinfo]: https://github.com/stefanprodan/podinfo
 [Helm Generator]: ./helm-generator.mdx
 [Platform]: ../api/author.md#Platform
+[Component Parameters]: ../topics/component-parameters.mdx
