@@ -8,6 +8,8 @@ sidebar_position: 30
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import RenderingOverview from '../diagrams/rendering-overview.mdx';
+import PlatformSequence from '../diagrams/render-platform-sequence.mdx';
+import ComponentSequence from '../diagrams/render-component-sequence.mdx';
 
 # Hello Holos
 
@@ -19,18 +21,19 @@ similar greeting message from a Kubernetes Pod.
 By the end of this tutorial you will gain the understanding of how to model
 an individual Holos Component using a Helm chart as its source.
 
-# The code
+## The Code
 
-### Podinfo Helm chart
 
-Start by creating a directory for `podinfo`, touching an empty CUE file,
-and then populating it with the CUE code below:
+### Create a Component
+
+Start by creating a directory for our `podinfo` component.  Create an empty file
+and then add the following CUE configuration to it.
 
 <Tabs groupId="tutorial-hello-podinfo-helm-cue-code">
-  <TabItem value="projects/tutorial/components/podinfo/podinfo.cue" label="Podinfo Helm Chart">
+  <TabItem value="components/podinfo/podinfo.cue" label="Podinfo Helm Chart">
 ```bash
-mkdir -p projects/tutorial/components/podinfo
-touch projects/tutorial/components/podinfo/podinfo.cue
+mkdir -p components/podinfo
+touch components/podinfo/podinfo.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -52,10 +55,10 @@ HelmChart: #Helm & {
   </TabItem>
 </Tabs>
 
-### Register the podinfo component
+### Integrate the Component
 
-Now let's register the code modeling the `podinfo` Helm chart as a Holos
-Component. Create a new file in the `platform` directory with this CUE code:
+Integrate the `podinfo` component by creating a new file in the `platform`
+directory with the following CUE code:
 
 <Tabs groupId="tutorial-hello-register-podinfo-component">
   <TabItem value="platform/podinfo.cue" label="Register Podinfo">
@@ -67,16 +70,16 @@ package holos
 
 Platform: Components: podinfo: {
 	name: "podinfo"
-	path: "projects/tutorial/components/podinfo"
+	path: "components/podinfo"
 }
 ```
   </TabItem>
 </Tabs>
 
-### Render the podinfo manifest file
+### Render the Manifests
 
-Finally we're ready to render the podinfo Kubernetes manifest using the
-`holos render platform` subcommand, targeting the `platform` directory.
+Render a manifest for `podinfo` using the `holos render platform ./platform`
+command.
 
 <Tabs groupId="tutorial-hello-render-manifests">
   <TabItem value="command" label="Command">
@@ -211,28 +214,36 @@ spec:
 Success! Holos generated the `deploy/components/podinfo/podinfo.gen.yaml` file
 containing manifest data from the `podinfo` Helm chart.
 
-# Breaking it down
+## Breaking it down
 
 Here’s a quick review of the files we created and their purpose:
 
-| File | Purpose
+| File | Purpose |
 | - | - |
-`projects/tutorial/components/podinfo/podinfo.cue` | Identifies and configures the `podinfo` Helm chart.
-`platform/podinfo.cue` | Adds the `podinfo` Helm chart to the list of Components that will be rendered by Holos.
+| `components/podinfo/podinfo.cue` | Configures the `podinfo` Helm chart. |
+| `platform/podinfo.cue` | Adds the `podinfo` Helm chart to the list of Components that will be rendered by Holos. |
 
 We run `holos render platform` against the `platform` directory because that
-directory contains the `#Platform` definition and the data Holos needs to kick
-off the rendering process:
+directory exports a [Platform] resource to `holos`.
 
-<RenderingOverview />
+<Tabs groupId="67C1EE71-3EA8-4568-9F6D-0072BA09FF12">
+  <TabItem value="platform" label="Platform Sequence">
+    <PlatformSequence />
+  </TabItem>
+  <TabItem value="component" label="Component Sequence">
+    <ComponentSequence />
+  </TabItem>
+  <TabItem value="overview" label="Rendering Overview">
+    <ComponentSequence />
+  </TabItem>
+</Tabs>
 
 Components are the building blocks for a Platform, and without them `holos
 render platform` does nothing. The `platform/podinfo.cue` file registers the
 `podinfo` Component with the Platform, and provides the path to the directory
 where the Component's CUE files are located.
 
-
-The `projects/tutorial/components/podinfo/podinfo.cue` file unifies the `#Helm`
+The `components/podinfo/podinfo.cue` file unifies the `#Helm`
 definition, indicating that we're configuring a Helm chart, along with the
 `podinfo` chart's version and repository information.  If we wanted to customize
 the `podinfo` chart and change any of the chart's values, we would make those
@@ -258,11 +269,12 @@ HelmChart: #Helm & {
 Holos repeats this process for every Component added to the Platform, and since `podinfo`
 is the only Component, we're done!
 
-# Next Steps
+## Next Steps
 
 We've shown how to add a single Helm chart to the Platform, but what if you have
 more than one Helm chart and they all need to access the same data? Check
-out the [Helm Generator tutorial][nexthelm] to learn more.
+out the [Helm Generator] tutorial to learn more.
 
 [podinfo]: https://github.com/stefanprodan/podinfo
-[nexthelm]: ./helm-generator.mdx
+[Helm Generator]: ./helm-generator.mdx
+[Platform]: ../api/author.md#Platform
