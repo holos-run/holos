@@ -98,7 +98,7 @@ const config: Config = {
       }
     },
     navbar: {
-      title: '',
+      title: 'Holos',
       logo: {
         src: 'img/logo.svg',
         srcDark: 'img/logo-dark.svg',
