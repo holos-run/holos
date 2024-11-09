@@ -165,6 +165,7 @@
     "loadbalancer",
     "loadrestrictions",
     "logfmt",
+    "lxnl",
     "mattn",
     "mccutchen",
     "metav",

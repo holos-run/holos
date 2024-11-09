@@ -9,8 +9,7 @@ sidebar_position: 200
 ## Introduction
 
 This page is intended as a high level conceptual overview of the key concepts in
-Holos.  Refer to the [Core API](/docs/api/core/) for low level reference
-documentation.
+Holos.  Refer to the [Core API] for low level reference documentation.
 
 Holos is a tool built for platform engineers.  The Holos authors share three
 core values which guide our design decisions for the tool.
@@ -368,3 +367,4 @@ typically has two Fleets, one for management and one for workloads.
 [krm]: https://docs.google.com/document/d/1RmHXdLhNbyOWPW_AtnnowaRfGejw-qlKQIuLKQWlwzs/view#heading=h.sa6p0aye4ide
 [Platform]: ../api/core.md#Platform
 [BuildPlan]: ../api/core.md#BuildPlan
+[Core API]: ../api/core.md

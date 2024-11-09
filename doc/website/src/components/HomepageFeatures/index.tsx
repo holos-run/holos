@@ -15,14 +15,14 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/base00/undraw_software_engineer_re_tnjc.svg').default,
     description: (
       <>
-        <p align="left">
+        <p style={{ textAlign: 'left' }}>
           <ul>
             <li>Provide simple definitions for other teams to use as golden paths.</li>
             <li>Define integrations in <a href="https://cuelang.org/">CUE</a> with strong type checking. No more text templates or bash scripts.</li>
             <li>Reuse your existing Helm charts and Kustomize bases.</li>
           </ul>
         </p>
-        <a href="/docs/">Learn More</a>
+        <a href="/docs/v1alpha5/tutorial/overview/">Learn More</a>
       </>
     ),
   },
@@ -31,14 +31,14 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/base00/undraw_through_the_park_lxnl.svg').default,
     description: (
       <>
-        <p align="left">
+        <p style={{ textAlign: 'left' }}>
           <ul>
             <li>Move faster using paved paths from your platform and security teams.</li>
             <li>Develop locally or in the cloud.</li>
             <li>Spend more time developing software and fewer cycles fighting infrastructure challenges.</li>
           </ul>
         </p>
-        <a href="/docs/">Learn More</a>
+        <a href="/docs/v1alpha5/tutorial/overview/">Learn More</a>
       </>
     ),
   },
@@ -47,14 +47,14 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/base00/undraw_security_on_re_e491.svg').default,
     description: (
       <>
-        <p align="left">
+        <p style={{ textAlign: 'left' }}>
           <ul>
             <li>Define security policy as reusable, typed configurations.</li>
             <li>Automatically enforce security policy on new projects.</li>
             <li>Ensure a consistent security posture cross-platform with fewer code changes.</li>
           </ul>
         </p>
-        <a href="/docs/">Learn More</a>
+        <a href="/docs/v1alpha5/tutorial/overview/">Learn More</a>
       </>
     ),
   }

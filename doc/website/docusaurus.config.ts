@@ -60,13 +60,13 @@ const config: Config = {
           showLastUpdateTime: true,
           sidebarPath: './sidebars.ts',
           // https://docusaurus.io/docs/versioning#configuring-versioning-behavior
-          // lastVersion: 'current',
-          // versions: {
-          //   current: {
-          //     label: 'v1alpha6',
-          //     path: 'v1alpha6',
-          //   }
-          // }
+          lastVersion: 'current',
+          versions: {
+            current: {
+              label: 'v1alpha5',
+              path: 'v1alpha5',
+            }
+          }
         },
         blog: {
           path: "blog",
@@ -104,7 +104,12 @@ const config: Config = {
         srcDark: 'img/logo-dark.svg',
       },
       items: [
-        { to: '/docs', label: 'Docs', position: 'left' },
+        {
+          type: 'doc',
+          docId: 'tutorial/overview',
+          label: 'Docs',
+          position: 'left'
+        },
         { to: '/blog', label: 'Blog', position: 'left' },
         {
           href: 'https://github.com/holos-run',
@@ -126,59 +131,7 @@ const config: Config = {
     },
     footer: {
       style: 'dark',
-      links: [
-        {
-          title: 'Docs',
-          items: [
-            {
-              label: 'Tutorial',
-              to: '/docs/tutorial/overview',
-            },
-            {
-              label: 'Topics',
-              to: '/docs/topics',
-            },
-          ],
-        },
-        {
-          title: 'Community',
-          items: [
-            {
-              label: 'Support',
-              href: '/docs/support',
-            },
-            {
-              label: 'Discord',
-              href: 'https://discord.gg/JgDVbNpye7',
-            },
-            {
-              label: 'Discussion List',
-              href: 'https://groups.google.com/g/holos-discuss',
-            },
-            {
-              label: 'Discussion Forum',
-              href: 'https://github.com/holos-run/holos/discussions',
-            },
-          ],
-        },
-        {
-          title: 'More',
-          items: [
-            {
-              label: 'Blog',
-              to: '/blog',
-            },
-            {
-              label: 'GitHub',
-              href: 'https://github.com/holos-run/holos',
-            },
-            {
-              label: 'GoDoc',
-              href: 'https://pkg.go.dev/github.com/holos-run/holos?tab=doc',
-            }
-          ],
-        },
-      ],
+      links: [],
       copyright: `Copyright © ${new Date().getFullYear()} The Holos Authors.`,
     },
     prism: {
