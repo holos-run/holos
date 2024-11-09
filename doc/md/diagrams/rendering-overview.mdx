@@ -1,32 +1,3 @@
-```mermaid
----
-title: Rendering Overview
----
-graph LR
-    Platform[<a href="/docs/v1alpha5/api/author/#Platform">Platform</a>]
-    Component[<a href="/docs/v1alpha5/api/author/#ComponentConfig">Components</a>]
+import RenderingOverview from "@site/src/diagrams/rendering-overview.mdx"
 
-    Helm[<a href="/docs/v1alpha5/api/author/#Helm">Helm</a>]
-    Kustomize[<a href="/docs/v1alpha5/api/author/#Kustomize">Kustomize</a>]
-    Kubernetes[<a href="/docs/v1alpha5/api/author/#Kubernetes">Kubernetes</a>]
-
-    BuildPlan[<a href="/docs/v1alpha5/api/core/#buildplan">BuildPlan</a>]
-
-    ResourcesArtifact[<a href="/docs/v1alpha5/api/core/#artifact">Resources<br/>Artifact</a>]
-    GitOpsArtifact[<a href="/docs/v1alpha5/api/core/#artifact">GitOps<br/>Artifact</a>]
-
-    Generators[<a href="/docs/v1alpha5/api/core/#generators">Generators</a>]
-    Transformers[<a href="/docs/v1alpha5/api/core/#transformer">Transformers</a>]
-    Validators[Validators<br/>TBD]
-    Files[Manifest<br/>Files]
-
-    Platform --> Component
-    Component --> Helm --> BuildPlan
-    Component --> Kubernetes --> BuildPlan
-    Component --> Kustomize --> BuildPlan
-
-    BuildPlan --> ResourcesArtifact --> Generators
-    BuildPlan --> GitOpsArtifact --> Generators
-
-    Generators --> Transformers --> Validators --> Files
-```
+<RenderingOverview />
