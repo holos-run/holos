@@ -238,15 +238,36 @@ executing `helm template` after caching `podinfo` locally.
 
 Here’s a quick review of the files we created and their purpose:
 
-| File | Purpose |
-| - | - |
-| `components/podinfo/podinfo.cue` | Configures the `podinfo` Helm chart as a holos component. |
-| `platform/podinfo.cue` | Integrates the `podinfo` Helm component into the platform. |
-| `platform/platform.gen.cue` | Exports the [Platform] spec from CUE to `holos` for processing. |
-| `cue.mod` | [CUE Module] directory containing schema definitions for Kubernetes resources. |
-| `resources.cue` | Defines the `#Resources` schema of common Kubernetes resources. |
-| `schema.cue` | Configures the common component kinds in a consistent way by composing the `#ComponentConfig` schema definition in to each kind. |
-| `tags.cue` | Holds parameter values passed from `holos render platform` to `holos render component` injected via [CUE Tags]. |
+#### `components/podinfo/podinfo.cue`
+
+Configures the `podinfo` Helm chart as a holos component.
+
+#### `platform/podinfo.cue`
+
+Integrates the `podinfo` Helm component into the platform.
+
+#### `platform/platform.gen.cue`
+
+Exports the [Platform] spec from CUE to `holos` for processing.
+
+#### `cue.mod`
+
+[CUE Module] directory containing schema definitions for Kubernetes resources.
+
+#### `resources.cue`
+
+Defines the `#Resources` schema of common Kubernetes resources.
+
+#### `schema.cue`
+
+Configures the `#Helm`, `#Kustomize`, and `#Kubernetes` common component kinds
+by composing the `#ComponentConfig` schema definition into each schema
+definition.  The component kinds behave consistently as a result.
+
+#### `tags.cue`
+
+Holds parameter values passed from `holos render platform` to `holos render
+component` injected via [CUE Tags].
 
 <Tabs groupId="67C1EE71-3EA8-4568-9F6D-0072BA09FF12">
   <TabItem value="overview" label="Rendering Overview">
