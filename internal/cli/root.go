@@ -18,7 +18,6 @@ import (
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/cli/create"
 	"github.com/holos-run/holos/internal/cli/destroy"
-	"github.com/holos-run/holos/internal/cli/generate"
 	"github.com/holos-run/holos/internal/cli/get"
 	"github.com/holos-run/holos/internal/cli/kv"
 	"github.com/holos-run/holos/internal/cli/login"
@@ -79,7 +78,7 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	rootCmd.AddCommand(login.New(cfg, feature))
 	rootCmd.AddCommand(logout.New(cfg, feature))
 	rootCmd.AddCommand(token.New(cfg, feature))
-	rootCmd.AddCommand(generate.New(cfg, feature))
+	rootCmd.AddCommand(newInitCommand(cfg, feature))
 	rootCmd.AddCommand(register.New(cfg, feature))
 	rootCmd.AddCommand(pull.New(cfg, feature))
 	rootCmd.AddCommand(push.New(cfg, feature))

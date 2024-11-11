@@ -1,4 +1,4 @@
-package generate
+package cli
 
 import (
 	"fmt"
@@ -14,29 +14,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// New returns a new generate command.
-func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
-	cmd := command.New("generate")
-	cmd.Aliases = []string{"gen"}
+// New returns a new init command.
+func newInitCommand(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
+	cmd := command.New("init")
+	cmd.Aliases = []string{"gen", "generate", "initialize"}
 	cmd.Short = "generate local resources"
 	cmd.Args = cobra.NoArgs
 
-	cmd.AddCommand(NewPlatform(cfg))
-	cmd.AddCommand(NewComponent(feature))
+	cmd.AddCommand(newInitPlatformCommand())
+	cmd.AddCommand(newInitComponentCommand(feature))
 
 	return cmd
 }
 
-func NewPlatform(cfg *holos.Config) *cobra.Command {
+func newInitPlatformCommand() *cobra.Command {
 	var force bool
 
 	cmd := command.New("platform [flags] PLATFORM")
-	cmd.Short = "generate a platform from an embedded schematic"
-	cmd.Long = fmt.Sprintf("Embedded platforms available to generate:\n\n  %s", strings.Join(generate.Platforms(), "\n  "))
-	cmd.Example = "  holos generate platform k3d"
+	cmd.Short = "initialize a platform from an embedded schematic"
+	cmd.Long = fmt.Sprintf("Available platforms:\n\n  %s", strings.Join(generate.Platforms(), "\n  "))
+	cmd.Example = "  holos init platform v1alpha5"
 	cmd.Args = cobra.ExactArgs(1)
 
-	cmd.Flags().BoolVarP(&force, "force", "", force, "force generation")
+	cmd.Flags().BoolVarP(&force, "force", "", force, "force initialization")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
@@ -47,7 +47,7 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 				return errors.Wrap(err)
 			}
 			if len(files) > 0 {
-				return errors.Format("could not generate: directory not empty and --force=false")
+				return errors.Format("could not initialize: directory not empty and --force=false")
 			}
 		}
 
@@ -63,10 +63,10 @@ func NewPlatform(cfg *holos.Config) *cobra.Command {
 	return cmd
 }
 
-// NewComponent returns a command to generate a holos component
-func NewComponent(feature holos.Flagger) *cobra.Command {
+// newInitComponentCommand returns a command to generate a holos component
+func newInitComponentCommand(feature holos.Flagger) *cobra.Command {
 	cmd := command.New("component")
-	cmd.Short = "generate a component from an embedded schematic"
+	cmd.Short = "initialize a component from an embedded schematic"
 	cmd.Hidden = !feature.Flag(holos.GenerateComponentFeature)
 
 	for _, name := range generate.Components("v1alpha3") {

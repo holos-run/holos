@@ -50,7 +50,7 @@ generate platform` command to generate a minimal platform.
 ```shell
 mkdir holos-tutorial
 cd holos-tutorial
-holos generate platform v1alpha5
+holos init platform v1alpha5
 ```
 
 Holos creates a `platform` directory containing a `platform.gen.cue` file
@@ -109,26 +109,11 @@ Note the `spec.components` field is empty.
   </TabItem>
 </Tabs>
 
-
 ## Next Steps
 
 You've got the structure of your platform configuration in place. Continue on to
 [Hello Holos] where you'll learn how easy it is to manage a Helm chart with
 holos.
-
-## Do I need Kubernetes?
-
-No.  Holos generates fully rendered Kubernetes manifests but does not apply
-them.  You don't need a Kubernetes cluster to start using Holos and reviewing
-the files it creates.
-
-You will need a cluster to apply the rendered manifests and interact with the
-resources and services Holos configures.  We recommend using our [Local Cluster]
-guide to set up a minimal [k3d] Kubernetes cluster with [OrbStack] or [Docker].
-You might like our [Local Cluster] guide because it:
-
-1. Includes a script to quickly reset the cluster to a known good state.
-2. Configures proper DNS and TLS certificates.
 
 [Helm]: https://github.com/helm/helm/releases
 [Kubectl]: https://kubernetes.io/docs/tasks/tools/
