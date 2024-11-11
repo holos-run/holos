@@ -26,19 +26,59 @@ Chart as a Holos Component.
 
 ### Generating the structure
 
-Use `holos` to generate a minimal platform directory structure.  First, create
-and cd into a blank directory. Then use the `holos init platform` command to
-generate a minimal platform.
+Use `holos` to generate a minimal platform directory structure.  Start by
+creating a blank directory to hold the platform configuration.
 
 ```shell
-mkdir holos-tutorial
-cd holos-tutorial
+mkdir holos-tutorial && cd holos-tutorial
+```
+
+Use the `holos init platform` command to initialize a minimal platform in the
+blank directory.
+
+```shell
 holos init platform v1alpha5
 ```
 
-Holos creates a `platform` directory containing a `platform.gen.cue` file.  This
-file is the entry point for your new platform configuration.  You'll integrate
-components into the platform using the CUE code in this `platform` directory.
+Here's the filesystem tree we'll build in this tutorial.
+
+```text showLineNumbers
+holos-tutorial/
+├── components/
+│   └── podinfo/
+│       └── podinfo.cue
+├── cue.mod/
+├── platform/
+│   ├── platform.gen.cue
+│   └── podinfo.cue
+├── resources.cue
+├── schema.cue
+└── tags.cue
+```
+
+- **Line 1** The platform root is the `holos-tutorial` directory we created.
+- **Line 2** This tutorial places components in `components/`.  They may reside
+anywhere.
+- **Line 3** A component is a collection of `*.cue` files at a path.
+- **Line 4** We'll create this file and configure the podinfo helm chart in the
+next section.
+- **Line 5** The CUE module directory.  Schema definitions for Kubernetes and
+Holos resources reside within the `cue.mod` directory.
+- **Line 6** The platform directory is the **main entrypoint** for the `holos
+render platform` command.
+- **Line 7** `platform.gen.cue` is initialized by `holos init platform` and
+contains the Platform spec.
+- **Line 8** `podinfo.cue` integrates podinfo with the platform by adding the
+component to the platform spec.  We'll add ths file after the next section.
+- **Line 9** `resources.cue` Defines the Kubernetes resources available to
+manage in CUE.
+- **Line 10** `schema.cue` Defines the configuration common to all component
+kinds.
+- **Line 11** `tags.cue` Defines where component parameter values are injected
+into the overall platform configuration.  We don't need to be concerned with
+this file until we cover component parameters.
+- **Lines 9-11** Initialized by `holos init platform`, user editable after
+initialization.
 
 ### Creating a component
 
@@ -71,10 +111,15 @@ HelmChart: #Helm & {
   </TabItem>
 </Tabs>
 
+:::important
+CUE loads all of `*.cue` files in the component directory to define component,
+similar to Go packages.
+:::
+
 ### Integrating the component
 
-Integrate the `podinfo` component by creating a new file in the `platform`
-directory with the following CUE code:
+Integrate the `podinfo` component into the platform by creating a new cue file
+in the `platform` directory with the following content.
 
 <Tabs groupId="tutorial-hello-register-podinfo-component">
   <TabItem value="platform/podinfo.cue" label="Register Podinfo">
@@ -95,9 +140,9 @@ Platform: Components: podinfo: {
 ## Rendering manifests
 
 Render a manifest for `podinfo` using the `holos render platform ./platform`
-command.
+command.  The `platform/` directory is the main entrypoint for this command.
 
-<Tabs groupId="tutorial-hello-render-manifests">
+<Tabs groupId="E150C802-7162-4FBF-82A7-77D9ADAEE847">
   <TabItem value="command" label="Command">
 ```bash
 holos render platform ./platform
@@ -110,10 +155,19 @@ rendered podinfo in 1.938665041s
 rendered platform in 1.938759417s
 ```
   </TabItem>
-  <TabItem value="manifest" label="Rendered Manifest">
+</Tabs>
+
+:::important
+Holos rendered the following manifest file by executing `helm template` after
+caching `podinfo` locally.
+:::
+
 ```txt
 deploy/components/podinfo/podinfo.gen.yaml
 ```
+
+<Tabs groupId="0E9C231D-D0E8-410A-A4A0-601842A086A6">
+  <TabItem value="service" label="Service">
 ```yaml showLineNumbers
 apiVersion: v1
 kind: Service
@@ -137,7 +191,10 @@ spec:
   selector:
     app.kubernetes.io/name: podinfo
   type: ClusterIP
----
+```
+  </TabItem>
+  <TabItem value="deployment" label="Deployment">
+```yaml showLineNumbers
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -231,26 +288,7 @@ spec:
   </TabItem>
 </Tabs>
 
-Holos rendered the `deploy/components/podinfo/podinfo.gen.yaml` file by
-executing `helm template` after caching `podinfo` locally.
-
 ## Breaking it down
-
-Here’s a quick review of the files we created and their purpose:
-
-```text
-holos-tutorial/
-├── components/
-│   └── podinfo/
-│       └── podinfo.cue
-├── cue.mod/
-├── platform/
-│   ├── platform.gen.cue
-│   └── podinfo.cue
-├── resources.cue
-├── schema.cue
-└── tags.cue
-```
 
 #### `components/podinfo/podinfo.cue`
 
@@ -308,10 +346,6 @@ Holos requires two things to integrate a component with the platform.
 
 1. A unique name for the component.
 2. The component filesystem path.
-
-:::important
-Components can be parameterized.
-:::
 
 The Platform spec can re-use the same component path providing it varying input
 parameters.  This is covered in the [Component Parameters] topic.
