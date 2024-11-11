@@ -1,4 +1,5 @@
 ---
+<<<<<<< HEAD
 slug: cue
 title: CUE
 description: Render component manifests directly from CUE.
@@ -7,17 +8,138 @@ sidebar_position: 50
 
 # CUE
 
-Concepts to cover:
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
-1. CUE is used in multiple ways.
-2. Generating resources.
-3. Validating rendered output.
-4. Injecting values to Helm and Kustomize
-5. As a better alternative to YAML when working with Kustomize.
+# CUE
 
-Important details:
+## Overview
+
+This tutorial demonstrates mixing additional resources into a component using
+CUE.  Holos components frequently mix in resources in this way so we don't need
+to modify existing charts or manifests.  We'll add an [ExternalSecret] resource
+to the podinfo Helm chart we configured in the [Hello Holos] tutorial.
+
+Key concepts:
 
 1. Resources are validated against `#Resources` defined at the root.
 2. Custom Resource Definitions need to be imported with timoni.
-3. Helm, Kustomize, and CUE can be mixed in together in the same Holos
-Component.
+3. Helm, Kustomize, and CUE can be mixed in together in the same component.
+
+## The Code
+
+### Generating the structure
+
+Use `holos` to generate a minimal platform directory structure.  First, create
+and cd into a blank directory. Then use the `holos generate platform` command to
+generate a minimal platform.
+
+```shell
+mkdir holos-cue-tutorial && cd holos-cue-tutorial
+holos init platform v1alpha5
+```
+
+### Creating the component
+
+Create the directory for the `podinfo` component.  Create an empty file and then
+add the following CUE configuration to it.
+
+<Tabs groupId="47982977-F0DF-41D4-89D3-017DAC154B5B">
+  <TabItem value="components/podinfo/podinfo.cue" label="Definition">
+```bash
+mkdir -p components/podinfo
+touch components/podinfo/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+// Produce a helm chart build plan.
+holos: HelmChart.BuildPlan
+
+HelmChart: #Helm & {
+	Name: "podinfo"
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+}
+```
+  </TabItem>
+  <TabItem value="platform/podinfo.cue" label="Integration">
+```bash
+touch platform/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+Platform: Components: podinfo: {
+	name: "podinfo"
+	path: "components/podinfo"
+}
+```
+  </TabItem>
+</Tabs>
+
+Render the platform.
+
+<Tabs groupId="tutorial-hello-render-manifests">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```
+cached podinfo 6.6.2
+rendered podinfo in 1.938665041s
+rendered platform in 1.938759417s
+```
+  </TabItem>
+</Tabs>
+
+Add and commit the initial configuration.
+
+```bash
+git init . && git add . && git commit -m initial
+```
+
+### Mixing in Resources
+
+We'll use the [Resources] kind of [Generator] to add an [ExternalSecret] to the
+component manifests.  We use the [ComponentConfig] `Resources` field to mix in
+resources to any component kind.
+
+1. Create the mixins.cue file.
+
+### Importing Custom Resources
+
+Holos includes CUE definitions of the ExternalSecret custom resource.  Included
+definitions are written by the `holos generate platform` command into the
+`cue.mod` directory.  Use [timoni] to import custom resources Holos doesn't
+include by default.
+
+Take a look at
+[cue.mod/gen/external-secrets.io/externalsecret/v1beta1/types_gen.cue] to see
+the imported definitions.
+
+## Reviewing Changes
+
+## Trying Locally
+
+Optionally apply the manifests Holos rendered to a [Local Cluster].
+
+## Next Steps
+
+TODO
+
+[Local Cluster]: ../topics/local-cluster.mdx
+[ExternalSecret]: https://external-secrets.io/latest/api/externalsecret/
+[Artifact]: ../api/core.md#Artifact
+[Generator]: ../api/core.md#Generator
+[Hello Holos]: ./hello-holos.mdx
+[cue.mod/gen/external-secrets.io/externalsecret/v1beta1/types_gen.cue]: https://github.com/holos-run/holos/blob/main/internal/generate/platforms/cue.mod/gen/external-secrets.io/externalsecret/v1beta1/types_gen.cue#L13
+[ComponentConfig]: ../api/author.md#ComponentConfig
+>>>>>>> 1971742 (wip)
