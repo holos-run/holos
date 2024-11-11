@@ -100,7 +100,10 @@ holos: HelmChart.BuildPlan
 HelmChart: #Helm & {
 	Name: "podinfo"
 	Chart: {
-		version: "6.6.2"
+		// version is a string with a default value of 6.6.1
+		// @tag indicates values may be injected from the platform spec.  We call
+		// these injected values Component Parameters.
+		version: string | *"6.6.1" @tag(podinfo_version, type=string)
 		repository: {
 			name: "podinfo"
 			url:  "https://stefanprodan.github.io/podinfo"
@@ -114,6 +117,12 @@ HelmChart: #Helm & {
 :::important
 CUE loads all of `*.cue` files in the component directory to define component,
 similar to Go packages.
+:::
+
+:::note
+CUE _also_ loads all `*.cue` files from the component leaf directory to the
+platform root directory.  In this example, `#Helm` on line 6 is defined in
+`schema.cue` at the root.
 :::
 
 ### Integrating the component
@@ -132,10 +141,17 @@ package holos
 Platform: Components: podinfo: {
 	name: "podinfo"
 	path: "components/podinfo"
+	// Inject version 6.6.2 to override the component default value.
+	parameters: podinfo_version: "6.6.2"
 }
 ```
   </TabItem>
 </Tabs>
+
+:::tip
+Component parameters may have any name as long as they don't start with
+`holos_`.
+:::
 
 ## Rendering manifests
 
@@ -359,27 +375,43 @@ The `components/podinfo/podinfo.cue` file unifies the `#Helm`
 definition, indicating that we're configuring a Helm chart, along with the
 `podinfo` chart's version and repository information.  If we wanted to customize
 the `podinfo` chart and change any of the chart's values, we would make those
-changes here.  For example, we could change the message being displayed by
-passing the `ui.message` value to the chart:
+changes here.
 
+For example, we could change the message being displayed by passing the
+`ui.message` value to the chart.
+
+```shell
+touch components/podinfo/values.cue
+```
 ```cue
-HelmChart: #Helm & {
-	Name: "podinfo"
-	Chart: {
-		version: "6.6.2"
-		repository: {
-			name: "podinfo"
-			url:  "https://stefanprodan.github.io/podinfo"
-		}
-	}
-	Values: {
-	    ui: message: "Hello Holos from Podinfo!"
-	}
+package holos
+
+HelmChart: Values: {
+	ui: message: "Hello Holos from Podinfo!"
 }
 ```
 
-Holos repeats this process for every Component added to the Platform, and since `podinfo`
-is the only Component, we're done!
+Holos repeats this process for every Component added to the Platform, and since
+`podinfo` is the only Component all we need to do is render the platform again
+to see the greeting.
+
+```shell
+holos render platform ./platform
+```
+
+Now the manifest will have the UI message:
+
+```shell
+grep -C2 Hello deploy/components/podinfo/podinfo.gen.yaml
+```
+```yaml
+        env:
+        - name: PODINFO_UI_MESSAGE
+          value: Hello Holos from Podinfo!
+        - name: PODINFO_UI_COLOR
+          value: '#34577c'
+```
+
 
 ## Next Steps
 
