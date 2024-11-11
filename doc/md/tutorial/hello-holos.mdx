@@ -238,21 +238,35 @@ executing `helm template` after caching `podinfo` locally.
 
 Here’s a quick review of the files we created and their purpose:
 
+```text
+holos-tutorial/
+├── components/
+│   └── podinfo/
+│       └── podinfo.cue
+├── cue.mod/
+├── platform/
+│   ├── platform.gen.cue
+│   └── podinfo.cue
+├── resources.cue
+├── schema.cue
+└── tags.cue
+```
+
 #### `components/podinfo/podinfo.cue`
 
 Configures the `podinfo` Helm chart as a holos component.
 
-#### `platform/podinfo.cue`
+#### `cue.mod`
 
-Integrates the `podinfo` Helm component into the platform.
+[CUE Module] directory containing schema definitions for Kubernetes resources.
 
 #### `platform/platform.gen.cue`
 
 Exports the [Platform] spec from CUE to `holos` for processing.
 
-#### `cue.mod`
+#### `platform/podinfo.cue`
 
-[CUE Module] directory containing schema definitions for Kubernetes resources.
+Integrates the `podinfo` Helm component into the platform.
 
 #### `resources.cue`
 
