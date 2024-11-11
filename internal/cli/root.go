@@ -68,6 +68,11 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	rootCmd.PersistentFlags().SortFlags = false
 	rootCmd.PersistentFlags().AddGoFlagSet(cfg.LogFlagSet())
 
+	// Hide the help command
+	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
+	rootCmd.PersistentFlags().BoolP("help", "h", false, "Print usage")
+	rootCmd.PersistentFlags().Lookup("help").Hidden = true
+
 	// subcommands
 	rootCmd.AddCommand(build.New(cfg, feature))
 	rootCmd.AddCommand(render.New(cfg, feature))
@@ -78,7 +83,7 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	rootCmd.AddCommand(login.New(cfg, feature))
 	rootCmd.AddCommand(logout.New(cfg, feature))
 	rootCmd.AddCommand(token.New(cfg, feature))
-	rootCmd.AddCommand(newInitCommand(cfg, feature))
+	rootCmd.AddCommand(newInitCommand(feature))
 	rootCmd.AddCommand(register.New(cfg, feature))
 	rootCmd.AddCommand(pull.New(cfg, feature))
 	rootCmd.AddCommand(push.New(cfg, feature))

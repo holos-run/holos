@@ -15,10 +15,10 @@ import (
 )
 
 // New returns a new init command.
-func newInitCommand(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
+func newInitCommand(feature holos.Flagger) *cobra.Command {
 	cmd := command.New("init")
-	cmd.Aliases = []string{"gen", "generate", "initialize"}
-	cmd.Short = "generate local resources"
+	cmd.Aliases = []string{"initialize", "gen", "generate"}
+	cmd.Short = "initialize platforms and components"
 	cmd.Args = cobra.NoArgs
 
 	cmd.AddCommand(newInitPlatformCommand())
