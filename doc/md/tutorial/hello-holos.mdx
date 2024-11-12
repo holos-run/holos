@@ -42,6 +42,8 @@ holos init platform v1alpha5
 
 Here's the filesystem tree we'll build in this tutorial.
 
+<Tabs groupId="80D04C6A-BC83-44D0-95CC-CE01B439B159">
+<TabItem value="tree" label="Tree">
 ```text showLineNumbers
 holos-tutorial/
 ├── components/
@@ -55,7 +57,25 @@ holos-tutorial/
 ├── schema.cue
 └── tags.cue
 ```
-
+</TabItem>
+<TabItem value="details" label="Details">
+<div style={{display: "flex"}}>
+<div>
+```text showLineNumbers
+holos-tutorial/
+├── components/
+│   └── podinfo/
+│       └── podinfo.cue
+├── cue.mod/
+├── platform/
+│   ├── platform.gen.cue
+│   └── podinfo.cue
+├── resources.cue
+├── schema.cue
+└── tags.cue
+```
+</div>
+<div>
 - **Line 1** The platform root is the `holos-tutorial` directory we created.
 - **Line 2** This tutorial places components in `components/`.  They may reside
 anywhere.
@@ -79,6 +99,10 @@ into the overall platform configuration.  We don't need to be concerned with
 this file until we cover component parameters.
 - **Lines 9-11** Initialized by `holos init platform`, user editable after
 initialization.
+</div>
+</div>
+</TabItem>
+</Tabs>
 
 ### Creating a component
 
@@ -100,13 +124,18 @@ holos: HelmChart.BuildPlan
 HelmChart: #Helm & {
 	Name: "podinfo"
 	Chart: {
-		// version is a string with a default value of 6.6.1
-		// @tag indicates values may be injected from the platform spec.  We call
-		// these injected values Component Parameters.
-		version: string | *"6.6.1" @tag(podinfo_version, type=string)
+		version: "6.6.2"
 		repository: {
 			name: "podinfo"
 			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+	// Holos marshals Values into values.yaml for Helm.
+	Values: {
+		// message is a string with a default value.  @tag indicates a value may
+		// be injected from the platform spec component parameters.
+		ui: {
+			message: string | *"Hello World" @tag(greeting, type=string)
 		}
 	}
 }
@@ -141,8 +170,8 @@ package holos
 Platform: Components: podinfo: {
 	name: "podinfo"
 	path: "components/podinfo"
-	// Inject version 6.6.2 to override the component default value.
-	parameters: podinfo_version: "6.6.2"
+	// Inject a value into the component.
+	parameters: greeting: "Hello Holos!"
 }
 ```
   </TabItem>
@@ -249,6 +278,8 @@ spec:
         - --random-delay=false
         - --random-error=false
         env:
+        - name: PODINFO_UI_MESSAGE
+          value: Hello Holos!
         - name: PODINFO_UI_COLOR
           value: '#34577c'
         image: ghcr.io/stefanprodan/podinfo:6.6.2
@@ -304,38 +335,34 @@ spec:
   </TabItem>
 </Tabs>
 
+Holos renders the component with the greeting injected from the platform spec.
+
+```shell
+grep -B2 Hello deploy/components/podinfo/podinfo.gen.yaml
+```
+```yaml
+        env:
+        - name: PODINFO_UI_MESSAGE
+          value: Hello Holos!
+```
+
 ## Breaking it down
 
-#### `components/podinfo/podinfo.cue`
+We run `holos render platform ./platform` because the cue files in the platform
+directory export a [Platform] resource to `holos`.  The platform directory is
+the entrypoint to the platform rendering process.
 
-Configures the `podinfo` Helm chart as a holos component.
+Components are the building blocks for a Platform.  The `platform/podinfo.cue`
+file integrates the `podinfo` Component with the Platform.
 
-#### `cue.mod`
+Holos requires two fields to integrate a component with the platform.
 
-[CUE Module] directory containing schema definitions for Kubernetes resources.
+1. A unique name for the component.
+2. The component path to the directory containing the cue files exporting a
+`BuildPlan` defining the component.
 
-#### `platform/platform.gen.cue`
-
-Exports the [Platform] spec from CUE to `holos` for processing.
-
-#### `platform/podinfo.cue`
-
-Integrates the `podinfo` Helm component into the platform.
-
-#### `resources.cue`
-
-Defines the `#Resources` schema of common Kubernetes resources.
-
-#### `schema.cue`
-
-Configures the `#Helm`, `#Kustomize`, and `#Kubernetes` common component kinds
-by composing the `#ComponentConfig` schema definition into each schema
-definition.  The component kinds behave consistently as a result.
-
-#### `tags.cue`
-
-Holds parameter values passed from `holos render platform` to `holos render
-component` injected via [CUE Tags].
+Component parameters are optional.  They allow re-use of the same component.
+Refer to the [Component Parameters] topic for more information.
 
 <Tabs groupId="67C1EE71-3EA8-4568-9F6D-0072BA09FF12">
   <TabItem value="overview" label="Rendering Overview">
@@ -350,75 +377,11 @@ component` injected via [CUE Tags].
   </TabItem>
 </Tabs>
 
-We run `holos render platform` against the `platform` directory because that
-directory exports a [Platform] resource to `holos`.  The platform directory is
-effectively the entrypoint into the rendering process.
-
-Components are the building blocks for a Platform, and without them `holos
-render platform` does nothing. The `platform/podinfo.cue` file integrates the
-`podinfo` Component with the Platform.
-
-Holos requires two things to integrate a component with the platform.
-
-1. A unique name for the component.
-2. The component filesystem path.
-
-The Platform spec can re-use the same component path providing it varying input
-parameters.  This is covered in the [Component Parameters] topic.
-
-:::tip
-Holos makes it easy to re-use a Helm chart with multiple customers and
-environments.  This is not well supported by Helm alone.
-:::
-
-The `components/podinfo/podinfo.cue` file unifies the `#Helm`
-definition, indicating that we're configuring a Helm chart, along with the
-`podinfo` chart's version and repository information.  If we wanted to customize
-the `podinfo` chart and change any of the chart's values, we would make those
-changes here.
-
-For example, we could change the message being displayed by passing the
-`ui.message` value to the chart.
-
-```shell
-touch components/podinfo/values.cue
-```
-```cue
-package holos
-
-HelmChart: Values: {
-	ui: message: "Hello Holos from Podinfo!"
-}
-```
-
-Holos repeats this process for every Component added to the Platform, and since
-`podinfo` is the only Component all we need to do is render the platform again
-to see the greeting.
-
-```shell
-holos render platform ./platform
-```
-
-Now the manifest will have the UI message:
-
-```shell
-grep -C2 Hello deploy/components/podinfo/podinfo.gen.yaml
-```
-```yaml
-        env:
-        - name: PODINFO_UI_MESSAGE
-          value: Hello Holos from Podinfo!
-        - name: PODINFO_UI_COLOR
-          value: '#34577c'
-```
-
-
 ## Next Steps
 
-We've shown how to add a single Helm chart to the Platform, but what if you have
-more than one Helm chart and they all need to access the same data?  Continue on
-with the next tutorial to learn how Holos makes it easy to pass data to multiple
-components and Helm Charts.
+We've shown how to integrate one Helm chart to the Platform, but we haven't yet
+covered multiple Helm charts.  Continue on with the next tutorial to learn how
+Holos makes it easy to inject values into multiple components safely and easily.
 
 [podinfo]: https://github.com/stefanprodan/podinfo
 [CUE Module]: https://cuelang.org/docs/reference/modules/
