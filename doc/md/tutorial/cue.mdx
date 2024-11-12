@@ -1,0 +1,23 @@
+---
+slug: cue
+title: CUE
+description: Render component manifests directly from CUE.
+sidebar_position: 50
+---
+
+# CUE
+
+Concepts to cover:
+
+1. CUE is used in multiple ways.
+2. Generating resources.
+3. Validating rendered output.
+4. Injecting values to Helm and Kustomize
+5. As a better alternative to YAML when working with Kustomize.
+
+Important details:
+
+1. Resources are validated against `#Resources` defined at the root.
+2. Custom Resource Definitions need to be imported with timoni.
+3. Helm, Kustomize, and CUE can be mixed in together in the same Holos
+Component.
