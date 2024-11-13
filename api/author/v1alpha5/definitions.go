@@ -81,6 +81,8 @@ type Helm struct {
 	EnableHooks bool `cue:"true | *false"`
 	// Namespace sets the helm chart namespace flag if provided.
 	Namespace string `json:",omitempty"`
+	// APIVersions represents the helm template --api-versions flag
+	APIVersions []string `json:",omitempty"`
 
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.

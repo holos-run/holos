@@ -333,6 +333,9 @@ func (b *BuildPlan) helm(
 	if !g.Helm.EnableHooks {
 		args = append(args, "--no-hooks")
 	}
+	for _, apiVersion := range g.Helm.APIVersions {
+		args = append(args, "--api-versions", apiVersion)
+	}
 	args = append(args,
 		"--include-crds",
 		"--values", valuesPath,

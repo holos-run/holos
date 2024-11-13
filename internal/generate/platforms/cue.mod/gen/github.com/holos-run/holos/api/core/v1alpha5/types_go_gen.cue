@@ -147,6 +147,9 @@ package core
 
 	// Namespace represents the helm namespace flag
 	namespace?: string @go(Namespace)
+
+	// APIVersions represents the helm template --api-versions flag
+	apiVersions?: [...string] @go(APIVersions,[]string)
 }
 
 // Values represents [Helm] Chart values generated from CUE.

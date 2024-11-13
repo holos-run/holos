@@ -1,0 +1,93 @@
+# https://github.com/holos-run/holos/issues/330
+exec holos init platform v1alpha5 --force
+exec helm template ./components/capabilities/vendor/0.1.0/capabilities
+cmp stdout want/helm-template.yaml
+exec holos render platform ./platform
+# When no capabilities are specified
+cmp deploy/components/capabilities/capabilities.gen.yaml want/when-no-capabilities-specified.yaml
+cmp deploy/components/specified/specified.gen.yaml want/with-capabilities-specified.yaml
+-- want/when-no-capabilities-specified.yaml --
+apiVersion: v1
+kind: Service
+metadata:
+  name: has-foo-v1beta1
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+-- want/with-capabilities-specified.yaml --
+apiVersion: v1
+kind: Service
+metadata:
+  name: has-foo-v1
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+-- platform/capabilities.cue --
+package holos
+
+import "encoding/json"
+
+Platform: Components: capabilities: {
+        name: "capabilities"
+        path: "components/capabilities"
+}
+Platform: Components: specified: {
+        name: "specified"
+        path: "components/capabilities"
+        parameters: apiVersions: json.Marshal(["foo/v1","bar/v1"])
+}
+-- components/capabilities/capabilities.cue --
+package holos
+
+import "encoding/json"
+
+holos: Component.BuildPlan
+
+Component: #Helm & {
+        Name: string @tag(holos_component_name, type=string)
+        Chart: name: "capabilities"
+        Chart: version: "0.1.0"
+        _APIVersions: string | *"[]" @tag(apiVersions, type=string)
+        APIVersions: json.Unmarshal(_APIVersions)
+}
+-- components/capabilities/vendor/0.1.0/capabilities/Chart.yaml --
+apiVersion: v2
+name: capabilities
+description: A Helm chart for Kubernetes
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
+-- components/capabilities/vendor/0.1.0/capabilities/templates/service.yaml --
+apiVersion: v1
+kind: Service
+metadata:
+{{- if .Capabilities.APIVersions.Has "foo/v1" }}
+  name: has-foo-v1
+{{- else }}
+  name: has-foo-v1beta1
+{{- end }}
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+-- want/helm-template.yaml --
+---
+# Source: capabilities/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: has-foo-v1beta1
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http

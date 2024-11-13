@@ -274,17 +274,18 @@ func (t tags) Tags() []string {
 }
 
 func (t tags) String() string {
-	return strings.Join(t.Tags(), ",")
+	return strings.Join(t.Tags(), " ")
 }
 
+// Set sets a value.  Only one value per flag is supported.  For example
+// --inject=foo=bar --inject=bar=baz.  For JSON values, --inject=foo=bar,bar=baz
+// is not supported.
 func (t tags) Set(value string) error {
-	for _, item := range strings.Split(value, ",") {
-		parts := strings.SplitN(item, "=", 2)
-		if len(parts) != 2 {
-			return errors.Format("invalid format, must be tag=value")
-		}
-		t[parts[0]] = parts[1]
+	parts := strings.SplitN(value, "=", 2)
+	if len(parts) != 2 {
+		return errors.Format("invalid format, must be tag=value")
 	}
+	t[parts[0]] = parts[1]
 	return nil
 }
 

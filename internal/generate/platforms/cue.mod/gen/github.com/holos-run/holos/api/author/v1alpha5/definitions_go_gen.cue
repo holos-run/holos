@@ -92,6 +92,9 @@ import "github.com/holos-run/holos/api/core/v1alpha5:core"
 	// Namespace sets the helm chart namespace flag if provided.
 	Namespace?: string
 
+	// APIVersions represents the helm template --api-versions flag
+	APIVersions?: [...string] @go(,[]string)
+
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.
 	BuildPlan: core.#BuildPlan

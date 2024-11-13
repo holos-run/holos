@@ -304,6 +304,7 @@
     "typemeta",
     "udev",
     "uibutton",
+    "Unmarshal",
     "unstage",
     "untar",
     "upbound",

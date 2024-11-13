@@ -106,9 +106,10 @@ import (
 		name:    string | *Name
 		release: string | *name
 	}
-	Values:      _
-	EnableHooks: _
-	Namespace?:  _
+	Values:       _
+	EnableHooks:  _
+	Namespace?:   _
+	APIVersions?: _
 
 	Artifacts: {
 		HolosComponent: {
@@ -133,6 +134,9 @@ import (
 						enableHooks: EnableHooks
 						if Namespace != _|_ {
 							namespace: Namespace
+						}
+						if APIVersions != _|_ {
+							apiVersions: APIVersions
 						}
 					}
 				},
