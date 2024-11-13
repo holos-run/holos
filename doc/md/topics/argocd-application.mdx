@@ -1,0 +1,274 @@
+---
+slug: argocd-application
+title: ArgoCD Application
+description: Configuring an Application for each Component.
+sidebar_position: 110
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# ArgoCD Application
+
+## Overview
+
+This topic covers how to mix in an ArgoCD Application to all components.  We'll
+use the `Artifacts` field of [ComponentConfig] defined by the author schema.
+
+## The Code
+
+### Generating the structure
+
+Use `holos` to generate a minimal platform directory structure.  Start by
+creating a blank directory to hold the platform configuration.
+
+```shell
+mkdir holos-argocd-application && cd holos-argocd-application
+```
+
+```shell
+holos init platform v1alpha5
+```
+
+### Creating a component
+
+Create a directory for the `podinfo` component.  Create an empty file and then
+add the following CUE configuration to it.
+
+<Tabs groupId="1D2C6013-3D19-4516-8147-5A6EE214CAFF">
+  <TabItem value="components/podinfo/podinfo.cue" label="Podinfo Helm Chart">
+```bash
+mkdir -p components/podinfo
+touch components/podinfo/podinfo.cue
+```
+```bash
+cat <<EOF >components/podinfo/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+holos: Component.BuildPlan
+
+Component: #Helm & {
+	Name: "podinfo"
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+}
+```
+```bash
+EOF
+```
+  </TabItem>
+</Tabs>
+
+Integrate the `podinfo` component into the platform.
+
+<Tabs groupId="tutorial-hello-register-podinfo-component">
+  <TabItem value="platform/podinfo.cue" label="Register Podinfo">
+```bash
+cat <<EOF >platform/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+Platform: Components: podinfo: {
+	name: "podinfo"
+	path: "components/podinfo"
+}
+```
+```bash
+EOF
+```
+  </TabItem>
+</Tabs>
+
+## Adding ArgoCD Application
+
+Configure Holos to render an [Application] by defining an [Artifact] for it in
+every BuildPlan holos produces.  We're unifying our custom configuration with
+the existing `#ComponentConfig` defined in `schema.cue`.
+
+```bash
+cat <<EOF >argocd-application.cue
+```
+```cue showLineNumbers
+package holos
+
+import (
+	"path"
+	app "argoproj.io/application/v1alpha1"
+)
+
+#ComponentConfig: {
+	Name:          _
+	OutputBaseDir: _
+
+	let ArtifactPath = path.Join([OutputBaseDir, "gitops", "\(Name).application.gen.yaml"], path.Unix)
+	let ResourcesPath = path.Join(["deploy", OutputBaseDir, "components", Name], path.Unix)
+
+	Artifacts: "\(Name)-application": {
+		artifact: ArtifactPath
+		generators: [{
+			kind:   "Resources"
+			output: artifact
+			resources: Application: (Name): app.#Application & {
+				metadata: name:      Name
+				metadata: namespace: "argocd"
+				spec: {
+					destination: server: "https://kubernetes.default.svc"
+					project: "default"
+					source: {
+						path:           ResourcesPath
+						repoURL:        "https://example.com/example.git"
+						targetRevision: "main"
+					}
+				}
+			}
+		}]
+	}
+}
+```
+```bash
+EOF
+```
+
+## Inspecting the BuildPlan
+
+Our customized `#ComponentConfig` results in the following `BuildPlan`.
+
+:::note
+The second artifact around line 40 contains the configured `Application`
+resource.
+:::
+
+<Tabs groupId="55075C71-02E8-4222-88C0-2D52C82D18FC">
+  <TabItem value="command" label="Command">
+```bash
+holos cue export --expression holos --out=yaml ./components/podinfo
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```yaml showLineNumbers
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: podinfo
+spec:
+  artifacts:
+    - artifact: components/podinfo/podinfo.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: podinfo
+              version: 6.6.2
+              release: podinfo
+              repository:
+                name: podinfo
+                url: https://stefanprodan.github.io/podinfo
+            values: {}
+            enableHooks: false
+        - kind: Resources
+          output: resources.gen.yaml
+          resources: {}
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: components/podinfo/podinfo.gen.yaml
+          kustomize:
+            kustomization:
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+              kind: Kustomization
+              apiVersion: kustomize.config.k8s.io/v1beta1
+    - artifact: gitops/podinfo.application.gen.yaml
+      generators:
+        - kind: Resources
+          output: gitops/podinfo.application.gen.yaml
+          resources:
+            Application:
+              podinfo:
+                apiVersion: argoproj.io/v1alpha1
+                kind: Application
+                metadata:
+                  name: podinfo
+                  namespace: argocd
+                spec:
+                  destination:
+                    server: https://kubernetes.default.svc
+                  project: default
+                  source:
+                    path: deploy/components/podinfo
+                    repoURL: https://example.com/example.git
+                    targetRevision: main
+source:
+  component:
+    name: podinfo
+    path: no-path
+    parameters: {}
+```
+  </TabItem>
+</Tabs>
+
+## Rendering manifests
+
+<Tabs groupId="E150C802-7162-4FBF-82A7-77D9ADAEE847">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform ./platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```
+cached podinfo 6.6.2
+rendered podinfo in 1.938665041s
+rendered platform in 1.938759417s
+```
+  </TabItem>
+</Tabs>
+
+## Reviewing the Application
+
+The Artifact we added to `#ComponentConfig` will produce an ArgoCD Application
+resource for every component in the platform.  The output in this example is
+located at:
+
+```txt
+deploy/gitops/podinfo.application.gen.yaml
+```
+```yaml showLineNumbers
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+    name: podinfo
+    namespace: argocd
+spec:
+    destination:
+        server: https://kubernetes.default.svc
+    project: default
+    source:
+        path: deploy/components/podinfo
+        repoURL: https://example.com/example.git
+        targetRevision: main
+```
+
+[podinfo]: https://github.com/stefanprodan/podinfo
+[CUE Module]: https://cuelang.org/docs/reference/modules/
+[CUE Tags]: https://cuelang.org/docs/howto/inject-value-into-evaluation-using-tag-attribute/
+[Platform]: ../api/author.md#Platform
+[Component Parameters]: ../topics/component-parameters.mdx
+[Application]: https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
+[ComponentConfig]: ../api/author.md#ComponentConfig
+[Artifact]: ../api/core.md#Artifact
