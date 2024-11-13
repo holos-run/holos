@@ -336,6 +336,9 @@ func (b *BuildPlan) helm(
 	for _, apiVersion := range g.Helm.APIVersions {
 		args = append(args, "--api-versions", apiVersion)
 	}
+	if kubeVersion := g.Helm.KubeVersion; kubeVersion != "" {
+		args = append(args, "--kube-version", kubeVersion)
+	}
 	args = append(args,
 		"--include-crds",
 		"--values", valuesPath,

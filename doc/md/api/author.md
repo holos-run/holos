@@ -85,6 +85,8 @@ type Helm struct {
     Namespace string `json:",omitempty"`
     // APIVersions represents the helm template --api-versions flag
     APIVersions []string `json:",omitempty"`
+    // KubeVersion represents the helm template --kube-version flag
+    KubeVersion string `json:",omitempty"`
 
     // BuildPlan represents the derived BuildPlan produced for the holos render
     // component command.

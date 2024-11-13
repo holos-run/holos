@@ -110,6 +110,7 @@ import (
 	EnableHooks:  _
 	Namespace?:   _
 	APIVersions?: _
+	KubeVersion?: _
 
 	Artifacts: {
 		HolosComponent: {
@@ -137,6 +138,9 @@ import (
 						}
 						if APIVersions != _|_ {
 							apiVersions: APIVersions
+						}
+						if KubeVersion != _|_ {
+							kubeVersion: KubeVersion
 						}
 					}
 				},

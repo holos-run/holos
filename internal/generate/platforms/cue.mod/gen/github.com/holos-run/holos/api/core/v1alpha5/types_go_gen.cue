@@ -150,6 +150,9 @@ package core
 
 	// APIVersions represents the helm template --api-versions flag
 	apiVersions?: [...string] @go(APIVersions,[]string)
+
+	// KubeVersion represents the helm template --kube-version flag
+	kubeVersion?: string @go(KubeVersion)
 }
 
 // Values represents [Helm] Chart values generated from CUE.

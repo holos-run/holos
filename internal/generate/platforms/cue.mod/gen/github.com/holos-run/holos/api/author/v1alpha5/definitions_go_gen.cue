@@ -95,6 +95,9 @@ import "github.com/holos-run/holos/api/core/v1alpha5:core"
 	// APIVersions represents the helm template --api-versions flag
 	APIVersions?: [...string] @go(,[]string)
 
+	// KubeVersion represents the helm template --kube-version flag
+	KubeVersion?: string
+
 	// BuildPlan represents the derived BuildPlan produced for the holos render
 	// component command.
 	BuildPlan: core.#BuildPlan

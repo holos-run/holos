@@ -153,6 +153,7 @@
     "kubelet",
     "kubelogin",
     "kubernetesobjects",
+    "kubeversion",
     "Kustomization",
     "Kustomizations",
     "kustomize",

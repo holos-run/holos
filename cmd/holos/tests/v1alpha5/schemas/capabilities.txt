@@ -5,11 +5,44 @@ cmp stdout want/helm-template.yaml
 exec holos render platform ./platform
 # When no capabilities are specified
 cmp deploy/components/capabilities/capabilities.gen.yaml want/when-no-capabilities-specified.yaml
+# With APIVersions specified
 cmp deploy/components/specified/specified.gen.yaml want/with-capabilities-specified.yaml
+# With KubeVersion specified
+cmp deploy/components/kubeversion1/kubeversion1.gen.yaml want/with-kubeversion-specified.yaml
+# With both APIVersions and KubeVersion specified
+cmp deploy/components/kubeversion2/kubeversion2.gen.yaml want/with-both-specified.yaml
+-- want/with-both-specified.yaml --
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubeVersion: v1.20.0
+  name: has-foo-v1
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
+-- want/with-kubeversion-specified.yaml --
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubeVersion: v1.20.0
+  name: has-foo-v1beta1
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: http
 -- want/when-no-capabilities-specified.yaml --
 apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    kubeVersion: v1.31.0
   name: has-foo-v1beta1
 spec:
   ports:
@@ -21,6 +54,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    kubeVersion: v1.31.0
   name: has-foo-v1
 spec:
   ports:
@@ -42,6 +77,17 @@ Platform: Components: specified: {
         path: "components/capabilities"
         parameters: apiVersions: json.Marshal(["foo/v1","bar/v1"])
 }
+Platform: Components: kubeversion1: {
+        name: "kubeversion1"
+        path: "components/capabilities"
+        parameters: kubeVersion: "v1.20.0"
+}
+Platform: Components: kubeversion2: {
+        name: "kubeversion2"
+        path: "components/capabilities"
+        parameters: kubeVersion: "v1.20.0"
+        parameters: apiVersions: json.Marshal(["foo/v1","bar/v1"])
+}
 -- components/capabilities/capabilities.cue --
 package holos
 
@@ -55,6 +101,7 @@ Component: #Helm & {
         Chart: version: "0.1.0"
         _APIVersions: string | *"[]" @tag(apiVersions, type=string)
         APIVersions: json.Unmarshal(_APIVersions)
+        KubeVersion: string | *"v1.31.0" @tag(kubeVersion, type=string)
 }
 -- components/capabilities/vendor/0.1.0/capabilities/Chart.yaml --
 apiVersion: v2
@@ -72,6 +119,8 @@ metadata:
 {{- else }}
   name: has-foo-v1beta1
 {{- end }}
+  annotations:
+    kubeVersion: {{ .Capabilities.KubeVersion }}
 spec:
   ports:
     - port: 80
@@ -85,6 +134,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: has-foo-v1beta1
+  annotations:
+    kubeVersion: v1.31.0
 spec:
   ports:
     - port: 80

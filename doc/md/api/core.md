@@ -243,6 +243,8 @@ type Helm struct {
     Namespace string `json:"namespace,omitempty"`
     // APIVersions represents the helm template --api-versions flag
     APIVersions []string `json:"apiVersions,omitempty"`
+    // KubeVersion represents the helm template --kube-version flag
+    KubeVersion string `json:"kubeVersion,omitempty"`
 }
 ```
 
