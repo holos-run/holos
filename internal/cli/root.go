@@ -118,7 +118,7 @@ func newOrgCmd(feature holos.Flagger) (cmd *cobra.Command) {
 }
 
 func newCueCmd() (cmd *cobra.Command) {
-	cueCmd, _ := cue.New(os.Args[2:])
+	cueCmd, _ := cue.New(os.Args[1:])
 	cmd = cueCmd.Command
 	return
 }
