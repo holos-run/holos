@@ -353,6 +353,7 @@ func (b *BuildPlan) helm(
 		stderr := helmOut.Stderr.String()
 		lines := strings.Split(stderr, "\n")
 		for _, line := range lines {
+			log.DebugContext(ctx, line)
 			if strings.HasPrefix(line, "Error:") {
 				err = fmt.Errorf("%s: %w", line, err)
 			}
@@ -520,7 +521,15 @@ func (b *BuildPlan) cacheChart(
 	}
 	helmOut, err := util.RunCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, cn)
 	if err != nil {
-		return errors.Wrap(fmt.Errorf("could not run helm pull: %w", err))
+		stderr := helmOut.Stderr.String()
+		lines := strings.Split(stderr, "\n")
+		for _, line := range lines {
+			log.DebugContext(ctx, line)
+			if strings.HasPrefix(line, "Error:") {
+				err = fmt.Errorf("%s: %w", line, err)
+			}
+		}
+		return errors.Format("could not run helm pull: %w", err)
 	}
 	log.Debug("helm pull", "stdout", helmOut.Stdout, "stderr", helmOut.Stderr)
 
