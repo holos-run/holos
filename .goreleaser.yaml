@@ -85,4 +85,4 @@ brews:
       fish_output = Utils.safe_popen_read(bin/"holos", "completion", "fish")
       (fish_completion/"holos.fish").write fish_output
     test: |
-      system "#{bin}/holos version"
+      system "#{bin}/holos --version"
