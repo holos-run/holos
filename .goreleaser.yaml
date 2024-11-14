@@ -6,7 +6,7 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
 # vim: set ts=2 sw=2 tw=0 fo=cnqoj
 
-version: 1
+version: 2
 
 before:
   hooks:
@@ -50,3 +50,39 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
+
+source:
+  enabled: true
+  name_template: '{{ .ProjectName }}_{{ .Version }}_source_code'
+
+sboms:
+  - id: source
+    artifacts: source
+    documents:
+      - "{{ .ProjectName }}_{{ .Version }}_sbom.spdx.json"
+
+brews:
+  - name: holos
+    repository:
+      owner: holos-run
+      name: homebrew-tap
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://holos.run"
+    description: "Holos CLI"
+    dependencies:
+      - name: helm
+        type: optional
+      - name: kubectl
+        type: optional
+    install: |
+      bin.install "holos"
+      bash_output = Utils.safe_popen_read(bin/"holos", "completion", "bash")
+      (bash_completion/"holos").write bash_output
+      zsh_output = Utils.safe_popen_read(bin/"holos", "completion", "zsh")
+      (zsh_completion/"_holos").write zsh_output
+      fish_output = Utils.safe_popen_read(bin/"holos", "completion", "fish")
+      (fish_completion/"holos.fish").write fish_output
+    test: |
+      system "#{bin}/holos version"

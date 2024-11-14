@@ -17,21 +17,53 @@ This tutorial will guide you through the installation of Holos and its
 dependencies, as well as the initialization of a minimal Platform that you can
 extend to meet your specific needs.
 
-## Installing Holos
+## Installing
 
 Holos is distributed as a single file executable that can be installed in a
 couple of ways.
+
+<Tabs groupId="FE2C74C8-B3A3-4AEA-BBD3-F57FAA654B6F">
+  <TabItem value="brew" label="Install with brew">
+```bash
+brew install holos-run/tap/holos
+```
+  </TabItem>
+  <TabItem value="go" label="Go">
+```bash
+go install github.com/holos-run/holos/cmd/holos@latest
+```
+  </TabItem>
+</Tabs>
+
+### Completion
+
+<Tabs groupId="65F79D28-2E57-4A90-8EBA-3D8758C80233">
+  <TabItem value="zsh" label="zsh">
+```bash
+source <(holos completion zsh)
+```
+  </TabItem>
+  <TabItem value="bash" label="bash">
+```bash
+source <(holos completion bash)
+```
+  </TabItem>
+  <TabItem value="fish" label="fish">
+```bash
+source <(holos completion fish)
+```
+  </TabItem>
+  <TabItem value="ksh" label="ksh">
+```bash
+source <(holos completion ksh)
+```
+  </TabItem>
+</Tabs>
 
 ### Releases
 
 Download `holos` from the [releases] page and place the executable into your
 shell path.
-
-### Go Install
-
-```shell
-go install github.com/holos-run/holos/cmd/holos@latest
-```
 
 ### Dependencies
 
@@ -41,8 +73,12 @@ their functionality.
 - [Helm] to fetch and render Helm chart Components.
 - [Kubectl] to [kustomize] components.
 
-Holos is tested with Helm version `v3.16.2`.  Please try upgrading helm if you
-encounter `Error: chart requires kubeVersion ...` errors.
+:::note
+Holos is tested with Helm version `v3.16.2`.
+:::
+
+Please try upgrading helm if you encounter `Error: chart requires kubeVersion
+...` errors.
 
 ## Next Steps
 

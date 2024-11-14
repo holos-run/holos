@@ -35,6 +35,9 @@ jobs:
         with:
           go-version: stable
 
+      - name: Setup Syft
+        uses: anchore/sbom-action/download-syft@1ca97d9028b51809cf6d3c934c3e160716e1b605 # v0.17.5
+
       # Necessary to run these outside of goreleaser, otherwise
       # /home/runner/_work/holos/holos/internal/frontend/node_modules/.bin/protoc-gen-connect-query is not in PATH
       - name: Install Tools
@@ -54,11 +57,19 @@ jobs:
       - name: Git diff
         run: git diff
 
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          owner: ${{ github.repository_owner }}
+          app-id: ${{ vars.GORELEASER_APP_ID }}
+          private-key: ${{ secrets.GORELEASER_APP_PRIVATE_KEY }}
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
-          version: latest
+          version: '~> v2'
           args: release --clean
         env:
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
