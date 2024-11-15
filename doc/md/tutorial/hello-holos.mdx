@@ -111,7 +111,9 @@ and then add the following CUE configuration to it.
 
 ```bash
 mkdir -p components/podinfo
-touch components/podinfo/podinfo.cue
+```
+```bash
+cat <<EOF > components/podinfo/podinfo.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -138,6 +140,9 @@ HelmChart: #Helm & {
 	}
 }
 ```
+```bash
+EOF
+```
 
 :::important
 CUE loads all of `*.cue` files in the component directory to define component,
@@ -155,10 +160,8 @@ platform root directory.  In this example, `#Helm` on line 6 is defined in
 Integrate the `podinfo` component into the platform by creating a new CUE file
 in the `platform` directory with the following content.
 
-<Tabs groupId="tutorial-hello-register-podinfo-component">
-  <TabItem value="platform/podinfo.cue" label="Register Podinfo">
 ```bash
-touch platform/podinfo.cue
+cat <<EOF > platform/podinfo.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -170,8 +173,9 @@ Platform: Components: podinfo: {
 	parameters: greeting: "Hello Holos!"
 }
 ```
-  </TabItem>
-</Tabs>
+```bash
+EOF
+```
 
 :::tip
 Component parameters may have any name as long as they don't start with

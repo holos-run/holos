@@ -43,7 +43,9 @@ add the following CUE configuration to it.
 
 ```bash
 mkdir -p components/podinfo
-touch components/podinfo/podinfo.cue
+```
+```bash
+cat <<EOF > components/podinfo/podinfo.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -66,11 +68,14 @@ Component: #Helm & {
 	}
 }
 ```
+```bash
+EOF
+```
 
 Integrate the component with the platform.
 
 ```bash
-touch platform/podinfo.cue
+cat <<EOF > platform/podinfo.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -79,6 +84,9 @@ Platform: Components: podinfo: {
 	name: "podinfo"
 	path: "components/podinfo"
 }
+```
+```bash
+EOF
 ```
 
 Render the platform.
@@ -113,7 +121,7 @@ component kind.  This field is a convenient wrapper around the core [BuildPlan]
 Create the mixins.cue file.
 
 ```bash
-touch components/podinfo/mixins.cue
+cat <<EOF > components/podinfo/mixins.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -141,6 +149,9 @@ Component: {
 		}
 	}
 }
+```
+```bash
+EOF
 ```
 
 :::important

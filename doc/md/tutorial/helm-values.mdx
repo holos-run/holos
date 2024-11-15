@@ -59,14 +59,12 @@ the following file contents.
 
 ```bash
 mkdir -p components/prometheus components/blackbox
-touch components/prometheus/prometheus.cue
-touch components/blackbox/blackbox.cue
 ```
 
 <Tabs groupId="D15A3008-1EFC-4D34-BED1-15BC0C736CC3">
   <TabItem value="prometheus.cue" label="prometheus.cue">
-```txt
-components/prometheus/prometheus.cue
+```bash
+cat <<EOF > components/prometheus/prometheus.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -85,10 +83,13 @@ Helm: #Helm & {
 	}
 }
 ```
+```bash
+EOF
+```
   </TabItem>
   <TabItem value="blackbox.cue" label="blackbox.cue">
-```txt
-components/blackbox/blackbox.cue
+```bash
+cat <<EOF > components/blackbox/blackbox.cue
 ```
 ```cue showLineNumbers
 package holos
@@ -107,6 +108,9 @@ Helm: #Helm & {
 	}
 }
 ```
+```bash
+EOF
+```
   </TabItem>
 </Tabs>
 
@@ -116,9 +120,8 @@ Integrate the components with the platform by adding the following file to the
 platform directory.
 
 ```bash
-touch platform/prometheus.cue
+cat <<EOF > platform/prometheus.cue
 ```
-
 ```cue showLineNumbers
 package holos
 
@@ -132,6 +135,9 @@ Platform: Components: {
 		path: "components/blackbox"
 	}
 }
+```
+```bash
+EOF
 ```
 
 Render the platform.
@@ -243,9 +249,8 @@ use.  We add this configuration to the `components` directory so it's in scope
 for all components.
 
 ```bash
-touch components/blackbox.cue
+cat <<EOF > components/blackbox.cue
 ```
-
 ```cue showLineNumbers
 package holos
 
@@ -262,6 +267,9 @@ Blackbox: #Blackbox & {
 	host: "blackbox"
 	port: 9115
 }
+```
+```bash
+EOF
 ```
 
 :::important

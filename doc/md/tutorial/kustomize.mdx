@@ -61,11 +61,12 @@ Create the `httpbin` component directory and add the `httpbin.cue` and
   <TabItem value="setup" label="Setup">
 ```bash
 mkdir -p components/httpbin
-touch components/httpbin/httpbin.cue
-touch components/httpbin/httpbin.yaml
 ```
   </TabItem>
   <TabItem value="components/httpbin/httpbin.cue" label="httpbin.cue">
+```bash
+cat <<EOF > components/httpbin/httpbin.cue
+```
 ```cue showLineNumbers
 package holos
 
@@ -98,8 +99,14 @@ Kustomize: #Kustomize & {
 	}
 }
 ```
+```bash
+EOF
+```
   </TabItem>
   <TabItem value="components/httpbin/httpbin.yaml" label="httpbin.yaml">
+```bash
+cat <<EOF > components/httpbin/httpbin.yaml
+```
 ```yaml showLineNumbers
 # https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/resources.yaml
 apiVersion: apps/v1
@@ -138,6 +145,9 @@ spec:
       name: http
       appProtocol: http
 ```
+```bash
+EOF
+```
   </TabItem>
 </Tabs>
 
@@ -150,9 +160,8 @@ Integrate `httpbin` with the platform by adding the following file to the
 platform directory.
 
 ```bash
-touch platform/httpbin.cue
+cat <<EOF > platform/httpbin.cue
 ```
-
 ```cue showLineNumbers
 package holos
 
@@ -162,6 +171,9 @@ Platform: Components: {
 		path: "components/httpbin"
 	}
 }
+```
+```bash
+EOF
 ```
 
 Render the platform.
@@ -275,13 +287,9 @@ makes this easier with CUE.  We don't need to edit any yaml files.
 Add a new `patches.cue` file to the `httpbin` component with the following
 content.
 
-<Tabs groupId="104D40FD-ED59-4F66-8B91-435436084743">
-  <TabItem value="touch" label="touch">
 ```bash
-touch components/httpbin/patches.cue
+cat <<EOF > components/httpbin/patches.cue
 ```
-  </TabItem>
-  <TabItem value="patches.cue" label="patches.cue">
 ```cue showLineNumbers
 package holos
 
@@ -300,8 +308,9 @@ Kustomize: KustomizeConfig: Kustomization: _patches: {
 	}
 }
 ```
-  </TabItem>
-</Tabs>
+```bash
+EOF
+```
 
 :::note
 We use a hidden `_patches` field to easily unify data into a struct, then
