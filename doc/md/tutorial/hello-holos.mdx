@@ -109,8 +109,6 @@ initialization.
 Start by creating a directory for the `podinfo` component.  Create an empty file
 and then add the following CUE configuration to it.
 
-<Tabs groupId="tutorial-hello-podinfo-helm-cue-code">
-  <TabItem value="components/podinfo/podinfo.cue" label="Podinfo Helm Chart">
 ```bash
 mkdir -p components/podinfo
 touch components/podinfo/podinfo.cue
@@ -140,8 +138,6 @@ HelmChart: #Helm & {
 	}
 }
 ```
-  </TabItem>
-</Tabs>
 
 :::important
 CUE loads all of `*.cue` files in the component directory to define component,
@@ -156,7 +152,7 @@ platform root directory.  In this example, `#Helm` on line 6 is defined in
 
 ### Integrating the component
 
-Integrate the `podinfo` component into the platform by creating a new cue file
+Integrate the `podinfo` component into the platform by creating a new CUE file
 in the `platform` directory with the following content.
 
 <Tabs groupId="tutorial-hello-register-podinfo-component">
@@ -348,7 +344,7 @@ grep -B2 Hello deploy/components/podinfo/podinfo.gen.yaml
 
 ## Breaking it down
 
-We run `holos render platform ./platform` because the cue files in the platform
+We run `holos render platform ./platform` because the CUE files in the platform
 directory export a [Platform] resource to `holos`.  The platform directory is
 the entrypoint to the platform rendering process.
 
@@ -358,7 +354,7 @@ file integrates the `podinfo` Component with the Platform.
 Holos requires two fields to integrate a component with the platform.
 
 1. A unique name for the component.
-2. The component path to the directory containing the cue files exporting a
+2. The component path to the directory containing the CUE files exporting a
 `BuildPlan` defining the component.
 
 Component parameters are optional.  They allow re-use of the same component.
