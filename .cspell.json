@@ -57,6 +57,7 @@
     "Cmds",
     "CNCF",
     "CODEOWNERS",
+    "componentconfig",
     "configdir",
     "configmap",
     "configmapargs",

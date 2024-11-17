@@ -7,6 +7,8 @@ sidebar_position: 110
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import CommonComponent from '../../common/example-component.mdx';
+import CommonComponentIntegrate from '../../common/example-component-integrate.mdx';
 
 # ArgoCD Application
 
@@ -30,62 +32,10 @@ mkdir holos-argocd-application && cd holos-argocd-application
 holos init platform v1alpha5
 ```
 
-### Creating a component
+### Creating an example Component
 
-Create a directory for the `podinfo` component.  Create an empty file and then
-add the following CUE configuration to it.
-
-<Tabs groupId="1D2C6013-3D19-4516-8147-5A6EE214CAFF">
-  <TabItem value="components/podinfo/podinfo.cue" label="Podinfo Helm Chart">
-```bash
-mkdir -p components/podinfo
-touch components/podinfo/podinfo.cue
-```
-```bash
-cat <<EOF >components/podinfo/podinfo.cue
-```
-```cue showLineNumbers
-package holos
-
-holos: Component.BuildPlan
-
-Component: #Helm & {
-	Name: "podinfo"
-	Chart: {
-		version: "6.6.2"
-		repository: {
-			name: "podinfo"
-			url:  "https://stefanprodan.github.io/podinfo"
-		}
-	}
-}
-```
-```bash
-EOF
-```
-  </TabItem>
-</Tabs>
-
-Integrate the `podinfo` component into the platform.
-
-<Tabs groupId="tutorial-hello-register-podinfo-component">
-  <TabItem value="platform/podinfo.cue" label="Register Podinfo">
-```bash
-cat <<EOF >platform/podinfo.cue
-```
-```cue showLineNumbers
-package holos
-
-Platform: Components: podinfo: {
-	name: "podinfo"
-	path: "components/podinfo"
-}
-```
-```bash
-EOF
-```
-  </TabItem>
-</Tabs>
+<CommonComponent />
+<CommonComponentIntegrate />
 
 ## Adding ArgoCD Application
 
@@ -267,8 +217,8 @@ spec:
 [podinfo]: https://github.com/stefanprodan/podinfo
 [CUE Module]: https://cuelang.org/docs/reference/modules/
 [CUE Tags]: https://cuelang.org/docs/howto/inject-value-into-evaluation-using-tag-attribute/
-[Platform]: ../api/author.md#Platform
-[Component Parameters]: ../topics/component-parameters.mdx
 [Application]: https://argo-cd.readthedocs.io/en/stable/user-guide/application-specification/
-[ComponentConfig]: ../api/author.md#ComponentConfig
-[Artifact]: ../api/core.md#Artifact
+[Component Parameters]: ../component-parameters.mdx
+[Platform]: ../../api/author.md#Platform
+[ComponentConfig]: ../../api/author.md#ComponentConfig
+[Artifact]: ../../api/core.md#Artifact
