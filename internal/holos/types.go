@@ -31,6 +31,7 @@ type feature string
 
 const BuildFeature = feature("BUILD")
 const ServerFeature = feature("SERVER")
+const ClientFeature = feature("CLIENT")
 const PreflightFeature = feature("PREFLIGHT")
 const GenerateComponentFeature = feature("GENERATE_COMPONENT")
 const SecretsFeature = feature("SECRETS")

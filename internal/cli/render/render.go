@@ -28,13 +28,13 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("render")
 	cmd.Args = cobra.NoArgs
 	cmd.Short = "render platforms and components to manifest files"
-	cmd.AddCommand(NewComponent(cfg))
-	cmd.AddCommand(NewPlatform(cfg))
+	cmd.AddCommand(NewComponent(cfg, feature))
+	cmd.AddCommand(NewPlatform(cfg, feature))
 	return cmd
 }
 
 // New returns the component subcommand for the render command
-func NewComponent(cfg *holos.Config) *cobra.Command {
+func NewComponent(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("component DIRECTORY")
 	cmd.Args = cobra.ExactArgs(1)
 	cmd.Short = "render a platform component"
@@ -43,8 +43,10 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 	cmd.Flags().AddGoFlagSet(cfg.ClusterFlagSet())
 
 	config := client.NewConfig(cfg)
-	cmd.PersistentFlags().AddGoFlagSet(config.ClientFlagSet())
-	cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
+	if feature.Flag(holos.ClientFeature) {
+		cmd.PersistentFlags().AddGoFlagSet(config.ClientFlagSet())
+		cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
+	}
 
 	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
 
@@ -176,15 +178,17 @@ func NewComponent(cfg *holos.Config) *cobra.Command {
 	return cmd
 }
 
-func NewPlatform(cfg *holos.Config) *cobra.Command {
+func NewPlatform(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("platform DIRECTORY")
 	cmd.Args = cobra.ExactArgs(1)
 	cmd.Example = "  holos render platform ./platform"
 	cmd.Short = "render an entire platform"
 
 	config := client.NewConfig(cfg)
-	cmd.PersistentFlags().AddGoFlagSet(config.ClientFlagSet())
-	cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
+	if feature.Flag(holos.ClientFeature) {
+		cmd.PersistentFlags().AddGoFlagSet(config.ClientFlagSet())
+		cmd.PersistentFlags().AddGoFlagSet(config.TokenFlagSet())
+	}
 
 	var concurrency int
 	cmd.Flags().IntVar(&concurrency, "concurrency", min(runtime.NumCPU(), 8), "number of components to render concurrently")
