@@ -32,6 +32,7 @@ func HandleError(ctx context.Context, err error, hc *holos.Config) (exitCode int
 	log := hc.NewTopLevelLogger().With("code", connect.CodeOf(err))
 	var cueErr cue.Error
 	var errAt *errors.ErrorAt
+
 	if errors.As(err, &errAt) {
 		loc := errAt.Source.Loc()
 		err2 := errAt.Unwrap()
@@ -39,10 +40,13 @@ func HandleError(ctx context.Context, err error, hc *holos.Config) (exitCode int
 	} else {
 		log.ErrorContext(ctx, fmt.Sprintf("could not run: %s", err), "err", err)
 	}
+
 	// cue errors are bundled up as a list and refer to multiple files / lines.
 	if errors.As(err, &cueErr) {
 		msg := cue.Details(cueErr, nil)
-		_, _ = fmt.Fprint(hc.Stderr(), msg)
+		if _, err := fmt.Fprint(hc.Stderr(), msg); err != nil {
+			log.ErrorContext(ctx, "could not write CUE error details: "+err.Error(), "err", err)
+		}
 	}
 	// connect errors have details and codes.
 	// Refer to https://connectrpc.com/docs/go/errors

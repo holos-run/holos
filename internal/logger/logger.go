@@ -89,6 +89,14 @@ type Config struct {
 	flagSet   *flag.FlagSet
 }
 
+func (c *Config) Level() string {
+	return c.level
+}
+
+func (c *Config) Format() string {
+	return c.format
+}
+
 // GetLogLevel returns a slog.Level configured by the user
 //
 // A non-zero length DEBUG env var takes precedence over config fields.

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -13,170 +12,89 @@ import (
 	"time"
 
 	"cuelang.org/go/cue"
-	"cuelang.org/go/cue/cuecontext"
-	"cuelang.org/go/cue/load"
-	"github.com/holos-run/holos"
-	h "github.com/holos-run/holos"
 	core "github.com/holos-run/holos/api/core/v1alpha5"
+	"github.com/holos-run/holos/internal/artifact"
 	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/util"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
 )
 
-func Unify(cueCtx *cue.Context, path string, tags []string) (bd holos.BuildData, err error) {
-	if bd.ModuleRoot, bd.Dir, err = util.FindRootLeaf(path); err != nil {
-		return bd, errors.Wrap(err)
-	}
-
-	cueConfig := load.Config{
-		Dir:        bd.ModuleRoot,
-		ModuleRoot: bd.ModuleRoot,
-		Tags:       tags,
-	}
-	args := []string{bd.Dir}
-	instances := load.Instances(args, &cueConfig)
-	v := cueCtx.BuildInstance(instances[0])
-	if err = v.Err(); err != nil {
-		return bd, errors.Wrap(err)
-	}
-	bd.Value = v
-
-	return
-}
-
-func LoadPlatform(path string, tags []string) (*Platform, error) {
-	bd, err := Unify(cuecontext.New(), path, tags)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-
-	decoder, err := bd.Decoder()
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-
-	var platform Platform
-	if err := decoder.Decode(&platform.Platform); err != nil {
-		return nil, errors.Wrap(err)
-	}
-	return &platform, nil
-}
-
 // Platform represents a platform builder.
 type Platform struct {
-	Platform    core.Platform
-	Concurrency int
-	Stderr      io.Writer
+	Platform core.Platform
 }
 
-// Build builds a Platform by concurrently building a BuildPlan for each
-// platform component.  No artifact files are written directly, only indirectly
-// by rendering each component.
-func (p *Platform) Build(ctx context.Context, _ h.ArtifactMap) error {
-	parentStart := time.Now()
-	components := p.Platform.Spec.Components
-	total := len(components)
-	g, ctx := errgroup.WithContext(ctx)
-	// Limit the number of concurrent goroutines due to CUE memory usage concerns
-	// while rendering components.  One more for the producer.
-	g.SetLimit(p.Concurrency + 1)
-	// Spawn a producer because g.Go() blocks when the group limit is reached.
-	g.Go(func() error {
-		for idx := range components {
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			default:
-				// Capture idx to avoid issues with closure.  Fixed in Go 1.22.
-				idx := idx
-				component := &components[idx]
-				// Worker go routine.  Blocks if limit has been reached.
-				g.Go(func() error {
-					select {
-					case <-ctx.Done():
-						return ctx.Err()
-					default:
-						start := time.Now()
-						log := logger.FromContext(ctx).With(
-							"name", component.Name,
-							"path", component.Path,
-							"num", idx+1,
-							"total", total,
-						)
-						log.DebugContext(ctx, "render component")
+// Load loads from a cue value.
+func (p *Platform) Load(v cue.Value) error {
+	return errors.Wrap(v.Decode(&p.Platform))
+}
 
-						tags := make([]string, 0, 2+len(component.Parameters))
-						tags = append(tags, "holos_component_name="+component.Name)
-						tags = append(tags, "holos_component_path="+component.Path)
-						for key, value := range component.Parameters {
-							tags = append(tags, fmt.Sprintf("%s=%s", key, value))
-						}
-
-						// Execute a sub-process to limit CUE memory usage.
-						args := make([]string, 0, 10)
-						args = append(args,
-							"render",
-							"component",
-						)
-						for _, tag := range tags {
-							args = append(args, "--inject", tag)
-						}
-						if component.WriteTo != "" {
-							args = append(args, "--write-to", component.WriteTo)
-						}
-						args = append(args, component.Path)
-						result, err := util.RunCmd(ctx, "holos", args...)
-						// I've lost an hour+ digging into why I couldn't see log output
-						// from sub-processes.  Make sure to surface at least stderr from
-						// sub-processes.
-						_, _ = io.Copy(p.Stderr, result.Stderr)
-						if err != nil {
-							return errors.Wrap(fmt.Errorf("could not render component: %w", err))
-						}
-
-						duration := time.Since(start)
-						msg := fmt.Sprintf(
-							"rendered %s in %s",
-							component.Name,
-							duration,
-						)
-						log.InfoContext(ctx, msg, "duration", duration)
-						return nil
-					}
-				})
-			}
-		}
-		return nil
-	})
-
-	// Wait for completion and return the first error (if any)
-	if err := g.Wait(); err != nil {
-		return err
+func (p *Platform) Export(encoder holos.Encoder) error {
+	if err := encoder.Encode(&p.Platform); err != nil {
+		return errors.Wrap(err)
 	}
-
-	duration := time.Since(parentStart)
-	msg := fmt.Sprintf("rendered platform in %s", duration)
-	logger.FromContext(ctx).InfoContext(ctx, msg, "duration", duration, "version", p.Platform.APIVersion)
 	return nil
 }
 
+func (p *Platform) Select(selectors ...holos.Selector) []holos.Component {
+	components := make([]holos.Component, 0, len(p.Platform.Spec.Components))
+	for _, component := range p.Platform.Spec.Components {
+		if holos.IsSelected(component.Labels, selectors...) {
+			components = append(components, &Component{component})
+		}
+	}
+	return components
+}
+
+type Component struct {
+	Component core.Component
+}
+
+func (c *Component) Describe() string {
+	if val, ok := c.Component.Annotations["app.holos.run/description"]; ok {
+		return val
+	}
+	return c.Component.Name
+}
+
+func (c *Component) Tags() []string {
+	tags := make([]string, 0, len(c.Component.Parameters)+2)
+	for k, v := range c.Component.Parameters {
+		tags = append(tags, k+"="+v)
+	}
+	// Inject holos component metadata tags.
+	tags = append(tags, "holos_component_name="+c.Component.Name)
+	tags = append(tags, "holos_component_path="+c.Component.Path)
+	return tags
+}
+
+func (c *Component) WriteTo() string {
+	return c.Component.WriteTo
+}
+
+func (c *Component) Labels() holos.Labels {
+	return c.Component.Labels
+}
+
+func (c *Component) Path() string {
+	return util.DotSlash(c.Component.Path)
+}
+
+var _ holos.BuildPlan = &BuildPlan{}
+
 // BuildPlan represents a component builder.
 type BuildPlan struct {
-	BuildPlan   core.BuildPlan
-	Concurrency int
-	Stderr      io.Writer
-	// WriteTo --write-to=deploy flag
-	WriteTo string
-	// Path represents the path to the component
-	Path h.InstancePath
+	core.BuildPlan
+	Opts holos.BuildOpts
 }
 
 // Build builds a BuildPlan into Artifact files.
-func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
+func (b *BuildPlan) Build(ctx context.Context) error {
 	name := b.BuildPlan.Metadata.Name
-	path := b.BuildPlan.Source.Component.Path
+	path := b.Opts.Path
 	log := logger.FromContext(ctx).With("name", name, "path", path)
 	msg := fmt.Sprintf("could not build %s", name)
 	if b.BuildPlan.Spec.Disabled {
@@ -186,7 +104,7 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	// One more for the producer
-	g.SetLimit(b.Concurrency + 1)
+	g.SetLimit(b.Opts.Concurrency + 1)
 
 	// Producer.
 	g.Go(func() error {
@@ -208,15 +126,15 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 					for _, gen := range a.Generators {
 						switch gen.Kind {
 						case "Resources":
-							if err := b.resources(log, gen, am); err != nil {
+							if err := b.resources(log, gen, b.Opts.Store); err != nil {
 								return errors.Format("could not generate resources: %w", err)
 							}
 						case "Helm":
-							if err := b.helm(ctx, log, gen, am); err != nil {
+							if err := b.helm(ctx, log, gen, b.Opts.Store); err != nil {
 								return errors.Format("could not generate helm: %w", err)
 							}
 						case "File":
-							if err := b.file(log, gen, am); err != nil {
+							if err := b.file(log, gen, b.Opts.Store); err != nil {
 								return errors.Format("could not generate file: %w", err)
 							}
 						default:
@@ -227,20 +145,20 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 					for _, t := range a.Transformers {
 						switch t.Kind {
 						case "Kustomize":
-							if err := b.kustomize(ctx, log, t, am); err != nil {
+							if err := b.kustomize(ctx, log, t, b.Opts.Store); err != nil {
 								return errors.Wrap(err)
 							}
 						case "Join":
 							s := make([][]byte, 0, len(t.Inputs))
 							for _, input := range t.Inputs {
-								if data, ok := am.Get(string(input)); ok {
+								if data, ok := b.Opts.Store.Get(string(input)); ok {
 									s = append(s, data)
 								} else {
 									return errors.Format("%s: missing %s", msg, input)
 								}
 							}
 							data := bytes.Join(s, []byte(t.Join.Separator))
-							if err := am.Set(string(t.Output), data); err != nil {
+							if err := b.Opts.Store.Set(string(t.Output), data); err != nil {
 								return errors.Format("%s: %w", msg, err)
 							}
 							log.Debug("set artifact: " + string(t.Output))
@@ -250,10 +168,10 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 					}
 
 					// Write the final artifact
-					if err := am.Save(b.WriteTo, string(a.Artifact)); err != nil {
+					if err := b.Opts.Store.Save(b.Opts.WriteTo, string(a.Artifact)); err != nil {
 						return errors.Format("%s: %w", msg, err)
 					}
-					log.DebugContext(ctx, "wrote "+filepath.Join(b.WriteTo, string(a.Artifact)))
+					log.DebugContext(ctx, "wrote "+filepath.Join(b.Opts.WriteTo, string(a.Artifact)))
 
 					return nil
 				})
@@ -266,16 +184,27 @@ func (b *BuildPlan) Build(ctx context.Context, am h.ArtifactMap) error {
 	return g.Wait()
 }
 
+func (b *BuildPlan) Export(encoder holos.Encoder) error {
+	if err := encoder.Encode(&b.BuildPlan); err != nil {
+		return errors.Wrap(err)
+	}
+	return nil
+}
+
+func (b *BuildPlan) Load(v cue.Value) error {
+	return errors.Wrap(v.Decode(&b.BuildPlan))
+}
+
 func (b *BuildPlan) file(
 	log *slog.Logger,
 	g core.Generator,
-	am h.ArtifactMap,
+	store artifact.Store,
 ) error {
-	data, err := os.ReadFile(filepath.Join(string(b.Path), string(g.File.Source)))
+	data, err := os.ReadFile(filepath.Join(string(b.Opts.Path), string(g.File.Source)))
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	if err := am.Set(string(g.Output), data); err != nil {
+	if err := store.Set(string(g.Output), data); err != nil {
 		return errors.Wrap(err)
 	}
 	log.Debug("set artifact: " + string(g.Output))
@@ -286,7 +215,7 @@ func (b *BuildPlan) helm(
 	ctx context.Context,
 	log *slog.Logger,
 	g core.Generator,
-	am h.ArtifactMap,
+	store artifact.Store,
 ) error {
 	chartName := g.Helm.Chart.Name
 	log = log.With("chart", chartName)
@@ -296,7 +225,7 @@ func (b *BuildPlan) helm(
 	}
 
 	// Cache the chart by version to pull new versions. (#273)
-	cacheDir := filepath.Join(string(b.Path), "vendor", g.Helm.Chart.Version)
+	cacheDir := filepath.Join(string(b.Opts.Path), "vendor", g.Helm.Chart.Version)
 	cachePath := filepath.Join(cacheDir, filepath.Base(chartName))
 
 	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
@@ -362,7 +291,7 @@ func (b *BuildPlan) helm(
 	}
 
 	// Set the artifact
-	if err := am.Set(string(g.Output), helmOut.Stdout.Bytes()); err != nil {
+	if err := store.Set(string(g.Output), helmOut.Stdout.Bytes()); err != nil {
 		return errors.Format("could not store helm output: %w", err)
 	}
 	log.Debug("set artifact: " + string(g.Output))
@@ -373,7 +302,7 @@ func (b *BuildPlan) helm(
 func (b *BuildPlan) resources(
 	log *slog.Logger,
 	g core.Generator,
-	am h.ArtifactMap,
+	store artifact.Store,
 ) error {
 	var size int
 	for _, m := range g.Resources {
@@ -391,7 +320,7 @@ func (b *BuildPlan) resources(
 		"could not generate %s for %s path %s",
 		g.Output,
 		b.BuildPlan.Metadata.Name,
-		b.BuildPlan.Source.Component.Path,
+		b.Opts.Path,
 	)
 
 	buf, err := marshal(list)
@@ -399,7 +328,7 @@ func (b *BuildPlan) resources(
 		return errors.Format("%s: %w", msg, err)
 	}
 
-	if err := am.Set(string(g.Output), buf.Bytes()); err != nil {
+	if err := store.Set(string(g.Output), buf.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
 
@@ -411,7 +340,7 @@ func (b *BuildPlan) kustomize(
 	ctx context.Context,
 	log *slog.Logger,
 	t core.Transformer,
-	am h.ArtifactMap,
+	store artifact.Store,
 ) error {
 	tempDir, err := os.MkdirTemp("", "holos.kustomize")
 	if err != nil {
@@ -422,7 +351,7 @@ func (b *BuildPlan) kustomize(
 		"could not transform %s for %s path %s",
 		t.Output,
 		b.BuildPlan.Metadata.Name,
-		b.BuildPlan.Source.Component.Path,
+		b.Opts.Path,
 	)
 
 	// Write the kustomization
@@ -439,7 +368,7 @@ func (b *BuildPlan) kustomize(
 	// Write the inputs
 	for _, input := range t.Inputs {
 		path := string(input)
-		if err := am.Save(tempDir, path); err != nil {
+		if err := store.Save(tempDir, path); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
 		log.DebugContext(ctx, "wrote "+filepath.Join(tempDir, path))
@@ -455,7 +384,7 @@ func (b *BuildPlan) kustomize(
 	}
 
 	// Store the artifact
-	if err := am.Set(string(t.Output), r.Stdout.Bytes()); err != nil {
+	if err := store.Set(string(t.Output), r.Stdout.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
 	log.Debug("set artifact " + string(t.Output))
@@ -495,16 +424,15 @@ func (b *BuildPlan) cacheChart(
 ) error {
 	// Add repositories
 	repo := chart.Repository
+	stderr := b.Opts.Stderr
 	if repo.URL == "" {
 		// repo update not needed for oci charts so this is debug instead of warn.
 		log.DebugContext(ctx, "skipped helm repo add and update: repo url is empty")
 	} else {
-		if r, err := util.RunCmd(ctx, "helm", "repo", "add", repo.Name, repo.URL); err != nil {
-			_, _ = io.Copy(b.Stderr, r.Stderr)
+		if _, err := util.RunCmdW(ctx, stderr, "helm", "repo", "add", repo.Name, repo.URL); err != nil {
 			return errors.Format("could not run helm repo add: %w", err)
 		}
-		if r, err := util.RunCmd(ctx, "helm", "repo", "update", repo.Name); err != nil {
-			_, _ = io.Copy(b.Stderr, r.Stderr)
+		if _, err := util.RunCmdW(ctx, stderr, "helm", "repo", "update", repo.Name); err != nil {
 			return errors.Format("could not run helm repo update: %w", err)
 		}
 	}
@@ -519,7 +447,7 @@ func (b *BuildPlan) cacheChart(
 	if chart.Repository.Name != "" {
 		cn = fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
 	}
-	helmOut, err := util.RunCmd(ctx, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, cn)
+	helmOut, err := util.RunCmdW(ctx, stderr, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, cn)
 	if err != nil {
 		stderr := helmOut.Stderr.String()
 		lines := strings.Split(stderr, "\n")

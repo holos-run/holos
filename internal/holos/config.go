@@ -126,6 +126,10 @@ type Config struct {
 	ServerConfig         *ServerConfig
 }
 
+func (c *Config) LogConfig() *logger.Config {
+	return c.logConfig
+}
+
 // LogFlagSet returns the logging *flag.FlagSet for use by the command handler.
 func (c *Config) LogFlagSet() *flag.FlagSet {
 	return c.logConfig.FlagSet()

@@ -35,6 +35,7 @@
     "balancereader",
     "blackbox",
     "buildplan",
+    "buildplans",
     "builtinpluginloadingoptions",
     "cachedir",
     "cadvisor",

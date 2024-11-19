@@ -3,11 +3,17 @@ package util
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"os"
 	"os/exec"
+	"strings"
+	"sync"
 
 	"github.com/holos-run/holos/internal/logger"
 )
+
+var mu sync.Mutex
 
 // runResult holds the stdout and stderr of a command.
 type RunResult struct {
@@ -39,7 +45,25 @@ func RunCmd(ctx context.Context, name string, args ...string) (result RunResult,
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, "running: "+name, "name", name, "args", args)
 	err = cmd.Run()
+	if err != nil {
+		err = fmt.Errorf("could not run command: %s %s: %w", name, strings.Join(args, " "), err)
+	}
 	return result, err
+}
+
+// RunCmdW calls RunCmd and copies the result stderr to w if there is an error.
+func RunCmdW(ctx context.Context, w io.Writer, name string, args ...string) (result RunResult, err error) {
+	result, err = RunCmd(ctx, name, args...)
+	if err != nil {
+		err = fmt.Errorf("could not run command: %s %s: %w", name, strings.Join(args, " "), err)
+		mu.Lock()
+		_, err2 := io.Copy(w, result.Stderr)
+		mu.Unlock()
+		if err2 != nil {
+			err = fmt.Errorf("could not copy stderr: %s: %w", err2.Error(), err)
+		}
+	}
+	return
 }
 
 // RunInteractiveCmd runs a command within a context but allows the command to

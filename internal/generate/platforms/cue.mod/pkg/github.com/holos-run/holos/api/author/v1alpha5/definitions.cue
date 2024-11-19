@@ -85,11 +85,6 @@ import (
 	BuildPlan: {
 		metadata: name: Name
 		spec: artifacts: [for x in Artifacts {x}]
-		source: component: {
-			name:       Name
-			path:       Path
-			parameters: Parameters
-		}
 	}
 }
 
@@ -176,10 +171,5 @@ import (
 	BuildPlan: {
 		metadata: name: Name
 		spec: artifacts: [for x in Artifacts {x}]
-		source: component: {
-			name:       Name
-			path:       Path
-			parameters: Parameters
-		}
 	}
 }

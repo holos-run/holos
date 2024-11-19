@@ -1,0 +1,4 @@
+Show BuildPlans produced from Platform.spec.components
+
+1. Selectors are applied to the Platform.spec.components list.
+2. Results are output in the same order as listed in the Platform spec.

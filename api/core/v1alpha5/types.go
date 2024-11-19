@@ -30,8 +30,6 @@ type BuildPlan struct {
 	Metadata Metadata `json:"metadata"`
 	// Spec specifies the desired state of the resource.
 	Spec BuildPlanSpec `json:"spec"`
-	// Source reflects the origin of the BuildPlan.
-	Source BuildPlanSource `json:"source,omitempty"`
 }
 
 // BuildPlanSpec represents the specification of the [BuildPlan].
@@ -230,6 +228,12 @@ type Kind string
 type Metadata struct {
 	// Name represents the resource name.
 	Name string `json:"name"`
+	// Labels represents a resource selector.
+	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	// Annotations represents arbitrary non-identifying metadata.  For example
+	// holos uses the `cli.holos.run/description` annotation to log resources in a
+	// user customized way.
+	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
 // Platform represents a platform to manage.  A Platform specifies a [Component]
@@ -276,4 +280,10 @@ type Component struct {
 	// Holos Authors.  Multiple environments are a prime example of an input
 	// parameter that should always be user defined, never defined by Holos.
 	Parameters map[string]string `json:"parameters,omitempty"`
+	// Labels represent selector labels for the component.  Copied to the
+	// resulting BuildPlan.
+	Labels map[string]string `json:"labels,omitempty"`
+	// Annotations represents arbitrary non-identifying metadata.  Use the
+	// `cli.holos.run/description` to customize the log message of each BuildPlan.
+	Annotations map[string]string `json:"annotations,omitempty"`
 }

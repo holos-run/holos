@@ -35,9 +35,6 @@ package core
 
 	// Spec specifies the desired state of the resource.
 	spec: #BuildPlanSpec @go(Spec)
-
-	// Source reflects the origin of the BuildPlan.
-	source?: #BuildPlanSource @go(Source)
 }
 
 // BuildPlanSpec represents the specification of the [BuildPlan].
@@ -254,6 +251,14 @@ package core
 #Metadata: {
 	// Name represents the resource name.
 	name: string @go(Name)
+
+	// Labels represents a resource selector.
+	labels?: {[string]: string} @go(Labels,map[string]string)
+
+	// Annotations represents arbitrary non-identifying metadata.  For example
+	// holos uses the `cli.holos.run/description` annotation to log resources in a
+	// user customized way.
+	annotations?: {[string]: string} @go(Annotations,map[string]string)
 }
 
 // Platform represents a platform to manage.  A Platform specifies a [Component]
@@ -305,4 +310,12 @@ package core
 	// Holos Authors.  Multiple environments are a prime example of an input
 	// parameter that should always be user defined, never defined by Holos.
 	parameters?: {[string]: string} @go(Parameters,map[string]string)
+
+	// Labels represent selector labels for the component.  Copied to the
+	// resulting BuildPlan.
+	labels?: {[string]: string} @go(Labels,map[string]string)
+
+	// Annotations represents arbitrary non-identifying metadata.  Use the
+	// `cli.holos.run/description` to customize the log message of each BuildPlan.
+	annotations?: {[string]: string} @go(Annotations,map[string]string)
 }

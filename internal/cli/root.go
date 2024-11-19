@@ -14,7 +14,6 @@ import (
 	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/server"
 
-	"github.com/holos-run/holos/internal/cli/build"
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/cli/create"
 	"github.com/holos-run/holos/internal/cli/destroy"
@@ -74,7 +73,6 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	rootCmd.PersistentFlags().Lookup("help").Hidden = true
 
 	// subcommands
-	rootCmd.AddCommand(build.New(cfg, feature))
 	rootCmd.AddCommand(render.New(cfg, feature))
 	rootCmd.AddCommand(get.New(cfg, feature))
 	rootCmd.AddCommand(create.New(cfg, feature))
@@ -100,6 +98,9 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 
 	// CUE
 	rootCmd.AddCommand(newCueCmd())
+
+	// Show
+	rootCmd.AddCommand(newShowCmd())
 
 	return rootCmd
 }

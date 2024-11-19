@@ -1,3 +1,4 @@
+// Deprecated: use cli instead
 package render
 
 import (

@@ -45,8 +45,3 @@ spec:
                 - resources.gen.yaml
               kind: Kustomization
               apiVersion: kustomize.config.k8s.io/v1beta1
-source:
-  component:
-    name: no-name
-    path: no-path
-    parameters: {}

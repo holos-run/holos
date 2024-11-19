@@ -9,21 +9,35 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 )
 
-func New() *Artifact {
-	return &Artifact{m: make(map[string][]byte)}
+// NewStore should provide a concrete Store.
+var _ Store = NewStore()
+
+// Store sets and gets data for file artifacts.
+//
+// Concrete values must ensure Set is write once, returning an error if a given
+// FilePath was previously Set.  Concrete values must be safe for concurrent
+// reads and writes.  Use [NewStore] to create a new concrete value.
+type Store interface {
+	Get(path string) (data []byte, ok bool)
+	Set(path string, data []byte) error
+	Save(dir, path string) error
 }
 
-// Artifact represents the fully rendered manifests build from the holos
+func NewStore() *MapStore {
+	return &MapStore{m: make(map[string][]byte)}
+}
+
+// MapStore represents the fully rendered manifests build from the holos
 // rendering pipeline.  Files are organized by keys representing paths relative
 // to the current working directory.  Values represent the file content.
-type Artifact struct {
+type MapStore struct {
 	mu sync.RWMutex
 	m  map[string][]byte
 }
 
 // Set sets an artifact file with write locking.  Set returns an error if the
 // artifact was previously set.
-func (a *Artifact) Set(path string, data []byte) error {
+func (a *MapStore) Set(path string, data []byte) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if _, ok := a.m[path]; ok {
@@ -34,7 +48,7 @@ func (a *Artifact) Set(path string, data []byte) error {
 }
 
 // Get gets the content of an artifact with read locking.
-func (a *Artifact) Get(path string) (data []byte, ok bool) {
+func (a *MapStore) Get(path string) (data []byte, ok bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	data, ok = a.m[path]
@@ -42,7 +56,7 @@ func (a *Artifact) Get(path string) (data []byte, ok bool) {
 }
 
 // Save writes a file to the filesystem.
-func (a *Artifact) Save(dir, path string) error {
+func (a *MapStore) Save(dir, path string) error {
 	fullPath := filepath.Join(dir, path)
 	msg := fmt.Sprintf("could not save %s", fullPath)
 	data, ok := a.Get(path)
@@ -58,7 +72,7 @@ func (a *Artifact) Save(dir, path string) error {
 	return nil
 }
 
-func (a *Artifact) Keys() []string {
+func (a *MapStore) Keys() []string {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	keys := make([]string, 0, len(a.m))
