@@ -23,21 +23,21 @@ package core
 // [external credential provider]: https://github.com/kubernetes/enhancements/blob/313ad8b59c80819659e1fbf0f165230f633f2b22/keps/sig-auth/541-external-credential-providers/README.md
 type BuildPlan struct {
 	// Kind represents the type of the resource.
-	Kind string `json:"kind" cue:"\"BuildPlan\""`
+	Kind string `json:"kind" yaml:"kind" cue:"\"BuildPlan\""`
 	// APIVersion represents the versioned schema of the resource.
-	APIVersion string `json:"apiVersion" cue:"string | *\"v1alpha5\""`
+	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha5\""`
 	// Metadata represents data about the resource such as the Name.
-	Metadata Metadata `json:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 	// Spec specifies the desired state of the resource.
-	Spec BuildPlanSpec `json:"spec"`
+	Spec BuildPlanSpec `json:"spec" yaml:"spec"`
 }
 
 // BuildPlanSpec represents the specification of the [BuildPlan].
 type BuildPlanSpec struct {
 	// Artifacts represents the artifacts for holos to build.
-	Artifacts []Artifact `json:"artifacts"`
+	Artifacts []Artifact `json:"artifacts" yaml:"artifacts"`
 	// Disabled causes the holos cli to disregard the build plan.
-	Disabled bool `json:"disabled,omitempty"`
+	Disabled bool `json:"disabled,omitempty" yaml:"disabled,omitempty"`
 }
 
 // BuildPlanSource reflects the origin of a [BuildPlan].  Useful to save a build
@@ -45,7 +45,7 @@ type BuildPlanSpec struct {
 // component collection.
 type BuildPlanSource struct {
 	// Component reflects the component that produced the build plan.
-	Component Component `json:"component,omitempty"`
+	Component Component `json:"component,omitempty" yaml:"component,omitempty"`
 }
 
 // Artifact represents one fully rendered manifest produced by a [Transformer]
@@ -69,10 +69,10 @@ type BuildPlanSource struct {
 // Transformers to produce the same Output value within the context of a
 // [BuildPlan].
 type Artifact struct {
-	Artifact     FilePath      `json:"artifact,omitempty"`
-	Generators   []Generator   `json:"generators,omitempty"`
-	Transformers []Transformer `json:"transformers,omitempty"`
-	Skip         bool          `json:"skip,omitempty"`
+	Artifact     FilePath      `json:"artifact,omitempty" yaml:"artifact,omitempty"`
+	Generators   []Generator   `json:"generators,omitempty" yaml:"generators,omitempty"`
+	Transformers []Transformer `json:"transformers,omitempty" yaml:"transformers,omitempty"`
+	Skip         bool          `json:"skip,omitempty" yaml:"skip,omitempty"`
 }
 
 // Generator generates Kubernetes resources.  [Helm] and [Resources] are the
@@ -88,19 +88,19 @@ type Artifact struct {
 //  3. [File] - Generates data by reading a file from the component directory.
 type Generator struct {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
-	Kind string `json:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
+	Kind string `json:"kind" yaml:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
 	// Output represents a file for a Transformer or Artifact to consume.
-	Output FilePath `json:"output"`
+	Output FilePath `json:"output" yaml:"output"`
 	// Resources generator. Ignored unless kind is Resources.  Resources are
 	// stored as a two level struct.  The top level key is the Kind of resource,
 	// e.g. Namespace or Deployment.  The second level key is an arbitrary
 	// InternalLabel.  The third level is a map[string]any representing the
 	// Resource.
-	Resources Resources `json:"resources,omitempty"`
+	Resources Resources `json:"resources,omitempty" yaml:"resources,omitempty"`
 	// Helm generator. Ignored unless kind is Helm.
-	Helm Helm `json:"helm,omitempty"`
+	Helm Helm `json:"helm,omitempty" yaml:"helm,omitempty"`
 	// File generator. Ignored unless kind is File.
-	File File `json:"file,omitempty"`
+	File File `json:"file,omitempty" yaml:"file,omitempty"`
 }
 
 // Resource represents one kubernetes api object.
@@ -117,24 +117,24 @@ type Resources map[Kind]map[InternalLabel]Resource
 // multiple resources.
 type File struct {
 	// Source represents a file sub-path relative to the component path.
-	Source FilePath `json:"source"`
+	Source FilePath `json:"source" yaml:"source"`
 }
 
 // Helm represents a [Chart] manifest [Generator].
 type Helm struct {
 	// Chart represents a helm chart to manage.
-	Chart Chart `json:"chart"`
+	Chart Chart `json:"chart" yaml:"chart"`
 	// Values represents values for holos to marshal into values.yaml when
 	// rendering the chart.
-	Values Values `json:"values"`
+	Values Values `json:"values" yaml:"values"`
 	// EnableHooks enables helm hooks when executing the `helm template` command.
-	EnableHooks bool `json:"enableHooks,omitempty"`
+	EnableHooks bool `json:"enableHooks,omitempty" yaml:"enableHooks,omitempty"`
 	// Namespace represents the helm namespace flag
-	Namespace string `json:"namespace,omitempty"`
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
 	// APIVersions represents the helm template --api-versions flag
-	APIVersions []string `json:"apiVersions,omitempty"`
+	APIVersions []string `json:"apiVersions,omitempty" yaml:"apiVersions,omitempty"`
 	// KubeVersion represents the helm template --kube-version flag
-	KubeVersion string `json:"kubeVersion,omitempty"`
+	KubeVersion string `json:"kubeVersion,omitempty" yaml:"kubeVersion,omitempty"`
 }
 
 // Values represents [Helm] Chart values generated from CUE.
@@ -143,19 +143,19 @@ type Values map[string]any
 // Chart represents a [Helm] Chart.
 type Chart struct {
 	// Name represents the chart name.
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name"`
 	// Version represents the chart version.
-	Version string `json:"version"`
+	Version string `json:"version" yaml:"version"`
 	// Release represents the chart release when executing helm template.
-	Release string `json:"release"`
+	Release string `json:"release" yaml:"release"`
 	// Repository represents the repository to fetch the chart from.
-	Repository Repository `json:"repository,omitempty"`
+	Repository Repository `json:"repository,omitempty" yaml:"repository,omitempty"`
 }
 
 // Repository represents a [Helm] [Chart] repository.
 type Repository struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
+	Name string `json:"name" yaml:"name"`
+	URL  string `json:"url" yaml:"url"`
 }
 
 // Transformer combines multiple inputs from prior [Generator] or [Transformer]
@@ -169,17 +169,17 @@ type Repository struct {
 // [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
 type Transformer struct {
 	// Kind represents the kind of transformer. Must be Kustomize, or Join.
-	Kind string `json:"kind" cue:"\"Kustomize\" | \"Join\""`
+	Kind string `json:"kind" yaml:"kind" cue:"\"Kustomize\" | \"Join\""`
 	// Inputs represents the files to transform. The Output of prior Generators
 	// and Transformers.
-	Inputs []FilePath `json:"inputs"`
+	Inputs []FilePath `json:"inputs" yaml:"inputs"`
 	// Output represents a file for a subsequent Transformer or Artifact to
 	// consume.
-	Output FilePath `json:"output"`
+	Output FilePath `json:"output" yaml:"output"`
 	// Kustomize transformer. Ignored unless kind is Kustomize.
-	Kustomize Kustomize `json:"kustomize,omitempty"`
+	Kustomize Kustomize `json:"kustomize,omitempty" yaml:"kustomize,omitempty"`
 	// Join transformer. Ignored unless kind is Join.
-	Join Join `json:"join,omitempty"`
+	Join Join `json:"join,omitempty" json:"yaml,omitempty"`
 }
 
 // Join represents a [Transformer] using [bytes.Join] to concatenate multiple
@@ -189,15 +189,15 @@ type Transformer struct {
 //
 // [bytes.Join]: https://pkg.go.dev/bytes#Join
 type Join struct {
-	Separator string `json:"separator" cue:"string | *\"---\\n\""`
+	Separator string `json:"separator" yaml:"separator" cue:"string | *\"---\\n\""`
 }
 
 // Kustomize represents a kustomization [Transformer].
 type Kustomize struct {
 	// Kustomization represents the decoded kustomization.yaml file
-	Kustomization Kustomization `json:"kustomization"`
+	Kustomization Kustomization `json:"kustomization" yaml:"kustomization"`
 	// Files holds file contents for kustomize, e.g. patch files.
-	Files FileContentMap `json:"files,omitempty"`
+	Files FileContentMap `json:"files,omitempty" yaml:"files,omitempty"`
 }
 
 // Kustomization represents a kustomization.yaml file for use with the
@@ -227,7 +227,7 @@ type Kind string
 // Metadata represents data about the resource such as the Name.
 type Metadata struct {
 	// Name represents the resource name.
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name"`
 	// Labels represents a resource selector.
 	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 	// Annotations represents arbitrary non-identifying metadata.  For example
@@ -246,20 +246,20 @@ type Metadata struct {
 //	cue export --out yaml ./platform
 type Platform struct {
 	// Kind is a string value representing the resource.
-	Kind string `json:"kind" cue:"\"Platform\""`
+	Kind string `json:"kind" yaml:"kind" cue:"\"Platform\""`
 	// APIVersion represents the versioned schema of this resource.
-	APIVersion string `json:"apiVersion" cue:"string | *\"v1alpha5\""`
+	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha5\""`
 	// Metadata represents data about the resource such as the Name.
-	Metadata Metadata `json:"metadata"`
+	Metadata Metadata `json:"metadata" yaml:"metadata"`
 
 	// Spec represents the platform specification.
-	Spec PlatformSpec `json:"spec"`
+	Spec PlatformSpec `json:"spec" yaml:"spec"`
 }
 
 // PlatformSpec represents the platform specification.
 type PlatformSpec struct {
 	// Components represents a collection of holos components to manage.
-	Components []Component `json:"components"`
+	Components []Component `json:"components" yaml:"components"`
 }
 
 // Component represents the complete context necessary to produce a [BuildPlan]
@@ -267,23 +267,23 @@ type PlatformSpec struct {
 type Component struct {
 	// Name represents the name of the component. Injected as the tag variable
 	// "holos_component_name".
-	Name string `json:"name"`
+	Name string `json:"name" yaml:"name"`
 	// Path represents the path of the component relative to the platform root.
 	// Injected as the tag variable "holos_component_path".
-	Path string `json:"path"`
+	Path string `json:"path" yaml:"path"`
 	// WriteTo represents the holos render component --write-to flag.  If empty,
 	// the default value for the --write-to flag is used.
-	WriteTo string `json:"writeTo,omitempty"`
+	WriteTo string `json:"writeTo,omitempty" yaml:"writeTo,omitempty"`
 	// Parameters represent user defined input variables to produce various
 	// [BuildPlan] resources from one component path.  Injected as CUE @tag
 	// variables.  Parameters with a "holos_" prefix are reserved for use by the
 	// Holos Authors.  Multiple environments are a prime example of an input
 	// parameter that should always be user defined, never defined by Holos.
-	Parameters map[string]string `json:"parameters,omitempty"`
+	Parameters map[string]string `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	// Labels represent selector labels for the component.  Copied to the
 	// resulting BuildPlan.
-	Labels map[string]string `json:"labels,omitempty"`
+	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 	// Annotations represents arbitrary non-identifying metadata.  Use the
 	// `cli.holos.run/description` to customize the log message of each BuildPlan.
-	Annotations map[string]string `json:"annotations,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
