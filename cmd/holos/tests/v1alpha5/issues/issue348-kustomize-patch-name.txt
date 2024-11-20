@@ -3,7 +3,7 @@
 exec holos init platform v1alpha5 --force
 # want a buildplan shown
 exec holos show buildplans
-stdout 'kind: BuildPlan'
+cmp stdout buildplan.yaml
 # want this error to go away
 ! stderr 'cannot convert non-concrete value string'
 -- platform/example.cue --
@@ -32,3 +32,36 @@ Component: #Kustomize & {
 		},
 	]
 }
+-- buildplan.yaml --
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: example
+spec:
+  artifacts:
+    - artifact: components/example/example.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/example/example.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              patches:
+                - patch: |
+                    - op: add
+                      path: /metadata/annotations/example
+                      value: example-value
+                  target:
+                    kind: CustomResourceDefinition
+                    name: ""
+              resources:
+                - resources.gen.yaml
