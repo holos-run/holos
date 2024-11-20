@@ -1,3 +1,0 @@
-package holos
-
-#Platform.Output
