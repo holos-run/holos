@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 
 	"cuelang.org/go/cue"
-	"github.com/holos-run/holos/api/v1alpha1"
 	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/holos"
 	object "github.com/holos-run/holos/service/gen/holos/object/v1alpha1"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -31,15 +31,15 @@ func PlatformForm(ctx context.Context, name string) (*object.Form, error) {
 		return nil, errors.Wrap(err)
 	}
 
-	var tm v1alpha1.TypeMeta
+	var tm holos.TypeMeta
 	if err := root.Decode(&tm); err != nil {
 		return nil, errors.Wrap(err)
 	}
-	if tm.GetKind() != "Form" {
-		return nil, errors.Wrap(fmt.Errorf("want: Form have: %s", tm.GetKind()))
+	if tm.Kind != "Form" {
+		return nil, errors.Wrap(fmt.Errorf("want: Form have: %s", tm.Kind))
 	}
-	if tm.GetAPIVersion() != APIVersion {
-		return nil, errors.Wrap(fmt.Errorf("want: %s have: %s", APIVersion, tm.GetAPIVersion()))
+	if tm.APIVersion != APIVersion {
+		return nil, errors.Wrap(fmt.Errorf("want: %s have: %s", APIVersion, tm.APIVersion))
 	}
 
 	// Extract the protobuf field to use protojson instead of json to unmarshal
