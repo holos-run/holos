@@ -44,14 +44,14 @@ func FindCueMod(path string) (root string, err error) {
 
 func FindRootLeaf(target string) (root string, leaf string, err error) {
 	if root, err = FindCueMod(target); err != nil {
-		return "", "", errors.Wrap(err)
+		return "", "", err
 	}
 	absPath, err := filepath.Abs(target)
 	if err != nil {
-		return "", "", errors.Wrap(err)
+		return "", "", err
 	}
 	if leaf, err = filepath.Rel(root, absPath); err != nil {
-		return "", "", errors.Wrap(err)
+		return "", "", err
 	}
 	// Needed for CUE to load the path properly.
 	leaf = DotSlash(leaf)
