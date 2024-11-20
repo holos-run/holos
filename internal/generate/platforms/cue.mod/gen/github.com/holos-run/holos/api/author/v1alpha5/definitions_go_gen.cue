@@ -49,6 +49,12 @@ import "github.com/holos-run/holos/api/core/v1alpha5:core"
 	// fully rendered manifest file path.
 	Name: string
 
+	// Labels represent the BuildPlan metadata.labels field.
+	Labels: {[string]: string} @go(,map[string]string)
+
+	// Annotations represent the BuildPlan metadata.annotations field.
+	Annotations: {[string]: string} @go(,map[string]string)
+
 	// Path represents the path to the component producing the BuildPlan.
 	Path: string
 

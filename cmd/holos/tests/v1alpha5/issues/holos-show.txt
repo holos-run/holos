@@ -87,6 +87,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty1
+  labels:
+    app.holos.run/name: empty1-label
+  annotations:
+    app.holos.run/description: empty1-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty1/empty1.gen.yaml
@@ -112,6 +116,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty2
+  labels:
+    app.holos.run/name: empty2-label
+  annotations:
+    app.holos.run/description: empty2-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty2/empty2.gen.yaml
@@ -137,6 +145,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty3
+  labels:
+    app.holos.run/name: empty3-label
+  annotations:
+    app.holos.run/description: empty3-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty3/empty3.gen.yaml
@@ -162,6 +174,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty4
+  labels:
+    app.holos.run/name: empty4-label
+  annotations:
+    app.holos.run/description: empty4-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty4/empty4.gen.yaml
@@ -187,6 +203,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty1
+  labels:
+    app.holos.run/name: empty1-label
+  annotations:
+    app.holos.run/description: empty1-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty1/empty1.gen.yaml
@@ -212,6 +232,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty2
+  labels:
+    app.holos.run/name: empty2-label
+  annotations:
+    app.holos.run/description: empty2-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty2/empty2.gen.yaml
@@ -237,6 +261,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty1
+  labels:
+    app.holos.run/name: empty1-label
+  annotations:
+    app.holos.run/description: empty1-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty1/empty1.gen.yaml
@@ -262,6 +290,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty2
+  labels:
+    app.holos.run/name: empty2-label
+  annotations:
+    app.holos.run/description: empty2-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty2/empty2.gen.yaml
@@ -287,6 +319,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty4
+  labels:
+    app.holos.run/name: empty4-label
+  annotations:
+    app.holos.run/description: empty4-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty4/empty4.gen.yaml
@@ -312,6 +348,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty1
+  labels:
+    app.holos.run/name: empty1-label
+  annotations:
+    app.holos.run/description: empty1-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty1/empty1.gen.yaml
@@ -337,6 +377,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty2
+  labels:
+    app.holos.run/name: empty2-label
+  annotations:
+    app.holos.run/description: empty2-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty2/empty2.gen.yaml
@@ -362,6 +406,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty3
+  labels:
+    app.holos.run/name: empty3-label
+  annotations:
+    app.holos.run/description: empty3-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty3/empty3.gen.yaml
@@ -387,6 +435,10 @@ kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
   name: empty4
+  labels:
+    app.holos.run/name: empty4-label
+  annotations:
+    app.holos.run/description: empty4-annotation empty test case
 spec:
   artifacts:
     - artifact: components/empty4/empty4.gen.yaml

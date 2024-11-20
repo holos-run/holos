@@ -3,6 +3,7 @@ package v1alpha5
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -60,15 +61,37 @@ func (c *Component) Describe() string {
 	return c.Component.Name
 }
 
-func (c *Component) Tags() []string {
-	tags := make([]string, 0, len(c.Component.Parameters)+2)
+func (c *Component) Tags() ([]string, error) {
+	size := 2 +
+		len(c.Component.Parameters) +
+		len(c.Component.Labels) +
+		len(c.Component.Annotations)
+
+	tags := make([]string, 0, size)
 	for k, v := range c.Component.Parameters {
 		tags = append(tags, k+"="+v)
 	}
 	// Inject holos component metadata tags.
 	tags = append(tags, "holos_component_name="+c.Component.Name)
 	tags = append(tags, "holos_component_path="+c.Component.Path)
-	return tags
+
+	if len(c.Component.Labels) > 0 {
+		labels, err := json.Marshal(c.Component.Labels)
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, "holos_component_labels="+string(labels))
+	}
+
+	if len(c.Component.Annotations) > 0 {
+		annotations, err := json.Marshal(c.Component.Annotations)
+		if err != nil {
+			return nil, err
+		}
+		tags = append(tags, "holos_component_annotations="+string(annotations))
+	}
+
+	return tags, nil
 }
 
 func (c *Component) WriteTo() string {

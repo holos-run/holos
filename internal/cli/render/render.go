@@ -140,7 +140,10 @@ func makePlatformRenderFunc(w io.Writer, prefixArgs []string) builder.BuildFunc 
 		case <-ctx.Done():
 			return errors.Wrap(ctx.Err())
 		default:
-			tags := component.Tags()
+			tags, err := component.Tags()
+			if err != nil {
+				return errors.Wrap(err)
+			}
 			args := make([]string, 0, 10+len(prefixArgs)+(len(tags)*2))
 			args = append(args, prefixArgs...)
 			args = append(args, "render", "component")

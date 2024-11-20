@@ -21,7 +21,7 @@ type Platform interface {
 type Component interface {
 	Describe() string
 	Path() string
-	Tags() []string
+	Tags() ([]string, error)
 	WriteTo() string
 	Labels() Labels
 }

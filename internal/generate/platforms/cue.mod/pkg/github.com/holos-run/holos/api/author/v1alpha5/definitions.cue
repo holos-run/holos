@@ -35,6 +35,8 @@ import (
 // https://holos.run/docs/next/api/author/#Kubernetes
 #Kubernetes: {
 	Name:            _
+	Labels:          _
+	Annotations:     _
 	Path:            _
 	Parameters:      _
 	Resources:       _
@@ -84,6 +86,12 @@ import (
 
 	BuildPlan: {
 		metadata: name: Name
+		if len(Labels) != 0 {
+			metadata: labels: Labels
+		}
+		if len(Annotations) != 0 {
+			metadata: annotations: Annotations
+		}
 		spec: artifacts: [for x in Artifacts {x}]
 	}
 }
@@ -91,6 +99,8 @@ import (
 // https://holos.run/docs/next/api/author/#Helm
 #Helm: {
 	Name:            _
+	Labels:          _
+	Annotations:     _
 	Path:            _
 	Parameters:      _
 	Resources:       _
@@ -170,6 +180,12 @@ import (
 
 	BuildPlan: {
 		metadata: name: Name
+		if len(Labels) != 0 {
+			metadata: labels: Labels
+		}
+		if len(Annotations) != 0 {
+			metadata: annotations: Annotations
+		}
 		spec: artifacts: [for x in Artifacts {x}]
 	}
 }

@@ -43,6 +43,11 @@ type ComponentConfig struct {
     // Name represents the BuildPlan metadata.name field.  Used to construct the
     // fully rendered manifest file path.
     Name string
+    // Labels represent the BuildPlan metadata.labels field.
+    Labels map[string]string
+    // Annotations represent the BuildPlan metadata.annotations field.
+    Annotations map[string]string
+
     // Path represents the path to the component producing the BuildPlan.
     Path string
     // Parameters are useful to reuse a component with various parameters.

@@ -6,7 +6,7 @@ chmod 755 bin/helm
 # Initialize the platform
 exec holos init platform v1alpha5 --force
 # when helm update returns an error
-! exec holos render platform ./platform
+! exec holos render platform
 # holos should log the helm error to stderr
 stderr 'Error: chart "podinfo" matching 0.0.0 not found in podinfo index'
 -- bin/helm --

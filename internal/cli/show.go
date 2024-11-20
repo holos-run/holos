@@ -116,7 +116,11 @@ func makeBuildFunc(encoder holos.OrderedEncoder, opts holos.BuildOpts) builder.B
 		case <-ctx.Done():
 			return errors.Wrap(ctx.Err())
 		default:
-			inst, err := builder.LoadInstance(component.Path(), component.Tags())
+			tags, err := component.Tags()
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			inst, err := builder.LoadInstance(component.Path(), tags)
 			if err != nil {
 				return errors.Wrap(err)
 			}
