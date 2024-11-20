@@ -184,8 +184,8 @@ func (b *BuildPlan) Build(ctx context.Context) error {
 	return g.Wait()
 }
 
-func (b *BuildPlan) Export(encoder holos.Encoder) error {
-	if err := encoder.Encode(&b.BuildPlan); err != nil {
+func (b *BuildPlan) Export(idx int, encoder holos.OrderedEncoder) error {
+	if err := encoder.Encode(idx, &b.BuildPlan); err != nil {
 		return errors.Wrap(err)
 	}
 	return nil

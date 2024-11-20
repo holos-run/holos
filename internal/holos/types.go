@@ -14,6 +14,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// yamlEncoder and jsonEncoder implement Encoder to write individual resources.
+var _ Encoder = &yamlEncoder{}
+var _ Encoder = &jsonEncoder{}
+
+// seqEncoder implements SequentialEncoder to write resources in order.
+var _ OrderedEncoder = &seqEncoder{}
+
 // StringSlice represents zero or more flag values.
 type StringSlice []string
 
@@ -171,17 +178,31 @@ type TypeMeta struct {
 	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
 }
 
+func NewSequentialEncoder(format string, w io.Writer) (OrderedEncoder, error) {
+	enc, err := NewEncoder(format, w)
+	if err != nil {
+		return nil, err
+	}
+	seqEnc := &seqEncoder{
+		Encoder: enc,
+		buf:     make(map[int]any),
+	}
+	return seqEnc, nil
+}
+
 // NewEncoder returns a yaml or json encoder that writes to w.
 func NewEncoder(format string, w io.Writer) (Encoder, error) {
 	switch format {
 	case "yaml":
-		encoder := &yamlEncoder{}
-		encoder.enc = yaml.NewEncoder(w)
+		encoder := &yamlEncoder{
+			enc: yaml.NewEncoder(w),
+		}
 		encoder.enc.SetIndent(2)
 		return encoder, nil
 	case "json":
-		encoder := &jsonEncoder{}
-		encoder.enc = json.NewEncoder(w)
+		encoder := &jsonEncoder{
+			enc: json.NewEncoder(w),
+		}
 		encoder.enc.SetIndent("", "  ")
 		return encoder, nil
 	default:
@@ -228,6 +249,44 @@ func IsSelected(labels Labels, selectors ...Selector) bool {
 		}
 	}
 	return true
+}
+
+type seqEncoder struct {
+	Encoder
+	mu   sync.Mutex
+	buf  map[int]any
+	next int
+}
+
+func (s *seqEncoder) Encode(idx int, v any) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// If this is the next expected index, encode it and any buffered values
+	if idx == s.next {
+		if err := s.Encoder.Encode(v); err != nil {
+			return errors.Wrap(err)
+		}
+		s.next++
+
+		// Encode any buffered values that come next in sequence
+		for {
+			if v, ok := s.buf[s.next]; ok {
+				if err := s.Encoder.Encode(v); err != nil {
+					return errors.Wrap(err)
+				}
+				delete(s.buf, s.next)
+				s.next++
+			} else {
+				break
+			}
+		}
+		return nil
+	}
+
+	// Buffer out-of-order value
+	s.buf[idx] = v
+	return nil
 }
 
 // BuildOpts represents options common across BuildPlan api versions.  Use

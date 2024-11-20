@@ -9,7 +9,6 @@ import (
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
-	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -86,7 +85,7 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 			return errors.Wrap(err)
 		}
 
-		encoder, err := holos.NewEncoder(format, cmd.OutOrStdout())
+		encoder, err := holos.NewSequentialEncoder(format, cmd.OutOrStdout())
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -111,14 +110,11 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 	return cmd
 }
 
-func makeBuildFunc(encoder holos.Encoder, opts holos.BuildOpts) builder.BuildFunc {
-	return func(ctx context.Context, component holos.Component) error {
+func makeBuildFunc(encoder holos.OrderedEncoder, opts holos.BuildOpts) builder.BuildFunc {
+	return func(ctx context.Context, idx int, component holos.Component) error {
 		select {
 		case <-ctx.Done():
-			msg := "should never get here: %w"
-			err := errors.Format(msg, ctx.Err())
-			logger.FromContext(ctx).ErrorContext(ctx, err.Error(), "err", err)
-			return err
+			return errors.Wrap(ctx.Err())
 		default:
 			inst, err := builder.LoadInstance(component.Path(), component.Tags())
 			if err != nil {
@@ -129,7 +125,7 @@ func makeBuildFunc(encoder holos.Encoder, opts holos.BuildOpts) builder.BuildFun
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			if err := bp.Export(encoder); err != nil {
+			if err := bp.Export(idx, encoder); err != nil {
 				return errors.Wrap(err)
 			}
 		}

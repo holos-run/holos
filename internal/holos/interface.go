@@ -7,6 +7,9 @@ import (
 )
 
 // Platform is the interface all Platform versions must support.
+//
+// Concrete values must preserve the relative ordering of components when
+// filtering with Select.
 type Platform interface {
 	Load(cue.Value) error
 	Select(...Selector) []Component
@@ -28,13 +31,20 @@ type Component interface {
 type BuildPlan interface {
 	Load(cue.Value) error
 	Build(context.Context) error
-	Export(Encoder) error
+	Export(idx int, encoder OrderedEncoder) error
 }
 
 // Encoder encodes to json or yaml.  Concrete values must be safe for concurrent
-// execution of Encode().  Refer to [NewEncoder] to get an Encoder from a flag
-// value.
+// execution.  Use [NewEncoder] to obtain a json or yaml encoder.
 type Encoder interface {
 	Encode(any) error
+	Close() error
+}
+
+// OrderedEncoder encodes in sequential order from idx 0.  Concrete values must
+// be safe for concurrent execution.  Use [NewSequentialEncoder] to obtain a
+// json or yaml encoder.
+type OrderedEncoder interface {
+	Encode(idx int, v any) error
 	Close() error
 }

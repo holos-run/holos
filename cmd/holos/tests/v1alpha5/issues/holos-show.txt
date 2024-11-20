@@ -8,29 +8,40 @@ env HOME=$WORK
 exec holos init platform v1alpha5 --force
 exec holos show platform
 cmp stdout want/platform.yaml
-# one equal works in the selector
-exec holos show buildplans --selector app.holos.run/name=empty-label
-cmp stdout want/buildplan.yaml
-# double equals works in the selector
-exec holos show buildplans --selector app.holos.run/name==empty-label
-cmp stdout want/buildplan.yaml
-# not equal works in the selector
-exec holos show buildplans --selector app.holos.run/name!=empty-label
-cmp stdout want/empty.yaml
+
+# all buildplans are selected by default
+exec holos show buildplans
+cmp stdout want/all-buildplans.yaml
+
+# one = works in the selector
+exec holos show buildplans --selector app.holos.run/name=empty1-label
+cmp stdout want/buildplans.1.yaml
+
+# double == works in the selector
+exec holos show buildplans --selector app.holos.run/name==empty2-label
+cmp stdout want/buildplans.2.yaml
+
+# not equal != negates the selection
+exec holos show buildplans --selector app.holos.run/name!=empty3-label
+cmp stdout want/buildplans.3.yaml
 exec holos show buildplans --selector app.holos.run/name!=something-else
-cmp stdout want/buildplan.yaml
+cmp stdout want/buildplans.4.yaml
+
 -- platform/empty.cue --
 package holos
 
-Platform: Components: empty: {
-  name: "empty"
-  path: "components/empty"
+Platform: Components: {
+  empty1: _
+  empty2: _
+  empty3: _
+  empty4: _
 }
 -- platform/metadata.cue --
 package holos
 
-Platform: Components: [_]: {
-  name: _
+Platform: Components: [NAME=string]: {
+  name: NAME
+  path: "components/empty"
   labels: "app.holos.run/name": "\(name)-label"
   annotations: "app.holos.run/description": "\(name)-annotation empty test case"
 }
@@ -47,20 +58,38 @@ metadata:
 spec:
   components:
     - annotations:
-        app.holos.run/description: empty-annotation empty test case
+        app.holos.run/description: empty1-annotation empty test case
       labels:
-        app.holos.run/name: empty-label
-      name: empty
+        app.holos.run/name: empty1-label
+      name: empty1
+      path: components/empty
+    - annotations:
+        app.holos.run/description: empty2-annotation empty test case
+      labels:
+        app.holos.run/name: empty2-label
+      name: empty2
+      path: components/empty
+    - annotations:
+        app.holos.run/description: empty3-annotation empty test case
+      labels:
+        app.holos.run/name: empty3-label
+      name: empty3
+      path: components/empty
+    - annotations:
+        app.holos.run/description: empty4-annotation empty test case
+      labels:
+        app.holos.run/name: empty4-label
+      name: empty4
       path: components/empty
 -- want/empty.yaml --
--- want/buildplan.yaml --
+-- want/all-buildplans.yaml --
 kind: BuildPlan
 apiVersion: v1alpha5
 metadata:
-  name: empty
+  name: empty1
 spec:
   artifacts:
-    - artifact: components/empty/empty.gen.yaml
+    - artifact: components/empty1/empty1.gen.yaml
       generators:
         - kind: Resources
           output: resources.gen.yaml
@@ -68,7 +97,307 @@ spec:
         - kind: Kustomize
           inputs:
             - resources.gen.yaml
-          output: components/empty/empty.gen.yaml
+          output: components/empty1/empty1.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty2
+spec:
+  artifacts:
+    - artifact: components/empty2/empty2.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty2/empty2.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty3
+spec:
+  artifacts:
+    - artifact: components/empty3/empty3.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty3/empty3.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty4
+spec:
+  artifacts:
+    - artifact: components/empty4/empty4.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty4/empty4.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+-- want/buildplans.1.yaml --
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty1
+spec:
+  artifacts:
+    - artifact: components/empty1/empty1.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty1/empty1.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+-- want/buildplans.2.yaml --
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty2
+spec:
+  artifacts:
+    - artifact: components/empty2/empty2.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty2/empty2.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+-- want/buildplans.3.yaml --
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty1
+spec:
+  artifacts:
+    - artifact: components/empty1/empty1.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty1/empty1.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty2
+spec:
+  artifacts:
+    - artifact: components/empty2/empty2.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty2/empty2.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty4
+spec:
+  artifacts:
+    - artifact: components/empty4/empty4.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty4/empty4.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+-- want/buildplans.4.yaml --
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty1
+spec:
+  artifacts:
+    - artifact: components/empty1/empty1.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty1/empty1.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty2
+spec:
+  artifacts:
+    - artifact: components/empty2/empty2.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty2/empty2.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty3
+spec:
+  artifacts:
+    - artifact: components/empty3/empty3.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty3/empty3.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty4
+spec:
+  artifacts:
+    - artifact: components/empty4/empty4.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty4/empty4.gen.yaml
           kustomize:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1

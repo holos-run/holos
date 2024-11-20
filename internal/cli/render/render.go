@@ -135,7 +135,7 @@ func newComponent(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 }
 
 func makePlatformRenderFunc(w io.Writer, prefixArgs []string) builder.BuildFunc {
-	return func(ctx context.Context, component holos.Component) error {
+	return func(ctx context.Context, idx int, component holos.Component) error {
 		select {
 		case <-ctx.Done():
 			return errors.Wrap(ctx.Err())

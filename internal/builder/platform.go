@@ -56,7 +56,7 @@ func (p *Platform) Build(ctx context.Context, opts PlatformOpts) error {
 					default:
 						start := time.Now()
 						log := logger.FromContext(ctx).With("num", idx+1, "total", total)
-						if err := opts.Fn(ctx, component); err != nil {
+						if err := opts.Fn(ctx, idx, component); err != nil {
 							return errors.Wrap(err)
 						}
 						duration := time.Since(start)
@@ -90,7 +90,7 @@ func (p *Platform) Build(ctx context.Context, opts PlatformOpts) error {
 }
 
 // BuildFunc is executed concurrently when processing platform components.
-type BuildFunc func(context.Context, holos.Component) error
+type BuildFunc func(context.Context, int, holos.Component) error
 
 func LoadPlatform(i *Instance) (platform Platform, err error) {
 	err = i.Discriminate(func(tm holos.TypeMeta) error {
