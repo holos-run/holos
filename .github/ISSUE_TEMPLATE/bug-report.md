@@ -13,8 +13,8 @@ To ask questions, see https://github.com/holos-run/holos/discussions
 
 ### What version of holos are you using (`holos --version`)?
 
-```shell
-holos --version
+```
+0.0.0
 ```
 
 ### Does this issue reproduce with the latest release?
@@ -43,23 +43,23 @@ Refer to: https://github.com/rogpeppe/go-internal/tree/master/cmd/testscript
 Steps to reproduce:
 
 ```shell
-brew install testscript
+testscript -v -continue <<EOF
 ```
 
-```shell
-testscript -v -continue example.txt
-```
-
-```txt
+```txtar
 # Have: an error related to the imported Kustomize schemas.
 # Want: holos show buildplans to work.
 exec holos --version
 exec holos init platform v1alpha5 --force
+# remove the fix to trigger the bug
+rm cue.mod/pkg/sigs.k8s.io/kustomize/api/types/var.cue
 # want a BuildPlan shown
 exec holos show buildplans
-stdout 'kind: BuildPlan'
+cmp stdout buildplan.yaml
 # want this error to go away
 ! stderr 'cannot convert non-concrete value string'
+-- buildplan.yaml --
+kind: BuildPlan
 -- platform/example.cue --
 package holos
 
@@ -87,6 +87,9 @@ Component: #Kustomize & {
 	]
 }
 ```
+```shell
+EOF
+```
 
 ### What did you expect to see?
 
@@ -96,29 +99,33 @@ The testscript should pass.
 
 The testscript fails because of the bug.
 
-```shell
-testscript -v -continue example.txt
-```
-
 ```txt
 # Have: an error related to the imported Kustomize schemas.
-# Want: holos show buildplans to work. (0.073s)
+# Want: holos show buildplans to work. (0.168s)
 > exec holos --version
 [stdout]
-0.100.0
+0.100.1-2-g9b10e23-dirty
 > exec holos init platform v1alpha5 --force
-# want a BuildPlan shown (0.085s)
+# remove the fix to trigger the bug (0.000s)
+> rm cue.mod/pkg/sigs.k8s.io/kustomize/api/types/var.cue
+# want a BuildPlan shown (0.091s)
 > exec holos show buildplans
 [stderr]
 could not run: holos.spec.artifacts.0.transformers.0.kustomize.kustomization.patches.0.target.name: cannot convert non-concrete value string at builder/v1alpha5/builder.go:218
 holos.spec.artifacts.0.transformers.0.kustomize.kustomization.patches.0.target.name: cannot convert non-concrete value string:
     $WORK/cue.mod/gen/sigs.k8s.io/kustomize/api/types/var_go_gen.cue:33:2
 [exit status 1]
-FAIL: example.txt:7: unexpected command failure
-> stdout 'kind: BuildPlan'
-FAIL: example.txt:8: no match for `kind: BuildPlan` found in stdout
+FAIL: <stdin>:8: unexpected command failure
+> cmp stdout buildplan.yaml
+diff stdout buildplan.yaml
+--- stdout
++++ buildplan.yaml
+@@ -0,0 +1,1 @@
++kind: BuildPlan
+
+FAIL: <stdin>:9: stdout and buildplan.yaml differ
 # want this error to go away (0.000s)
 > ! stderr 'cannot convert non-concrete value string'
-FAIL: example.txt:10: unexpected match for `cannot convert non-concrete value string` found in stderr: cannot convert non-concrete value string
+FAIL: <stdin>:11: unexpected match for `cannot convert non-concrete value string` found in stderr: cannot convert non-concrete value string
 failed run
 ```
