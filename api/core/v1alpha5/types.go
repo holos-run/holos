@@ -179,7 +179,7 @@ type Transformer struct {
 	// Kustomize transformer. Ignored unless kind is Kustomize.
 	Kustomize Kustomize `json:"kustomize,omitempty" yaml:"kustomize,omitempty"`
 	// Join transformer. Ignored unless kind is Join.
-	Join Join `json:"join,omitempty" json:"yaml,omitempty"`
+	Join Join `json:"join,omitempty" yaml:"join,omitempty"`
 }
 
 // Join represents a [Transformer] using [bytes.Join] to concatenate multiple
@@ -189,7 +189,7 @@ type Transformer struct {
 //
 // [bytes.Join]: https://pkg.go.dev/bytes#Join
 type Join struct {
-	Separator string `json:"separator" yaml:"separator" cue:"string | *\"---\\n\""`
+	Separator string `json:"separator,omitempty" yaml:"separator,omitempty"`
 }
 
 // Kustomize represents a kustomization [Transformer].

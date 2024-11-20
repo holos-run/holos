@@ -94,33 +94,31 @@ type Selector struct {
 	Negative map[string]string
 }
 
-// IsSelected returns true when the selector selects the given labels.  An empty
-// selector selects.
+// IsSelected returns true when the selector selects the given labels
 func (s *Selector) IsSelected(labels Labels) bool {
-	// Reject if any positive match is negative.
+	if s == nil {
+		return true // Nil selector selects everything
+	}
+
+	if len(s.Positive) == 0 && len(s.Negative) == 0 {
+		return true // Empty selector selects everything
+	}
+
+	// Check positive matches
 	for k, v := range s.Positive {
-		if val, ok := labels[k]; ok {
-			if v != val {
-				// Reject - value does not match.
-				return false
-			} // Select - key and value match.
-		} else {
-			// Reject - key not present.
+		val, ok := labels[k]
+		if !ok || v != val {
 			return false
 		}
 	}
 
-	// Reject if any negative match is positive.
+	// Check negative matches
 	for k, v := range s.Negative {
-		if val, ok := labels[k]; ok {
-			if v == val {
-				// Reject - value matches, negated.
-				return false
-			} // Select - value does not match, negated.
+		if val, ok := labels[k]; ok && v == val {
+			return false
 		}
 	}
 
-	// Select if all checks pass.  An empty selector selects.
 	return true
 }
 
@@ -146,31 +144,23 @@ func (s *Selector) Set(value string) error {
 	if s.Negative == nil {
 		s.Negative = map[string]string{}
 	}
-	msg := "invalid value: %s, must be label=val label==val or label!=val"
+
 	for _, str := range strings.Split(value, ",") {
-		splits := map[string]map[string]string{
-			"!=": s.Negative,
-			"==": s.Positive, // must be before =
-			"=":  s.Positive, // must be after ==
+		if strings.Contains(str, "!=") {
+			elems := strings.SplitN(str, "!=", 2)
+			s.Negative[elems[0]] = elems[1]
+			continue
 		}
 
-		var ok bool
-		for sep, m := range splits {
-			elems := strings.SplitN(str, sep, 2)
-			if len(elems) == 2 {
-				k, v := elems[0], elems[1]
-				if _, exists := m[k]; exists {
-					return errors.Format("already set: %s", k)
-				}
-				m[k] = v
-				ok = true
-				break
-			}
+		// Treat both = and == as positive matches
+		str = strings.ReplaceAll(str, "==", "=")
+		elems := strings.SplitN(str, "=", 2)
+		if len(elems) != 2 {
+			return errors.Format("invalid value: %s", str)
 		}
-		if !ok {
-			return errors.Format(msg, str)
-		}
+		s.Positive[elems[0]] = elems[1]
 	}
+
 	return nil
 }
 

@@ -4,10 +4,10 @@
 cd $WORK
 
 # Generate the directory structure we're going to work in.
-exec holos generate platform v1alpha5 --force
+exec holos init platform v1alpha5 --force
 
 # Platforms are empty by default.
-exec holos render platform ./platform
+exec holos render platform
 stderr -count=1 '^rendered platform'
 
 # When author.#Kubernetes is empty

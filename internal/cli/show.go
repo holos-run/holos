@@ -9,6 +9,7 @@ import (
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
+	"github.com/holos-run/holos/internal/server/middleware/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -114,7 +115,10 @@ func makeBuildFunc(encoder holos.Encoder, opts holos.BuildOpts) builder.BuildFun
 	return func(ctx context.Context, component holos.Component) error {
 		select {
 		case <-ctx.Done():
-			return errors.Wrap(ctx.Err())
+			msg := "should never get here: %w"
+			err := errors.Format(msg, ctx.Err())
+			logger.FromContext(ctx).ErrorContext(ctx, err.Error(), "err", err)
+			return err
 		default:
 			inst, err := builder.LoadInstance(component.Path(), component.Tags())
 			if err != nil {

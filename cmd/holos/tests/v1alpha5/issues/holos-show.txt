@@ -1,0 +1,80 @@
+# https://github.com/holos-run/holos/issues/331
+# ensure holos show components --labels selects correctly.
+# ensure BuildPlan includes labels and annotations from the platform component.
+# ensure holos render platform injects the holos_component_labels and
+# holos_component_annotations tags.
+env HOME=$WORK
+
+exec holos init platform v1alpha5 --force
+exec holos show platform
+cmp stdout want/platform.yaml
+# one equal works in the selector
+exec holos show buildplans --selector app.holos.run/name=empty-label
+cmp stdout want/buildplan.yaml
+# double equals works in the selector
+exec holos show buildplans --selector app.holos.run/name==empty-label
+cmp stdout want/buildplan.yaml
+# not equal works in the selector
+exec holos show buildplans --selector app.holos.run/name!=empty-label
+cmp stdout want/empty.yaml
+exec holos show buildplans --selector app.holos.run/name!=something-else
+cmp stdout want/buildplan.yaml
+-- platform/empty.cue --
+package holos
+
+Platform: Components: empty: {
+  name: "empty"
+  path: "components/empty"
+}
+-- platform/metadata.cue --
+package holos
+
+Platform: Components: [_]: {
+  name: _
+  labels: "app.holos.run/name": "\(name)-label"
+  annotations: "app.holos.run/description": "\(name)-annotation empty test case"
+}
+-- components/empty/empty.cue --
+package holos
+
+Component: #Kubernetes & {}
+holos: Component.BuildPlan
+-- want/platform.yaml --
+apiVersion: v1alpha5
+kind: Platform
+metadata:
+  name: default
+spec:
+  components:
+    - annotations:
+        app.holos.run/description: empty-annotation empty test case
+      labels:
+        app.holos.run/name: empty-label
+      name: empty
+      path: components/empty
+-- want/empty.yaml --
+-- want/buildplan.yaml --
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty
+spec:
+  artifacts:
+    - artifact: components/empty/empty.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty/empty.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - resources.gen.yaml

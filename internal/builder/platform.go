@@ -28,10 +28,10 @@ type Platform struct {
 }
 
 // Build calls [PlatformOpts] Fn(ctx, component) concurrently.
-func (b *Platform) Build(ctx context.Context, opts PlatformOpts) error {
+func (p *Platform) Build(ctx context.Context, opts PlatformOpts) error {
 	limit := max(opts.Concurrency, 1)
 	parentStart := time.Now()
-	components := b.Select()
+	components := p.Select(opts.Selector)
 	total := len(components)
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -48,12 +48,7 @@ func (b *Platform) Build(ctx context.Context, opts PlatformOpts) error {
 				// Capture idx to avoid issues with closure.  Fixed in Go 1.22.
 				idx := idx
 				component := components[idx]
-				if !holos.IsSelected(component.Labels(), opts.Selector) {
-					msg := fmt.Sprintf("skipped %s: not selected", component.Describe())
-					logger.FromContext(ctx).DebugContext(ctx, msg)
-					break
-				}
-				// Worker go routine.  Blocks if limit has been reached.
+				// Worker go routine. Blocks if limit has been reached.
 				g.Go(func() error {
 					select {
 					case <-ctx.Done():

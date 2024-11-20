@@ -1,0 +1,15 @@
+#! /bin/bash
+
+TOPLEVEL="$(cd $(dirname "$0") && git rev-parse --show-toplevel)"
+
+cd "${TOPLEVEL}"
+
+# The text files use about 85% of the knowledge base.
+mkdir -p tmp/claude
+for x in $(git ls-files internal/\*.go api/author/v1alpha5/\*.go api/core/v1alpha5/\*.go doc/md/\*.md{,x}); do
+  y="${x//\//__}.txt"
+
+  [[ $y =~ "__ent__" ]] && continue
+
+  cp "$x" "tmp/claude/$y"
+done

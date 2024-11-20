@@ -211,7 +211,7 @@ package core
 //
 // [bytes.Join]: https://pkg.go.dev/bytes#Join
 #Join: {
-	separator: string & (string | *"---\n") @go(Separator)
+	separator?: string @go(Separator)
 }
 
 // Kustomize represents a kustomization [Transformer].
