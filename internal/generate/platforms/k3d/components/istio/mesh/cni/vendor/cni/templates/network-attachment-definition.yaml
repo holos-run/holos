@@ -1,9 +1,0 @@
-{{- if eq .Values.cni.provider "multus" }}
-apiVersion: k8s.cni.cncf.io/v1
-kind: NetworkAttachmentDefinition
-metadata:
-  name: istio-cni
-  namespace: default
-  labels:
-    operator.istio.io/component: "Cni"
-{{- end }}
