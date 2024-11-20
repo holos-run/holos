@@ -1,0 +1,34 @@
+# https://github.com/holos-run/holos/issues/348
+# when the optional kustomize patch name field is omitted
+exec holos init platform v1alpha5 --force
+# want a buildplan shown
+exec holos show buildplans
+stdout 'kind: BuildPlan'
+# want this error to go away
+! stderr 'cannot convert non-concrete value string'
+-- platform/example.cue --
+package holos
+
+Platform: Components: example: {
+	name: "example"
+	path: "components/example"
+}
+-- components/example/example.cue --
+package holos
+
+import "encoding/yaml"
+
+holos: Component.BuildPlan
+
+Component: #Kustomize & {
+	KustomizeConfig: Kustomization: patches: [
+		{
+			target: kind: "CustomResourceDefinition"
+			patch: yaml.Marshal([{
+				op:    "add"
+				path:  "/metadata/annotations/example"
+				value: "example-value"
+			}])
+		},
+	]
+}
