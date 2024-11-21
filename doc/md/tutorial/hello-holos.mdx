@@ -194,9 +194,6 @@ Holos executes `helm template` with locally cached charts to generate:
 deploy/components/podinfo/podinfo.gen.yaml
 ```
 
-By default, Holos looks for configuration in `platform/`. Override with
-`--platform <dir>`.
-
 <Tabs groupId="0E9C231D-D0E8-410A-A4A0-601842A086A6">
   <TabItem value="service" label="Service">
 ```yaml showLineNumbers
@@ -335,8 +332,12 @@ grep -B2 Hello deploy/components/podinfo/podinfo.gen.yaml
 ## Breaking it down
 
 We run `holos render platform` because the CUE files in the platform directory
-export a [Platform] resource to `holos`. The `./platform` directory is the entry
-point to the platform rendering process.
+export a [Platform] resource to `holos`.
+
+:::important
+The `platform/` directory is the default entry point to the platform rendering
+process.  Override with `--platform <dir>`.
+:::
 
 Components are the building blocks of a Platform. The `platform/podinfo.cue`
 file integrates the `podinfo` component with the Platform.

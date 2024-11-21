@@ -12,14 +12,14 @@ import TabItem from '@theme/TabItem';
 
 ## Overview
 
-In the previous tutorial we learned how Holos makes it easier to holistically
-integrate the [prometheus] and [blackbox] charts so they're configured in lock
-step with each other.
+In the previous tutorial, we learned how Holos simplifies the holistic
+integration of the [prometheus] and [blackbox] charts, ensuring they are
+configured in sync.
 
-This tutorial goes further by integrating the [httpbin] service with prometheus
-and blackbox to automatically probe for availability.
+In this tutorial, we'll go a step further by integrating the [httpbin] service
+with Prometheus and Blackbox to automatically probe for availability.
 
-We'll explore how Holos manages [kustomize] bases similar to the Helm kind
+We'll also explore how Holos manages [kustomize] bases, similar to the Helm kind
 covered in the [Helm Values] tutorial.
 
 ## The Code
@@ -34,8 +34,10 @@ Otherwise click the **Generate** tab to generate a blank platform now.
 :::
   </TabItem>
   <TabItem value="generate" label="Generate">
-Use `holos` to generate a minimal platform directory structure.  First, create
-and cd into a blank directory. Then use the `holos init platform` command.
+
+Use `holos` to generate a minimal platform directory structure. First, create
+and navigate into a blank directory. Then, run the `holos init platform`
+command.
 
 ```shell
 mkdir holos-kustomize-tutorial
@@ -54,8 +56,8 @@ git init . && git add . && git commit -m initial
 
 ### Managing the Component
 
-Create the `httpbin` component directory and add the `httpbin.cue` and
-`httpbin.yaml` files to it.
+Create the `httpbin` component directory, and add the `httpbin.cue` and
+`httpbin.yaml` files to it for configuration and setup.
 
 <Tabs groupId="800C3AE7-E7F8-4AFC-ABF1-6AFECD945958">
   <TabItem value="setup" label="Setup">
@@ -154,9 +156,9 @@ EOF
 Holos knows the `httpbin.yaml` file is part of the BuildPlan because of the
 `KustomizeConfig: Files: "httpbin.yaml": _` line in the `httpbin.cue`.
 
-### Integrating the Components
+### Register the Components
 
-Integrate `httpbin` with the platform by adding the following file to the
+Register `httpbin` with the platform by adding the following file to the
 platform directory.
 
 ```bash
@@ -212,10 +214,10 @@ git add . && git commit -m 'add httpbin'
   </TabItem>
 </Tabs>
 
-### Inspecting the BuildPlan
+### Inspecting the Build Plan
 
 We can see the [BuildPlan] exported to `holos` by the `holos:
-Kustomize.BuildPlan` line in `httpbin.cue`.  Holos processes this build plan to
+Kustomize.BuildPlan` line in `httpbin.cue`. Holos processes this build plan to
 produce the fully rendered manifests.
 
 <Tabs groupId="DD697D65-5BEC-4B92-BB33-59BE4FEC112F">
@@ -270,19 +272,21 @@ source:
   </TabItem>
 </Tabs>
 
-### Transforming manifests
+### Transforming Manifests
 
-Reviewing the BuildPlan exported in the previous command:
+Review the BuildPlan exported in the previous command:
 
 1. The [File Generator] copies the plain `httpbin.yaml` file into the build.
 2. The [Kustomize Transformer] uses `httpbin.yaml` as an input resource.
 3. The final artifact is the output from Kustomize.
 
-This BuildPlan transforms the raw yaml by labeling all of the resources with
+This BuildPlan transforms the raw YAML by labeling all of the resources with
 `"app.kubernetes.io/name": "httpbin"` using the [KustomizeConfig] `CommonLabels`
-field.  We still need to integrate `httpbin` with `prometheus`.   Annotate the
-Service with `prometheus.io/probe: "true"` to complete the integration.  Holos
-makes this easier with CUE.  We don't need to edit any yaml files.
+field.
+
+To complete the integration with Prometheus, annotate the Service with
+`prometheus.io/probe: "true"`. Holos makes this easier with CUE, so there's no
+need to edit any YAML files manually.
 
 Add a new `patches.cue` file to the `httpbin` component with the following
 content.
@@ -382,17 +386,19 @@ git add . && git commit -m 'annotate httpbin for prometheus probes'
 
 ## Trying Locally
 
-Optionally apply the manifests Holos rendered to a [Local Cluster].
+Optionally, apply the manifests rendered by Holos to a [Local Cluster] for
+testing and validation.
 
 ## Next Steps
 
-We learned how Holos makes it easier to manage [httpbin], distributed as a
-Kustomize base, using a kustomize Component similar to the helm component we saw
-previously.  Holos offers a clear way to kustomize any component, patching an
-annotation onto the `httpbin` Service in this example.
+In this tutorial, we learned how Holos simplifies managing [httpbin], which is
+distributed as a Kustomize base. We used a Kustomize component similar to the
+Helm component covered previously. Holos provides a straightforward way to
+customize any component, demonstrated by patching an annotation onto the
+`httpbin` Service.
 
-Continue on with the tutorial to explore how Holos makes it easier to manage
-certificates and make services accessible outside of a cluster.
+Continue with the tutorial to learn how Holos facilitates certificate management
+and makes services accessible outside of a cluster.
 
 [httpbin]: https://github.com/mccutchen/go-httpbin/tree/v2.15.0
 [prometheus]: https://github.com/prometheus-community/helm-charts/tree/prometheus-25.27.0/charts/prometheus

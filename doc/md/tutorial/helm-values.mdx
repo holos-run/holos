@@ -17,28 +17,23 @@ import TabItem from '@theme/TabItem';
 
 ## Overview
 
-Holos makes it easier to integrate multiple Helm charts together.  Holos adds
-valuable capabilities to Helm and Kustomize.
+Holos simplifies integrating multiple Helm charts by adding valuable
+capabilities to Helm and Kustomize:
 
-1. Inject the same value into two or more charts to integrate them safer than Helm alone.
-2. Add strong type checking and validation of constraints for Helm input values.
-3. Implementation of the [rendered manifests pattern].
+1. Inject the same value into multiple charts more safely than using Helm alone.
+2. Add strong type checking and validation for Helm input values.
+3. Implement the [rendered manifests pattern].
 
-We'll manage the [prometheus] and [blackbox] Helm Charts in this tutorial.
-Unfortunately, the upstream `values.yaml` files are misconfigured by default.
-Prometheus tries to connect to Blackbox at the wrong host and port.
-
-:::tip
-Holos and CUE makes it easy to fix this problem by integrating them correctly.
-The integrated charts will stay in lock step over time.
-:::
+In this tutorial, we'll manage the [prometheus] and [blackbox] Helm charts. By
+default, the upstream `values.yaml` files are misconfigured, causing Prometheus
+to connect to Blackbox at the wrong host and port.
 
 ## The Code
 
 ### Generating the structure
 
-Use `holos` to generate a minimal platform directory structure.  First, create
-and cd into a blank directory. Then use the `holos init platform` command.
+Use `holos` to generate a minimal platform directory structure. First, create
+and navigate into a blank directory, then use the `holos init platform` command:
 
 ```shell
 mkdir holos-helm-values-tutorial
@@ -46,10 +41,10 @@ cd holos-helm-values-tutorial
 holos init platform v1alpha5
 ```
 
-Make a commit to track changes.
+Make an initial commit to track changes:
 
 ```bash
-git init . && git add . && git commit -m initial
+git init . && git add . && git commit -m "initial commit"
 ```
 
 ### Managing the Components
@@ -114,10 +109,9 @@ EOF
   </TabItem>
 </Tabs>
 
-### Integrating the Components
+### Register the Components
 
-Integrate the components with the platform by adding the following file to the
-platform directory.
+Register the components with the platform by adding the following file to the platform directory.
 
 ```bash
 cat <<EOF > platform/prometheus.cue
@@ -182,9 +176,8 @@ git add . && git commit -m 'add blackbox and prometheus'
 
 ### Importing Helm Values
 
-Holos renders the helm charts with their default values.  We can import these
-default values into CUE so we can easily work with them as structured data
-instead of text markup.
+Holos renders Helm charts with their default values. We can import these default
+values into CUE to work with them as structured data instead of text markup.
 
 ```bash
 holos cue import \
@@ -206,10 +199,10 @@ These commands convert the YAML data into CUE code and nest the values under the
 `Values` field of the `Helm` struct.
 
 :::important
-CUE unifies `values.cue` with the other `*.cue` files in the same directory.
+CUE unifies `values.cue` with the other `\*.cue` files in the same directory.
 :::
 
-Render the platform and commit the results.
+Render the platform using `holos render platform` and commit the results.
 
 <Tabs groupId="BDDCD65A-2E9D-4BA6-AAE2-8099494D5E4B">
   <TabItem value="command" label="Command">
@@ -244,9 +237,10 @@ git add . && git commit -m 'import values'
 
 ### Managing Common Configuration
 
-Define a structure to hold the configuration values we want both helm charts to
-use.  We add this configuration to the `components` directory so it's in scope
-for all components.
+To manage shared configuration for both Helm charts, define a structure that
+holds the common configuration values. Place this configuration in the
+`components` directory to ensure it is accessible to all components.
+
 
 ```bash
 cat <<EOF > components/blackbox.cue
@@ -296,13 +290,13 @@ git add . && git commit -m 'add blackbox configuration'
   </TabItem>
 </Tabs>
 
-### Referring to Common Configuration
+### Using Common Configuration Across Components
 
-Referencing common configuration from multiple components is easy and safe with
-Holos and CUE.
+Referencing common configuration across multiple components is straightforward
+and reliable using Holos and CUE.
 
-Patch the two `values.cue` files, or edit them by hand, to reference
-`Blackbox.host` and `Blackbox.port`.
+To apply the common configuration, patch the two `values.cue` files, or manually
+edit them to reference `Blackbox.host` and `Blackbox.port`.
 
 <Tabs groupId="5FFCE892-B8D4-4F5B-B2E2-39EC9E9F87A4">
   <TabItem value="command" label="Command">
@@ -379,8 +373,8 @@ git add . && git commit -m 'integrate blackbox and prometheus together'
 
 ## Reviewing Changes
 
-Holos makes it easy to see and review platform wide changes.  Render the
-platform to see how both prometheus and blackbox change in lock step.
+Holos makes it easy to view and review platform-wide changes. Render the
+platform to observe how both Prometheus and Blackbox update in sync.
 
 <Tabs groupId="E7F6D8B1-22FA-4075-9B44-D9F2815FE0D3">
   <TabItem value="command" label="Command">
@@ -397,7 +391,7 @@ rendered platform in 383.270625ms
   </TabItem>
 </Tabs>
 
-Changes are easily visible with version control.
+Changes are easily visible in version control.
 
 <Tabs groupId="9789A0EF-24D4-4FB9-978A-3895C2778789">
   <TabItem value="command" label="Command">
@@ -476,19 +470,18 @@ index 9e02bce..ab638f0 100644
   </TabItem>
 </Tabs>
 
-From the diff we know this change will:
+From the diff, we can see this change will:
 
-1. Reconfigure the blackbox exporter host from `prometheus-blackbox-exporter` to `blackbox`.
-2. Have no effect on the blackbox service port.  It was already using the default 9115.
-3. Reconfigure prometheus to query the blackbox exporter at the correct host and
-port, `blackbox:9115`.
+1. Reconfigure the Blackbox Exporter host from `prometheus-blackbox-exporter` to `blackbox`.
+2. Have no effect on the Blackbox service port, as it was already using the default `9115`.
+3. Reconfigure Prometheus to query the Blackbox Exporter at the correct host and port, `blackbox:9115`.
 
-Without this change prometheus incorrectly assumed blackbox was listening at
+Without this change, Prometheus incorrectly assumed Blackbox was listening at
 `blackbox` on port `80` when it was actually listening at
-`prometheus-blackbox-exporter` port `9115`.  Going forward, changing the
-blackbox host or port will reconfigure both charts correctly.
+`prometheus-blackbox-exporter` on port `9115`. Going forward, changing the
+Blackbox host or port will reconfigure both charts correctly.
 
-Commit the changes and move on to deploying them.
+Commit the changes and proceed to deploy them.
 
 <Tabs groupId="F8C9A98D-DE1E-4EF6-92C1-017A9166F6C7">
   <TabItem value="command" label="Command">
@@ -506,14 +499,15 @@ git add . && git commit -m 'render integrated blackbox and prometheus manifests'
 
 ## Trying Locally
 
-Optionally apply the manifests Holos rendered to a [Local Cluster].
+Optionally, apply the manifests rendered by Holos to a [Local Cluster].
 
 ## Next Steps
 
-In this tutorial we learned how Holos makes it easier to holistically integrate
-the [prometheus] and [blackbox] charts so they're configured in lock step with
-each other.  If we relied on Helm alone, there is no good way to configure both
-charts to use the same service endpoint.
+In this tutorial, we learned how Holos simplifies the holistic integration of
+the [prometheus] and [blackbox] charts, ensuring they are configured
+consistently. By using Holos, we overcome the limitations of relying solely on
+Helm, which lacks an effective method to configure both charts to use the same
+service endpoint.
 
 [rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern
 [prometheus]: https://github.com/prometheus-community/helm-charts/tree/prometheus-25.27.0/charts/prometheus
