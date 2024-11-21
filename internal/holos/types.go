@@ -14,12 +14,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// yamlEncoder and jsonEncoder implement Encoder to write individual resources.
+// Interface implementation assertions.
 var _ Encoder = &yamlEncoder{}
 var _ Encoder = &jsonEncoder{}
-
-// seqEncoder implements SequentialEncoder to write resources in order.
-var _ OrderedEncoder = &seqEncoder{}
+var _ OrderedEncoder = &orderedEncoder{}
 
 // StringSlice represents zero or more flag values.
 type StringSlice []string
@@ -183,7 +181,7 @@ func NewSequentialEncoder(format string, w io.Writer) (OrderedEncoder, error) {
 	if err != nil {
 		return nil, err
 	}
-	seqEnc := &seqEncoder{
+	seqEnc := &orderedEncoder{
 		Encoder: enc,
 		buf:     make(map[int]any),
 	}
@@ -251,16 +249,24 @@ func IsSelected(labels Labels, selectors ...Selector) bool {
 	return true
 }
 
-type seqEncoder struct {
+type orderedEncoder struct {
 	Encoder
 	mu   sync.Mutex
 	buf  map[int]any
 	next int
 }
 
-func (s *seqEncoder) Encode(idx int, v any) error {
+// Encode encodes v in sequential or starting with idx 0.
+//
+// It is an error to provide idx values less than the next to encode.  Is is an
+// error to provide the same idx value more than once.
+func (s *orderedEncoder) Encode(idx int, v any) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if idx < s.next {
+		return fmt.Errorf("could not encode idx %d: must be greater than or equal to next idx %d", idx, s.next)
+	}
 
 	// If this is the next expected index, encode it and any buffered values
 	if idx == s.next {
@@ -282,6 +288,10 @@ func (s *seqEncoder) Encode(idx int, v any) error {
 			}
 		}
 		return nil
+	}
+
+	if _, ok := s.buf[idx]; ok {
+		return fmt.Errorf("could not encode idx %d: already exists", idx)
 	}
 
 	// Buffer out-of-order value
