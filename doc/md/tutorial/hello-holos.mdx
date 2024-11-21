@@ -184,13 +184,13 @@ Component parameters may have any name as long as they don't start with
 
 ## Rendering manifests
 
-Render a manifest for `podinfo` using the `holos render platform ./platform`
-command.  The `platform/` directory is the main entrypoint for this command.
+Render a manifest for `podinfo` using the `holos render platform`
+command.
 
 <Tabs groupId="E150C802-7162-4FBF-82A7-77D9ADAEE847">
   <TabItem value="command" label="Command">
 ```bash
-holos render platform ./platform
+holos render platform
 ```
   </TabItem>
   <TabItem value="output" label="Output">
@@ -204,7 +204,9 @@ rendered platform in 1.938759417s
 
 :::important
 Holos rendered the following manifest file by executing `helm template` after
-caching `podinfo` locally.
+caching `podinfo` locally. The `platform/` directory is the main entrypoint for
+this command, but you can specify a different directory using the `--platform`
+option.
 :::
 
 ```txt
@@ -348,8 +350,8 @@ grep -B2 Hello deploy/components/podinfo/podinfo.gen.yaml
 
 ## Breaking it down
 
-We run `holos render platform ./platform` because the CUE files in the platform
-directory export a [Platform] resource to `holos`.  The platform directory is
+We run `holos render platform` because the CUE files in the platform
+directory export a [Platform] resource to `holos`.  The `./platform` directory is
 the entrypoint to the platform rendering process.
 
 Components are the building blocks for a Platform.  The `platform/podinfo.cue`
