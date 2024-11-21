@@ -11,19 +11,16 @@ import RenderingOverview from '@site/src/diagrams/rendering-overview.mdx';
 
 ## Overview
 
-Holos is a configuration management tool for Kubernetes resources.  It provides
-the building blocks needed for implementing the [rendered manifests pattern].
-It gives the flexibility to manage a wide range of configurations, from large
-software delivery platforms spanning multiple clusters and regions to generating
-a single resource on your local device.
+Holos is a configuration management tool for Kubernetes that implements the
+[rendered manifests pattern]. It handles configurations ranging from single
+resources to multi-cluster platforms across regions.
 
 {/* truncate */}
 
-At a high level, Holos provides a few major components:
-
-- A Platform schema for specifying how components integrate together into a platform.
-- Component building blocks for Helm, Kustomize, and Kubernetes to unify configuration with CUE.
-- A BuildPlan orchestrating generators, transformers, and validators to produce manifest files.
+Key components:
+- Platform schemas defining component integration
+- Building blocks unifying Helm, Kustomize and Kubernetes configs with CUE
+- BuildPlan pipeline for generating, transforming and validating manifests
 
 <RenderingOverview />
 
@@ -31,43 +28,39 @@ At a high level, Holos provides a few major components:
 
 ## Holos' role in your organization
 
-Platform engineers run the `holos render platform` command locally and in CI to
-produce Kubernetes manifests which are committed to version control.  GitOps
-tools like ArgoCD or Flux deploy the manifests produced by Holos.
+Platform engineers use Holos to generate Kubernetes manifests, both locally and
+in CI pipelines. The manifests are committed to version control and deployed via
+GitOps tools like ArgoCD or Flux.
 
-Holos works well with your existing Helm charts, kustomize bases, and any other
-configuration data you currently store in version control.
+Holos integrates seamlessly with existing Helm charts, Kustomize bases, and
+other version-controlled configurations.
 
 ## Advantages of Holos
 
 ### Safe
 
-Holos uses [CUE] to provide strong typing and constraints to configuration data.
-Additionally, holos adds strong validation to verify the output produced by Helm
-and other tools.
+Holos leverages [CUE] for strong typing and validation of configuration data,
+ensuring consistent output from Helm and other tools.
 
 ### Consistent
 
-Holos offers a consistent way to incorporate a wide variety of tools into a well
-defined data pipeline.  Configuration produced from CUE, Helm, and Kustomize are
-all handled with the same consistent process.
+A unified pipeline processes all configurations - whether from CUE, Helm, or
+Kustomize - through the same well-defined stages.
 
 ### Flexible
 
-Holos is designed to be flexible.  Holos offers flexible building blocks for
-data generation, transformation, validation, and integration.  Find the perfect
-fit for your team by assembling these building blocks to your unique needs.
+Composable building blocks for generation, transformation, validation and
+integration let teams assemble workflows that match their needs.
 
-Holos does not have an opinion on many common aspects of platform configuration.
-For example, environments and clusters are explicitly kept out of the core and
-instead are provided as flexible, user-customizable [topics] organized as a
-recipes.
+The core is intentionally unopinionated about platform configuration patterns.
+Common needs like environments and clusters are provided as customizable
+[topics] recipes rather than enforced structures.
 
 ## Getting Help
 
-If you get stuck, you can get help on [Discord] or [GitHub discussions].  Don't
-worry about asking "beginner" questions, configuration is often complex even for
-the most experienced among us.  We all start somewhere and are happy to help.
+Get support through our [Discord] channel or [GitHub discussions]. Configuration
+challenges arise at all experience levels - we welcome your questions and are
+here to help.
 
 [rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern
 [CUE]: https://cuelang.org/

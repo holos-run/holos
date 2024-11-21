@@ -11,22 +11,23 @@ import RenderPlatformDiagram from '@site/src/diagrams/render-platform-sequence.m
 
 # Setup
 
-## Overview
-
-This tutorial will guide you through the installation of Holos and its
-dependencies, as well as the initialization of a minimal Platform that you can
-extend to meet your specific needs.
-
 ## Installing
 
-Holos is distributed as a single file executable that can be installed in a
-couple of ways.
+Holos is a single executable that can be installed via:
 
 <Tabs groupId="FE2C74C8-B3A3-4AEA-BBD3-F57FAA654B6F">
-  <TabItem value="brew" label="Install with brew">
+  <TabItem value="brew" label="macOS">
 ```bash
 brew install holos-run/tap/holos
 ```
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+Download holos from the [releases] page and place the executable into your shell
+path.
+  </TabItem>
+  <TabItem value="win" label="Windows">
+Download holos from the [releases] page and place the executable into your shell
+path.
   </TabItem>
   <TabItem value="go" label="Go">
 ```bash
@@ -60,31 +61,22 @@ holos completion powershell | Invoke-Expression
   </TabItem>
 </Tabs>
 
-### Releases
-
-Download `holos` from the [releases] page and place the executable into your
-shell path.
-
 ### Dependencies
 
-Holos integrates with the following tools that should be installed to enable
-their functionality.
+Install these tools to use Holos's full capabilities:
 
-- [Helm] to fetch and render Helm chart Components.
-- [Kubectl] to [kustomize] components.
+- [Helm] for chart management and rendering
+- [Kubectl] for [kustomize] operations
 
 :::note
-Holos is tested with Helm version `v3.16.2`.
+Holos is tested with Helm `v3.16.2`. If you see `Error: chart requires
+kubeVersion` errors, try upgrading Helm.
 :::
-
-Please try upgrading helm if you encounter `Error: chart requires kubeVersion
-...` errors.
 
 ## Next Steps
 
-You've got the structure of your platform configuration in place. Continue on to
-[Hello Holos] where you'll learn how easy it is to manage a Helm chart with
-holos.
+With your platform structure initialized, proceed to [Hello Holos] to learn Helm
+chart management.
 
 [Helm]: https://github.com/helm/helm/releases
 [Kubectl]: https://kubernetes.io/docs/tasks/tools/

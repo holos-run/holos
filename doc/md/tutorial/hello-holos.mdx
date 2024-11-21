@@ -15,32 +15,22 @@ import ComponentSequence from '@site/src/diagrams/render-component-sequence.mdx'
 
 ## Overview
 
-One of the first exercises we do when learning a new programming language is
-printing out a "Hello World!" greeting. Hello Holos configures the [podinfo Helm
-chart][podinfo] producing a similar greeting from a Kubernetes Service.
+Like a traditional "Hello World" program, we'll start by configuring the
+[podinfo Helm chart][podinfo] to output a greeting from a Kubernetes Service.
+This introduces the core concept of wrapping Helm charts as Holos Components.
 
-By the end of this tutorial you have an understanding of how to wrap a Helm
-Chart as a Holos Component.
+## Implementation
 
-## The Code
+### Initialize Platform Structure
 
-### Generating the structure
-
-Use `holos` to generate a minimal platform directory structure.  Start by
-creating a blank directory to hold the platform configuration.
+Create and initialize a minimal platform:
 
 ```shell
 mkdir holos-tutorial && cd holos-tutorial
-```
-
-Use the `holos init platform` command to initialize a minimal platform in the
-blank directory.
-
-```shell
 holos init platform v1alpha5
 ```
 
-Here's the filesystem tree we'll build in this tutorial.
+The resulting directory structure:
 
 <Tabs groupId="80D04C6A-BC83-44D0-95CC-CE01B439B159">
 <TabItem value="tree" label="Tree">
@@ -104,10 +94,9 @@ initialization.
 </TabItem>
 </Tabs>
 
-### Creating a component
+### Create the Component
 
-Start by creating a directory for the `podinfo` component.  Create an empty file
-and then add the following CUE configuration to it.
+Configure the `podinfo` component:
 
 ```bash
 mkdir -p components/podinfo
@@ -145,20 +134,19 @@ EOF
 ```
 
 :::important
-CUE loads all of `*.cue` files in the component directory to define component,
-similar to Go packages.
+Like Go packages, CUE loads all `*.cue` files in the component directory to
+define the component.
 :::
 
 :::note
-CUE _also_ loads all `*.cue` files from the component leaf directory to the
-platform root directory.  In this example, `#Helm` on line 6 is defined in
-`schema.cue` at the root.
+CUE recursively loads `*.cue` files from the component directory up to the
+platform root. For example, `#Helm` referenced on line 6 is defined in
+root-level `schema.cue`.
 :::
 
-### Integrating the component
+### Add to Platform
 
-Integrate the `podinfo` component into the platform by creating a new CUE file
-in the `platform` directory with the following content.
+Register the `podinfo` component in `platform/podinfo.cue`:
 
 ```bash
 cat <<EOF > platform/podinfo.cue
@@ -178,14 +166,12 @@ EOF
 ```
 
 :::tip
-Component parameters may have any name as long as they don't start with
-`holos_`.
+Parameter names are unrestricted, except for the reserved `holos_` prefix.
 :::
 
-## Rendering manifests
+## Generate Manifests
 
-Render a manifest for `podinfo` using the `holos render platform`
-command.
+Render the `podinfo` configuration:
 
 <Tabs groupId="E150C802-7162-4FBF-82A7-77D9ADAEE847">
   <TabItem value="command" label="Command">
@@ -202,16 +188,14 @@ rendered platform in 1.938759417s
   </TabItem>
 </Tabs>
 
-:::important
-Holos rendered the following manifest file by executing `helm template` after
-caching `podinfo` locally. The `platform/` directory is the main entrypoint for
-this command, but you can specify a different directory using the `--platform`
-option.
-:::
+Holos executes `helm template` with locally cached charts to generate:
 
 ```txt
 deploy/components/podinfo/podinfo.gen.yaml
 ```
+
+By default, Holos looks for configuration in `platform/`. Override with
+`--platform <dir>`.
 
 <Tabs groupId="0E9C231D-D0E8-410A-A4A0-601842A086A6">
   <TabItem value="service" label="Service">
@@ -350,21 +334,20 @@ grep -B2 Hello deploy/components/podinfo/podinfo.gen.yaml
 
 ## Breaking it down
 
-We run `holos render platform` because the CUE files in the platform
-directory export a [Platform] resource to `holos`.  The `./platform` directory is
-the entrypoint to the platform rendering process.
+We run `holos render platform` because the CUE files in the platform directory
+export a [Platform] resource to `holos`. The `./platform` directory is the entry
+point to the platform rendering process.
 
-Components are the building blocks for a Platform.  The `platform/podinfo.cue`
-file integrates the `podinfo` Component with the Platform.
+Components are the building blocks of a Platform. The `platform/podinfo.cue`
+file integrates the `podinfo` component with the Platform.
 
-Holos requires two fields to integrate a component with the platform.
+Holos requires two fields to integrate a component with the platform:
 
 1. A unique name for the component.
-2. The component path to the directory containing the CUE files exporting a
+2. The component path to the directory containing the CUE files that export a
 `BuildPlan` defining the component.
 
-Component parameters are optional.  They allow re-use of the same component.
-Refer to the [Component Parameters] topic for more information.
+Component parameters are optional and allow re-use of the same component.
 
 <Tabs groupId="67C1EE71-3EA8-4568-9F6D-0072BA09FF12">
   <TabItem value="overview" label="Rendering Overview">
@@ -381,9 +364,10 @@ Refer to the [Component Parameters] topic for more information.
 
 ## Next Steps
 
-We've shown how to integrate one Helm chart to the Platform, but we haven't yet
-covered multiple Helm charts.  Continue on with the next tutorial to learn how
-Holos makes it easy to inject values into multiple components safely and easily.
+We've shown how to integrate one Helm chart into the Platform, but we haven't
+yet covered multiple Helm charts. Continue with the next tutorial to learn how
+Holos makes it easy to inject values into multiple components safely and
+efficiently.
 
 [podinfo]: https://github.com/stefanprodan/podinfo
 [CUE Module]: https://cuelang.org/docs/reference/modules/
