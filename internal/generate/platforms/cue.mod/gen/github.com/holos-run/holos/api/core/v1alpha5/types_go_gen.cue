@@ -232,7 +232,10 @@ package core
 #FileContent: string
 
 // Validator validates files.  Useful to validate an [Artifact] prior to writing
-// it out to the final destination.  Validators may be executed concurrently.
+// it out to the final destination.  Holos may execute validators concurrently.
+// See the [validators] tutorial for an end to end example.
+//
+// [validators]: https://holos.run/docs/v1alpha5/tutorial/validators/
 #Validator: {
 	// Kind represents the kind of transformer. Must be Kustomize, or Join.
 	kind: string & "Command" @go(Kind)
