@@ -31,6 +31,7 @@ spec:
         - kind: Resources
           output: resources.gen.yaml
           resources: {}
+      validators: []
       transformers:
         - kind: Kustomize
           inputs:
@@ -38,9 +39,6 @@ spec:
           output: components/no-name/no-name.gen.yaml
           kustomize:
             kustomization:
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
               kind: Kustomization

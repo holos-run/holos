@@ -16,9 +16,9 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 
 - [type Artifact](<#Artifact>)
 - [type BuildPlan](<#BuildPlan>)
-- [type BuildPlanSource](<#BuildPlanSource>)
 - [type BuildPlanSpec](<#BuildPlanSpec>)
 - [type Chart](<#Chart>)
+- [type Command](<#Command>)
 - [type Component](<#Component>)
 - [type File](<#File>)
 - [type FileContent](<#FileContent>)
@@ -38,6 +38,7 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 - [type Resource](<#Resource>)
 - [type Resources](<#Resources>)
 - [type Transformer](<#Transformer>)
+- [type Validator](<#Validator>)
 - [type Values](<#Values>)
 
 
@@ -59,6 +60,7 @@ type Artifact struct {
     Artifact     FilePath      `json:"artifact,omitempty" yaml:"artifact,omitempty"`
     Generators   []Generator   `json:"generators,omitempty" yaml:"generators,omitempty"`
     Transformers []Transformer `json:"transformers,omitempty" yaml:"transformers,omitempty"`
+    Validators   []Validator   `json:"validators,omitempty" yaml:"validators,omitempty"`
     Skip         bool          `json:"skip,omitempty" yaml:"skip,omitempty"`
 }
 ```
@@ -82,18 +84,6 @@ type BuildPlan struct {
     Metadata Metadata `json:"metadata" yaml:"metadata"`
     // Spec specifies the desired state of the resource.
     Spec BuildPlanSpec `json:"spec" yaml:"spec"`
-}
-```
-
-<a name="BuildPlanSource"></a>
-## type BuildPlanSource {#BuildPlanSource}
-
-BuildPlanSource reflects the origin of a [BuildPlan](<#BuildPlan>). Useful to save a build plan to a file, then re\-generate it without needing to process a [Platform](<#Platform>) component collection.
-
-```go
-type BuildPlanSource struct {
-    // Component reflects the component that produced the build plan.
-    Component Component `json:"component,omitempty" yaml:"component,omitempty"`
 }
 ```
 
@@ -126,6 +116,17 @@ type Chart struct {
     Release string `json:"release" yaml:"release"`
     // Repository represents the repository to fetch the chart from.
     Repository Repository `json:"repository,omitempty" yaml:"repository,omitempty"`
+}
+```
+
+<a name="Command"></a>
+## type Command {#Command}
+
+Command represents a command vetting one or more artifacts. Holos appends fully qualified input file paths to the end of the args list, then executes the command. Inputs are written into a temporary directory prior to executing the command and removed afterwards.
+
+```go
+type Command struct {
+    Args []string `json:"args,omitempty" yaml:"args,omitempty"`
 }
 ```
 
@@ -411,6 +412,22 @@ type Transformer struct {
     Kustomize Kustomize `json:"kustomize,omitempty" yaml:"kustomize,omitempty"`
     // Join transformer. Ignored unless kind is Join.
     Join Join `json:"join,omitempty" yaml:"join,omitempty"`
+}
+```
+
+<a name="Validator"></a>
+## type Validator {#Validator}
+
+Validator validates files. Useful to validate an [Artifact](<#Artifact>) prior to writing it out to the final destination. Validators may be executed concurrently.
+
+```go
+type Validator struct {
+    // Kind represents the kind of transformer. Must be Kustomize, or Join.
+    Kind string `json:"kind" yaml:"kind" cue:"\"Command\""`
+    // Inputs represents the files to validate.  Usually the final Artifact.
+    Inputs []FilePath `json:"inputs" yaml:"inputs"`
+    // Command represents a validation command.  Ignored unless kind is Command.
+    Command Command `json:"command,omitempty" yaml:"command,omitempty"`
 }
 ```
 

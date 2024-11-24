@@ -151,7 +151,7 @@ func makePlatformRenderFunc(w io.Writer, prefixArgs []string) builder.BuildFunc 
 				args = append(args, "--inject", tag)
 			}
 			args = append(args, component.Path())
-			if _, err := util.RunCmdW(ctx, w, "holos", args...); err != nil {
+			if _, err := util.RunCmdA(ctx, w, "holos", args...); err != nil {
 				return errors.Format("could not render component: %w", err)
 			}
 		}

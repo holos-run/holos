@@ -40,14 +40,6 @@ type BuildPlanSpec struct {
 	Disabled bool `json:"disabled,omitempty" yaml:"disabled,omitempty"`
 }
 
-// BuildPlanSource reflects the origin of a [BuildPlan].  Useful to save a build
-// plan to a file, then re-generate it without needing to process a [Platform]
-// component collection.
-type BuildPlanSource struct {
-	// Component reflects the component that produced the build plan.
-	Component Component `json:"component,omitempty" yaml:"component,omitempty"`
-}
-
 // Artifact represents one fully rendered manifest produced by a [Transformer]
 // sequence, which transforms a [Generator] collection.  A [BuildPlan] produces
 // an [Artifact] collection.
@@ -72,6 +64,7 @@ type Artifact struct {
 	Artifact     FilePath      `json:"artifact,omitempty" yaml:"artifact,omitempty"`
 	Generators   []Generator   `json:"generators,omitempty" yaml:"generators,omitempty"`
 	Transformers []Transformer `json:"transformers,omitempty" yaml:"transformers,omitempty"`
+	Validators   []Validator   `json:"validators,omitempty" yaml:"validators,omitempty"`
 	Skip         bool          `json:"skip,omitempty" yaml:"skip,omitempty"`
 }
 
@@ -206,14 +199,33 @@ type Kustomize struct {
 // is expected to happen in CUE against the kubectl version the user prefers.
 type Kustomization map[string]any
 
-// FileContent represents file contents.
-type FileContent string
-
 // FileContentMap represents a mapping of file paths to file contents.
 type FileContentMap map[FilePath]FileContent
 
 // FilePath represents a file path.
 type FilePath string
+
+// FileContent represents file contents.
+type FileContent string
+
+// Validator validates files.  Useful to validate an [Artifact] prior to writing
+// it out to the final destination.  Validators may be executed concurrently.
+type Validator struct {
+	// Kind represents the kind of transformer. Must be Kustomize, or Join.
+	Kind string `json:"kind" yaml:"kind" cue:"\"Command\""`
+	// Inputs represents the files to validate.  Usually the final Artifact.
+	Inputs []FilePath `json:"inputs" yaml:"inputs"`
+	// Command represents a validation command.  Ignored unless kind is Command.
+	Command Command `json:"command,omitempty" yaml:"command,omitempty"`
+}
+
+// Command represents a command vetting one or more artifacts.  Holos appends
+// fully qualified input file paths to the end of the args list, then executes
+// the command.  Inputs are written into a temporary directory prior to
+// executing the command and removed afterwards.
+type Command struct {
+	Args []string `json:"args,omitempty" yaml:"args,omitempty"`
+}
 
 // InternalLabel is an arbitrary unique identifier internal to holos itself.
 // The holos cli is expected to never write a InternalLabel value to rendered

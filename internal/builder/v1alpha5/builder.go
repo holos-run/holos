@@ -190,6 +190,17 @@ func (b *BuildPlan) Build(ctx context.Context) error {
 						}
 					}
 
+					for _, validator := range a.Validators {
+						switch validator.Kind {
+						case "Command":
+							if err := b.validate(ctx, log, validator, b.Opts.Store); err != nil {
+								return errors.Wrap(err)
+							}
+						default:
+							return errors.Format("%s: unsupported kind %s", msg, validator.Kind)
+						}
+					}
+
 					// Write the final artifact
 					if err := b.Opts.Store.Save(b.Opts.WriteTo, string(a.Artifact)); err != nil {
 						return errors.Format("%s: %w", msg, err)
@@ -359,6 +370,50 @@ func (b *BuildPlan) resources(
 	return nil
 }
 
+func (b *BuildPlan) validate(
+	ctx context.Context,
+	log *slog.Logger,
+	validator core.Validator,
+	store artifact.Store,
+) error {
+	tempDir, err := os.MkdirTemp("", "holos.validate")
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	defer util.Remove(ctx, tempDir)
+	msg := fmt.Sprintf(
+		"could not validate %s path %s",
+		b.BuildPlan.Metadata.Name,
+		b.Opts.Path,
+	)
+
+	// Write the inputs
+	for _, input := range validator.Inputs {
+		path := string(input)
+		if err := store.Save(tempDir, path); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		log.DebugContext(ctx, "wrote "+filepath.Join(tempDir, path))
+	}
+
+	if len(validator.Command.Args) < 1 {
+		return errors.Format("%s: command args length must be at least 1", msg)
+	}
+	size := len(validator.Command.Args) + len(validator.Inputs)
+	args := make([]string, 0, size)
+	args = append(args, validator.Command.Args...)
+	for _, input := range validator.Inputs {
+		args = append(args, filepath.Join(tempDir, string(input)))
+	}
+
+	// Execute the validator
+	if _, err = util.RunCmdA(ctx, b.Opts.Stderr, args[0], args[1:]...); err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+
+	return nil
+}
+
 func (b *BuildPlan) kustomize(
 	ctx context.Context,
 	log *slog.Logger,
@@ -398,7 +453,7 @@ func (b *BuildPlan) kustomize(
 	}
 
 	// Execute kustomize
-	r, err := util.RunCmd(ctx, "kubectl", "kustomize", tempDir)
+	r, err := util.RunCmdW(ctx, b.Opts.Stderr, "kubectl", "kustomize", tempDir)
 	if err != nil {
 		kErr := r.Stderr.String()
 		err = errors.Format("%s: could not run kustomize: %w", msg, err)

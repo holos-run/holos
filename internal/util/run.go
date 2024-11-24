@@ -55,15 +55,25 @@ func RunCmd(ctx context.Context, name string, args ...string) (result RunResult,
 func RunCmdW(ctx context.Context, w io.Writer, name string, args ...string) (result RunResult, err error) {
 	result, err = RunCmd(ctx, name, args...)
 	if err != nil {
-		err = fmt.Errorf("could not run command: %s %s: %w", name, strings.Join(args, " "), err)
 		mu.Lock()
+		defer mu.Unlock()
 		_, err2 := io.Copy(w, result.Stderr)
-		mu.Unlock()
 		if err2 != nil {
 			err = fmt.Errorf("could not copy stderr: %s: %w", err2.Error(), err)
 		}
 	}
-	return
+	return result, err
+}
+
+// RunCmdA calls RunCmd and always copies the result stderr to w.
+func RunCmdA(ctx context.Context, w io.Writer, name string, args ...string) (result RunResult, err error) {
+	result, err = RunCmd(ctx, name, args...)
+	mu.Lock()
+	defer mu.Unlock()
+	if _, err2 := io.Copy(w, result.Stderr); err2 != nil {
+		err = fmt.Errorf("could not copy stderr: %s: %w", err2.Error(), err)
+	}
+	return result, err
 }
 
 // RunInteractiveCmd runs a command within a context but allows the command to

@@ -72,8 +72,11 @@ import "github.com/holos-run/holos/api/core/v1alpha5:core"
 	// Resources represents kubernetes resources mixed into the rendered manifest.
 	Resources: core.#Resources
 
-	// KustomizeConfig represents the configuration kustomize.
+	// KustomizeConfig represents the kustomize configuration.
 	KustomizeConfig: #KustomizeConfig
+
+	// Validators represent checks that must pass for output to be written.
+	Validators: {[string]: core.#Validator} @go(,map[NameLabel]core.Validator)
 
 	// Artifacts represents additional artifacts to mix in.  Useful for adding
 	// GitOps resources.  Each Artifact is unified without modification into the

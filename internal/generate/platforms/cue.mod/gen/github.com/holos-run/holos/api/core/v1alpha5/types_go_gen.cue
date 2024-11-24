@@ -46,14 +46,6 @@ package core
 	disabled?: bool @go(Disabled)
 }
 
-// BuildPlanSource reflects the origin of a [BuildPlan].  Useful to save a build
-// plan to a file, then re-generate it without needing to process a [Platform]
-// component collection.
-#BuildPlanSource: {
-	// Component reflects the component that produced the build plan.
-	component?: #Component @go(Component)
-}
-
 // Artifact represents one fully rendered manifest produced by a [Transformer]
 // sequence, which transforms a [Generator] collection.  A [BuildPlan] produces
 // an [Artifact] collection.
@@ -78,6 +70,7 @@ package core
 	artifact?: #FilePath @go(Artifact)
 	generators?: [...#Generator] @go(Generators,[]Generator)
 	transformers?: [...#Transformer] @go(Transformers,[]Transformer)
+	validators?: [...#Validator] @go(Validators,[]Validator)
 	skip?: bool @go(Skip)
 }
 
@@ -229,14 +222,35 @@ package core
 // is expected to happen in CUE against the kubectl version the user prefers.
 #Kustomization: {...}
 
-// FileContent represents file contents.
-#FileContent: string
-
 // FileContentMap represents a mapping of file paths to file contents.
 #FileContentMap: {[string]: #FileContent}
 
 // FilePath represents a file path.
 #FilePath: string
+
+// FileContent represents file contents.
+#FileContent: string
+
+// Validator validates files.  Useful to validate an [Artifact] prior to writing
+// it out to the final destination.  Validators may be executed concurrently.
+#Validator: {
+	// Kind represents the kind of transformer. Must be Kustomize, or Join.
+	kind: string & "Command" @go(Kind)
+
+	// Inputs represents the files to validate.  Usually the final Artifact.
+	inputs: [...#FilePath] @go(Inputs,[]FilePath)
+
+	// Command represents a validation command.  Ignored unless kind is Command.
+	command?: #Command @go(Command)
+}
+
+// Command represents a command vetting one or more artifacts.  Holos appends
+// fully qualified input file paths to the end of the args list, then executes
+// the command.  Inputs are written into a temporary directory prior to
+// executing the command and removed afterwards.
+#Command: {
+	args?: [...string] @go(Args,[]string)
+}
 
 // InternalLabel is an arbitrary unique identifier internal to holos itself.
 // The holos cli is expected to never write a InternalLabel value to rendered

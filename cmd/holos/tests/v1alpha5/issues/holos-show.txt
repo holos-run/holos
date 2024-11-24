@@ -106,9 +106,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 ---
@@ -135,9 +132,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 ---
@@ -164,9 +158,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 ---
@@ -193,9 +184,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 -- want/buildplans.1.yaml --
@@ -222,9 +210,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 -- want/buildplans.2.yaml --
@@ -251,9 +236,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 -- want/buildplans.3.yaml --
@@ -280,9 +262,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 ---
@@ -309,9 +288,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 ---
@@ -338,9 +314,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 -- want/buildplans.4.yaml --
@@ -367,9 +340,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 ---
@@ -396,9 +366,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 ---
@@ -425,9 +392,6 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml
 ---
@@ -454,8 +418,5 @@ spec:
             kustomization:
               apiVersion: kustomize.config.k8s.io/v1beta1
               kind: Kustomization
-              labels:
-                - includeSelectors: false
-                  pairs: {}
               resources:
                 - resources.gen.yaml

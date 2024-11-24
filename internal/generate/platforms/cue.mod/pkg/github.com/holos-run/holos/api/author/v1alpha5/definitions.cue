@@ -19,11 +19,14 @@ import (
 	Kustomization: ks.#Kustomization & {
 		apiVersion: "kustomize.config.k8s.io/v1beta1"
 		kind:       "Kustomization"
-		_labels: commonLabels: {
-			includeSelectors: false
-			pairs:            CommonLabels
+		_labels: {}
+		if len(CommonLabels) > 0 {
+			_labels: commonLabels: {
+				includeSelectors: false
+				pairs:            CommonLabels
+			}
+			labels: [for x in _labels {x}]
 		}
-		labels: [for x in _labels {x}]
 	}
 }
 
@@ -40,20 +43,11 @@ import (
 	Path:            _
 	Parameters:      _
 	Resources:       _
-	OutputBaseDir:   _
 	KustomizeConfig: _
 
 	Artifacts: {
 		HolosComponent: {
-			_path: string
-			if OutputBaseDir == "" {
-				_path: "components/\(Name)"
-			}
-			if OutputBaseDir != "" {
-				_path: "\(OutputBaseDir)/components/\(Name)"
-			}
-
-			artifact: "\(_path)/\(Name).gen.yaml"
+			artifact: _
 			let ResourcesOutput = "resources.gen.yaml"
 			generators: [
 				{
@@ -83,17 +77,6 @@ import (
 			]
 		}
 	}
-
-	BuildPlan: {
-		metadata: name: Name
-		if len(Labels) != 0 {
-			metadata: labels: Labels
-		}
-		if len(Annotations) != 0 {
-			metadata: annotations: Annotations
-		}
-		spec: artifacts: [for x in Artifacts {x}]
-	}
 }
 
 // https://holos.run/docs/next/api/author/#Helm
@@ -119,15 +102,7 @@ import (
 
 	Artifacts: {
 		HolosComponent: {
-			_path: string
-			if OutputBaseDir == "" {
-				_path: "components/\(Name)"
-			}
-			if OutputBaseDir != "" {
-				_path: "\(OutputBaseDir)/components/\(Name)"
-			}
-
-			artifact: "\(_path)/\(Name).gen.yaml"
+			artifact: _
 			let HelmOutput = "helm.gen.yaml"
 			let ResourcesOutput = "resources.gen.yaml"
 			generators: [
@@ -176,6 +151,26 @@ import (
 				},
 			]
 		}
+	}
+}
+
+#ComponentConfig: {
+	Name:          _
+	Labels:        _
+	Annotations:   _
+	Validators:    _
+	OutputBaseDir: _
+
+	Artifacts: HolosComponent: {
+		_path: string
+		if OutputBaseDir == "" {
+			_path: "components/\(Name)"
+		}
+		if OutputBaseDir != "" {
+			_path: "\(OutputBaseDir)/components/\(Name)"
+		}
+		artifact: "\(_path)/\(Name).gen.yaml"
+		validators: [for x in Validators {x & {inputs: [artifact]}}]
 	}
 
 	BuildPlan: {
