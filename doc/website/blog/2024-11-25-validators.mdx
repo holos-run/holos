@@ -16,10 +16,10 @@ addresses two primary use cases:
 
 1. Prevent insecure configuration early in the process.  For example, prevent
 Helm from rendering a `Secret` which would otherwise be committed to version control.
-2. Prevent unsafe configuration by validating manifests against Kubernetes cure
+2. Prevent unsafe configuration by validating manifests against Kubernetes core
 and custom resource type definitions.
 
-Check out our [Validators] tutorial for examples of both use cases.
+Check out the [Validators] tutorial for examples of both use cases.
 
 [Validators]: https://holos.run/docs/v1alpha5/tutorial/validators/
 [v0.101.0]: https://github.com/holos-run/holos/releases/tag/v0.101.0
@@ -33,7 +33,3 @@ pipeline.  We are seeking design partners to help enhance Generators and
 Transformers.  Validators are implemented using a generic `Command` kind, and
 we're considering a similar kind for Generators and Transformers.  Please
 connect with us if you'd like to help design these enhancements.
-
-
-[Validators]: https://holos.run/docs/v1alpha5/tutorial/validators/
-[v0.101.0]: https://github.com/holos-run/holos/releases/tag/v0.101.0
