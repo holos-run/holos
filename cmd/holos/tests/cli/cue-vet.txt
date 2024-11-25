@@ -1,0 +1,12 @@
+# https://github.com/holos-run/holos/issues/358
+# holos cue vet should fail verifications with exit code 1
+! exec holos cue vet ./policy --path strings.ToLower(kind) ./data/secret.yaml
+# holos cue vet should report validation errors to stderr
+stderr 'Forbidden. Use an ExternalSecret instead.'
+
+-- data/secret.yaml --
+kind: Secret
+-- policy/validators.cue --
+package policy
+
+secret: kind: "Forbidden. Use an ExternalSecret instead."

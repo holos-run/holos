@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"fmt"
 	"log/slog"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -119,7 +118,20 @@ func newOrgCmd(feature holos.Flagger) (cmd *cobra.Command) {
 }
 
 func newCueCmd() (cmd *cobra.Command) {
-	cueCmd, _ := cue.New(os.Args[1:])
-	cmd = cueCmd.Command
-	return
+	// Get a handle on the cue root command fields.
+	root, _ := cue.New([]string{})
+	// Copy the fields to our embedded command.
+	cmd = command.New("cue")
+	cmd.Short = root.Short
+	cmd.Long = root.Long
+	// Pass all arguments through to RunE.
+	cmd.DisableFlagParsing = true
+	cmd.Args = cobra.ArbitraryArgs
+
+	// We do it this way so we handle errors correctly.
+	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		cueRootCommand, _ := cue.New(args)
+		return cueRootCommand.Run(cmd.Root().Context())
+	}
+	return cmd
 }
