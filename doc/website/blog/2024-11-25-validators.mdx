@@ -1,0 +1,38 @@
+---
+slug: validators-feature
+title: Validators added in Holos v0.101.0
+authors: [jeff]
+tags: [holos, feature]
+description: Validators are useful to enforce policy and catch Helm errors.
+---
+
+import RenderingOverview from '@site/src/diagrams/rendering-overview.mdx';
+import RenderPlatformDiagram from '@site/src/diagrams/render-platform-sequence.mdx';
+
+We've added support for [Validators] in [v0.101.0].  Validators are useful to
+enforce policies and ensure consistency early in the process.  This feature
+addresses two primary use cases:
+
+1. Prevent insecure configuration early in the process.  For example, prevent
+Helm from rendering a `Secret` which would otherwise be committed to version control.
+2. Prevent unsafe configuration by validating manifests against Kubernetes cure
+and custom resource type definitions.
+
+Check out our [Validators] tutorial for examples of both use cases.
+
+[Validators]: https://holos.run/docs/v1alpha5/tutorial/validators/
+[v0.101.0]: https://github.com/holos-run/holos/releases/tag/v0.101.0
+
+{/* truncate */}
+
+<RenderingOverview />
+
+Validators complete the core functionality of the Holos manifest rendering
+pipeline.  We are seeking design partners to help enhance Generators and
+Transformers.  Validators are implemented using a generic `Command` kind, and
+we're considering a similar kind for Generators and Transformers.  Please
+connect with us if you'd like to help design these enhancements.
+
+
+[Validators]: https://holos.run/docs/v1alpha5/tutorial/validators/
+[v0.101.0]: https://github.com/holos-run/holos/releases/tag/v0.101.0
