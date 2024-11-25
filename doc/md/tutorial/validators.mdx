@@ -135,11 +135,19 @@ package policy
 
 import apps "k8s.io/api/apps/v1"
 
+// Organize by kind then name to avoid conflicts.
+kind: [KIND=string]: [NAME=string]: {...}
+
+// Useful when one component manages the same resource kind and name across
+// multiple namespaces.
+let KIND = kind
+namespace: [NS=string]: KIND
+
 // Block Secret resources. kind will not unify with "Secret"
-secret: kind: "Use an ExternalSecret instead.  Forbidden by security policy."
+kind: secret: [NAME=string]: kind: "Use an ExternalSecret instead.  Forbidden by security policy.  secret/\(NAME)"
 
 // Validate Deployment against Kubernetes type definitions.
-deployment: apps.#Deployment
+kind: deployment: [_]: apps.#Deployment
 ```
 ```shell
 EOF
@@ -160,7 +168,16 @@ package holos
 #ComponentConfig: Validators: cue: {
 	kind: "Command"
 	// Note --path maps each resource to a top level field named by the kind.
-	command: args: ["holos", "cue", "vet", "./policy", "--path", "strings.ToLower(kind)"]
+	command: args: [
+		"holos",
+		"cue",
+		"vet",
+		"./policy",
+		"--path=\"namespace\"",
+		"--path=metadata.namespace",
+		"--path=strings.ToLower(kind)",
+		"--path=metadata.name",
+	]
 }
 ```
 ```shell
