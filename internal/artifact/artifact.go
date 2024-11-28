@@ -20,6 +20,7 @@ var _ Store = NewStore()
 type Store interface {
 	Get(path string) (data []byte, ok bool)
 	Set(path string, data []byte) error
+	// Save previously set path to dir preserving directories.
 	Save(dir, path string) error
 }
 

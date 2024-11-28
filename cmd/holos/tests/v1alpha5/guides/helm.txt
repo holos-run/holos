@@ -7,11 +7,11 @@ cd $WORK
 exec holos generate platform v1alpha5 --force
 
 # Platforms are empty by default.
-exec holos render platform ./platform
+exec holos render platform
 stderr -count=1 '^rendered platform'
 
 # Holos uses CUE to build a platform specification.
-exec cue export --expression holos --out=yaml ./platform
+exec holos show platform
 cmp stdout want/1.platform_spec.yaml
 
 # Define the host and port in projects/blackbox.schema.cue
@@ -22,7 +22,7 @@ mv projects/platform/components/prometheus/prometheus.cue.disabled projects/plat
 mv platform/prometheus.cue.disabled platform/prometheus.cue
 
 # Render the platform to render the prometheus chart.
-exec holos render platform ./platform
+exec holos render platform
 stderr -count=1 '^rendered prometheus'
 stderr -count=1 '^rendered platform'
 cmp deploy/components/prometheus/prometheus.gen.yaml want/1.prometheus.gen.yaml
@@ -73,8 +73,8 @@ core.#BuildPlan & {
 	metadata: name: _Tags.component.name
 }
 -- want/1.platform_spec.yaml --
-kind: Platform
 apiVersion: v1alpha5
+kind: Platform
 metadata:
   name: default
 spec:
