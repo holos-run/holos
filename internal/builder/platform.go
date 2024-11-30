@@ -15,7 +15,7 @@ import (
 // PlatformOpts represents build options when processing the components in a
 // platform.
 type PlatformOpts struct {
-	Fn          BuildFunc
+	Fn          func(context.Context, int, holos.Component) error
 	Selector    holos.Selector
 	Concurrency int
 	InfoEnabled bool
@@ -88,9 +88,6 @@ func (p *Platform) Build(ctx context.Context, opts PlatformOpts) error {
 	}
 	return nil
 }
-
-// BuildFunc is executed concurrently when processing platform components.
-type BuildFunc func(context.Context, int, holos.Component) error
 
 func LoadPlatform(i *Instance) (platform Platform, err error) {
 	err = i.Discriminate(func(tm holos.TypeMeta) error {

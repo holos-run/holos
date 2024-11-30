@@ -94,6 +94,7 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 		buildPlanOpts := holos.NewBuildOpts(path)
 		buildPlanOpts.Stderr = cmd.ErrOrStderr()
 		buildPlanOpts.Concurrency = concurrency
+		buildPlanOpts.Tags = tagMap.Tags()
 
 		platformOpts := builder.PlatformOpts{
 			Fn:          makeBuildFunc(encoder, buildPlanOpts),
@@ -110,7 +111,7 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 	return cmd
 }
 
-func makeBuildFunc(encoder holos.OrderedEncoder, opts holos.BuildOpts) builder.BuildFunc {
+func makeBuildFunc(encoder holos.OrderedEncoder, opts holos.BuildOpts) func(context.Context, int, holos.Component) error {
 	return func(ctx context.Context, idx int, component holos.Component) error {
 		select {
 		case <-ctx.Done():
@@ -120,6 +121,7 @@ func makeBuildFunc(encoder holos.OrderedEncoder, opts holos.BuildOpts) builder.B
 			if err != nil {
 				return errors.Wrap(err)
 			}
+			tags = append(tags, opts.Tags...)
 			inst, err := builder.LoadInstance(component.Path(), tags)
 			if err != nil {
 				return errors.Wrap(err)

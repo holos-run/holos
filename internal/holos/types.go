@@ -320,6 +320,7 @@ type BuildOpts struct {
 	Stderr      io.Writer
 	WriteTo     string
 	Path        string
+	Tags        []string
 }
 
 func NewBuildOpts(path string) BuildOpts {
@@ -329,5 +330,6 @@ func NewBuildOpts(path string) BuildOpts {
 		Stderr:      os.Stderr,
 		WriteTo:     "deploy",
 		Path:        path,
+		Tags:        make([]string, 0, 10),
 	}
 }

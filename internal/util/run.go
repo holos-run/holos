@@ -43,10 +43,11 @@ func RunCmd(ctx context.Context, name string, args ...string) (result RunResult,
 	cmd.Stdout = result.Stdout
 	cmd.Stderr = result.Stderr
 	log := logger.FromContext(ctx)
-	log.DebugContext(ctx, "running: "+name, "name", name, "args", args)
+	command := fmt.Sprintf("%s '%s'", name, strings.Join(args, "' '"))
+	log.DebugContext(ctx, "running command: "+command, "name", name, "args", args)
 	err = cmd.Run()
 	if err != nil {
-		err = fmt.Errorf("could not run command: %s %s: %w", name, strings.Join(args, " "), err)
+		err = fmt.Errorf("could not run command:\n\t%s\n\t%w", command, err)
 	}
 	return result, err
 }

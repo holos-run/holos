@@ -72,7 +72,7 @@ func newPlatform(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 			"--log-format", cfg.LogConfig().Format(),
 		}
 		opts := builder.PlatformOpts{
-			Fn:          makePlatformRenderFunc(cmd.ErrOrStderr(), prefixArgs),
+			Fn:          makeComponentRenderFunc(cmd.ErrOrStderr(), prefixArgs, tagMap.Tags()),
 			Selector:    selector,
 			Concurrency: concurrency,
 			InfoEnabled: true,
@@ -136,7 +136,7 @@ func newComponent(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	return cmd
 }
 
-func makePlatformRenderFunc(w io.Writer, prefixArgs []string) builder.BuildFunc {
+func makeComponentRenderFunc(w io.Writer, prefixArgs, cliTags []string) func(context.Context, int, holos.Component) error {
 	return func(ctx context.Context, idx int, component holos.Component) error {
 		select {
 		case <-ctx.Done():
@@ -149,6 +149,9 @@ func makePlatformRenderFunc(w io.Writer, prefixArgs []string) builder.BuildFunc 
 			args := make([]string, 0, 10+len(prefixArgs)+(len(tags)*2))
 			args = append(args, prefixArgs...)
 			args = append(args, "render", "component")
+			for _, tag := range cliTags {
+				args = append(args, "--inject", tag)
+			}
 			for _, tag := range tags {
 				args = append(args, "--inject", tag)
 			}
