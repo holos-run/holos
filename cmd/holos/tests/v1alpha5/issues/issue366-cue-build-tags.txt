@@ -1,0 +1,50 @@
+# https://github.com/holos-run/holos/issues/366
+# Build tags conditionally include CUE files.
+env HOME=$WORK
+
+exec holos init platform v1alpha5 --force
+exec holos show platform
+cmp stdout want/empty.yaml
+
+exec holos show platform -t foo
+cmp stdout want/foo.yaml
+
+-- platform/empty.cue --
+@if(foo)
+package holos
+
+Platform: Components: foo: _
+-- platform/metadata.cue --
+package holos
+
+Platform: Components: [NAME=string]: {
+  name: NAME
+  path: "components/empty"
+  labels: "app.holos.run/name": NAME
+  annotations: "app.holos.run/description": "\(NAME) empty test case"
+}
+-- components/empty/empty.cue --
+package holos
+
+Component: #Kubernetes & {}
+holos: Component.BuildPlan
+-- want/empty.yaml --
+apiVersion: v1alpha5
+kind: Platform
+metadata:
+  name: default
+spec:
+  components: []
+-- want/foo.yaml --
+apiVersion: v1alpha5
+kind: Platform
+metadata:
+  name: default
+spec:
+  components:
+    - annotations:
+        app.holos.run/description: foo empty test case
+      labels:
+        app.holos.run/name: foo
+      name: foo
+      path: components/empty

@@ -16,6 +16,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const tagHelp = "set the value of a cue @tag field in the form key [ = value ]"
+
 func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("render")
 	cmd.Args = cobra.NoArgs
@@ -38,13 +40,13 @@ func newPlatform(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	}
 
 	var concurrency int
-	cmd.Flags().IntVar(&concurrency, "concurrency", min(runtime.NumCPU(), 8), "number of components to render concurrently")
+	cmd.Flags().IntVar(&concurrency, "concurrency", runtime.NumCPU(), "number of components to render concurrently")
 	var platform string
 	cmd.Flags().StringVar(&platform, "platform", "./platform", "platform directory path")
 	var selector holos.Selector
 	cmd.Flags().VarP(&selector, "selector", "l", "label selector (e.g. label==string,label!=string)")
 	tagMap := make(holos.TagMap)
-	cmd.Flags().VarP(&tagMap, "inject", "t", "set the value of a cue @tag field from a key=value pair")
+	cmd.Flags().VarP(&tagMap, "inject", "t", tagHelp)
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
@@ -102,9 +104,9 @@ func newComponent(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	}
 
 	tagMap := make(holos.TagMap)
-	cmd.Flags().VarP(&tagMap, "inject", "t", "set the value of a cue @tag field from a key=value pair")
+	cmd.Flags().VarP(&tagMap, "inject", "t", tagHelp)
 	var concurrency int
-	cmd.Flags().IntVar(&concurrency, "concurrency", min(runtime.NumCPU(), 8), "number of concurrent build steps")
+	cmd.Flags().IntVar(&concurrency, "concurrency", runtime.NumCPU(), "number of concurrent build steps")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()

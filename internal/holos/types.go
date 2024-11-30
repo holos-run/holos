@@ -40,13 +40,22 @@ func (i *StringSlice) Set(value string) error {
 	return nil
 }
 
-// TagMap represents a map of key values for CUE TagMap for flag parsing.
-type TagMap map[string]string
+// TagMap represents a map of key values for CUE TagMap for flag parsing.  The
+// values are pointers to disambiguate between the case where a tag is a boolean
+// ("--inject foo") and the case where a tag has a string zero value ("--inject
+// foo=").  Refer to the Tags field of [cue/load.Config]
+//
+// [cue/load.Config]: https://pkg.go.dev/cuelang.org/go@v0.10.1/cue/load#Config
+type TagMap map[string]*string
 
 func (t TagMap) Tags() []string {
 	parts := make([]string, 0, len(t))
-	for k, v := range t {
-		parts = append(parts, fmt.Sprintf("%s=%s", k, v))
+	for tag, val := range t {
+		if val == nil {
+			parts = append(parts, tag)
+		} else {
+			parts = append(parts, fmt.Sprintf("%s=%s", tag, *val))
+		}
 	}
 	return parts
 }
@@ -60,10 +69,14 @@ func (t TagMap) String() string {
 // is not supported.
 func (t TagMap) Set(value string) error {
 	parts := strings.SplitN(value, "=", 2)
-	if len(parts) != 2 {
+	switch len(parts) {
+	case 1:
+		t[parts[0]] = nil
+	case 2:
+		t[parts[0]] = &parts[1]
+	default:
 		return errors.Format("invalid format, must be tag=value")
 	}
-	t[parts[0]] = parts[1]
 	return nil
 }
 
