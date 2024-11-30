@@ -28,7 +28,7 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 }
 
 func newPlatform(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
-	cmd := command.New("platform DIRECTORY")
+	cmd := command.New("platform")
 	cmd.Args = cobra.MaximumNArgs(1)
 	cmd.Example = "holos render platform"
 	cmd.Short = "render an entire platform"
