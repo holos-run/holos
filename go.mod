@@ -10,7 +10,7 @@ require (
 	connectrpc.com/grpcreflect v1.2.0
 	connectrpc.com/otelconnect v0.7.0
 	connectrpc.com/validate v0.1.0
-	cuelang.org/go v0.10.1
+	cuelang.org/go v0.11.0
 	entgo.io/ent v0.13.1
 	github.com/bufbuild/buf v1.35.1
 	github.com/choria-io/machine-room v0.0.0-20240417064836-c604da2f005e
@@ -33,9 +33,9 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.9.0
-	golang.org/x/net v0.28.0
+	golang.org/x/net v0.30.0
 	golang.org/x/sync v0.8.0
-	golang.org/x/tools v0.24.0
+	golang.org/x/tools v0.26.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240617180043-68d350f18fd4
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v3 v3.0.1
@@ -53,7 +53,7 @@ require (
 	buf.build/gen/go/bufbuild/registry/connectrpc/go v1.16.2-20240610164129-660609bc46d3.1 // indirect
 	buf.build/gen/go/bufbuild/registry/protocolbuffers/go v1.34.2-20240610164129-660609bc46d3.2 // indirect
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
-	cuelabs.dev/go/oci/ociregistry v0.0.0-20240807094312-a32ad29eed79 // indirect
+	cuelabs.dev/go/oci/ociregistry v0.0.0-20240906074133-82eb438dd565 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible // indirect
@@ -256,7 +256,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
-	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
+	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -268,7 +268,7 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.52.3 // indirect
 	github.com/prometheus/procfs v0.13.0 // indirect
-	github.com/protocolbuffers/txtpbfmt v0.0.0-20231025115547-084445ff1adf // indirect
+	github.com/protocolbuffers/txtpbfmt v0.0.0-20240823084532-8e6b51fa9bef // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
@@ -326,14 +326,14 @@ require (
 	go.uber.org/automaxprocs v1.5.3 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.26.0 // indirect
+	golang.org/x/crypto v0.28.0 // indirect
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20221208152030-732eee02a75a // indirect
-	golang.org/x/mod v0.20.0 // indirect
-	golang.org/x/oauth2 v0.22.0 // indirect
-	golang.org/x/sys v0.23.0 // indirect
-	golang.org/x/term v0.23.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/mod v0.21.0 // indirect
+	golang.org/x/oauth2 v0.23.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/term v0.25.0 // indirect
+	golang.org/x/text v0.19.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240617180043-68d350f18fd4 // indirect
