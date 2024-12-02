@@ -7,6 +7,7 @@ sidebar_position: 40
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import YouTube from '@site/src/components/YouTube';
 
 <head>
   <meta property="og:title" content="Helm Values | Holos" />
@@ -27,6 +28,16 @@ capabilities to Helm and Kustomize:
 In this tutorial, we'll manage the [prometheus] and [blackbox] Helm charts. By
 default, the upstream `values.yaml` files are misconfigured, causing Prometheus
 to connect to Blackbox at the wrong host and port.
+
+## The Video
+
+The video below enhances this tutorial by offering greater detail on the issue
+of poorly integrated Helm charts and the solution we've provided. If you're
+looking for a deeper explanation of the code being presented, this video is a great
+resource.
+
+{/* cspell:disable-next-line */}
+<YouTube id="PSdceGlhHGo"/>
 
 ## The Code
 
