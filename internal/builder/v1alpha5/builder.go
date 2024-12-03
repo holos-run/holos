@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -566,7 +567,10 @@ func cacheChart(ctx context.Context, cacheDir string, chart core.Chart, stderr i
 		}
 	}
 
-	cacheTemp, err := os.MkdirTemp(cacheDir, chart.Name)
+	// Support chart.Name = "oci:/ghcr.io/akuity/kargo-charts/kargo"
+	chartBaseName := path.Base(chart.Name)
+
+	cacheTemp, err := os.MkdirTemp(cacheDir, chartBaseName)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -600,7 +604,7 @@ func cacheChart(ctx context.Context, cacheDir string, chart core.Chart, stderr i
 	item := items[0]
 
 	src := filepath.Join(cacheTemp, item.Name())
-	dst := filepath.Join(cacheDir, chart.Name)
+	dst := filepath.Join(cacheDir, chartBaseName)
 	if err := os.Rename(src, dst); err != nil {
 		var linkErr *os.LinkError
 		if errors.As(err, &linkErr) && errors.Is(linkErr.Err, syscall.EEXIST) {
