@@ -164,9 +164,26 @@ package core
 }
 
 // Repository represents a [Helm] [Chart] repository.
+//
+// The Auth field is useful to configure http basic authentication to the Helm
+// repository.  Holos gets the username and password from the environment
+// variables represented by the Auth field.
 #Repository: {
-	name: string @go(Name)
-	url:  string @go(URL)
+	name:  string @go(Name)
+	url:   string @go(URL)
+	auth?: #Auth  @go(Auth)
+}
+
+// Auth represents environment variable names containing auth credentials.
+#Auth: {
+	username: #AuthSource @go(Username)
+	password: #AuthSource @go(Password)
+}
+
+// AuthSource represents a source for the value of an [Auth] field.
+#AuthSource: {
+	value?:   string @go(Value)
+	fromEnv?: string @go(FromEnv)
 }
 
 // Transformer combines multiple inputs from prior [Generator] or [Transformer]

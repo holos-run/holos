@@ -15,6 +15,8 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 ## Index
 
 - [type Artifact](<#Artifact>)
+- [type Auth](<#Auth>)
+- [type AuthSource](<#AuthSource>)
 - [type BuildPlan](<#BuildPlan>)
 - [type BuildPlanSpec](<#BuildPlanSpec>)
 - [type Chart](<#Chart>)
@@ -62,6 +64,30 @@ type Artifact struct {
     Transformers []Transformer `json:"transformers,omitempty" yaml:"transformers,omitempty"`
     Validators   []Validator   `json:"validators,omitempty" yaml:"validators,omitempty"`
     Skip         bool          `json:"skip,omitempty" yaml:"skip,omitempty"`
+}
+```
+
+<a name="Auth"></a>
+## type Auth {#Auth}
+
+Auth represents environment variable names containing auth credentials.
+
+```go
+type Auth struct {
+    Username AuthSource `json:"username" yaml:"username"`
+    Password AuthSource `json:"password" yaml:"password"`
+}
+```
+
+<a name="AuthSource"></a>
+## type AuthSource {#AuthSource}
+
+AuthSource represents a source for the value of an [Auth](<#Auth>) field.
+
+```go
+type AuthSource struct {
+    Value   string `json:"value,omitempty" yaml:"value,omitempty"`
+    FromEnv string `json:"fromEnv,omitempty" yaml:"fromEnv,omitempty"`
 }
 ```
 
@@ -365,10 +391,13 @@ type PlatformSpec struct {
 
 Repository represents a [Helm](<#Helm>) [Chart](<#Chart>) repository.
 
+The Auth field is useful to configure http basic authentication to the Helm repository. Holos gets the username and password from the environment variables represented by the Auth field.
+
 ```go
 type Repository struct {
     Name string `json:"name" yaml:"name"`
     URL  string `json:"url" yaml:"url"`
+    Auth Auth   `json:"auth,omitempty" yaml:"auth,omitempty"`
 }
 ```
 

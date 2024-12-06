@@ -1,0 +1,175 @@
+---
+description: Private Helm Repositories
+slug: private-helm
+sidebar_position: 999
+---
+
+# Private Helm
+
+## Configuration
+
+Holos uses the Helm SDK and defers to it for authentication to private
+repositories.  Each Helm Generator supports providing http basic authentication
+credentials from environment variables.
+
+For example, the following BuildPlan causes `holos` to get the admin username
+password from the `HOLOS_TEST_PASS` environment variable.
+
+```bash
+mkdir -p projects/holos/components/private-chart
+cat <<EOF > projects/holos/components/private-chart/private-chart.cue
+```
+```cue showLineNumbers
+package holos
+
+holos: Component.BuildPlan
+
+// Test holos can access a private repository with basic auth.
+// https://github.com/holos-run/holos/issues/370
+Component: #Helm & {
+	Chart: {
+		name:    "mychart"
+		version: "0.1.0"
+		repository: {
+			name: "holos-test"
+			url:  "https://charts.holos.localhost"
+			// auth: username: fromEnv:   "HOLOS_TEST_USER"
+			auth: username: value:   "admin"
+			auth: password: fromEnv: "HOLOS_TEST_PASS"
+		}
+	}
+}
+```
+```bash
+EOF
+```
+
+## Verification
+
+Verify `holos` can access a private Helm repository by setting [ChartMuseum] up
+on a [Local Cluster].  We'll use https with basic auth to authenticate to the
+chart repository.
+
+Using the [bank of holos] repository, deploy chart museum:
+
+```bash
+holos render platform -t ChartMuseum
+```
+
+Apply the manifests:
+
+```bash
+kubectl apply --server-side=true -f deploy/clusters/workload/projects/holos/components/chart-museum
+kubectl apply --server-side=true -f deploy/clusters/workload/projects/network/components/httproutes
+```
+
+Get the admin password:
+
+```bash
+kubectl get secret -n holos chartmuseum-auth -o json \
+  | jq --exit-status -r '.data.password | @base64d'
+```
+
+Add a local repo:
+
+```bash
+helm repo add holos-test https://charts.holos.localhost --username admin
+```
+```txt
+Password:
+"holos-test" has been added to your repositories
+```
+
+:::note
+Helm by default stores this password in `~/Library/Preferences/helm/repositories.yaml`
+:::
+
+Create a chart:
+
+```bash
+helm create mychart
+```
+```txt
+Creating mychart
+```
+
+Package it up.
+
+```bash
+helm package mychart
+```
+```txt
+Successfully packaged chart and saved it to: mychart-0.1.0.tgz
+```
+
+Publish it.
+
+```bash
+curl --user "admin:$(pbpaste)" --data-binary "@mychart-0.1.0.tgz" https://charts.holos.localhost/api/charts
+```
+```json
+{"saved":true}
+```
+
+Remove all cached charts:
+
+```bash
+find . -name vendor | xargs rm -rf
+```
+
+Render the chart:
+
+```bash
+cat <<EOF > test-private-repo.cue
+```
+```cue showLineNumbers
+@if(TestPrivateRepo)
+package holos
+
+// Test holos can access a private repository with basic auth.
+// https://github.com/holos-run/holos/issues/370
+Projects: holos: #ProjectBuilder & {
+        team: "holos-authors"
+
+        namespaces: holos:            _
+        _components: "private-chart": _
+}
+```
+```bash
+EOF
+```
+
+```
+time holos render platform -t TestPrivateRepo
+```
+
+Check the chart was pulled and cached:
+
+```shell
+tree ./projects/holos/components/private-chart/vendor
+```
+```txt
+./projects/holos/components/private-chart/vendor
+└── 0.1.0
+    ├── mychart
+    │   ├── Chart.yaml
+    │   ├── mychart-0.1.0.tgz
+    │   ├── templates
+    │   │   ├── NOTES.txt
+    │   │   ├── _helpers.tpl
+    │   │   ├── deployment.yaml
+    │   │   ├── hpa.yaml
+    │   │   ├── ingress.yaml
+    │   │   ├── service.yaml
+    │   │   ├── serviceaccount.yaml
+    │   │   └── tests
+    │   │       └── test-connection.yaml
+    │   └── values.yaml
+    └── mychart-0.1.0.tgz
+
+6 directories, 11 files
+```
+
+[Local Cluster]: ./local-cluster.mdx
+[ChartMuseum]: https://chartmuseum.com/docs/
+[bank of holos]: https://github.com/holos-run/bank-of-holos

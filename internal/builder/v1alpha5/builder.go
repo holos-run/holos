@@ -5,24 +5,23 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"cuelang.org/go/cue"
 	core "github.com/holos-run/holos/api/core/v1alpha5"
 	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/helm"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/util"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
+	"helm.sh/helm/v3/pkg/cli"
 )
 
 // Platform represents a platform builder.
@@ -168,23 +167,37 @@ func (t generatorTask) file() error {
 }
 
 func (t generatorTask) helm(ctx context.Context) error {
-	chartName := t.generator.Helm.Chart.Name
-	// Unnecessary? cargo cult copied from internal/cli/render/render.go
-	if chartName == "" {
-		return errors.New("missing chart name")
-	}
+	h := t.generator.Helm
 	// Cache the chart by version to pull new versions. (#273)
 	cacheDir := filepath.Join(string(t.opts.Path), "vendor", t.generator.Helm.Chart.Version)
-	cachePath := filepath.Join(cacheDir, filepath.Base(chartName))
+	cachePath := filepath.Join(cacheDir, filepath.Base(h.Chart.Name))
 
 	log := logger.FromContext(ctx)
+
+	username := h.Chart.Repository.Auth.Username.Value
+	if username == "" {
+		username = os.Getenv(h.Chart.Repository.Auth.Username.FromEnv)
+	}
+	password := h.Chart.Repository.Auth.Password.Value
+	if password == "" {
+		password = os.Getenv(h.Chart.Repository.Auth.Password.FromEnv)
+	}
 
 	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
 		err := func() error {
 			ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()
 			return onceWithLock(log, ctx, cachePath, func() error {
-				return cacheChart(ctx, cacheDir, t.generator.Helm.Chart, t.opts.Stderr)
+				return errors.Wrap(helm.PullChart(
+					ctx,
+					cli.New(),
+					h.Chart.Name,
+					h.Chart.Version,
+					h.Chart.Repository.URL,
+					cacheDir,
+					username,
+					password,
+				))
 			})
 		}()
 		if err != nil {
@@ -549,81 +562,6 @@ func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() 
 
 	// Unexpected error
 	return errors.Wrap(err)
-}
-
-func cacheChart(ctx context.Context, cacheDir string, chart core.Chart, stderr io.Writer) error {
-	log := logger.FromContext(ctx)
-	// Add repositories
-	repo := chart.Repository
-	if repo.URL == "" {
-		// repo update not needed for oci charts so this is debug instead of warn.
-		log.DebugContext(ctx, "skipped helm repo add and update: repo url is empty")
-	} else {
-		if _, err := util.RunCmdW(ctx, stderr, "helm", "repo", "add", repo.Name, repo.URL); err != nil {
-			return errors.Format("could not run helm repo add: %w", err)
-		}
-		if _, err := util.RunCmdW(ctx, stderr, "helm", "repo", "update", repo.Name); err != nil {
-			return errors.Format("could not run helm repo update: %w", err)
-		}
-	}
-
-	// Support chart.Name = "oci:/ghcr.io/akuity/kargo-charts/kargo"
-	chartBaseName := path.Base(chart.Name)
-
-	cacheTemp, err := os.MkdirTemp(cacheDir, chartBaseName)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	defer util.Remove(ctx, cacheTemp)
-
-	cn := chart.Name
-	if chart.Repository.Name != "" {
-		cn = fmt.Sprintf("%s/%s", chart.Repository.Name, chart.Name)
-	}
-	helmOut, err := util.RunCmdW(ctx, stderr, "helm", "pull", "--destination", cacheTemp, "--untar=true", "--version", chart.Version, cn)
-	if err != nil {
-		stderr := helmOut.Stderr.String()
-		lines := strings.Split(stderr, "\n")
-		for _, line := range lines {
-			log.DebugContext(ctx, line)
-			if strings.HasPrefix(line, "Error:") {
-				err = fmt.Errorf("%s: %w", line, err)
-			}
-		}
-		return errors.Format("could not run helm pull: %w", err)
-	}
-	log.Debug("helm pull", "stdout", helmOut.Stdout, "stderr", helmOut.Stderr)
-
-	items, err := os.ReadDir(cacheTemp)
-	if err != nil {
-		return errors.Wrap(fmt.Errorf("could not read directory: %w", err))
-	}
-	if len(items) != 1 {
-		return errors.Format("want: exactly one item, have: %+v", items)
-	}
-	item := items[0]
-
-	src := filepath.Join(cacheTemp, item.Name())
-	dst := filepath.Join(cacheDir, chartBaseName)
-	if err := os.Rename(src, dst); err != nil {
-		var linkErr *os.LinkError
-		if errors.As(err, &linkErr) && errors.Is(linkErr.Err, syscall.EEXIST) {
-			log.DebugContext(ctx, "cache already exists", "chart", chart.Name, "chart_version", chart.Version, "path", dst)
-		} else {
-			return errors.Wrap(fmt.Errorf("could not rename: %w", err))
-		}
-	} else {
-		log.DebugContext(ctx, fmt.Sprintf("renamed %s to %s", src, dst), "src", src, "dst", dst)
-	}
-
-	log.InfoContext(ctx,
-		fmt.Sprintf("cached %s %s", chart.Name, chart.Version),
-		"chart", chart.Name,
-		"chart_version", chart.Version,
-		"path", dst,
-	)
-
-	return nil
 }
 
 func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {

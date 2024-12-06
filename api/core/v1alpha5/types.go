@@ -146,9 +146,26 @@ type Chart struct {
 }
 
 // Repository represents a [Helm] [Chart] repository.
+//
+// The Auth field is useful to configure http basic authentication to the Helm
+// repository.  Holos gets the username and password from the environment
+// variables represented by the Auth field.
 type Repository struct {
 	Name string `json:"name" yaml:"name"`
 	URL  string `json:"url" yaml:"url"`
+	Auth Auth   `json:"auth,omitempty" yaml:"auth,omitempty"`
+}
+
+// Auth represents environment variable names containing auth credentials.
+type Auth struct {
+	Username AuthSource `json:"username" yaml:"username"`
+	Password AuthSource `json:"password" yaml:"password"`
+}
+
+// AuthSource represents a source for the value of an [Auth] field.
+type AuthSource struct {
+	Value   string `json:"value,omitempty" yaml:"value,omitempty"`
+	FromEnv string `json:"fromEnv,omitempty" yaml:"fromEnv,omitempty"`
 }
 
 // Transformer combines multiple inputs from prior [Generator] or [Transformer]

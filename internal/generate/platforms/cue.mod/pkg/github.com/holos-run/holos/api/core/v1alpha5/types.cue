@@ -1,5 +1,8 @@
 package v1alpha5
 
+// Don't allow password values, use fromEnv instead.
+#Auth: password: value?: ""
+
 #Transformer: {
 	kind: _
 
