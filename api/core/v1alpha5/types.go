@@ -81,7 +81,7 @@ type Artifact struct {
 //  3. [File] - Generates data by reading a file from the component directory.
 type Generator struct {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
-	Kind string `json:"kind" yaml:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
+	Kind string `json:"kind" yaml:"kind" cue:"\"Resources\" | \"Helm\" | \"File\" | \"HelmSDK\""`
 	// Output represents a file for a Transformer or Artifact to consume.
 	Output FilePath `json:"output" yaml:"output"`
 	// Resources generator. Ignored unless kind is Resources.  Resources are
@@ -94,6 +94,8 @@ type Generator struct {
 	Helm Helm `json:"helm,omitempty" yaml:"helm,omitempty"`
 	// File generator. Ignored unless kind is File.
 	File File `json:"file,omitempty" yaml:"file,omitempty"`
+	// HelmSDK generator. Ignored unless kind is HelmSDK.
+	HelmSDK HelmSDK `json:"helmSDK,omitempty" yaml:"helmSDK,omitempty"`
 }
 
 // Resource represents one kubernetes api object.
@@ -113,8 +115,31 @@ type File struct {
 	Source FilePath `json:"source" yaml:"source"`
 }
 
-// Helm represents a [Chart] manifest [Generator].
+// Helm represents a [Chart] manifest [Generator].  This generator calls the
+// helm command line tool.
+//
+// Deprecated: Use HelmSDK instead.
 type Helm struct {
+	// Chart represents a helm chart to manage.
+	Chart Chart `json:"chart" yaml:"chart"`
+	// Values represents values for holos to marshal into values.yaml when
+	// rendering the chart.
+	Values Values `json:"values" yaml:"values"`
+	// EnableHooks enables helm hooks when executing the `helm template` command.
+	EnableHooks bool `json:"enableHooks,omitempty" yaml:"enableHooks,omitempty"`
+	// Namespace represents the helm namespace flag
+	Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+	// APIVersions represents the helm template --api-versions flag
+	APIVersions []string `json:"apiVersions,omitempty" yaml:"apiVersions,omitempty"`
+	// KubeVersion represents the helm template --kube-version flag
+	KubeVersion string `json:"kubeVersion,omitempty" yaml:"kubeVersion,omitempty"`
+}
+
+// HelmSDK represents a [Chart] manifest [Generator].  The HelmSDK generator
+// uses Helm's [Go SDK] as a robust alternative to the [Helm] generator.
+//
+// [Go SDK]: https://helm.sh/docs/sdk/gosdk/
+type HelmSDK struct {
 	// Chart represents a helm chart to manage.
 	Chart Chart `json:"chart" yaml:"chart"`
 	// Values represents values for holos to marshal into values.yaml when

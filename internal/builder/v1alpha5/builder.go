@@ -18,11 +18,13 @@ import (
 	"cuelang.org/go/cue"
 	core "github.com/holos-run/holos/api/core/v1alpha5"
 	"github.com/holos-run/holos/internal/errors"
+	"github.com/holos-run/holos/internal/helm"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/util"
 	"golang.org/x/sync/errgroup"
 	"gopkg.in/yaml.v3"
+	"helm.sh/helm/v3/pkg/cli"
 )
 
 // Platform represents a platform builder.
@@ -150,6 +152,10 @@ func (t generatorTask) run(ctx context.Context) error {
 		if err := t.file(); err != nil {
 			return errors.Format("%s: could not generate file: %w", msg, err)
 		}
+	case "HelmSDK":
+		if err := t.helmSDK(ctx); err != nil {
+			return errors.Format("%s: could not generate helm: %w", msg, err)
+		}
 	default:
 		return errors.Format("%s: unsupported kind %s", msg, t.generator.Kind)
 	}
@@ -167,15 +173,37 @@ func (t generatorTask) file() error {
 	return nil
 }
 
-func (t generatorTask) helm(ctx context.Context) error {
-	chartName := t.generator.Helm.Chart.Name
-	// Unnecessary? cargo cult copied from internal/cli/render/render.go
-	if chartName == "" {
-		return errors.New("missing chart name")
+func (t generatorTask) helmSDK(ctx context.Context) error {
+	log := logger.FromContext(ctx)
+	h := t.generator.HelmSDK
+
+	// Cache the chart by version to pull new versions. (#273)
+	cacheDir := filepath.Join(string(t.opts.Path), "vendor", h.Chart.Version)
+	cachePath := filepath.Join(cacheDir, filepath.Base(h.Chart.Name))
+
+	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
+		err := func() error {
+			ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+			defer cancel()
+			return onceWithLock(log, ctx, cachePath, func() error {
+				return errors.Wrap(helm.PullChart(ctx, cli.New(), h.Chart.Name, h.Chart.Version, h.Chart.Repository.URL, cacheDir))
+			})
+		}()
+		if err != nil {
+			return errors.Format("could not cache chart: %w", err)
+		}
 	}
+
+	log.ErrorContext(ctx, "HelmSDK - not implemented, pick up here.")
+
+	return nil
+}
+
+func (t generatorTask) helm(ctx context.Context) error {
+	h := t.generator.Helm
 	// Cache the chart by version to pull new versions. (#273)
 	cacheDir := filepath.Join(string(t.opts.Path), "vendor", t.generator.Helm.Chart.Version)
-	cachePath := filepath.Join(cacheDir, filepath.Base(chartName))
+	cachePath := filepath.Join(cacheDir, filepath.Base(h.Chart.Name))
 
 	log := logger.FromContext(ctx)
 
@@ -184,7 +212,7 @@ func (t generatorTask) helm(ctx context.Context) error {
 			ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 			defer cancel()
 			return onceWithLock(log, ctx, cachePath, func() error {
-				return cacheChart(ctx, cacheDir, t.generator.Helm.Chart, t.opts.Stderr)
+				return errors.Wrap(helm.PullChart(ctx, cli.New(), h.Chart.Name, h.Chart.Version, h.Chart.Repository.URL, cacheDir))
 			})
 		}()
 		if err != nil {

@@ -87,7 +87,7 @@ package core
 //  3. [File] - Generates data by reading a file from the component directory.
 #Generator: {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
-	kind: string & ("Resources" | "Helm" | "File") @go(Kind)
+	kind: string & ("Resources" | "Helm" | "File" | "HelmSDK") @go(Kind)
 
 	// Output represents a file for a Transformer or Artifact to consume.
 	output: #FilePath @go(Output)
@@ -104,6 +104,9 @@ package core
 
 	// File generator. Ignored unless kind is File.
 	file?: #File @go(File)
+
+	// HelmSDK generator. Ignored unless kind is HelmSDK.
+	helmSDK?: #HelmSDK @go(HelmSDK)
 }
 
 // Resource represents one kubernetes api object.
@@ -123,8 +126,36 @@ package core
 	source: #FilePath @go(Source)
 }
 
-// Helm represents a [Chart] manifest [Generator].
+// Helm represents a [Chart] manifest [Generator].  This generator calls the
+// helm command line tool.
+//
+// Deprecated: Use HelmSDK instead.
 #Helm: {
+	// Chart represents a helm chart to manage.
+	chart: #Chart @go(Chart)
+
+	// Values represents values for holos to marshal into values.yaml when
+	// rendering the chart.
+	values: #Values @go(Values)
+
+	// EnableHooks enables helm hooks when executing the `helm template` command.
+	enableHooks?: bool @go(EnableHooks)
+
+	// Namespace represents the helm namespace flag
+	namespace?: string @go(Namespace)
+
+	// APIVersions represents the helm template --api-versions flag
+	apiVersions?: [...string] @go(APIVersions,[]string)
+
+	// KubeVersion represents the helm template --kube-version flag
+	kubeVersion?: string @go(KubeVersion)
+}
+
+// HelmSDK represents a [Chart] manifest [Generator].  The HelmSDK generator
+// uses Helm's [Go SDK] as an alternative to the [Helm] [Generator] which calls
+// the helm command line executable.
+// [Go SDK]: https://helm.sh/docs/sdk/gosdk/
+#HelmSDK: {
 	// Chart represents a helm chart to manage.
 	chart: #Chart @go(Chart)
 

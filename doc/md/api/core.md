@@ -26,6 +26,7 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 - [type FilePath](<#FilePath>)
 - [type Generator](<#Generator>)
 - [type Helm](<#Helm>)
+- [type HelmSDK](<#HelmSDK>)
 - [type InternalLabel](<#InternalLabel>)
 - [type Join](<#Join>)
 - [type Kind](<#Kind>)
@@ -214,7 +215,7 @@ Each Generator in an [Artifact](<#Artifact>) must have a distinct Output value f
 ```go
 type Generator struct {
     // Kind represents the kind of generator.  Must be Resources, Helm, or File.
-    Kind string `json:"kind" yaml:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
+    Kind string `json:"kind" yaml:"kind" cue:"\"Resources\" | \"Helm\" | \"File\" | \"HelmSDK\""`
     // Output represents a file for a Transformer or Artifact to consume.
     Output FilePath `json:"output" yaml:"output"`
     // Resources generator. Ignored unless kind is Resources.  Resources are
@@ -227,16 +228,43 @@ type Generator struct {
     Helm Helm `json:"helm,omitempty" yaml:"helm,omitempty"`
     // File generator. Ignored unless kind is File.
     File File `json:"file,omitempty" yaml:"file,omitempty"`
+    // HelmSDK generator. Ignored unless kind is HelmSDK.
+    HelmSDK HelmSDK `json:"helmSDK,omitempty" yaml:"helmSDK,omitempty"`
 }
 ```
 
 <a name="Helm"></a>
 ## type Helm {#Helm}
 
-Helm represents a [Chart](<#Chart>) manifest [Generator](<#Generator>).
+Helm represents a [Chart](<#Chart>) manifest [Generator](<#Generator>). This generator calls the helm command line tool.
+
+Deprecated: Use HelmSDK instead.
 
 ```go
 type Helm struct {
+    // Chart represents a helm chart to manage.
+    Chart Chart `json:"chart" yaml:"chart"`
+    // Values represents values for holos to marshal into values.yaml when
+    // rendering the chart.
+    Values Values `json:"values" yaml:"values"`
+    // EnableHooks enables helm hooks when executing the `helm template` command.
+    EnableHooks bool `json:"enableHooks,omitempty" yaml:"enableHooks,omitempty"`
+    // Namespace represents the helm namespace flag
+    Namespace string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+    // APIVersions represents the helm template --api-versions flag
+    APIVersions []string `json:"apiVersions,omitempty" yaml:"apiVersions,omitempty"`
+    // KubeVersion represents the helm template --kube-version flag
+    KubeVersion string `json:"kubeVersion,omitempty" yaml:"kubeVersion,omitempty"`
+}
+```
+
+<a name="HelmSDK"></a>
+## type HelmSDK {#HelmSDK}
+
+HelmSDK represents a [Chart](<#Chart>) manifest [Generator](<#Generator>). The HelmSDK generator uses Helm's \[Go SDK\] as an alternative to the [Helm](<#Helm>) [Generator](<#Generator>) which calls the helm command line executable. \[Go SDK\]: https://helm.sh/docs/sdk/gosdk/
+
+```go
+type HelmSDK struct {
     // Chart represents a helm chart to manage.
     Chart Chart `json:"chart" yaml:"chart"`
     // Values represents values for holos to marshal into values.yaml when
