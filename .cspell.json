@@ -99,6 +99,7 @@
     "fieldmaskpb",
     "fieldspec",
     "flushcache",
+    "fluxcd",
     "fullname",
     "gatewayclass",
     "gatewayclasses",

@@ -1,0 +1,218 @@
+---
+slug: flux-kustomization
+title: Flux Kustomization
+description: Configuring a Kustomization for each Component.
+sidebar_position: 120
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CommonComponent from '../../common/example-component.mdx';
+import CommonComponentIntegrate from '../../common/example-component-integrate.mdx';
+
+# Flux Kustomization
+
+## Overview
+
+This topic covers how to mix in a Flux Kustomization to all components.  We'll
+use the `Artifacts` field of [ComponentConfig] defined by the author schema.
+
+## The Code
+
+### Generating the structure
+
+Use `holos` to generate a minimal platform directory structure.  Start by
+creating a blank directory to hold the platform configuration.
+
+```shell
+mkdir holos-flux-kustomization && cd holos-flux-kustomization
+```
+
+```shell
+holos init platform v1alpha5
+```
+
+### Creating an example Component
+
+<CommonComponent />
+<CommonComponentIntegrate />
+
+## Adding Flux Kustomizations
+
+Configure Holos to render a [Kustomization] by defining an [Artifact] for it in
+every BuildPlan holos produces.  We're unifying our custom configuration with
+the existing `#ComponentConfig` defined in `schema.cue`.
+
+```bash
+cat <<EOF >flux-kustomization.cue
+```
+```cue showLineNumbers
+package holos
+
+import (
+	"path"
+	flux "kustomize.toolkit.fluxcd.io/kustomization/v1"
+)
+
+#ComponentConfig: {
+	Name:          _
+	OutputBaseDir: _
+
+	let ArtifactPath = path.Join([OutputBaseDir, "gitops", "\(Name).kustomization.gen.yaml"], path.Unix)
+	let ResourcesPath = path.Join(["deploy", OutputBaseDir, "components", Name], path.Unix)
+
+	Artifacts: "\(Name)-kustomization": {
+		artifact: ArtifactPath
+		generators: [{
+			kind:   "Resources"
+			output: artifact
+			resources: Kustomization: (Name): flux.#Kustomization & {
+				metadata: name:      Name
+				metadata: namespace: "default"
+				spec: {
+					interval: "5m"
+					timeout:  "1m"
+					prune:    true
+					path:     ResourcesPath
+					sourceRef: {
+						kind: "GitRepository"
+						name: "webapp"
+					}
+				}
+			}
+		}]
+	}
+}
+```
+```bash
+EOF
+```
+
+## Inspecting the BuildPlan
+
+Our customized `#ComponentConfig` results in the following `BuildPlan`.
+
+:::note
+The second artifact around line 40 contains the configured `Kustomization`
+resource.
+:::
+
+<Tabs groupId="55075C71-02E8-4222-88C0-2D52C82D18FC">
+  <TabItem value="command" label="Command">
+```bash
+holos cue export --expression holos --out=yaml ./components/podinfo
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```yaml showLineNumbers
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: podinfo
+spec:
+  artifacts:
+    - artifact: components/podinfo/podinfo.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: podinfo
+              version: 6.6.2
+              release: podinfo
+              repository:
+                name: podinfo
+                url: https://stefanprodan.github.io/podinfo
+            values:
+              ui:
+                message: Hello World
+            enableHooks: false
+        - kind: Resources
+          output: resources.gen.yaml
+          resources: {}
+      validators: []
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: components/podinfo/podinfo.gen.yaml
+          kustomize:
+            kustomization:
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+              kind: Kustomization
+              apiVersion: kustomize.config.k8s.io/v1beta1
+    - artifact: gitops/podinfo.kustomization.gen.yaml
+      generators:
+        - kind: Resources
+          output: gitops/podinfo.kustomization.gen.yaml
+          resources:
+            Kustomization:
+              podinfo:
+                apiVersion: kustomize.toolkit.fluxcd.io/v1
+                kind: Kustomization
+                metadata:
+                  name: podinfo
+                  namespace: default
+                spec:
+                  interval: 5m
+                  path: deploy/components/podinfo
+                  prune: true
+                  sourceRef:
+                    kind: GitRepository
+                    name: webapp
+                  timeout: 1m
+```
+  </TabItem>
+</Tabs>
+
+## Rendering manifests
+
+<Tabs groupId="E150C802-7162-4FBF-82A7-77D9ADAEE847">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```
+rendered podinfo in 140.341417ms
+rendered platform in 140.441333ms
+```
+  </TabItem>
+</Tabs>
+
+## Reviewing the Kustomization
+
+The Artifact we added to `#ComponentConfig` will produce a Flux Kustomization
+resource for every component in the platform.  The output in this example is
+located at:
+
+```txt
+deploy/gitops/podinfo.kustomization.gen.yaml
+```
+```yaml showLineNumbers
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+    name: podinfo
+    namespace: default
+spec:
+    interval: 5m
+    path: deploy/components/podinfo
+    prune: true
+    sourceRef:
+        kind: GitRepository
+        name: webapp
+    timeout: 1m
+```
+
+[podinfo]: https://github.com/stefanprodan/podinfo
+[CUE Module]: https://cuelang.org/docs/reference/modules/
+[CUE Tags]: https://cuelang.org/docs/howto/inject-value-into-evaluation-using-tag-attribute/
+[Kustomization]: https://fluxcd.io/flux/components/kustomize/kustomizations/
+[Platform]: ../../api/author.md#Platform
+[ComponentConfig]: ../../api/author.md#ComponentConfig
+[Artifact]: ../../api/core.md#Artifact
