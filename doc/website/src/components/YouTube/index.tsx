@@ -4,7 +4,7 @@ import styles from './styles.module.css';
 //components/mdx/YouTube.tsx
 export default function YouTube({ id }: { id: string }) {
   return (
-    <div class={styles.videoWrapper}>
+    <div className={styles.videoWrapper}>
       <iframe
         className="aspect-video w-full"
         src={"https://www.youtube.com/embed/" + id}
