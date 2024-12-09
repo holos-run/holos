@@ -7,7 +7,7 @@ export default function YouTube({ id }: { id: string }) {
     <div className={styles.videoWrapper}>
       <iframe
         className="aspect-video w-full"
-        src={"https://www.youtube.com/embed/" + id}
+        src={"https://www.youtube.com/embed/" + id + "?rel=0"}
         title="YouTube Video Player"
         allow="picture-in-picture; fullscreen; accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;"
       ></iframe>
