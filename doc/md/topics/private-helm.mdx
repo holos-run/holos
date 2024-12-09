@@ -6,6 +6,14 @@ sidebar_position: 999
 
 # Private Helm
 
+Holos supports private Helm repositories accessed with http basic authentication
+since `v0.101.4`.  Use the following command to update your author and core
+schemas to support this configuration.
+
+```bash
+holos init platform v1alpha5 --force
+```
+
 ## Configuration
 
 Holos uses the Helm SDK and defers to it for authentication to private
