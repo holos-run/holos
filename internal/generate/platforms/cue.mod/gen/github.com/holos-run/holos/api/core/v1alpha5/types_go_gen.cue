@@ -334,6 +334,10 @@ package core
 	// Injected as the tag variable "holos_component_path".
 	path: string @go(Path)
 
+	// Instances represents additional cue instance paths to unify with Path.
+	// Useful to unify data files into a component BuildPlan.
+	instances?: [...#Instance] @go(Instances,[]Instance)
+
 	// WriteTo represents the holos render component --write-to flag.  If empty,
 	// the default value for the --write-to flag is used.
 	writeTo?: string @go(WriteTo)
@@ -352,4 +356,25 @@ package core
 	// Annotations represents arbitrary non-identifying metadata.  Use the
 	// `cli.holos.run/description` to customize the log message of each BuildPlan.
 	annotations?: {[string]: string} @go(Annotations,map[string]string)
+}
+
+// Instance represents a data instance to unify with the configuration.  Useful
+// to unify json and yaml files with cue configuration files.
+#Instance: {
+	// Kind is a discriminator.
+	kind: string & "extractYAML" @go(Kind)
+
+	// Ignored unless kind is extractYAML.
+	extractYAML: #ExtractYAML @go(ExtractYAML)
+}
+
+// ExtractYAML represents a cue data instance encoded as yaml.  Holos extracts data of
+// this kind using cue [encoding/yaml].
+//
+// If Path refers to a directory, all files in the directory are extracted
+// non-recursively.  Otherwise, path must refer to a file.
+//
+// [yaml.Extract]: https://pkg.go.dev/cuelang.org/go@v0.11.0/encoding/yaml#Extract
+#ExtractYAML: {
+	path?: string @go(Path)
 }
