@@ -107,17 +107,15 @@ func (c *Component) Path() string {
 	return util.DotSlash(c.Component.Path)
 }
 
-func (c *Component) Instances() ([]string, error) {
+// ExtractYAML returns the path values for the --extract-yaml command line flag.
+func (c *Component) ExtractYAML() ([]string, error) {
 	if c == nil {
 		return nil, nil
 	}
 	instances := make([]string, 0, len(c.Component.Instances))
 	for _, instance := range c.Component.Instances {
-		switch instance.Kind {
-		case "extractYAML":
+		if instance.Kind == "ExtractYAML" {
 			instances = append(instances, instance.ExtractYAML.Path)
-		default:
-			return nil, errors.Format("unsupported instance kind: %s", instance.Kind)
 		}
 	}
 	return instances, nil

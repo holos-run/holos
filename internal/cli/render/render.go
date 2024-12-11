@@ -150,7 +150,11 @@ func makeComponentRenderFunc(w io.Writer, prefixArgs, cliTags []string) func(con
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			args := make([]string, 0, 10+len(prefixArgs)+(len(tags)*2))
+			filepaths, err := component.ExtractYAML()
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			args := make([]string, 0, 10+len(prefixArgs)+(len(tags)*2+len(filepaths)*2))
 			args = append(args, prefixArgs...)
 			args = append(args, "render", "component")
 			for _, tag := range cliTags {
@@ -158,6 +162,9 @@ func makeComponentRenderFunc(w io.Writer, prefixArgs, cliTags []string) func(con
 			}
 			for _, tag := range tags {
 				args = append(args, "--inject", tag)
+			}
+			for _, path := range filepaths {
+				args = append(args, "--extract-yaml", path)
 			}
 			args = append(args, component.Path())
 			if _, err := util.RunCmdA(ctx, w, "holos", args...); err != nil {

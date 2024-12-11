@@ -126,11 +126,11 @@ func makeBuildFunc(encoder holos.OrderedEncoder, opts holos.BuildOpts) func(cont
 				return errors.Wrap(err)
 			}
 			tags = append(tags, opts.Tags...)
-			instances, err := component.Instances()
+			filepaths, err := component.ExtractYAML()
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			inst, err := builder.LoadInstance(component.Path(), instances, tags)
+			inst, err := builder.LoadInstance(component.Path(), filepaths, tags)
 			if err != nil {
 				return errors.Wrap(err)
 			}

@@ -21,7 +21,8 @@ type Platform interface {
 type Component interface {
 	Describe() string
 	Path() string
-	Instances() ([]string, error)
+	// ExtractYAML represents the values of the --extract-yaml flag
+	ExtractYAML() ([]string, error)
 	Tags() ([]string, error)
 	WriteTo() string
 	Labels() Labels

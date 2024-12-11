@@ -304,7 +304,8 @@ type Component struct {
 	// Injected as the tag variable "holos_component_path".
 	Path string `json:"path" yaml:"path"`
 	// Instances represents additional cue instance paths to unify with Path.
-	// Useful to unify data files into a component BuildPlan.
+	// Useful to unify data files into a component BuildPlan.  Added in holos
+	// 0.101.7.
 	Instances []Instance `json:"instances,omitempty" yaml:"instances,omitempty"`
 	// WriteTo represents the holos render component --write-to flag.  If empty,
 	// the default value for the --write-to flag is used.
@@ -323,18 +324,26 @@ type Component struct {
 	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
-// Instance represents a data instance to unify with the configuration.  Useful
-// to unify json and yaml files with cue configuration files.
+// Instance represents a data instance to unify with the configuration.
+//
+// Useful to unify json and yaml files with cue configuration files for
+// integration with other tools.  For example, executing holos render platform
+// from a pull request workflow after [Kargo] executes the [yaml update] and
+// [git wait for pr] promotion steps.
+//
+// [Kargo]: https://docs.kargo.io/
+// [yaml update]: https://docs.kargo.io/references/promotion-steps#yaml-update
+// [git wait for pr]: https://docs.kargo.io/references/promotion-steps#git-wait-for-pr
 type Instance struct {
 	// Kind is a discriminator.
-	Kind string `json:"kind" yaml:"kind" cue:"\"extractYAML\""`
-	// Ignored unless kind is extractYAML.
-	ExtractYAML ExtractYAML `json:"extractYAML" yaml:"extractYAML"`
+	Kind string `json:"kind" yaml:"kind" cue:"\"ExtractYAML\""`
+	// Ignored unless kind is ExtractYAML.
+	ExtractYAML ExtractYAML `json:"extractYAML,omitempty" yaml:"extractYAML,omitempty"`
 }
 
-// ExtractYAML represents a cue data instance encoded as yaml. If Path refers to
-// a directory all files in the directory are extracted non-recursively.
-// Otherwise, path must refer to a file.
+// ExtractYAML represents a cue data instance encoded as yaml or json. If Path
+// refers to a directory all files in the directory are extracted
+// non-recursively.  Otherwise, path must refer to a file.
 type ExtractYAML struct {
-	Path string `json:"path,omitempty" yaml:"path,omitempty"`
+	Path string `json:"path" yaml:"path"`
 }
