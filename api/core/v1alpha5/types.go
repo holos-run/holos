@@ -332,13 +332,9 @@ type Instance struct {
 	ExtractYAML ExtractYAML `json:"extractYAML" yaml:"extractYAML"`
 }
 
-// ExtractYAML represents a cue data instance encoded as yaml.  Holos extracts data of
-// this kind using cue [encoding/yaml].
-//
-// If Path refers to a directory, all files in the directory are extracted
-// non-recursively.  Otherwise, path must refer to a file.
-//
-// [yaml.Extract]: https://pkg.go.dev/cuelang.org/go@v0.11.0/encoding/yaml#Extract
+// ExtractYAML represents a cue data instance encoded as yaml. If Path refers to
+// a directory all files in the directory are extracted non-recursively.
+// Otherwise, path must refer to a file.
 type ExtractYAML struct {
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 }
