@@ -43,6 +43,8 @@ func newPlatform(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd.Flags().IntVar(&concurrency, "concurrency", runtime.NumCPU(), "number of components to render concurrently")
 	var platform string
 	cmd.Flags().StringVar(&platform, "platform", "./platform", "platform directory path")
+	var instances holos.StringSlice
+	cmd.Flags().Var(&instances, "instance", "cue instances to unify with the platform")
 	var selector holos.Selector
 	cmd.Flags().VarP(&selector, "selector", "l", "label selector (e.g. label==string,label!=string)")
 	tagMap := make(holos.TagMap)
@@ -57,7 +59,7 @@ func newPlatform(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 			log.WarnContext(ctx, fmt.Sprintf(msg, platform))
 		}
 
-		inst, err := builder.LoadInstance(platform, tagMap.Tags())
+		inst, err := builder.LoadInstance(platform, instances, tagMap.Tags())
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -107,12 +109,14 @@ func newComponent(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd.Flags().VarP(&tagMap, "inject", "t", tagHelp)
 	var concurrency int
 	cmd.Flags().IntVar(&concurrency, "concurrency", runtime.NumCPU(), "number of concurrent build steps")
+	var instances holos.StringSlice
+	cmd.Flags().Var(&instances, "instance", "cue instances to unify with the platform")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
 		path := args[0]
 
-		inst, err := builder.LoadInstance(path, tagMap.Tags())
+		inst, err := builder.LoadInstance(path, instances, tagMap.Tags())
 		if err != nil {
 			return errors.Wrap(err)
 		}

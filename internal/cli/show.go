@@ -30,13 +30,15 @@ func newShowPlatformCmd() (cmd *cobra.Command) {
 
 	var platform string
 	cmd.Flags().StringVar(&platform, "platform", "./platform", "platform directory path")
+	var instances holos.StringSlice
+	cmd.Flags().Var(&instances, "instance", "cue instances to unify with the platform")
 	var format string
 	cmd.Flags().StringVar(&format, "format", "yaml", "yaml or json format")
 	tagMap := make(holos.TagMap)
 	cmd.Flags().VarP(&tagMap, "inject", "t", "set the value of a cue @tag field from a key=value pair")
 
 	cmd.RunE = func(c *cobra.Command, args []string) (err error) {
-		inst, err := builder.LoadInstance(platform, tagMap.Tags())
+		inst, err := builder.LoadInstance(platform, instances, tagMap.Tags())
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -64,6 +66,8 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 
 	var platform string
 	cmd.Flags().StringVar(&platform, "platform", "./platform", "platform directory path")
+	var instances holos.StringSlice
+	cmd.Flags().Var(&instances, "instance", "cue instances to unify with the platform")
 	var format string
 	cmd.Flags().StringVar(&format, "format", "yaml", "yaml or json format")
 	var selector holos.Selector
@@ -75,7 +79,7 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 
 	cmd.RunE = func(c *cobra.Command, args []string) (err error) {
 		path := platform
-		inst, err := builder.LoadInstance(path, tagMap.Tags())
+		inst, err := builder.LoadInstance(path, instances, tagMap.Tags())
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -122,7 +126,11 @@ func makeBuildFunc(encoder holos.OrderedEncoder, opts holos.BuildOpts) func(cont
 				return errors.Wrap(err)
 			}
 			tags = append(tags, opts.Tags...)
-			inst, err := builder.LoadInstance(component.Path(), tags)
+			instances, err := component.Instances()
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			inst, err := builder.LoadInstance(component.Path(), instances, tags)
 			if err != nil {
 				return errors.Wrap(err)
 			}
