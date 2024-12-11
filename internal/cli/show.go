@@ -30,15 +30,15 @@ func newShowPlatformCmd() (cmd *cobra.Command) {
 
 	var platform string
 	cmd.Flags().StringVar(&platform, "platform", "./platform", "platform directory path")
-	var instances holos.StringSlice
-	cmd.Flags().Var(&instances, "instance", "cue instances to unify with the platform")
+	var extractYAMLs holos.StringSlice
+	cmd.Flags().Var(&extractYAMLs, "extract-yaml", "data file paths to extract and unify with the platform config")
 	var format string
 	cmd.Flags().StringVar(&format, "format", "yaml", "yaml or json format")
 	tagMap := make(holos.TagMap)
 	cmd.Flags().VarP(&tagMap, "inject", "t", "set the value of a cue @tag field from a key=value pair")
 
 	cmd.RunE = func(c *cobra.Command, args []string) (err error) {
-		inst, err := builder.LoadInstance(platform, instances, tagMap.Tags())
+		inst, err := builder.LoadInstance(platform, extractYAMLs, tagMap.Tags())
 		if err != nil {
 			return errors.Wrap(err)
 		}
@@ -66,8 +66,8 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 
 	var platform string
 	cmd.Flags().StringVar(&platform, "platform", "./platform", "platform directory path")
-	var instances holos.StringSlice
-	cmd.Flags().Var(&instances, "instance", "cue instances to unify with the platform")
+	var extractYAMLs holos.StringSlice
+	cmd.Flags().Var(&extractYAMLs, "extract-yaml", "data file paths to extract and unify with the platform config")
 	var format string
 	cmd.Flags().StringVar(&format, "format", "yaml", "yaml or json format")
 	var selector holos.Selector
@@ -79,7 +79,7 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 
 	cmd.RunE = func(c *cobra.Command, args []string) (err error) {
 		path := platform
-		inst, err := builder.LoadInstance(path, instances, tagMap.Tags())
+		inst, err := builder.LoadInstance(path, extractYAMLs, tagMap.Tags())
 		if err != nil {
 			return errors.Wrap(err)
 		}
