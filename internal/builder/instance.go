@@ -18,16 +18,16 @@ import (
 	"github.com/holos-run/holos/internal/util"
 )
 
-// loadYamlFiles loads data files represented by paths.  The files are unified
-// into one value.  If a path element is a directory, all files in the directory
-// are loaded non-recursively.
+// ExtractYAML extracts yaml encoded data from file paths.  The data is unified
+// into one [cue.Value].  If a path element is a directory, all files in the
+// directory are loaded non-recursively.
 //
 // Attribution: https://github.com/cue-lang/cue/issues/3504
-func loadYamlFiles(ctxt *cue.Context, paths []string) (cue.Value, error) {
+func ExtractYAML(ctxt *cue.Context, filepaths []string) (cue.Value, error) {
 	value := ctxt.CompileString("")
-	files := make([]string, 0, 10*len(paths))
+	files := make([]string, 0, 10*len(filepaths))
 
-	for _, path := range paths {
+	for _, path := range filepaths {
 		info, err := os.Stat(path)
 		if err != nil {
 			return value, errors.Wrap(err)
@@ -61,10 +61,11 @@ func loadYamlFiles(ctxt *cue.Context, paths []string) (cue.Value, error) {
 	return value, nil
 }
 
-// LoadInstance loads the cue configuration instance at path.  Additional
-// instances are loaded with the [cue.Context.BuildFile] method, then unified
-// into the configuration instance.
-func LoadInstance(path string, instances []string, tags []string) (*Instance, error) {
+// LoadInstance loads the cue configuration instance at path.  External data
+// file paths are loaded by calling [ExtractYAML] providing filepaths.  The
+// extracted data values are unified with the platform configuration [cue.Value]
+// in the returned [Instance].
+func LoadInstance(path string, filepaths []string, tags []string) (*Instance, error) {
 	root, leaf, err := util.FindRootLeaf(path)
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -83,7 +84,7 @@ func LoadInstance(path string, instances []string, tags []string) (*Instance, er
 		return nil, errors.Wrap(err)
 	}
 
-	value, err := loadYamlFiles(ctxt, instances)
+	value, err := ExtractYAML(ctxt, filepaths)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
