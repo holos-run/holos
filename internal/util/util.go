@@ -42,6 +42,9 @@ func FindCueMod(path string) (root string, err error) {
 	return root, nil
 }
 
+// FindRootLeaf returns the root path containing the cue.mod and the leaf path
+// relative to the root for the given target path.  FindRootLeaf calls
+// [filepath.Clean] on the returned paths.
 func FindRootLeaf(target string) (root string, leaf string, err error) {
 	if root, err = FindCueMod(target); err != nil {
 		return "", "", err

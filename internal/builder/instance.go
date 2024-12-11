@@ -5,17 +5,66 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/load"
+	"cuelang.org/go/encoding/yaml"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/util"
 )
 
-func LoadInstance(path string, tags []string) (*Instance, error) {
+// loadYamlFiles loads data files represented by paths.  The files are unified
+// into one value.  If a path element is a directory, all files in the directory
+// are loaded non-recursively.
+//
+// Attribution: https://github.com/cue-lang/cue/issues/3504
+func loadYamlFiles(ctxt *cue.Context, paths []string) (cue.Value, error) {
+	value := ctxt.CompileString("")
+	files := make([]string, 0, 10*len(paths))
+
+	for _, path := range paths {
+		info, err := os.Stat(path)
+		if err != nil {
+			return value, errors.Wrap(err)
+		}
+
+		if !info.IsDir() {
+			files = append(files, path)
+			continue
+		}
+
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			return value, errors.Wrap(err)
+		}
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+			files = append(files, filepath.Join(path, entry.Name()))
+		}
+	}
+
+	for _, file := range files {
+		f, err := yaml.Extract(file, nil)
+		if err != nil {
+			return value, errors.Wrap(err)
+		}
+		value = value.Unify(ctxt.BuildFile(f))
+	}
+
+	return value, nil
+}
+
+// LoadInstance loads the cue configuration instance at path.  Additional
+// instances are loaded with the [cue.Context.BuildFile] method, then unified
+// into the configuration instance.
+func LoadInstance(path string, instances []string, tags []string) (*Instance, error) {
 	root, leaf, err := util.FindRootLeaf(path)
 	if err != nil {
 		return nil, errors.Wrap(err)
@@ -26,20 +75,26 @@ func LoadInstance(path string, tags []string) (*Instance, error) {
 		ModuleRoot: root,
 		Tags:       tags,
 	}
+	ctxt := cuecontext.New()
 
-	ctx := cuecontext.New()
-
-	instances := load.Instances([]string{leaf}, cfg)
-	values, err := ctx.BuildInstances(instances)
+	bis := load.Instances([]string{path}, cfg)
+	values, err := ctxt.BuildInstances(bis)
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
 
+	value, err := loadYamlFiles(ctxt, instances)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	// TODO: https://cuelang.org/docs/howto/place-data-go-api/
+	value = value.Unify(values[0])
+
 	inst := &Instance{
 		path:  leaf,
-		ctx:   ctx,
+		ctx:   ctxt,
 		cfg:   cfg,
-		value: values[0],
+		value: value,
 	}
 
 	return inst, nil

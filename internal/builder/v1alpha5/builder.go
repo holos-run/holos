@@ -107,6 +107,22 @@ func (c *Component) Path() string {
 	return util.DotSlash(c.Component.Path)
 }
 
+func (c *Component) Instances() ([]string, error) {
+	if c == nil {
+		return nil, nil
+	}
+	instances := make([]string, 0, len(c.Component.Instances))
+	for _, instance := range c.Component.Instances {
+		switch instance.Kind {
+		case "extractYAML":
+			instances = append(instances, instance.ExtractYAML.Path)
+		default:
+			return nil, errors.Format("unsupported instance kind: %s", instance.Kind)
+		}
+	}
+	return instances, nil
+}
+
 var _ holos.BuildPlan = &BuildPlan{}
 var _ task = generatorTask{}
 var _ task = transformersTask{}

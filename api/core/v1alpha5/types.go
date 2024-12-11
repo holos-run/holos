@@ -303,6 +303,9 @@ type Component struct {
 	// Path represents the path of the component relative to the platform root.
 	// Injected as the tag variable "holos_component_path".
 	Path string `json:"path" yaml:"path"`
+	// Instances represents additional cue instance paths to unify with Path.
+	// Useful to unify data files into a component BuildPlan.
+	Instances []Instance `json:"instances,omitempty" yaml:"instances,omitempty"`
 	// WriteTo represents the holos render component --write-to flag.  If empty,
 	// the default value for the --write-to flag is used.
 	WriteTo string `json:"writeTo,omitempty" yaml:"writeTo,omitempty"`
@@ -318,4 +321,24 @@ type Component struct {
 	// Annotations represents arbitrary non-identifying metadata.  Use the
 	// `cli.holos.run/description` to customize the log message of each BuildPlan.
 	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+// Instance represents a data instance to unify with the configuration.  Useful
+// to unify json and yaml files with cue configuration files.
+type Instance struct {
+	// Kind is a discriminator.
+	Kind string `json:"kind" yaml:"kind" cue:"\"extractYAML\""`
+	// Ignored unless kind is extractYAML.
+	ExtractYAML ExtractYAML `json:"extractYAML" yaml:"extractYAML"`
+}
+
+// ExtractYAML represents a cue data instance encoded as yaml.  Holos extracts data of
+// this kind using cue [encoding/yaml].
+//
+// If Path refers to a directory, all files in the directory are extracted
+// non-recursively.  Otherwise, path must refer to a file.
+//
+// [yaml.Extract]: https://pkg.go.dev/cuelang.org/go@v0.11.0/encoding/yaml#Extract
+type ExtractYAML struct {
+	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 }
