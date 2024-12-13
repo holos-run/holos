@@ -45,7 +45,40 @@ holos init platform v1alpha5
 
 ### Using an example Component
 
-<CommonComponent />
+Create a directory for the example `podinfo` component we'll use to render
+platform manifests.
+
+```bash
+mkdir -p components/podinfo
+```
+
+Create the CUE configuration for the example `podinfo` component.
+
+```bash
+cat <<EOF >components/podinfo/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+holos: Component.BuildPlan
+
+Component: #Helm & {
+	Chart: {
+		name:    "podinfo"
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+	Values: ui: {
+		message: string | *"Hello World" @tag(message, type=string)
+	}
+}
+```
+```bash
+EOF
+```
 
 We'll integrate the component with the platform after we define the
 configuration structures.
@@ -276,6 +309,9 @@ let ProdPodinfo = {
 	labels: "app.holos.run/city":      _city
 	parameters: EnvironmentName:       "prod-\(_city)"
 }
+```
+```
+EOF
 ```
 
 ### Using the environment
