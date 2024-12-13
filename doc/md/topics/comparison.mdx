@@ -1,0 +1,57 @@
+---
+description: Holos compared to other tools
+sidebar_label: Comparison
+slug: comparison
+sidebar_position: 40
+---
+
+{/* cspell:ignore Prodan, rollouts */}
+
+# Holos compared to other tools
+
+## Timoni
+
+Holos and Timoni both aim to solve similar problems but approach them at
+different levels of the stack.
+
+Timoni focuses on managing applications by evaluating [CUE] stored in OCI
+containers. Its creator, Stephan Prodan, envisions a controller that applies the
+resulting manifests. In this process, Timoni defers to [Flux] for managing Helm
+charts within the cluster.
+
+In contrast, Holos implements the [Rendered Manifests Pattern] and takes a
+different approach, particularly in how it handles [Helm] charts. Like
+[ArgoCD], Holos renders Helm charts into manifests using the `helm template`
+command in its rendering pipeline. Holos differs from Timoni in several important
+ways:
+
+1. **Separation of Responsibilities:**  Holos stops short of applying
+rendered manifests to a cluster, leaving that task to existing tools like
+[ArgoCD], [Flux], or even basic `kubectl apply` commands.
+
+2. **Ecosystem Integration:**  By focusing solely on rendering Kubernetes
+manifests, Holos creates space for other tools to handle deployment and
+management. For instance, Holos integrates seamlessly with [Kargo] for
+progressive rollouts, as [Kargo] operates between Holos and the Kubernetes API.
+This approach ensures that you're not locked into any specific tool and can
+choose the best solution for each task.
+
+3. **Platform Integration:** Holos focuses on integrating multiple Components
+into a larger Platform. In Holos terminology, a Component refers to a wrapper
+for [Helm] charts, [Kustomize] bases, or raw YAML files, integrated into the
+rendering pipeline through [CUE].  A Platform represents the full combination of
+these components.
+
+4. **Explicit Rendering Pipeline:** Holos emphasizes flexibility in its
+rendering pipeline. The system allows any tool that generates Kubernetes
+manifests to be wrapped in a Generator, which can then feed into existing
+transformers like [Kustomize]. This explicit separation makes Holos highly
+adaptable for different workflows.
+
+[Kargo]: https://kargo.io/
+[Flux]: https://fluxcd.io
+[Helm]: https://helm.sh
+[ArgoCD]: https://argoproj.github.io/cd/
+[Kustomize]: https://kustomize.io/
+[CUE]: https://cuelang.org/
+[Rendered Manifests Pattern]: https://akuity.io/blog/the-rendered-manifests-pattern
