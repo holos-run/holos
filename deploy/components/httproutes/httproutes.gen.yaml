@@ -3,6 +3,7 @@ kind: HTTPRoute
 metadata:
   labels:
     app: argocd
+    argocd.argoproj.io/instance: network-httproutes
   name: argocd
   namespace: istio-ingress
 spec:
@@ -26,6 +27,7 @@ kind: HTTPRoute
 metadata:
   labels:
     app: kargo
+    argocd.argoproj.io/instance: network-httproutes
   name: kargo
   namespace: istio-ingress
 spec:

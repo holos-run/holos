@@ -3,6 +3,8 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
+  labels:
+    argocd.argoproj.io/instance: argocd-rollouts-crds
   name: analysisruns.argoproj.io
 spec:
   group: argoproj.io
@@ -3296,6 +3298,8 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
+  labels:
+    argocd.argoproj.io/instance: argocd-rollouts-crds
   name: analysistemplates.argoproj.io
 spec:
   group: argoproj.io
@@ -6463,6 +6467,8 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
+  labels:
+    argocd.argoproj.io/instance: argocd-rollouts-crds
   name: clusteranalysistemplates.argoproj.io
 spec:
   group: argoproj.io
@@ -9630,6 +9636,8 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
+  labels:
+    argocd.argoproj.io/instance: argocd-rollouts-crds
   name: experiments.argoproj.io
 spec:
   group: argoproj.io
@@ -12489,6 +12497,8 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.13.0
+  labels:
+    argocd.argoproj.io/instance: argocd-rollouts-crds
   name: rollouts.argoproj.io
 spec:
   group: argoproj.io

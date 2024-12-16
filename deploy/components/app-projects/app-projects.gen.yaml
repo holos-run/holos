@@ -1,6 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
+  labels:
+    argocd.argoproj.io/instance: argocd-app-projects
   name: argocd
   namespace: argocd
 spec:
@@ -17,6 +19,8 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
+  labels:
+    argocd.argoproj.io/instance: argocd-app-projects
   name: network
   namespace: argocd
 spec:
@@ -33,6 +37,8 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
+  labels:
+    argocd.argoproj.io/instance: argocd-app-projects
   name: security
   namespace: argocd
 spec:

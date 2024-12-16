@@ -5,6 +5,7 @@ metadata:
     app.kubernetes.io/component: rollouts-controller
     app.kubernetes.io/name: argo-rollouts
     app.kubernetes.io/part-of: argo-rollouts
+    argocd.argoproj.io/instance: argocd-rollouts
   name: argo-rollouts
   namespace: argo-rollouts
 ---
@@ -15,6 +16,7 @@ metadata:
     app.kubernetes.io/component: rollouts-controller
     app.kubernetes.io/name: argo-rollouts
     app.kubernetes.io/part-of: argo-rollouts
+    argocd.argoproj.io/instance: argocd-rollouts
   name: argo-rollouts
 rules:
 - apiGroups:
@@ -241,6 +243,7 @@ metadata:
     app.kubernetes.io/component: aggregate-cluster-role
     app.kubernetes.io/name: argo-rollouts-aggregate-to-admin
     app.kubernetes.io/part-of: argo-rollouts
+    argocd.argoproj.io/instance: argocd-rollouts
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
   name: argo-rollouts-aggregate-to-admin
 rules:
@@ -271,6 +274,7 @@ metadata:
     app.kubernetes.io/component: aggregate-cluster-role
     app.kubernetes.io/name: argo-rollouts-aggregate-to-edit
     app.kubernetes.io/part-of: argo-rollouts
+    argocd.argoproj.io/instance: argocd-rollouts
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
   name: argo-rollouts-aggregate-to-edit
 rules:
@@ -301,6 +305,7 @@ metadata:
     app.kubernetes.io/component: aggregate-cluster-role
     app.kubernetes.io/name: argo-rollouts-aggregate-to-view
     app.kubernetes.io/part-of: argo-rollouts
+    argocd.argoproj.io/instance: argocd-rollouts
     rbac.authorization.k8s.io/aggregate-to-view: "true"
   name: argo-rollouts-aggregate-to-view
 rules:
@@ -325,6 +330,7 @@ metadata:
     app.kubernetes.io/component: rollouts-controller
     app.kubernetes.io/name: argo-rollouts
     app.kubernetes.io/part-of: argo-rollouts
+    argocd.argoproj.io/instance: argocd-rollouts
   name: argo-rollouts
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -342,12 +348,15 @@ metadata:
     app.kubernetes.io/component: rollouts-controller
     app.kubernetes.io/name: argo-rollouts
     app.kubernetes.io/part-of: argo-rollouts
+    argocd.argoproj.io/instance: argocd-rollouts
   name: argo-rollouts-config
   namespace: argo-rollouts
 ---
 apiVersion: v1
 kind: Secret
 metadata:
+  labels:
+    argocd.argoproj.io/instance: argocd-rollouts
   name: argo-rollouts-notification-secret
   namespace: argo-rollouts
 ---
@@ -358,6 +367,7 @@ metadata:
     app.kubernetes.io/component: server
     app.kubernetes.io/name: argo-rollouts-metrics
     app.kubernetes.io/part-of: argo-rollouts
+    argocd.argoproj.io/instance: argocd-rollouts
   name: argo-rollouts-metrics
   namespace: argo-rollouts
 spec:
@@ -376,6 +386,7 @@ metadata:
     app.kubernetes.io/component: rollouts-controller
     app.kubernetes.io/name: argo-rollouts
     app.kubernetes.io/part-of: argo-rollouts
+    argocd.argoproj.io/instance: argocd-rollouts
   name: argo-rollouts
   namespace: argo-rollouts
 spec:

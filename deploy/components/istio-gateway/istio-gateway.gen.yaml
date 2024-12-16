@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
+    argocd.argoproj.io/instance: network-istio-gateway
     gateway.istio.io/managed: istio.io-gateway-controller
     gateway.networking.k8s.io/gateway-name: default
     istio.io/gateway-name: default
@@ -11,6 +12,8 @@ metadata:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
+  labels:
+    argocd.argoproj.io/instance: network-istio-gateway
   name: gateway-cert
   namespace: istio-ingress
 spec:
@@ -26,6 +29,8 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
+  labels:
+    argocd.argoproj.io/instance: network-istio-gateway
   name: default
   namespace: istio-ingress
 spec:

@@ -5,6 +5,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     istio: security
@@ -590,6 +591,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -5860,6 +5862,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -6186,6 +6189,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -6695,6 +6699,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     istio: security
@@ -6904,6 +6909,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -6984,6 +6990,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     istio: security
@@ -7443,6 +7450,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -8015,6 +8023,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -9431,6 +9440,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     istio: telemetry
@@ -10206,6 +10216,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -13136,6 +13147,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -13428,6 +13440,7 @@ metadata:
     helm.sh/resource-policy: keep
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -13722,6 +13735,7 @@ kind: CustomResourceDefinition
 metadata:
   labels:
     app: istio-pilot
+    argocd.argoproj.io/instance: network-istio-base
     chart: istio
     heritage: Tiller
     release: istio
@@ -14334,6 +14348,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app: istio-reader
+    argocd.argoproj.io/instance: network-istio-base
     release: base
   name: istio-reader-service-account
   namespace: istio-system
@@ -14343,6 +14358,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istio-base
     istio: istiod
     istio.io/rev: default
     release: base

@@ -9,6 +9,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: certificaterequests.cert-manager.io
 spec:
@@ -330,6 +331,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: certificates.cert-manager.io
 spec:
@@ -1110,6 +1112,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: challenges.acme.cert-manager.io
 spec:
@@ -4509,6 +4512,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: clusterissuers.cert-manager.io
 spec:
@@ -8487,6 +8491,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: issuers.cert-manager.io
 spec:
@@ -12464,6 +12469,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: orders.acme.cert-manager.io
 spec:
@@ -12732,6 +12738,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager
   namespace: cert-manager
@@ -12747,6 +12754,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-cainjector
   namespace: cert-manager
@@ -12762,6 +12770,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-webhook
   namespace: cert-manager
@@ -12776,6 +12785,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-cainjector:leaderelection
   namespace: cert-manager
@@ -12808,6 +12818,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-tokenrequest
   namespace: cert-manager
@@ -12831,6 +12842,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-webhook:dynamic-serving
   namespace: cert-manager
@@ -12863,6 +12875,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager:leaderelection
   namespace: cert-manager
@@ -12894,6 +12907,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-cainjector
 rules:
@@ -12964,6 +12978,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
     rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
   name: cert-manager-cluster-view
@@ -12987,6 +13002,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-approve:cert-manager-io
 rules:
@@ -13010,6 +13026,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-certificates
 rules:
@@ -13081,6 +13098,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-certificatesigningrequests
 rules:
@@ -13126,6 +13144,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-challenges
 rules:
@@ -13233,6 +13252,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-clusterissuers
 rules:
@@ -13281,6 +13301,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-ingress-shim
 rules:
@@ -13352,6 +13373,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-issuers
 rules:
@@ -13400,6 +13422,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-orders
 rules:
@@ -13468,6 +13491,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
@@ -13513,6 +13537,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-cluster-reader: "true"
@@ -13550,6 +13575,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-webhook:subjectaccessreviews
 rules:
@@ -13570,6 +13596,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-cainjector:leaderelection
   namespace: cert-manager
@@ -13592,6 +13619,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-cert-manager-tokenrequest
   namespace: cert-manager
@@ -13614,6 +13642,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-webhook:dynamic-serving
   namespace: cert-manager
@@ -13636,6 +13665,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager:leaderelection
   namespace: cert-manager
@@ -13658,6 +13688,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-cainjector
 roleRef:
@@ -13679,6 +13710,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-approve:cert-manager-io
 roleRef:
@@ -13700,6 +13732,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-certificates
 roleRef:
@@ -13721,6 +13754,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-certificatesigningrequests
 roleRef:
@@ -13742,6 +13776,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-challenges
 roleRef:
@@ -13763,6 +13798,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-clusterissuers
 roleRef:
@@ -13784,6 +13820,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-ingress-shim
 roleRef:
@@ -13805,6 +13842,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-issuers
 roleRef:
@@ -13826,6 +13864,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-controller-orders
 roleRef:
@@ -13847,6 +13886,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-webhook:subjectaccessreviews
 roleRef:
@@ -13868,6 +13908,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager
   namespace: cert-manager
@@ -13893,6 +13934,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-cainjector
   namespace: cert-manager
@@ -13917,6 +13959,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-webhook
   namespace: cert-manager
@@ -13946,6 +13989,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager
   namespace: cert-manager
@@ -14028,6 +14072,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cainjector
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-cainjector
   namespace: cert-manager
@@ -14094,6 +14139,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-webhook
   namespace: cert-manager
@@ -14193,6 +14239,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-webhook
 webhooks:
@@ -14230,6 +14277,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: webhook
     app.kubernetes.io/version: v1.16.2
+    argocd.argoproj.io/instance: security-cert-manager
     helm.sh/chart: cert-manager-v1.16.2
   name: cert-manager-webhook
 webhooks:

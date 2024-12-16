@@ -4,6 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/name: ztunnel
     app.kubernetes.io/part-of: istio
+    argocd.argoproj.io/instance: network-istio-ztunnel
   name: ztunnel
   namespace: istio-system
 ---
@@ -13,6 +14,7 @@ metadata:
   labels:
     app.kubernetes.io/name: ztunnel
     app.kubernetes.io/part-of: istio
+    argocd.argoproj.io/instance: network-istio-ztunnel
   name: ztunnel
   namespace: istio-system
 spec:

@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+    labels: {}
+    name: network-istio-cni
+    namespace: argocd
+spec:
+    destination:
+        server: https://kubernetes.default.svc
+    project: network
+    source:
+        path: deploy/components/istio-cni
+        repoURL: https://github.com/holos-run/kargo-demo.git
+        targetRevision: main

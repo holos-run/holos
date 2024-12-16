@@ -3,6 +3,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app: istio-cni
+    argocd.argoproj.io/instance: network-istio-cni
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Cni
@@ -15,6 +16,7 @@ kind: ClusterRole
 metadata:
   labels:
     app: istio-cni
+    argocd.argoproj.io/instance: network-istio-cni
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Cni
@@ -37,6 +39,7 @@ kind: ClusterRole
 metadata:
   labels:
     app: istio-cni
+    argocd.argoproj.io/instance: network-istio-cni
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Cni
@@ -56,6 +59,7 @@ kind: ClusterRole
 metadata:
   labels:
     app: istio-cni
+    argocd.argoproj.io/instance: network-istio-cni
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Cni
@@ -83,6 +87,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app: istio-cni
+    argocd.argoproj.io/instance: network-istio-cni
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Cni
@@ -101,6 +106,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
+    argocd.argoproj.io/instance: network-istio-cni
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     k8s-app: istio-cni-repair
@@ -120,6 +126,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
+    argocd.argoproj.io/instance: network-istio-cni
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     k8s-app: istio-cni-repair
@@ -155,6 +162,7 @@ kind: ConfigMap
 metadata:
   labels:
     app: istio-cni
+    argocd.argoproj.io/instance: network-istio-cni
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Cni
@@ -166,6 +174,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
+    argocd.argoproj.io/instance: network-istio-cni
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     k8s-app: istio-cni-node

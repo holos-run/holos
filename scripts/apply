@@ -59,31 +59,17 @@ fi
 # Routes should be accepted, but all backends aren't valid yet.
 apply httproutes
 
-exit 0
-
 # ArgoCD Applications
-applyDir gitops
+kubectl apply --force-conflicts --server-side=true -f deploy/gitops
 
 # Kargo Projects.  They need the webhook but we don't need them until later.
 kubectl wait --for=condition=Available deployment/kargo-webhooks-server -n kargo --timeout=300s
-
-## nonprod Bank of Holos
-applyProject nonprod-bank-security
-applyProject nonprod-bank-backend
-applyProject nonprod-bank-web
-## prod Bank of Holos
-applyProject prod-bank-security
-applyProject prod-bank-backend
-applyProject prod-bank-web
 
 set +x
 echo
 echo "httproutes:"
 echo "  - https://argocd.holos.localhost"
 echo "  - https://kargo.holos.localhost"
-echo "  - https://prod-east-bank-frontend.holos.localhost - Regional endpoint"
-echo "  - https://prod-west-bank-frontend.holos.localhost - Regional endpoint"
-echo "  - https://bank.holos.localhost                    - Routes to all prod environments"
 echo
 echo "Kargo admin password:"
 echo "  run: kubectl get secret -n kargo admin-credentials -o json | jq --exit-status -r '.data.password | @base64d'"

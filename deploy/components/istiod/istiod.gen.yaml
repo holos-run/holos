@@ -3,6 +3,7 @@ kind: ServiceAccount
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     release: istiod
   name: istiod
   namespace: istio-system
@@ -12,6 +13,7 @@ kind: Role
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     release: istiod
   name: istiod
   namespace: istio-system
@@ -54,6 +56,7 @@ kind: ClusterRole
 metadata:
   labels:
     app: istio-reader
+    argocd.argoproj.io/instance: network-istiod
     release: istiod
   name: istio-reader-clusterrole-istio-system
 rules:
@@ -162,6 +165,7 @@ kind: ClusterRole
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     release: istiod
   name: istiod-clusterrole-istio-system
 rules:
@@ -355,6 +359,7 @@ kind: ClusterRole
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     release: istiod
   name: istiod-gateway-controller-istio-system
 rules:
@@ -400,6 +405,7 @@ kind: RoleBinding
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     release: istiod
   name: istiod
   namespace: istio-system
@@ -417,6 +423,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app: istio-reader
+    argocd.argoproj.io/instance: network-istiod
     release: istiod
   name: istio-reader-clusterrole-istio-system
 roleRef:
@@ -433,6 +440,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     release: istiod
   name: istiod-clusterrole-istio-system
 roleRef:
@@ -449,6 +457,7 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     release: istiod
   name: istiod-gateway-controller-istio-system
 roleRef:
@@ -479,6 +488,7 @@ data:
 kind: ConfigMap
 metadata:
   labels:
+    argocd.argoproj.io/instance: network-istiod
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -2450,6 +2460,7 @@ data:
 kind: ConfigMap
 metadata:
   labels:
+    argocd.argoproj.io/instance: network-istiod
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -2462,6 +2473,7 @@ kind: Service
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     install.operator.istio.io/owning-resource: unknown
     istio: pilot
     istio.io/rev: default
@@ -2493,6 +2505,7 @@ kind: Deployment
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     install.operator.istio.io/owning-resource: unknown
     istio: pilot
     istio.io/rev: default
@@ -2657,6 +2670,7 @@ kind: PodDisruptionBudget
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     install.operator.istio.io/owning-resource: unknown
     istio: pilot
     istio.io/rev: default
@@ -2676,6 +2690,7 @@ kind: HorizontalPodAutoscaler
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -2702,6 +2717,7 @@ kind: MutatingWebhookConfiguration
 metadata:
   labels:
     app: sidecar-injector
+    argocd.argoproj.io/instance: network-istiod
     install.operator.istio.io/owning-resource: unknown
     istio.io/rev: default
     operator.istio.io/component: Pilot
@@ -2854,6 +2870,7 @@ kind: ValidatingWebhookConfiguration
 metadata:
   labels:
     app: istiod
+    argocd.argoproj.io/instance: network-istiod
     istio: istiod
     istio.io/rev: default
     release: istiod
