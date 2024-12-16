@@ -1,2 +1,2 @@
-module: "user.holos.run/platform"
-language: version: "v0.9.2"
+module: "example.com/platform"
+language: version: "v0.11.0"
