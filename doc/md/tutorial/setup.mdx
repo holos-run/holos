@@ -38,8 +38,23 @@ go install github.com/holos-run/holos/cmd/holos@latest
 
 ### Completion
 
+:::tip
+Completion is automatically enabled if [brew shell
+completion](https://docs.brew.sh/Shell-Completion) is also enabled.
+:::
+
 <Tabs groupId="65F79D28-2E57-4A90-8EBA-3D8758C80233">
   <TabItem value="zsh" label="zsh">
+
+Add the following to `~/.zshrc` if not already present to initialize zsh completion.
+
+```bash
+autoload -Uz compinit
+compinit
+```
+
+Then load holos completion after zsh completion has been initialized.
+
 ```bash
 source <(holos completion zsh)
 ```
