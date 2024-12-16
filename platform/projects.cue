@@ -4,5 +4,9 @@ package holos
 // This works using the name label idiom, for example
 //  things: [NAME=string]: #Thing & {name: NAME}
 for PROJECT in Projects {
-	Platform: Components: PROJECT.components
+	for KEY, COMPONENT in PROJECT.components {
+		Platform: Components: (KEY): COMPONENT & {
+			parameters: ProjectName: PROJECT.name
+		}
+	}
 }

@@ -4,3 +4,7 @@ package holos
 // namespaces into this structure to manage them automatically from the
 // namespaces component.
 Namespaces: #Namespaces
+
+for PROJECT in Projects {
+	Namespaces: PROJECT.namespaces
+}

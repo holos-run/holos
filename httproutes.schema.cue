@@ -2,6 +2,10 @@ package holos
 
 import v1 "gateway.networking.k8s.io/httproute/v1"
 
+// HTTPRoutes is where routes are registered.  The httproutes component manages
+// routes by composing this struct into a BuildPlan.
+HTTPRoutes: #HTTPRoutes
+
 // #HTTPRoutes defines the schema of managed HTTPRoute resources for the
 // platform.
 #HTTPRoutes: {
@@ -16,7 +20,7 @@ import v1 "gateway.networking.k8s.io/httproute/v1"
 		}
 
 		metadata: name:      Name
-		metadata: namespace: "ingress-gateways"
+		metadata: namespace: Istio.Gateway.Namespace
 		metadata: labels: app: Name
 		spec: hostnames: [HOST]
 		spec: parentRefs: [{

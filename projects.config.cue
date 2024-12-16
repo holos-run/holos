@@ -16,6 +16,10 @@ Projects: #Projects & {
 			"cert-manager":     _
 		}
 		components: {
+			"namespaces": {
+				name: "namespaces"
+				path: "projects/security/components/namespaces"
+			}
 			"external-secrets-crds": {
 				name: "external-secrets-crds"
 				path: "projects/security/components/external-secrets-crds"

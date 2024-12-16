@@ -1,0 +1,45 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    app: argocd
+  name: argocd
+  namespace: istio-ingress
+spec:
+  hostnames:
+  - argocd.holos.localhost
+  parentRefs:
+  - name: default
+    namespace: istio-ingress
+  rules:
+  - backendRefs:
+    - name: argocd-server
+      namespace: argocd
+      port: 80
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    app: kargo
+  name: kargo
+  namespace: istio-ingress
+spec:
+  hostnames:
+  - kargo.holos.localhost
+  parentRefs:
+  - name: default
+    namespace: istio-ingress
+  rules:
+  - backendRefs:
+    - name: kargo-api
+      namespace: kargo
+      port: 80
+    matches:
+    - path:
+        type: PathPrefix
+        value: /

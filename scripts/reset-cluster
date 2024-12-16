@@ -1,0 +1,25 @@
+#! /bin/bash
+
+# Reset the cluster as described at
+# https://holos.run/docs/guides/local-cluster/#reset-the-cluster
+
+# cd to the repository root
+TOPLEVEL="$(cd $(dirname "$0") && git rev-parse --show-toplevel)"
+cd "$TOPLEVEL"
+
+set -xeuo pipefail
+
+k3d cluster delete workload
+
+k3d cluster create workload \
+  --registry-use k3d-registry.holos.localhost:5100 \
+  --port "443:443@loadbalancer" \
+  --k3s-arg "--disable=traefik@server:0"
+
+CAROOT="$(mkcert -CAROOT)"
+kubectl apply --server-side=true -f "${CAROOT}/namespace.yaml"
+kubectl apply --server-side=true -n cert-manager -f "${CAROOT}/local-ca.yaml"
+# Kargo secret
+if [[ -f "${CAROOT}/kargo.yaml" ]]; then
+  kubectl apply --server-side=true -f "${CAROOT}/kargo.yaml" --force-conflicts
+fi

@@ -13,6 +13,8 @@ ArgoCD: #ArgoCD & {
 	Namespace: string
 }
 
+HTTPRoutes: argocd: _backendRefs: "argocd-server": namespace: ArgoCD.Namespace
+
 // ArgoCD AppProject
 #AppProject: ap.#AppProject & {
 	metadata: name:      string
@@ -29,7 +31,6 @@ ArgoCD: #ArgoCD & {
 // Register the ArgoCD Project namespaces and components
 Projects: {
 	argocd: {
-		httpRoutes: argocd: _backendRefs: "argocd-server": namespace: ArgoCD.Namespace
 		namespaces: (ArgoCD.Namespace): _
 		components: {
 			"app-projects": {

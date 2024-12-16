@@ -1,0 +1,93 @@
+#! /bin/bash
+
+# cd to the repository root
+TOPLEVEL="$(cd $(dirname "$0") && git rev-parse --show-toplevel)"
+cd "$TOPLEVEL"
+
+set -xeuo pipefail
+
+apply() {
+  kubectl apply --force-conflicts --server-side=true -f "deploy/components/${1}/${1}.gen.yaml"
+}
+
+# Namespaces first
+apply namespaces
+
+
+# Custom Resource Definitions
+apply argocd-crds
+apply rollouts-crds
+apply gateway-api
+apply external-secrets-crds
+kubectl wait --for=condition=Established crd --all --timeout=300s
+
+# External Secrets
+apply external-secrets
+# Cert Manager (CRDs are included)
+apply cert-manager
+# Wait for cert manager to be available so we can manage the cluster issuer
+kubectl wait --for=condition=Available deployment/cert-manager-webhook -n cert-manager --timeout=300s
+
+# Manage the cluster issuer (local-ca)
+apply local-ca
+if ! kubectl wait --for=condition=Ready clusterissuer/local-ca --timeout=30s; then
+  echo 'Did you forget to apply your local CA?  See: https://holos.run/docs/local-cluster/#reset-the-cluster' >&2
+  exit 1
+fi
+
+# ArgoCD
+apply argocd
+apply app-projects
+apply rollouts
+
+# Kargo
+kubectl wait --for=condition=Available deployment/external-secrets-webhook -n external-secrets --timeout=300s
+apply kargo-secrets
+apply kargo # includes crds
+
+# Istio
+apply istio-base
+apply istiod
+apply istio-cni
+apply istio-ztunnel
+apply istio-gateway
+
+if ! kubectl wait --for=condition=Ready pod -l k8s-app=istio-cni-node --timeout=300s -n istio-system; then
+  echo 'istio-cni-node not ready' >&2
+  exit 1
+fi
+# Routes should be accepted, but all backends aren't valid yet.
+apply httproutes
+
+exit 0
+
+# ArgoCD Applications
+applyDir gitops
+
+# Kargo Projects.  They need the webhook but we don't need them until later.
+kubectl wait --for=condition=Available deployment/kargo-webhooks-server -n kargo --timeout=300s
+
+## nonprod Bank of Holos
+applyProject nonprod-bank-security
+applyProject nonprod-bank-backend
+applyProject nonprod-bank-web
+## prod Bank of Holos
+applyProject prod-bank-security
+applyProject prod-bank-backend
+applyProject prod-bank-web
+
+set +x
+echo
+echo "httproutes:"
+echo "  - https://argocd.holos.localhost"
+echo "  - https://kargo.holos.localhost"
+echo "  - https://prod-east-bank-frontend.holos.localhost - Regional endpoint"
+echo "  - https://prod-west-bank-frontend.holos.localhost - Regional endpoint"
+echo "  - https://bank.holos.localhost                    - Routes to all prod environments"
+echo
+echo "Kargo admin password:"
+echo "  run: kubectl get secret -n kargo admin-credentials -o json | jq --exit-status -r '.data.password | @base64d'"
+echo
+set -x
+
+exit 0

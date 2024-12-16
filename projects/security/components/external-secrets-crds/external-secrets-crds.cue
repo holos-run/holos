@@ -12,7 +12,8 @@ Component: #Kustomize & {
 	Name: "external-secrets-crds"
 
 	KustomizeConfig: {
-		Resources: "https://raw.githubusercontent.com/external-secrets/external-secrets/v\(ExternalSecrets.Version)/deploy/crds/bundle.yaml": _
+		// Resources: "https://raw.githubusercontent.com/external-secrets/external-secrets/v\(ExternalSecrets.Version)/deploy/crds/bundle.yaml": _
+		Files: "bundle.\(ExternalSecrets.Version).yaml": _
 		Kustomization: patches: [for x in KustomizePatches {x}]
 	}
 }

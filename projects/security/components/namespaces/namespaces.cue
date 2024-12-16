@@ -4,6 +4,5 @@ package holos
 holos: Component.BuildPlan
 
 Component: #Kubernetes & {
-	Name: "httproutes"
-	Resources: HTTPRoute: HTTPRoutes
+	Resources: Namespace: Namespaces
 }
