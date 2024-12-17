@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+    labels: {}
+    name: podinfo-prod-us-west-podinfo
+    namespace: argocd
+spec:
+    destination:
+        server: https://kubernetes.default.svc
+    project: podinfo
+    source:
+        path: deploy/components/prod-us-west-podinfo
+        repoURL: https://github.com/holos-run/kargo-demo.git
+        targetRevision: main

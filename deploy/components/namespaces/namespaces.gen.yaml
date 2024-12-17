@@ -27,6 +27,14 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    kubernetes.io/metadata.name: dev-podinfo
+  name: dev-podinfo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
     kubernetes.io/metadata.name: external-secrets
   name: external-secrets
 ---
@@ -53,3 +61,43 @@ metadata:
     argocd.argoproj.io/instance: security-namespaces
     kubernetes.io/metadata.name: kargo
   name: kargo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
+    kubernetes.io/metadata.name: prod-us-central-podinfo
+  name: prod-us-central-podinfo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
+    kubernetes.io/metadata.name: prod-us-east-podinfo
+  name: prod-us-east-podinfo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
+    kubernetes.io/metadata.name: prod-us-west-podinfo
+  name: prod-us-west-podinfo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
+    kubernetes.io/metadata.name: test-podinfo
+  name: test-podinfo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
+    kubernetes.io/metadata.name: uat-podinfo
+  name: uat-podinfo

@@ -39,6 +39,24 @@ kind: AppProject
 metadata:
   labels:
     argocd.argoproj.io/instance: argocd-app-projects
+  name: podinfo
+  namespace: argocd
+spec:
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  description: Holos managed AppProject
+  destinations:
+  - namespace: '*'
+    server: '*'
+  sourceRepos:
+  - '*'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  labels:
+    argocd.argoproj.io/instance: argocd-app-projects
   name: security
   namespace: argocd
 spec:
