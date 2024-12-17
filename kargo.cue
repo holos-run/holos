@@ -68,3 +68,50 @@ Projects: {
 
 // Register the HTTPRoute to the backend Service
 HTTPRoutes: kargo: _backendRefs: "kargo-api": namespace: Kargo.Namespace
+
+// KargoProjectBuilder expands components out across the provided stages and
+// configured a Kargo Project resource to manage the promotion process across
+// stages for the project.
+#KargoProjectBuilder: {
+	Name: string | *"default"
+	// TODO: Namespace for the Kargo project.
+	Namespaces: [NAME=string]: {name: NAME}
+	Components: #Components
+	Stages:     #Stages
+
+	Project: #Project & {
+		name: Name
+		for STAGE in Stages {
+			for NAMESPACE in Namespaces {
+				namespaces: "\(STAGE.name)-\(NAMESPACE.name)": _
+			}
+
+			for COMPONENT in Components {
+				// Unique key to roll the component into the platform spec.
+				let KEY = "project:\(Name):stage:\(STAGE.name):component:\(COMPONENT.name)"
+
+				// Generate a new component with the stage specific name and output.
+				let STAGE_COMPONENT = {
+					name: "\(STAGE.name)-\(COMPONENT.name)"
+					for k, v in COMPONENT if k != "name" {
+						(k): v
+					}
+
+					// Pass parameters to the component as tags so the component
+					// definition can look up project and stage specific values.
+					parameters: ProjectName: Name
+					parameters: StageName:   STAGE.name
+
+					// Store the stage as a hidden field so it is not output but allows us
+					// to select components by stage attributes.  Useful to select all
+					// prod tier components for use with an HTTPRoute.
+					_stage: STAGE
+					// Store the namespace name as well for reference in HTTPRoute backends.
+					_namespace: name
+				}
+				namespaces: (STAGE_COMPONENT._namespace): _
+				components: (KEY):                        STAGE_COMPONENT
+			}
+		}
+	}
+}

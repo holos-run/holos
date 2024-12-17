@@ -13,14 +13,3 @@ import "github.com/holos-run/holos/api/core/v1alpha5:core"
 #Components: [string]: core.#Component
 
 #Projects: [NAME=string]: #Project & {name: NAME}
-
-#ProjectBuilder: {
-	Name:       string | *"default"
-	Components: #Components
-	Stages:     #Stages
-
-	Project: #Project & {
-		name:       Name
-		components: Components
-	}
-}

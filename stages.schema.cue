@@ -2,6 +2,7 @@ package holos
 
 #Stage: {
 	name: string
+	tier: "prod" | "nonprod"
 }
 
 #Stages: {
