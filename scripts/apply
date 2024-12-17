@@ -10,6 +10,10 @@ apply() {
   kubectl apply --force-conflicts --server-side=true -f "deploy/components/${1}/${1}.gen.yaml"
 }
 
+applyProject() {
+  kubectl apply --force-conflicts --server-side=true -f "deploy/projects/${1}/components/${2}/${2}.gen.yaml"
+}
+
 # Namespaces first
 apply namespaces
 
@@ -53,12 +57,12 @@ apply istio-ztunnel
 apply istio-gateway
 
 # Podinfo across multiple Stages for Kargo Demo
-apply dev-podinfo
-apply test-podinfo
-apply uat-podinfo
-apply prod-us-east-podinfo
-apply prod-us-central-podinfo
-apply prod-us-west-podinfo
+applyProject podinfo dev-podinfo
+applyProject podinfo test-podinfo
+applyProject podinfo uat-podinfo
+applyProject podinfo prod-us-east-podinfo
+applyProject podinfo prod-us-central-podinfo
+applyProject podinfo prod-us-west-podinfo
 
 if ! kubectl wait --for=condition=Ready pod -l k8s-app=istio-cni-node --timeout=300s -n istio-system; then
   echo 'istio-cni-node not ready' >&2
@@ -69,9 +73,13 @@ apply httproutes
 
 # ArgoCD Applications
 kubectl apply --force-conflicts --server-side=true -f deploy/gitops
+kubectl apply --force-conflicts --server-side=true -f deploy/projects/podinfo/gitops
 
 # Kargo Projects.  They need the webhook but we don't need them until later.
 kubectl wait --for=condition=Available deployment/kargo-webhooks-server -n kargo --timeout=300s
+
+# Project Kargo Resources (Requires kargo-webhooks-server)
+applyProject podinfo kargo-project
 
 set +x
 echo
