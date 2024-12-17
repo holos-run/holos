@@ -1,6 +1,9 @@
 package holos
 
-import v1 "gateway.networking.k8s.io/httproute/v1"
+import (
+	v1 "gateway.networking.k8s.io/httproute/v1"
+	rg "gateway.networking.k8s.io/referencegrant/v1beta1"
+)
 
 // HTTPRoutes is where routes are registered.  The httproutes component manages
 // routes by composing this struct into a BuildPlan.
@@ -33,5 +36,30 @@ HTTPRoutes: #HTTPRoutes
 				backendRefs: [for x in _backendRefs {x}]
 			},
 		]
+	}
+}
+
+// #ReferenceGrantBuilder builds a ReferenceGrant.  Useful from within a
+// component definition to grant the HTTPRoute access to the namespace the
+// component is managed in.
+//
+// Usage:
+//  Component: Resources: #ReferenceGrantBuilder & {Namespace: NAMESPACE}
+#ReferenceGrantBuilder: {
+	Namespace:        string
+	GatewayNamespace: string | *Istio.Gateway.Namespace
+
+	ReferenceGrant: (GatewayNamespace): rg.#ReferenceGrant & {
+		metadata: name:      GatewayNamespace
+		metadata: namespace: Namespace
+		spec: from: [{
+			group:     "gateway.networking.k8s.io"
+			kind:      "HTTPRoute"
+			namespace: "istio-ingress"
+		}]
+		spec: to: [{
+			group: ""
+			kind:  "Service"
+		}]
 	}
 }

@@ -101,6 +101,7 @@ HTTPRoutes: kargo: _backendRefs: "kargo-api": namespace: Kargo.Namespace
 					// definition can look up project and stage specific values.
 					parameters: ProjectName: Name
 					parameters: StageName:   STAGE.name
+					parameters: namespace:   _namespace
 
 					// Store the stage as a hidden field so it is not output but allows us
 					// to select components by stage attributes.  Useful to select all

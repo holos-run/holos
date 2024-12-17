@@ -52,6 +52,14 @@ apply istio-cni
 apply istio-ztunnel
 apply istio-gateway
 
+# Podinfo across multiple Stages for Kargo Demo
+apply dev-podinfo
+apply test-podinfo
+apply uat-podinfo
+apply prod-us-east-podinfo
+apply prod-us-central-podinfo
+apply prod-us-west-podinfo
+
 if ! kubectl wait --for=condition=Ready pod -l k8s-app=istio-cni-node --timeout=300s -n istio-system; then
   echo 'istio-cni-node not ready' >&2
   exit 1
@@ -70,6 +78,7 @@ echo
 echo "httproutes:"
 echo "  - https://argocd.holos.localhost"
 echo "  - https://kargo.holos.localhost"
+echo "  - https://podinfo.holos.localhost"
 echo
 echo "Kargo admin password:"
 echo "  run: kubectl get secret -n kargo admin-credentials -o json | jq --exit-status -r '.data.password | @base64d'"
