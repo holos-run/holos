@@ -14,3 +14,5 @@
 /docs/local-cluster/ /docs/v1alpha5/topics/local-cluster/ 301
 /docs/guides/helm    /docs/v1alpha5/tutorial/helm-values/ 301
 /docs/guides/helm/   /docs/v1alpha5/tutorial/helm-values/ 301
+/docs/kargo          /docs/v1alpha5/topics/kargo/ 301
+/docs/kargo/         /docs/v1alpha5/topics/kargo/ 301
