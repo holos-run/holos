@@ -6,5 +6,7 @@ holos: Component.BuildPlan
 _ProjectName: string @tag(ProjectName)
 
 Component: #Kubernetes & {
-	Resources: Project: (_ProjectName): _
+	Resources: Project: (_ProjectName): {
+		spec: promotionPolicies: KargoProjects[_ProjectName].promotionPolicies
+	}
 }

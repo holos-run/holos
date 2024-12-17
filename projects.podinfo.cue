@@ -21,7 +21,11 @@ let PODINFO = #KargoProjectBuilder & {
 	}
 }
 
+// Register podinfo as a Holos Project
 Projects: podinfo: PODINFO.Project
+
+// Register podinfo as a Kargo Project
+KargoProjects: podinfo: PODINFO.KargoProject
 
 // Manage an HTTPRoute for the podinfo service in each namespace.
 for NAMESPACE in PODINFO.Project.namespaces {

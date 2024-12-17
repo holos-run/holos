@@ -1,9 +1,20 @@
 @if(!NoKargo)
 package holos
 
+// #KargoProjects defines the structure of a kargo project, useful for kargo
+// related components to look up data given a ProjectName.
+#KargoProjects: [NAME=string]: #KargoProject & {name: NAME}
+
+#KargoProject: {
+	name:   string
+	stages: #Stages
+	// Automatically promote non-prod stages.
+	promotionPolicies: [for STAGE in stages if STAGE.tier == "nonprod" {stage: STAGE.name, autoPromotionEnabled: true}]
+}
+
 // KargoProjectBuilder expands components out across the provided stages and
-// configured a Kargo Project resource to manage the promotion process across
-// stages for the project.
+// configures a Kargo Project to manage the promotion process across stages for
+// the components in the project.
 #KargoProjectBuilder: {
 	Name: string | *"default"
 	// Stages to manage resources within.
@@ -72,5 +83,10 @@ package holos
 				components: (COMPONENT_KEY):              STAGE_COMPONENT
 			}
 		}
+	}
+
+	KargoProject: #KargoProject & {
+		name:   Name
+		stages: Stages
 	}
 }
