@@ -8,6 +8,7 @@ metadata:
     argocd.argoproj.io/instance: podinfo-dev-podinfo
     helm.sh/chart: podinfo-6.6.1
   name: podinfo
+  namespace: dev-podinfo
 spec:
   ports:
   - name: http
@@ -32,6 +33,7 @@ metadata:
     argocd.argoproj.io/instance: podinfo-dev-podinfo
     helm.sh/chart: podinfo-6.6.1
   name: podinfo
+  namespace: dev-podinfo
 spec:
   replicas: 1
   selector:
@@ -114,3 +116,19 @@ spec:
       volumes:
       - emptyDir: {}
         name: data
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  labels:
+    argocd.argoproj.io/instance: podinfo-dev-podinfo
+  name: istio-ingress
+  namespace: dev-podinfo
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: istio-ingress
+  to:
+  - group: ""
+    kind: Service
