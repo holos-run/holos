@@ -1,0 +1,7 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  labels:
+    argocd.argoproj.io/instance: podinfo-kargo-project
+  name: podinfo
+spec: {}
