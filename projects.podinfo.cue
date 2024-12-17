@@ -33,12 +33,16 @@ for NAMESPACE in PODINFO.Project.namespaces {
 
 HTTPRoutes: podinfo: _backendRefs: {
 	// Manage a backend ref for all prod tier stages.
-	for PROD_COMPONENT in PODINFO.Project.components if PROD_COMPONENT._stage.tier == "prod" {
-		// The field name just needs to be unique, we don't output it.
-		(PROD_COMPONENT._namespace): {
-			name:      "podinfo"
-			namespace: PROD_COMPONENT._namespace
-			port:      9898
+	for COMPONENT in PODINFO.Project.components {
+		if COMPONENT._stage != _|_ {
+			if COMPONENT._stage.tier == "prod" {
+				// The field name just needs to be unique, we don't output it.
+				(COMPONENT._namespace): {
+					name:      "podinfo"
+					namespace: COMPONENT._namespace
+					port:      9898
+				}
+			}
 		}
 	}
 }

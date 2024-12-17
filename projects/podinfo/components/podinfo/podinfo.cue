@@ -2,7 +2,7 @@ package holos
 
 holos: Component.BuildPlan
 
-_namespace: string @tag(namespace)
+_NamespaceName: string @tag(NamespaceName)
 
 Component: #Helm & {
 	Chart: {
@@ -16,7 +16,7 @@ Component: #Helm & {
 		}
 	}
 	// Ensure all resources are located in this namespace.
-	KustomizeConfig: Kustomization: namespace: _namespace
+	KustomizeConfig: Kustomization: namespace: _NamespaceName
 	// Grant the HTTPRoute access to route to this namespace.
-	Resources: ReferenceGrant: (#ReferenceGrantBuilder & {Namespace: _namespace}).ReferenceGrant
+	Resources: ReferenceGrant: (#ReferenceGrantBuilder & {Namespace: _NamespaceName}).ReferenceGrant
 }
