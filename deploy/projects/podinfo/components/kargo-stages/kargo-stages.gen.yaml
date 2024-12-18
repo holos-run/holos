@@ -3,7 +3,7 @@ kind: Stage
 metadata:
   labels:
     argocd.argoproj.io/instance: podinfo-kargo-stages
-  name: dev-podinfo
+  name: dev
   namespace: podinfo
 spec:
   promotionTemplate:
@@ -59,7 +59,7 @@ kind: Stage
 metadata:
   labels:
     argocd.argoproj.io/instance: podinfo-kargo-stages
-  name: prod-us-central-podinfo
+  name: prod-us-central
   namespace: podinfo
 spec:
   promotionTemplate:
@@ -116,7 +116,7 @@ kind: Stage
 metadata:
   labels:
     argocd.argoproj.io/instance: podinfo-kargo-stages
-  name: prod-us-east-podinfo
+  name: prod-us-east
   namespace: podinfo
 spec:
   promotionTemplate:
@@ -173,7 +173,7 @@ kind: Stage
 metadata:
   labels:
     argocd.argoproj.io/instance: podinfo-kargo-stages
-  name: prod-us-west-podinfo
+  name: prod-us-west
   namespace: podinfo
 spec:
   promotionTemplate:
@@ -230,7 +230,7 @@ kind: Stage
 metadata:
   labels:
     argocd.argoproj.io/instance: podinfo-kargo-stages
-  name: test-podinfo
+  name: test
   namespace: podinfo
 spec:
   promotionTemplate:
@@ -287,7 +287,7 @@ kind: Stage
 metadata:
   labels:
     argocd.argoproj.io/instance: podinfo-kargo-stages
-  name: uat-podinfo
+  name: uat
   namespace: podinfo
 spec:
   promotionTemplate:

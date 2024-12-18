@@ -46,7 +46,7 @@ Component: #Kubernetes & {
 			let OutPath = "deploy/projects/\(ProjectName)/components/\(ComponentName)"
 			let BRANCH = "project/\(ProjectName)/component/\(ComponentName)"
 
-			Stage: (ComponentName): {
+			Stage: (STAGE.name): {
 				spec: {
 					// The requested freight is a static structure where users actually
 					// define how artifacts are promoted with kargo.  Currently this is a
