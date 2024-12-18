@@ -36,13 +36,6 @@ let PODINFO = kargo.#ProjectBuilder & {
 		parameters: image: IMAGE
 	}
 
-	// The builder builds a httproute to each backend stage namespace using this
-	// template.
-	BackendRefs: podinfo: podinfo: {
-		name: "podinfo"
-		port: 9898
-	}
-
 	// Compose the Kargo promotion stages into the holos project components.
 	// Project owners are expected to copy the component path into
 	// projects/<project name>/components/kargo-stages and customize it as needed

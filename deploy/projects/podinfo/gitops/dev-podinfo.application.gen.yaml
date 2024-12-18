@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
     annotations:
-        kargo.akuity.io/authorized-stage: podinfo:dev-podinfo
+        kargo.akuity.io/authorized-stage: podinfo:dev
     labels: {}
     name: podinfo-dev-podinfo
     namespace: argocd

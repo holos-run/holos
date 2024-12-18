@@ -11,7 +11,7 @@ Component: {
 	_OutPath:      "\(OutputBaseDir)/components/\(Name)"
 
 	_ArgoApplication: {
-		metadata: annotations: "kargo.akuity.io/authorized-stage": "\(ProjectName):\(Name)"
+		metadata: annotations: "kargo.akuity.io/authorized-stage": "\(ProjectName):\(StageName)"
 		spec: source: {
 			path:           "./"
 			targetRevision: "project/\(ProjectName)/component/\(Name)"

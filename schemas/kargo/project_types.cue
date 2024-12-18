@@ -42,7 +42,7 @@ import (
 
 	// Automatically promote non-prod stages.
 	promotionPolicies: [for STAGE in stages if STAGE.tier == "nonprod" {
-		stage:                "\(STAGE.name)-\(name)"
+		stage:                STAGE.name
 		autoPromotionEnabled: true
 	}]
 
@@ -64,12 +64,6 @@ import (
 	}
 	// Components to manage in each Stage.
 	Components: holos.#Components
-	// BackendRefs  organized by component names.  The builder will populate the
-	// namespace field.
-	BackendRefs: [COMPONENT_NAME=string]: [SERVICE_NAME=string]: {
-		name: string | *SERVICE_NAME
-		port: int | *80
-	}
 
 	// Project represents the built kargo project.
 	Project: #Project & {
