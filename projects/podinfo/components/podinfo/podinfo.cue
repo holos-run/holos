@@ -1,5 +1,7 @@
 package holos
 
+import h "example.com/platform/schemas/holos/v1alpha5"
+
 holos: Component.BuildPlan
 
 _NamespaceName: string @tag(NamespaceName)
@@ -25,5 +27,5 @@ Component: #Helm & {
 	// Ensure all resources are located in this namespace.
 	KustomizeConfig: Kustomization: namespace: _NamespaceName
 	// Grant the HTTPRoute access to route to this namespace.
-	Resources: ReferenceGrant: (#ReferenceGrantBuilder & {Namespace: _NamespaceName}).ReferenceGrant
+	Resources: ReferenceGrant: (h.#ReferenceGrantBuilder & {Namespace: _NamespaceName}).ReferenceGrant
 }

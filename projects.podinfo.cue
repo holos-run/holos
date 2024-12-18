@@ -3,12 +3,13 @@ package holos
 import "example.com/platform/schemas/kargo"
 
 let IMAGE = "ghcr.io/stefanprodan/podinfo"
+let HTTPROUTE_LABEL = "holos.run/httproute.project"
 
 let PODINFO = kargo.#ProjectBuilder & {
 	Name: "podinfo"
 	// Namespaces is used as a template, KargoProjectBuilder will prefix each
 	// namespace with the stage name.
-	Namespaces: podinfo: _
+	Namespaces: podinfo: metadata: labels: (HTTPROUTE_LABEL): Name
 
 	// Stages organized by prod and nonprod so we can easily get a handle on all
 	// prod stages, for example in the HTTPRoute below.
@@ -60,19 +61,23 @@ Projects: podinfo: PODINFO.Project.HolosProject
 // Register podinfo as a Kargo Project.
 KargoProjects: podinfo: PODINFO.Project
 
-// Compose stage specific httproutes with the platform.
-// HTTPRoutes: PODINFO.Project.HolosProject.httpRoutes
+// Compose stage specific httproutes with the platform selecting namespaces.
+for NS in PODINFO.Project.HolosProject.namespaces {
+	for K, V in NS.metadata.labels {
+		if K == HTTPROUTE_LABEL && V == "podinfo" {
+			HTTPRoutes: (NS.metadata.name): _backendRefs: podinfo: {
+				namespace: NS.metadata.name
+				port:      9898
+			}
+		}
 
-// Manage a backend ref for all prod tier stages.
-// HTTPRoutes: podinfo: _backendRefs: {
-// 	for COMPONENT in PODINFO.Project.HolosProject.components {
-// 		if COMPONENT._stage != _|_ {
-// 			if COMPONENT._stage.tier == "prod" {
-// 				// The field name just needs to be unique, we don't output it.
-// 				(COMPONENT._namespace): PODINFO.BackendRefs.podinfo.podinfo & {
-// 					namespace: COMPONENT._namespace
-// 				}
-// 			}
-// 		}
-// 	}
-// }
+		// Manage a backend ref for all prod tier stages.
+		if K == "holos.run/stage.tier" && V == "prod" {
+			HTTPRoutes: podinfo: _backendRefs: (NS.metadata.name): {
+				name:      "podinfo"
+				namespace: NS.metadata.name
+				port:      9898
+			}
+		}
+	}
+}

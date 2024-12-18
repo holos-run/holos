@@ -6,7 +6,6 @@ package holos
 // "us-central1-docker.pkg.dev/bank-of-anthos-ci/bank-of-anthos/frontend"
 _image:            string @tag(image)
 _semverConstraint: string @tag(semverConstraint)
-_ProjectName:      string @tag(ProjectName)
 
 holos: Component.BuildPlan
 
@@ -17,9 +16,9 @@ holos: Component.BuildPlan
 Component: #Kubernetes & {
 	Resources: {
 		// Place all of the resources in the Kargo Project namespace.
-		[_]: [_]: metadata: namespace: _ProjectName
+		[_]: [_]: metadata: namespace: ProjectName
 
-		Warehouse: (_ProjectName): {
+		Warehouse: (ProjectName): {
 			spec: {
 				subscriptions: [{
 					image: {
@@ -31,7 +30,7 @@ Component: #Kubernetes & {
 			}
 		}
 
-		for STAGE in KargoProjects[_ProjectName].stages {
+		for STAGE in KargoProjects[ProjectName].stages {
 			// NOTE: This assumes a simple structure where there is one component
 			// named the same as the project which is managed in each stage.  This
 			// hols true for podinfo.  There is a component named podinfo managed in
@@ -43,9 +42,9 @@ Component: #Kubernetes & {
 			// structure.  This structure would vary over on the promotable
 			// components, images, and stages within the Project, likely defined as a
 			// field of the #KargoProject definition.
-			let ComponentName = "\(STAGE.name)-\(_ProjectName)"
-			let OutPath = "deploy/projects/\(_ProjectName)/components/\(ComponentName)"
-			let BRANCH = "project/\(_ProjectName)/component/\(ComponentName)"
+			let ComponentName = "\(STAGE.name)-\(ProjectName)"
+			let OutPath = "deploy/projects/\(ProjectName)/components/\(ComponentName)"
+			let BRANCH = "project/\(ProjectName)/component/\(ComponentName)"
 
 			Stage: (ComponentName): {
 				spec: {
@@ -55,7 +54,7 @@ Component: #Kubernetes & {
 					// from the uat stage.
 					//
 					// See projects.podinfo.cue for an example of how this is configured.
-					requestedFreight: KargoProjects[_ProjectName].promotions[ComponentName].requestedFreight
+					requestedFreight: KargoProjects[ProjectName].promotions[STAGE.name].requestedFreight
 					promotionTemplate: spec: {
 						let SRC = "./src"
 						let OUT = "./out"

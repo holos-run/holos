@@ -44,6 +44,3 @@ Projects: {
 		}
 	}
 }
-
-// Register the HTTPRoute to the backend Service
-HTTPRoutes: kargo: _backendRefs: "kargo-api": namespace: Kargo.Namespace

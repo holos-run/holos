@@ -7,7 +7,6 @@ import "github.com/holos-run/holos/api/core/v1alpha5:core"
 	name:       string
 	components: #Components
 	namespaces: #Namespaces
-	httpRoutes: #HTTPRoutes
 }
 
 // #Projects represents a collection of #Project values organized by name.

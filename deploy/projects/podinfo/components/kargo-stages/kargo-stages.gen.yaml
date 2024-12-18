@@ -109,7 +109,7 @@ spec:
       name: podinfo
     sources:
       stages:
-      - uat-podinfo
+      - uat
 ---
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
@@ -166,7 +166,7 @@ spec:
       name: podinfo
     sources:
       stages:
-      - uat-podinfo
+      - uat
 ---
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
@@ -223,7 +223,7 @@ spec:
       name: podinfo
     sources:
       stages:
-      - uat-podinfo
+      - uat
 ---
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
@@ -280,7 +280,7 @@ spec:
       name: podinfo
     sources:
       stages:
-      - dev-podinfo
+      - dev
 ---
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
@@ -337,7 +337,7 @@ spec:
       name: podinfo
     sources:
       stages:
-      - test-podinfo
+      - test
 ---
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Warehouse

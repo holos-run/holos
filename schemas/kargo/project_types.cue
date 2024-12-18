@@ -58,7 +58,10 @@ import (
 	// Stages to manage resources within.
 	Stages: holos.#Stages
 	// Namespaces to manage in each Stage.
-	Namespaces: [NAME=string]: {name: NAME}
+	Namespaces: [NAME=string]: {
+		name: NAME
+		metadata: labels: [string]: string
+	}
 	// Components to manage in each Stage.
 	Components: holos.#Components
 	// BackendRefs  organized by component names.  The builder will populate the
@@ -73,14 +76,12 @@ import (
 		name:   Name
 		stages: Stages
 
-		// TODO: Build promotions
-		promotions: {}
-
 		for STAGE in stages {
 			for COMPONENT in Components {
 				let PARAMS = {
 					Component: COMPONENT.name
 					Prior:     STAGE.prior
+					Warehouse: name: COMPONENT.name
 				}
 				promotions: (STAGE.name): requestedFreight: (#StageSpecBuilder & PARAMS).spec.requestedFreight
 			}
@@ -112,7 +113,15 @@ import (
 
 			for STAGE in Stages {
 				for NAMESPACE in Namespaces {
-					namespaces: "\(STAGE.name)-\(NAMESPACE.name)": _
+					namespaces: "\(STAGE.name)-\(NAMESPACE.name)": {
+						// Compose labels provided to make it easy to select the namespaces
+						// this builder builds.
+						metadata: labels: NAMESPACE.metadata.labels
+						// Label the namespace with the stage name and tier so we can select
+						// where to route traffic easily.
+						metadata: labels: "holos.run/stage.name": STAGE.name
+						metadata: labels: "holos.run/stage.tier": STAGE.tier
+					}
 				}
 
 				for COMPONENT in Components {
@@ -133,27 +142,9 @@ import (
 						parameters: NamespaceName: name
 						// Mix in the stage parameters
 						parameters: STAGE.parameters
-
-						// Store the stage as a hidden field so it is not output but allows us
-						// to select components by stage attributes.  Useful to select all
-						// prod tier components for use with an HTTPRoute.
-						_stage: STAGE
-						// Store the namespace name as well for reference in HTTPRoute backends.
-						_namespace: name
 					}
-					namespaces: (STAGE_COMPONENT._namespace): _
-					components: (COMPONENT_KEY):              STAGE_COMPONENT
-					// Register HTTPRoutes for each stage.  The backend refs are expected to
-					// be composed in from outside the builder so the builder doesn't have
-					// to concern itself with service details.  We do this so we know how to
-					// build a route for each stage.
-					if BackendRefs[COMPONENT.name] != _|_ {
-						for BACKEND_REF in BackendRefs[COMPONENT.name] {
-							httpRoutes: (STAGE_COMPONENT._namespace): _backendRefs: (BACKEND_REF.name): BACKEND_REF & {
-								namespace: STAGE_COMPONENT._namespace
-							}
-						}
-					}
+					namespaces: (STAGE_COMPONENT.name): _
+					components: (COMPONENT_KEY):        STAGE_COMPONENT
 				}
 			}
 		}

@@ -27,6 +27,9 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: podinfo
+    holos.run/stage.name: dev
+    holos.run/stage.tier: nonprod
     kubernetes.io/metadata.name: dev-podinfo
   name: dev-podinfo
 ---
@@ -76,6 +79,9 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: podinfo
+    holos.run/stage.name: prod-us-central
+    holos.run/stage.tier: prod
     kubernetes.io/metadata.name: prod-us-central-podinfo
   name: prod-us-central-podinfo
 ---
@@ -84,6 +90,9 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: podinfo
+    holos.run/stage.name: prod-us-east
+    holos.run/stage.tier: prod
     kubernetes.io/metadata.name: prod-us-east-podinfo
   name: prod-us-east-podinfo
 ---
@@ -92,6 +101,9 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: podinfo
+    holos.run/stage.name: prod-us-west
+    holos.run/stage.tier: prod
     kubernetes.io/metadata.name: prod-us-west-podinfo
   name: prod-us-west-podinfo
 ---
@@ -100,6 +112,9 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: podinfo
+    holos.run/stage.name: test
+    holos.run/stage.tier: nonprod
     kubernetes.io/metadata.name: test-podinfo
   name: test-podinfo
 ---
@@ -108,5 +123,8 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: podinfo
+    holos.run/stage.name: uat
+    holos.run/stage.tier: nonprod
     kubernetes.io/metadata.name: uat-podinfo
   name: uat-podinfo
