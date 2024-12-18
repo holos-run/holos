@@ -1,0 +1,2 @@
+resources:
+    - test-podinfo.gen.yaml

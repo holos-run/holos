@@ -1,6 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+    annotations:
+        kargo.akuity.io/authorized-stage: podinfo:prod-us-east-podinfo
     labels: {}
     name: podinfo-prod-us-east-podinfo
     namespace: argocd
@@ -11,4 +13,4 @@ spec:
     source:
         path: deploy/projects/podinfo/components/prod-us-east-podinfo
         repoURL: https://github.com/holos-run/kargo-demo.git
-        targetRevision: main
+        targetRevision: stage/prod-us-east
