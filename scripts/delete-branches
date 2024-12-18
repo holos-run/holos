@@ -1,0 +1,8 @@
+#! /bin/bash
+
+git push origin :project/podinfo/component/dev-podinfo
+git push origin :project/podinfo/component/test-podinfo
+git push origin :project/podinfo/component/uat-podinfo
+git push origin :project/podinfo/component/prod-us-east-podinfo
+git push origin :project/podinfo/component/prod-us-central-podinfo
+git push origin :project/podinfo/component/prod-us-west-podinfo
