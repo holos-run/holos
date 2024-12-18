@@ -1,12 +1,15 @@
 package holos
 
 #Stage: {
-	name: string
-	tier: "prod" | "nonprod"
+	#Name: string
+	name:  #Name
+
+	#Tier: "prod" | "nonprod"
+	tier:  #Tier
 }
 
 #Stages: {
-	[NAME=string]: #Stage & {
+	[NAME=#Stage.#Name]: #Stage & {
 		name: NAME
 	}
 }

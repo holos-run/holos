@@ -8,6 +8,11 @@ package holos
 #KargoProject: {
 	name:   string
 	stages: #Stages
+
+	// promotions maps the promotable component names to pipeline stages.
+	// TODO: Define requestedFreight values properly.
+	promotions: [COMPONENT_NAME=string]: {requestedFreight: [...{...}]}
+
 	// Automatically promote non-prod stages.
 	promotionPolicies: [for STAGE in stages if STAGE.tier == "nonprod" {stage: STAGE.name, autoPromotionEnabled: true}]
 }
@@ -47,8 +52,6 @@ package holos
 			path: "components/kargo-project"
 			parameters: ProjectName: Name
 		}
-
-		// TODO: Manage the component that manages the Kargo Stage resources.
 
 		for STAGE in Stages {
 			for NAMESPACE in Namespaces {

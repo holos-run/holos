@@ -1,5 +1,7 @@
 package holos
 
+let IMAGE = "ghcr.io/stefanprodan/podinfo"
+
 let PODINFO = #KargoProjectBuilder & {
 	Name: "podinfo"
 	// Namespaces is used as a template, KargoProjectBuilder will prefix each
@@ -18,6 +20,55 @@ let PODINFO = #KargoProjectBuilder & {
 	Components: podinfo: {
 		name: "podinfo"
 		path: "projects/podinfo/components/podinfo"
+		parameters: image: IMAGE
+	}
+
+	// Compose the Kargo promotion stages into the holos project components.
+	// Project owners are expected to copy the component path into
+	// projects/<project name>/components/kargo-stages and customize it as needed
+	// to define their promotion process.
+	Project: components: "project:\(Name):component:kargo-stages": {
+		name: "kargo-stages"
+		path: "components/kargo-stages"
+		parameters: image:            IMAGE
+		parameters: semverConstraint: "^6.0.0"
+	}
+
+	KargoProject: {
+		name: _
+
+		// We need to use a let variable otherwise name: name is a cyclical
+		// reference error.
+		let NAME = name
+		let WAREHOUSE = {
+			kind: "Warehouse"
+			name: NAME
+		}
+
+		// TODO Figure out a better way to define the promotion process.  This is
+		// nice and clear though.  It would be better to pull the information from
+		// the stages structure though.
+		promotions: {
+			"dev-podinfo": requestedFreight: [{
+				origin: WAREHOUSE
+				sources: direct: true
+			}]
+			"test-podinfo": requestedFreight: [{
+				origin: WAREHOUSE
+				sources: stages: ["dev-podinfo"]
+			}]
+			"uat-podinfo": requestedFreight: [{
+				origin: WAREHOUSE
+				sources: stages: ["test-podinfo"]
+			}]
+			// We can at least aggregate all prod stages
+			for STAGE in KargoProject.stages if STAGE.tier == "prod" {
+				"\(STAGE.name)-podinfo": requestedFreight: [{
+					origin: WAREHOUSE
+					sources: stages: ["uat-podinfo"]
+				}]
+			}
+		}
 	}
 }
 

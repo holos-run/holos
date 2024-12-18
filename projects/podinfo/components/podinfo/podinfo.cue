@@ -8,11 +8,15 @@ Component: #Helm & {
 	Chart: {
 		name:    "oci://ghcr.io/stefanprodan/charts/podinfo"
 		release: "podinfo"
-		version: "6.6.1"
+		version: "6.6.0"
 	}
-	Values: {
+	Values: #ComponentValues & {
 		ui: {
 			message: "Hello! Stage: \(StageName)"
+		}
+		image: {
+			tag:        Chart.version
+			repository: string @tag(image)
 		}
 	}
 	// Ensure all resources are located in this namespace.
