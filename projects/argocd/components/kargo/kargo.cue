@@ -11,7 +11,7 @@ Component: #Helm & {
 
 	Chart: {
 		name:    "oci://ghcr.io/akuity/kargo-charts/kargo"
-		version: "1.0.3"
+		version: Kargo.Version
 		release: Name
 	}
 	EnableHooks: true

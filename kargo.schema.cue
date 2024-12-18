@@ -20,5 +20,6 @@ import (
 // Kargo config definition.
 #Kargo: {
 	Namespace: string
+	Version: string | *"1.1.1"
 	Values: {...}
 }

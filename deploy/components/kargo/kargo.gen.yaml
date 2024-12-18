@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.3
+    controller-gen.kubebuilder.io/version: v0.16.5
     helm.sh/resource-policy: keep
   labels:
     argocd.argoproj.io/instance: argocd-kargo
@@ -205,7 +205,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.3
+    controller-gen.kubebuilder.io/version: v0.16.5
     helm.sh/resource-policy: keep
   labels:
     argocd.argoproj.io/instance: argocd-kargo
@@ -374,7 +374,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.3
+    controller-gen.kubebuilder.io/version: v0.16.5
     helm.sh/resource-policy: keep
   labels:
     argocd.argoproj.io/instance: argocd-kargo
@@ -463,8 +463,56 @@ spec:
                       description: As is the alias this step can be referred to as.
                       type: string
                     config:
-                      description: Config is the configuration for the directive.
+                      description: |-
+                        Config is opaque configuration for the PromotionStep that is understood
+                        only by each PromotionStep's implementation. It is legal to utilize
+                        expressions in defining values at any level of this block.
+                        See https://docs.kargo.io/references/expression-language for details.
                       x-kubernetes-preserve-unknown-fields: true
+                    retry:
+                      description: Retry is the retry policy for this step.
+                      properties:
+                        errorThreshold:
+                          description: |-
+                            ErrorThreshold is the number of consecutive times the step must fail (for
+                            any reason) before retries are abandoned and the entire Promotion is marked
+                            as failed.
+
+                            If this field is set to 0, the effective default will be a step-specific
+                            one. If no step-specific default exists (i.e. is also 0), the effective
+                            default will be the system-wide default of 1.
+
+                            A value of 1 will cause the Promotion to be marked as failed after just
+                            a single failure; i.e. no retries will be attempted.
+
+                            There is no option to specify an infinite number of retries using a value
+                            such as -1.
+
+                            In a future release, Kargo is likely to become capable of distinguishing
+                            between recoverable and non-recoverable step failures. At that time, it is
+                            planned that unrecoverable failures will not be subject to this threshold
+                            and will immediately cause the Promotion to be marked as failed without
+                            further condition.
+                          format: int32
+                          type: integer
+                        timeout:
+                          description: |-
+                            Timeout is the soft maximum interval in which a step that returns a Running
+                            status (which typically indicates it's waiting for something to happen)
+                            may be retried.
+
+                            The maximum is a soft one because the check for whether the interval has
+                            elapsed occurs AFTER the step has run. This effectively means a step may
+                            run ONCE beyond the close of the interval.
+
+                            If this field is set to nil, the effective default will be a step-specific
+                            one. If no step-specific default exists (i.e. is also nil), the effective
+                            default will be the system-wide default of 0.
+
+                            A value of 0 will cause the step to be retried indefinitely unless the
+                            ErrorThreshold is reached.
+                          type: string
+                      type: object
                     uses:
                       description: Uses identifies a runner that can execute this
                         step.
@@ -472,6 +520,31 @@ spec:
                       type: string
                   required:
                   - uses
+                  type: object
+                type: array
+              vars:
+                description: |-
+                  Vars is a list of variables that can be referenced by expressions in
+                  promotion steps.
+                items:
+                  description: |-
+                    PromotionVariable describes a single variable that may be referenced by
+                    expressions in promotion steps.
+                  properties:
+                    name:
+                      description: Name is the name of the variable.
+                      minLength: 1
+                      pattern: ^[a-zA-Z_]\w*$
+                      type: string
+                    value:
+                      description: |-
+                        Value is the value of the variable. It is allowed to utilize expressions
+                        in the value.
+                        See https://docs.kargo.io/references/expression-language for details.
+                      type: string
+                  required:
+                  - name
+                  - value
                   type: object
                 type: array
             required:
@@ -860,6 +933,44 @@ spec:
                   State stores the state of the promotion process between reconciliation
                   attempts.
                 x-kubernetes-preserve-unknown-fields: true
+              stepExecutionMetadata:
+                description: |-
+                  StepExecutionMetadata tracks metadata pertaining to the execution
+                  of individual promotion steps.
+                items:
+                  description: |-
+                    StepExecutionMetadata tracks metadata pertaining to the execution of
+                    a promotion step.
+                  properties:
+                    alias:
+                      description: Alias is the alias of the step.
+                      type: string
+                    errorCount:
+                      description: ErrorCount tracks consecutive failed attempts to
+                        execute the step.
+                      format: int32
+                      type: integer
+                    finishedAt:
+                      description: |-
+                        FinishedAt is the time at which the final attempt to execute the step
+                        completed.
+                      format: date-time
+                      type: string
+                    message:
+                      description: Message is a display message about the step, including
+                        any errors.
+                      type: string
+                    startedAt:
+                      description: |-
+                        StartedAt is the time at which the first attempt to execute the step
+                        began.
+                      format: date-time
+                      type: string
+                    status:
+                      description: Status is the high-level outcome of the step.
+                      type: string
+                  type: object
+                type: array
             type: object
         required:
         - spec
@@ -873,7 +984,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.3
+    controller-gen.kubebuilder.io/version: v0.16.5
     helm.sh/resource-policy: keep
   labels:
     argocd.argoproj.io/instance: argocd-kargo
@@ -955,8 +1066,56 @@ spec:
                                 to as.
                               type: string
                             config:
-                              description: Config is the configuration for the directive.
+                              description: |-
+                                Config is opaque configuration for the PromotionStep that is understood
+                                only by each PromotionStep's implementation. It is legal to utilize
+                                expressions in defining values at any level of this block.
+                                See https://docs.kargo.io/references/expression-language for details.
                               x-kubernetes-preserve-unknown-fields: true
+                            retry:
+                              description: Retry is the retry policy for this step.
+                              properties:
+                                errorThreshold:
+                                  description: |-
+                                    ErrorThreshold is the number of consecutive times the step must fail (for
+                                    any reason) before retries are abandoned and the entire Promotion is marked
+                                    as failed.
+
+                                    If this field is set to 0, the effective default will be a step-specific
+                                    one. If no step-specific default exists (i.e. is also 0), the effective
+                                    default will be the system-wide default of 1.
+
+                                    A value of 1 will cause the Promotion to be marked as failed after just
+                                    a single failure; i.e. no retries will be attempted.
+
+                                    There is no option to specify an infinite number of retries using a value
+                                    such as -1.
+
+                                    In a future release, Kargo is likely to become capable of distinguishing
+                                    between recoverable and non-recoverable step failures. At that time, it is
+                                    planned that unrecoverable failures will not be subject to this threshold
+                                    and will immediately cause the Promotion to be marked as failed without
+                                    further condition.
+                                  format: int32
+                                  type: integer
+                                timeout:
+                                  description: |-
+                                    Timeout is the soft maximum interval in which a step that returns a Running
+                                    status (which typically indicates it's waiting for something to happen)
+                                    may be retried.
+
+                                    The maximum is a soft one because the check for whether the interval has
+                                    elapsed occurs AFTER the step has run. This effectively means a step may
+                                    run ONCE beyond the close of the interval.
+
+                                    If this field is set to nil, the effective default will be a step-specific
+                                    one. If no step-specific default exists (i.e. is also nil), the effective
+                                    default will be the system-wide default of 0.
+
+                                    A value of 0 will cause the step to be retried indefinitely unless the
+                                    ErrorThreshold is reached.
+                                  type: string
+                              type: object
                             uses:
                               description: Uses identifies a runner that can execute
                                 this step.
@@ -966,6 +1125,31 @@ spec:
                           - uses
                           type: object
                         minItems: 1
+                        type: array
+                      vars:
+                        description: |-
+                          Vars is a list of variables that can be referenced by expressions in
+                          promotion steps.
+                        items:
+                          description: |-
+                            PromotionVariable describes a single variable that may be referenced by
+                            expressions in promotion steps.
+                          properties:
+                            name:
+                              description: Name is the name of the variable.
+                              minLength: 1
+                              pattern: ^[a-zA-Z_]\w*$
+                              type: string
+                            value:
+                              description: |-
+                                Value is the value of the variable. It is allowed to utilize expressions
+                                in the value.
+                                See https://docs.kargo.io/references/expression-language for details.
+                              type: string
+                          required:
+                          - name
+                          - value
+                          type: object
                         type: array
                     type: object
                 required:
@@ -1108,6 +1292,68 @@ spec:
             description: Status describes the Stage's current and recent Freight,
               health, and more.
             properties:
+              conditions:
+                description: |-
+                  Conditions contains the last observations of the Stage's current
+                  state.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
               currentPromotion:
                 description: CurrentPromotion is a reference to the currently Running
                   promotion.
@@ -1629,6 +1875,45 @@ spec:
                           State stores the state of the promotion process between reconciliation
                           attempts.
                         x-kubernetes-preserve-unknown-fields: true
+                      stepExecutionMetadata:
+                        description: |-
+                          StepExecutionMetadata tracks metadata pertaining to the execution
+                          of individual promotion steps.
+                        items:
+                          description: |-
+                            StepExecutionMetadata tracks metadata pertaining to the execution of
+                            a promotion step.
+                          properties:
+                            alias:
+                              description: Alias is the alias of the step.
+                              type: string
+                            errorCount:
+                              description: ErrorCount tracks consecutive failed attempts
+                                to execute the step.
+                              format: int32
+                              type: integer
+                            finishedAt:
+                              description: |-
+                                FinishedAt is the time at which the final attempt to execute the step
+                                completed.
+                              format: date-time
+                              type: string
+                            message:
+                              description: Message is a display message about the
+                                step, including any errors.
+                              type: string
+                            startedAt:
+                              description: |-
+                                StartedAt is the time at which the first attempt to execute the step
+                                began.
+                              format: date-time
+                              type: string
+                            status:
+                              description: Status is the high-level outcome of the
+                                step.
+                              type: string
+                          type: object
+                        type: array
                     type: object
                 required:
                 - name
@@ -1861,49 +2146,6 @@ spec:
               health:
                 description: Health is the Stage's last observed health.
                 properties:
-                  argoCDApps:
-                    description: ArgoCDApps describes the current state of any related
-                      ArgoCD Applications.
-                    items:
-                      description: ArgoCDAppStatus describes the current state of
-                        a single ArgoCD Application.
-                      properties:
-                        healthStatus:
-                          description: HealthStatus is the health of the ArgoCD Application.
-                          properties:
-                            message:
-                              type: string
-                            status:
-                              type: string
-                          required:
-                          - status
-                          type: object
-                        name:
-                          description: Name is the name of the ArgoCD Application.
-                          type: string
-                        namespace:
-                          description: Namespace is the namespace of the ArgoCD Application.
-                          type: string
-                        syncStatus:
-                          description: SyncStatus is the sync status of the ArgoCD
-                            Application.
-                          properties:
-                            revision:
-                              type: string
-                            revisions:
-                              items:
-                                type: string
-                              type: array
-                            status:
-                              type: string
-                          required:
-                          - status
-                          type: object
-                      required:
-                      - name
-                      - namespace
-                      type: object
-                    type: array
                   config:
                     description: |-
                       Config is the opaque configuration of all health checks performed on this
@@ -2450,6 +2692,45 @@ spec:
                           State stores the state of the promotion process between reconciliation
                           attempts.
                         x-kubernetes-preserve-unknown-fields: true
+                      stepExecutionMetadata:
+                        description: |-
+                          StepExecutionMetadata tracks metadata pertaining to the execution
+                          of individual promotion steps.
+                        items:
+                          description: |-
+                            StepExecutionMetadata tracks metadata pertaining to the execution of
+                            a promotion step.
+                          properties:
+                            alias:
+                              description: Alias is the alias of the step.
+                              type: string
+                            errorCount:
+                              description: ErrorCount tracks consecutive failed attempts
+                                to execute the step.
+                              format: int32
+                              type: integer
+                            finishedAt:
+                              description: |-
+                                FinishedAt is the time at which the final attempt to execute the step
+                                completed.
+                              format: date-time
+                              type: string
+                            message:
+                              description: Message is a display message about the
+                                step, including any errors.
+                              type: string
+                            startedAt:
+                              description: |-
+                                StartedAt is the time at which the first attempt to execute the step
+                                began.
+                              format: date-time
+                              type: string
+                            status:
+                              description: Status is the high-level outcome of the
+                                step.
+                              type: string
+                          type: object
+                        type: array
                     type: object
                 required:
                 - name
@@ -2481,7 +2762,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.16.3
+    controller-gen.kubebuilder.io/version: v0.16.5
     helm.sh/resource-policy: keep
   labels:
     argocd.argoproj.io/instance: argocd-kargo
@@ -2533,6 +2814,7 @@ spec:
                   FreightCreationPolicy describes how Freight is created by this Warehouse.
                   This field is optional. When left unspecified, the field is implicitly
                   treated as if its value were "Automatic".
+                  Accepted values: Automatic, Manual
                 enum:
                 - Automatic
                 - Manual
@@ -2642,6 +2924,7 @@ spec:
                             commit of interest in the repository specified by the RepoURL field. This
                             field is optional. When left unspecified, the field is implicitly treated
                             as if its value were "NewestFromBranch".
+                            Accepted values: Lexical, NewestFromBranch, NewestTag, SemVer
                           enum:
                           - Lexical
                           - NewestFromBranch
@@ -2787,6 +3070,7 @@ spec:
                             of the image specified by the RepoURL field. This field is optional. When
                             left unspecified, the field is implicitly treated as if its value were
                             "SemVer".
+                            Accepted values: Digest, Lexical, NewestBuild, SemVer
                           enum:
                           - Digest
                           - Lexical
@@ -3127,9 +3411,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-admin
   namespace: kargo
 ---
@@ -3141,9 +3425,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-api
   namespace: kargo
 ---
@@ -3155,9 +3439,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-controller
   namespace: kargo
 ---
@@ -3169,9 +3453,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-garbage-collector
   namespace: kargo
 ---
@@ -3183,9 +3467,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-management-controller
   namespace: kargo
 ---
@@ -3196,9 +3480,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-viewer
   namespace: kargo
 ---
@@ -3210,9 +3494,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server
   namespace: kargo
 ---
@@ -3223,9 +3507,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-admin
 rules:
 - apiGroups:
@@ -3303,9 +3587,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-api
 rules:
 - apiGroups:
@@ -3423,9 +3707,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-api-rollouts
 rules:
 - apiGroups:
@@ -3445,9 +3729,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-controller
 rules:
 - apiGroups:
@@ -3520,9 +3804,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-controller-argocd
 rules:
 - apiGroups:
@@ -3543,9 +3827,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-controller-rollouts
 rules:
 - apiGroups:
@@ -3576,9 +3860,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-garbage-collector
 rules:
 - apiGroups:
@@ -3623,9 +3907,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-management-controller
 rules:
 - apiGroups:
@@ -3677,9 +3961,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-project-admin
 rules:
 - apiGroups:
@@ -3705,9 +3989,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-viewer
 rules:
 - apiGroups:
@@ -3759,9 +4043,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server
 rules:
 - apiGroups:
@@ -3829,9 +4113,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server-generic-gc
 rules:
 - apiGroups:
@@ -3849,9 +4133,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server-ns-controller
 rules:
 - apiGroups:
@@ -3868,9 +4152,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -3889,9 +4173,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-api
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -3910,9 +4194,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-api-rollouts
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -3931,9 +4215,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-controller
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -3952,9 +4236,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-controller-argocd
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -3973,9 +4257,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-controller-rollouts
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -3994,9 +4278,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-garbage-collector
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -4015,9 +4299,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-management-controller
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -4035,9 +4319,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-viewer
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -4056,9 +4340,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -4077,9 +4361,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server-generic-gc
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -4098,9 +4382,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server-ns-controller
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -4129,9 +4413,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-api
   namespace: kargo
 ---
@@ -4146,6 +4430,10 @@ data:
   GITCLIENT_SIGNING_KEY_TYPE: gpg
   GLOBAL_CREDENTIALS_NAMESPACES: kargo
   LOG_LEVEL: INFO
+  MAX_CONCURRENT_CONTROL_FLOW_RECONCILES: "4"
+  MAX_CONCURRENT_PROMOTION_RECONCILES: "4"
+  MAX_CONCURRENT_STAGE_RECONCILES: "4"
+  MAX_CONCURRENT_WAREHOUSE_RECONCILES: "4"
   ROLLOUTS_CONTROLLER_INSTANCE_ID: ""
   ROLLOUTS_INTEGRATION_ENABLED: "true"
 kind: ConfigMap
@@ -4155,9 +4443,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-controller
   namespace: kargo
 ---
@@ -4176,9 +4464,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-garbage-collector
   namespace: kargo
 ---
@@ -4187,6 +4475,9 @@ data:
   KARGO_NAMESPACE: kargo
   LOG_LEVEL: INFO
   MANAGE_CONTROLLER_ROLE_BINDINGS: "false"
+  MAX_CONCURRENT_NAMESPACE_RECONCILES: "4"
+  MAX_CONCURRENT_PROJECT_RECONCILES: "4"
+  MAX_CONCURRENT_SERVICE_ACCOUNT_RECONCILES: "4"
 kind: ConfigMap
 metadata:
   labels:
@@ -4194,9 +4485,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-management-controller
   namespace: kargo
 ---
@@ -4212,9 +4503,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server
   namespace: kargo
 ---
@@ -4226,9 +4517,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-api
   namespace: kargo
 spec:
@@ -4250,9 +4541,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server
   namespace: kargo
 spec:
@@ -4274,9 +4565,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-api
   namespace: kargo
 spec:
@@ -4298,19 +4589,30 @@ spec:
         app.kubernetes.io/instance: kargo
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kargo
-        app.kubernetes.io/version: v1.0.3
-        helm.sh/chart: kargo-1.0.3
+        app.kubernetes.io/version: v1.1.1
+        helm.sh/chart: kargo-1.1.1
     spec:
       containers:
       - command:
         - /usr/local/bin/kargo
         - api
+        env:
+        - name: GOMEMLIMIT
+          valueFrom:
+            resourceFieldRef:
+              containerName: api
+              resource: limits.memory
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              containerName: api
+              resource: limits.cpu
         envFrom:
         - configMapRef:
             name: kargo-api
         - secretRef:
             name: admin-credentials
-        image: ghcr.io/akuity/kargo:v1.0.3
+        image: ghcr.io/akuity/kargo:v1.1.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:
@@ -4340,9 +4642,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-controller
   namespace: kargo
 spec:
@@ -4357,23 +4659,37 @@ spec:
   template:
     metadata:
       annotations:
-        configmap/checksum: 6b243732e7e4c920dda8395eb9f4d97c796850efc4916b7cd7a1c3be851ff4be
+        configmap/checksum: 86dffc1096f171ff1772ba5174f5e58f8959c09d3c9aaa2c3d67a9b9fa5d58ed
       labels:
         app.kubernetes.io/component: controller
         app.kubernetes.io/instance: kargo
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kargo
-        app.kubernetes.io/version: v1.0.3
-        helm.sh/chart: kargo-1.0.3
+        app.kubernetes.io/version: v1.1.1
+        helm.sh/chart: kargo-1.1.1
     spec:
       containers:
-      - command:
-        - /usr/local/bin/kargo
+      - args:
         - controller
+        command:
+        - /sbin/tini
+        - --
+        - /usr/local/bin/kargo
+        env:
+        - name: GOMEMLIMIT
+          valueFrom:
+            resourceFieldRef:
+              containerName: controller
+              resource: limits.memory
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              containerName: controller
+              resource: limits.cpu
         envFrom:
         - configMapRef:
             name: kargo-controller
-        image: ghcr.io/akuity/kargo:v1.0.3
+        image: ghcr.io/akuity/kargo:v1.1.1
         imagePullPolicy: IfNotPresent
         name: controller
         resources: {}
@@ -4387,9 +4703,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-management-controller
   namespace: kargo
 spec:
@@ -4404,20 +4720,34 @@ spec:
   template:
     metadata:
       annotations:
-        configmap/checksum: d5c3143a94d57af29a3836414d147d76b5406bcb3cf780e3fd38acab01ee984f
+        configmap/checksum: 46f0311183f703dab1c1936d27034b0ba80d81472a4c1a552acb080b95d89ac7
       labels:
         app.kubernetes.io/component: management-controller
         app.kubernetes.io/instance: kargo
         app.kubernetes.io/name: kargo
     spec:
       containers:
-      - command:
-        - /usr/local/bin/kargo
+      - args:
         - management-controller
+        command:
+        - /sbin/tini
+        - --
+        - /usr/local/bin/kargo
+        env:
+        - name: GOMEMLIMIT
+          valueFrom:
+            resourceFieldRef:
+              containerName: management-controller
+              resource: limits.memory
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              containerName: management-controller
+              resource: limits.cpu
         envFrom:
         - configMapRef:
             name: kargo-management-controller
-        image: ghcr.io/akuity/kargo:v1.0.3
+        image: ghcr.io/akuity/kargo:v1.1.1
         imagePullPolicy: IfNotPresent
         name: management-controller
         resources: {}
@@ -4431,9 +4761,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-webhooks-server
   namespace: kargo
 spec:
@@ -4454,17 +4784,31 @@ spec:
         app.kubernetes.io/instance: kargo
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kargo
-        app.kubernetes.io/version: v1.0.3
-        helm.sh/chart: kargo-1.0.3
+        app.kubernetes.io/version: v1.1.1
+        helm.sh/chart: kargo-1.1.1
     spec:
       containers:
-      - command:
-        - /usr/local/bin/kargo
+      - args:
         - webhooks-server
+        command:
+        - /sbin/tini
+        - --
+        - /usr/local/bin/kargo
+        env:
+        - name: GOMEMLIMIT
+          valueFrom:
+            resourceFieldRef:
+              containerName: webhooks-server
+              resource: limits.memory
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              containerName: webhooks-server
+              resource: limits.cpu
         envFrom:
         - configMapRef:
             name: kargo-webhooks-server
-        image: ghcr.io/akuity/kargo:v1.0.3
+        image: ghcr.io/akuity/kargo:v1.1.1
         imagePullPolicy: IfNotPresent
         name: webhooks-server
         ports:
@@ -4491,9 +4835,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo-garbage-collector
   namespace: kargo
 spec:
@@ -4507,8 +4851,8 @@ spec:
         app.kubernetes.io/instance: kargo
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/name: kargo
-        app.kubernetes.io/version: v1.0.3
-        helm.sh/chart: kargo-1.0.3
+        app.kubernetes.io/version: v1.1.1
+        helm.sh/chart: kargo-1.1.1
     spec:
       template:
         metadata:
@@ -4519,17 +4863,31 @@ spec:
             app.kubernetes.io/instance: kargo
             app.kubernetes.io/managed-by: Helm
             app.kubernetes.io/name: kargo
-            app.kubernetes.io/version: v1.0.3
-            helm.sh/chart: kargo-1.0.3
+            app.kubernetes.io/version: v1.1.1
+            helm.sh/chart: kargo-1.1.1
         spec:
           containers:
-          - command:
-            - /usr/local/bin/kargo
+          - args:
             - garbage-collector
+            command:
+            - /sbin/tini
+            - --
+            - /usr/local/bin/kargo
+            env:
+            - name: GOMEMLIMIT
+              valueFrom:
+                resourceFieldRef:
+                  containerName: garbage-collector
+                  resource: limits.memory
+            - name: GOMAXPROCS
+              valueFrom:
+                resourceFieldRef:
+                  containerName: garbage-collector
+                  resource: limits.cpu
             envFrom:
             - configMapRef:
                 name: kargo-garbage-collector
-            image: ghcr.io/akuity/kargo:v1.0.3
+            image: ghcr.io/akuity/kargo:v1.1.1
             imagePullPolicy: IfNotPresent
             name: garbage-collector
             resources: {}
@@ -4588,9 +4946,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo
 webhooks:
 - admissionReviewVersions:
@@ -4688,9 +5046,9 @@ metadata:
     app.kubernetes.io/instance: kargo
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: kargo
-    app.kubernetes.io/version: v1.0.3
+    app.kubernetes.io/version: v1.1.1
     argocd.argoproj.io/instance: argocd-kargo
-    helm.sh/chart: kargo-1.0.3
+    helm.sh/chart: kargo-1.1.1
   name: kargo
 webhooks:
 - admissionReviewVersions:
