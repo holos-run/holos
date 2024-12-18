@@ -7,27 +7,40 @@ let HTTPROUTE_LABEL = "holos.run/httproute.project"
 
 let PODINFO = kargo.#ProjectBuilder & {
 	Name: "podinfo"
-	// Namespaces is used as a template, KargoProjectBuilder will prefix each
+	// Namespaces are used as a template, KargoProjectBuilder will prefix each
 	// namespace with the stage name.
 	Namespaces: podinfo: metadata: labels: (HTTPROUTE_LABEL): Name
 
 	// Stages organized by prod and nonprod so we can easily get a handle on all
 	// prod stages, for example in the HTTPRoute below.
 	Stages: {
-		let NONPROD = {
+		let PARAMS = {
+			name: string
+			parameters: message: "Hello! Stage: \(name)"
+		}
+		let NONPROD = PARAMS & {
 			tier: "nonprod"
 			parameters: version: "6.7.0"
 		}
 		dev: NONPROD & {prior: "direct"}
 		test: NONPROD & {prior: "dev"}
 		uat: NONPROD & {prior: "test"}
-		let PROD = {
+		let PROD = PARAMS & {
 			tier:  "prod"
 			prior: "uat"
+			// We have to stringify all injected tags.  This is a reason to switch to
+			// passing the component over standard input as structured data.
+			parameters: replicaCount: "2"
 		}
-		"prod-us-east": PROD & {parameters: version: "6.6.1"}
-		"prod-us-central": PROD & {parameters: version: "6.6.2"}
-		"prod-us-west": PROD & {parameters: version: "6.7.0"}
+		"prod-us-east": PROD & {
+			parameters: version: "6.6.1"
+		}
+		"prod-us-central": PROD & {
+			parameters: version: "6.6.2"
+		}
+		"prod-us-west": PROD & {
+			parameters: version: "6.7.0"
+		}
 	}
 
 	Components: podinfo: {

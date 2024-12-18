@@ -1,41 +1,36 @@
 package holos
 
-import h "example.com/platform/schemas/holos/v1alpha5"
-
-holos: Component.BuildPlan
-
-_NamespaceName: string @tag(NamespaceName)
-// image is the oci image repository to configure.
-_image:   string            @tag(image)
-_version: string | *"6.7.0" @tag(version)
-
-TierName: Stages[StageName].tier
-
-ValuesByTier: {
-	prod: replicaCount:    2
-	nonprod: replicaCount: 1
+// Parameters injected from the platform spec.
+Parameters: {
+	namespace:    string | *"podinfo-demo"                 @tag(NamespaceName)
+	image:        string | *"ghcr.io/stefanprodan/podinfo" @tag(image)
+	message:      string | *"Hello World"                  @tag(message)
+	version:      string | *"6.7.0"                        @tag(version)
+	replicaCount: int | *1                                 @tag(replicaCount, type=int)
 }
 
+// BuildPlan for holos to execute.
+holos: Component.BuildPlan
+
+// Configure the component from input parameters.
 Component: #Helm & {
 	Chart: {
 		name:    "oci://ghcr.io/stefanprodan/charts/podinfo"
 		release: "podinfo"
-		version: _version
+		version: Parameters.version
 	}
-	Values: #ComponentValues & {
-		// Embed the values for this tier.
-		ValuesByTier[Stages[StageName].tier]
 
-		ui: {
-			message: "Hello! Stage: \(StageName)"
-		}
+	// Ensure all resources are located in the provided namespace
+	KustomizeConfig: Kustomization: namespace: Parameters.namespace
+
+	// The #Values definition is imported from the chart and defined in
+	// values_schema.cue
+	Values: #Values & {
+		replicaCount: Parameters.replicaCount
+		ui: message: Parameters.message
 		image: {
 			tag:        Chart.version
-			repository: _image
+			repository: Parameters.image
 		}
 	}
-	// Ensure all resources are located in this namespace.
-	KustomizeConfig: Kustomization: namespace: _NamespaceName
-	// Grant the HTTPRoute access to route to this namespace.
-	Resources: ReferenceGrant: (h.#ReferenceGrantBuilder & {Namespace: _NamespaceName}).ReferenceGrant
 }

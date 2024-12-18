@@ -1,9 +1,11 @@
 package holos
 
 // Imported with:
-// holos cue import --package holos --path '#ComponentValues:' --outfile values.schema.cue vendor/6.6.2/podinfo/values.yaml
-// null values need to be converted to optional fields in cue.
-#ComponentValues: {
+// holos cue import --package holos --path '#Values:' --outfile
+// values_schema.cue vendor/6.6.2/podinfo/values.yaml
+//
+// null values need to be converted by hand to optional fields after importing.
+#Values: {
 	// Default values for podinfo.
 	replicaCount: int | *1
 	logLevel:     "info"
