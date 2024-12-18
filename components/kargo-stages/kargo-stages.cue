@@ -72,6 +72,7 @@ Component: #Kubernetes & {
 											// ComponentName has the stage prefix, so no need to also
 											// scope to the stage name.
 											branch: BRANCH
+											create: true
 											path:   OUT
 										},
 									]

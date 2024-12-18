@@ -14,6 +14,7 @@ spec:
           - branch: main
             path: ./src
           - branch: project/podinfo/component/dev-podinfo
+            create: true
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -70,6 +71,7 @@ spec:
           - branch: main
             path: ./src
           - branch: project/podinfo/component/prod-us-central-podinfo
+            create: true
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -127,6 +129,7 @@ spec:
           - branch: main
             path: ./src
           - branch: project/podinfo/component/prod-us-east-podinfo
+            create: true
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -184,6 +187,7 @@ spec:
           - branch: main
             path: ./src
           - branch: project/podinfo/component/prod-us-west-podinfo
+            create: true
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -241,6 +245,7 @@ spec:
           - branch: main
             path: ./src
           - branch: project/podinfo/component/test-podinfo
+            create: true
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -298,6 +303,7 @@ spec:
           - branch: main
             path: ./src
           - branch: project/podinfo/component/uat-podinfo
+            create: true
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
