@@ -80,6 +80,7 @@ kubectl wait --for=condition=Available deployment/kargo-webhooks-server -n kargo
 
 # Project Kargo Resources (Requires kargo-webhooks-server)
 applyProject podinfo kargo-project
+applyProject podinfo kargo-stages
 
 set +x
 echo
