@@ -12,7 +12,10 @@ Component: {
 
 	_ArgoApplication: {
 		metadata: annotations: "kargo.akuity.io/authorized-stage": "\(ProjectName):\(Name)"
-		spec: source: targetRevision:                              "stage/\(StageName)"
+		spec: source: {
+			path:           "./"
+			targetRevision: "project/\(ProjectName)/component/\(Name)"
+		}
 	}
 
 	// Write a kustomization.yaml to the deploy directory for Kargo to edit.

@@ -4,9 +4,9 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: podinfo
-    app.kubernetes.io/version: 6.6.0
+    app.kubernetes.io/version: 6.6.1
     argocd.argoproj.io/instance: podinfo-prod-us-east-podinfo
-    helm.sh/chart: podinfo-6.6.0
+    helm.sh/chart: podinfo-6.6.1
   name: podinfo
   namespace: prod-us-east-podinfo
 spec:
@@ -29,9 +29,9 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: podinfo
-    app.kubernetes.io/version: 6.6.0
+    app.kubernetes.io/version: 6.6.1
     argocd.argoproj.io/instance: podinfo-prod-us-east-podinfo
-    helm.sh/chart: podinfo-6.6.0
+    helm.sh/chart: podinfo-6.6.1
   name: podinfo
   namespace: prod-us-east-podinfo
 spec:
@@ -67,7 +67,7 @@ spec:
           value: 'Hello! Stage: prod-us-east'
         - name: PODINFO_UI_COLOR
           value: '#34577c'
-        image: ghcr.io/stefanprodan/podinfo:6.6.0
+        image: ghcr.io/stefanprodan/podinfo:6.6.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:

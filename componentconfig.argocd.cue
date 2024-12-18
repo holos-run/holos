@@ -24,7 +24,7 @@ import (
 			destination: server: "https://kubernetes.default.svc"
 			project: ProjectName
 			source: {
-				path:           ResourcesPath
+				path:           string | *ResourcesPath
 				repoURL:        Organization.RepoURL
 				targetRevision: string | *"main"
 			}

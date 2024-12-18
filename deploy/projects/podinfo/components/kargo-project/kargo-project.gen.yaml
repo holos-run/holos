@@ -7,8 +7,8 @@ metadata:
 spec:
   promotionPolicies:
   - autoPromotionEnabled: true
-    stage: dev
+    stage: dev-podinfo
   - autoPromotionEnabled: true
-    stage: test
+    stage: test-podinfo
   - autoPromotionEnabled: true
-    stage: uat
+    stage: uat-podinfo

@@ -13,7 +13,7 @@ spec:
           checkout:
           - branch: main
             path: ./src
-          - branch: stage/dev
+          - branch: project/podinfo/component/dev-podinfo
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -27,7 +27,7 @@ spec:
           path: ./src/deploy/projects/podinfo/components/dev-podinfo
         uses: kustomize-set-image
       - config:
-          outPath: ./out/deploy/projects/podinfo/components/dev-podinfo/dev-podinfo.gen.yaml
+          outPath: ./out/dev-podinfo.gen.yaml
           path: ./src/deploy/projects/podinfo/components/dev-podinfo
         uses: kustomize-build
       - as: commit
@@ -38,7 +38,7 @@ spec:
         uses: git-commit
       - config:
           path: ./out
-          targetBranch: stage/dev
+          targetBranch: project/podinfo/component/dev-podinfo
         uses: git-push
       - config:
           apps:
@@ -69,7 +69,7 @@ spec:
           checkout:
           - branch: main
             path: ./src
-          - branch: stage/prod-us-central
+          - branch: project/podinfo/component/prod-us-central-podinfo
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -83,7 +83,7 @@ spec:
           path: ./src/deploy/projects/podinfo/components/prod-us-central-podinfo
         uses: kustomize-set-image
       - config:
-          outPath: ./out/deploy/projects/podinfo/components/prod-us-central-podinfo/prod-us-central-podinfo.gen.yaml
+          outPath: ./out/prod-us-central-podinfo.gen.yaml
           path: ./src/deploy/projects/podinfo/components/prod-us-central-podinfo
         uses: kustomize-build
       - as: commit
@@ -94,7 +94,7 @@ spec:
         uses: git-commit
       - config:
           path: ./out
-          targetBranch: stage/prod-us-central
+          targetBranch: project/podinfo/component/prod-us-central-podinfo
         uses: git-push
       - config:
           apps:
@@ -126,7 +126,7 @@ spec:
           checkout:
           - branch: main
             path: ./src
-          - branch: stage/prod-us-east
+          - branch: project/podinfo/component/prod-us-east-podinfo
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -140,7 +140,7 @@ spec:
           path: ./src/deploy/projects/podinfo/components/prod-us-east-podinfo
         uses: kustomize-set-image
       - config:
-          outPath: ./out/deploy/projects/podinfo/components/prod-us-east-podinfo/prod-us-east-podinfo.gen.yaml
+          outPath: ./out/prod-us-east-podinfo.gen.yaml
           path: ./src/deploy/projects/podinfo/components/prod-us-east-podinfo
         uses: kustomize-build
       - as: commit
@@ -151,7 +151,7 @@ spec:
         uses: git-commit
       - config:
           path: ./out
-          targetBranch: stage/prod-us-east
+          targetBranch: project/podinfo/component/prod-us-east-podinfo
         uses: git-push
       - config:
           apps:
@@ -183,7 +183,7 @@ spec:
           checkout:
           - branch: main
             path: ./src
-          - branch: stage/prod-us-west
+          - branch: project/podinfo/component/prod-us-west-podinfo
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -197,7 +197,7 @@ spec:
           path: ./src/deploy/projects/podinfo/components/prod-us-west-podinfo
         uses: kustomize-set-image
       - config:
-          outPath: ./out/deploy/projects/podinfo/components/prod-us-west-podinfo/prod-us-west-podinfo.gen.yaml
+          outPath: ./out/prod-us-west-podinfo.gen.yaml
           path: ./src/deploy/projects/podinfo/components/prod-us-west-podinfo
         uses: kustomize-build
       - as: commit
@@ -208,7 +208,7 @@ spec:
         uses: git-commit
       - config:
           path: ./out
-          targetBranch: stage/prod-us-west
+          targetBranch: project/podinfo/component/prod-us-west-podinfo
         uses: git-push
       - config:
           apps:
@@ -240,7 +240,7 @@ spec:
           checkout:
           - branch: main
             path: ./src
-          - branch: stage/test
+          - branch: project/podinfo/component/test-podinfo
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -254,7 +254,7 @@ spec:
           path: ./src/deploy/projects/podinfo/components/test-podinfo
         uses: kustomize-set-image
       - config:
-          outPath: ./out/deploy/projects/podinfo/components/test-podinfo/test-podinfo.gen.yaml
+          outPath: ./out/test-podinfo.gen.yaml
           path: ./src/deploy/projects/podinfo/components/test-podinfo
         uses: kustomize-build
       - as: commit
@@ -265,7 +265,7 @@ spec:
         uses: git-commit
       - config:
           path: ./out
-          targetBranch: stage/test
+          targetBranch: project/podinfo/component/test-podinfo
         uses: git-push
       - config:
           apps:
@@ -297,7 +297,7 @@ spec:
           checkout:
           - branch: main
             path: ./src
-          - branch: stage/uat
+          - branch: project/podinfo/component/uat-podinfo
             path: ./out
           repoURL: https://github.com/holos-run/kargo-demo.git
         uses: git-clone
@@ -311,7 +311,7 @@ spec:
           path: ./src/deploy/projects/podinfo/components/uat-podinfo
         uses: kustomize-set-image
       - config:
-          outPath: ./out/deploy/projects/podinfo/components/uat-podinfo/uat-podinfo.gen.yaml
+          outPath: ./out/uat-podinfo.gen.yaml
           path: ./src/deploy/projects/podinfo/components/uat-podinfo
         uses: kustomize-build
       - as: commit
@@ -322,7 +322,7 @@ spec:
         uses: git-commit
       - config:
           path: ./out
-          targetBranch: stage/uat
+          targetBranch: project/podinfo/component/uat-podinfo
         uses: git-push
       - config:
           apps:

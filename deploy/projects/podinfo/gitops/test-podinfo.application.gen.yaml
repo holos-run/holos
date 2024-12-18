@@ -11,6 +11,6 @@ spec:
         server: https://kubernetes.default.svc
     project: podinfo
     source:
-        path: deploy/projects/podinfo/components/test-podinfo
+        path: ./
         repoURL: https://github.com/holos-run/kargo-demo.git
-        targetRevision: stage/test
+        targetRevision: project/podinfo/component/test-podinfo

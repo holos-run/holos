@@ -45,6 +45,7 @@ Component: #Kubernetes & {
 			// field of the #KargoProject definition.
 			let ComponentName = "\(STAGE.name)-\(_ProjectName)"
 			let OutPath = "deploy/projects/\(_ProjectName)/components/\(ComponentName)"
+			let BRANCH = "project/\(_ProjectName)/component/\(ComponentName)"
 
 			Stage: (ComponentName): {
 				spec: {
@@ -69,7 +70,9 @@ Component: #Kubernetes & {
 											path:   SRC
 										},
 										{
-											branch: "stage/\(STAGE.name)"
+											// ComponentName has the stage prefix, so no need to also
+											// scope to the stage name.
+											branch: BRANCH
 											path:   OUT
 										},
 									]
@@ -91,7 +94,7 @@ Component: #Kubernetes & {
 								uses: "kustomize-build"
 								config: {
 									path:    "\(SRC)/\(OutPath)"
-									outPath: "\(OUT)/\(OutPath)/\(ComponentName).gen.yaml"
+									outPath: "\(OUT)/\(ComponentName).gen.yaml"
 								}
 							},
 							{
@@ -106,7 +109,7 @@ Component: #Kubernetes & {
 								uses: "git-push"
 								config: {
 									path:         OUT
-									targetBranch: "stage/\(STAGE.name)"
+									targetBranch: BRANCH
 								}
 							},
 							{

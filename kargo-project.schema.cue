@@ -15,7 +15,7 @@ import stage "kargo.akuity.io/stage/v1alpha1"
 	promotions: [COMPONENT_NAME=string]: requestedFreight: stage.#StageSpec.requestedFreight
 
 	// Automatically promote non-prod stages.
-	promotionPolicies: [for STAGE in stages if STAGE.tier == "nonprod" {stage: STAGE.name, autoPromotionEnabled: true}]
+	promotionPolicies: [for STAGE in stages if STAGE.tier == "nonprod" {stage: "\(STAGE.name)-\(name)", autoPromotionEnabled: true}]
 }
 
 // KargoProjectBuilder expands components out across the provided stages and

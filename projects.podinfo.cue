@@ -21,9 +21,9 @@ let PODINFO = #KargoProjectBuilder & {
 			tier:  "prod"
 			prior: "uat"
 		}
-		"prod-us-east": PROD & {parameters: version: "6.6.0"}
-		"prod-us-central": PROD & {parameters: version: "6.6.1"}
-		"prod-us-west": PROD & {parameters: version: "6.6.2"}
+		"prod-us-east": PROD & {parameters: version: "6.6.1"}
+		"prod-us-central": PROD & {parameters: version: "6.6.2"}
+		"prod-us-west": PROD & {parameters: version: "6.7.0"}
 	}
 
 	Components: podinfo: {
