@@ -1,12 +1,15 @@
 package holos
 
+import "example.com/platform/schemas/kargo"
+
 let IMAGE = "ghcr.io/stefanprodan/podinfo"
 
-let PODINFO = #KargoProjectBuilder & {
+let PODINFO = kargo.#ProjectBuilder & {
 	Name: "podinfo"
 	// Namespaces is used as a template, KargoProjectBuilder will prefix each
 	// namespace with the stage name.
 	Namespaces: podinfo: _
+
 	// Stages organized by prod and nonprod so we can easily get a handle on all
 	// prod stages, for example in the HTTPRoute below.
 	Stages: {
@@ -43,7 +46,7 @@ let PODINFO = #KargoProjectBuilder & {
 	// Project owners are expected to copy the component path into
 	// projects/<project name>/components/kargo-stages and customize it as needed
 	// to define their promotion process.
-	Project: components: "project:\(Name):component:kargo-stages": {
+	Project: HolosProject: components: "project:\(Name):component:kargo-stages": {
 		name: "kargo-stages"
 		path: "components/kargo-stages"
 		parameters: image:            IMAGE
@@ -52,24 +55,24 @@ let PODINFO = #KargoProjectBuilder & {
 }
 
 // Register podinfo as a Holos Project.
-Projects: podinfo: PODINFO.Project
+Projects: podinfo: PODINFO.Project.HolosProject
 
 // Register podinfo as a Kargo Project.
-KargoProjects: podinfo: PODINFO.KargoProject
+KargoProjects: podinfo: PODINFO.Project
 
 // Compose stage specific httproutes with the platform.
-HTTPRoutes: PODINFO.Project.httpRoutes
+// HTTPRoutes: PODINFO.Project.HolosProject.httpRoutes
 
 // Manage a backend ref for all prod tier stages.
-HTTPRoutes: podinfo: _backendRefs: {
-	for COMPONENT in PODINFO.Project.components {
-		if COMPONENT._stage != _|_ {
-			if COMPONENT._stage.tier == "prod" {
-				// The field name just needs to be unique, we don't output it.
-				(COMPONENT._namespace): PODINFO.BackendRefs.podinfo.podinfo & {
-					namespace: COMPONENT._namespace
-				}
-			}
-		}
-	}
-}
+// HTTPRoutes: podinfo: _backendRefs: {
+// 	for COMPONENT in PODINFO.Project.HolosProject.components {
+// 		if COMPONENT._stage != _|_ {
+// 			if COMPONENT._stage.tier == "prod" {
+// 				// The field name just needs to be unique, we don't output it.
+// 				(COMPONENT._namespace): PODINFO.BackendRefs.podinfo.podinfo & {
+// 					namespace: COMPONENT._namespace
+// 				}
+// 			}
+// 		}
+// 	}
+// }

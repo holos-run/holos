@@ -1,8 +1,10 @@
 package holos
 
+import holos "example.com/platform/schemas/holos/v1alpha5"
+
 ProjectName: string | *"no-project" @tag(ProjectName)
 
-Projects: #Projects & {
+Projects: holos.#Projects & {
 	network: {
 		components: "gateway-api": {
 			name: "gateway-api"

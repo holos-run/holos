@@ -1,9 +1,11 @@
 package holos
 
+import holos "example.com/platform/schemas/holos/v1alpha5"
+
 // Injected from Platform.spec.components.parameters.StageName
 StageName: string | *"dev" @tag(StageName)
 
-Stages: #Stages & {
+Stages: holos.#Stages & {
 	dev:               _
 	test:              _
 	uat:               _

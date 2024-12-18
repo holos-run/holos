@@ -1,5 +1,4 @@
-@if(!NoKargo)
-package holos
+package kargo
 
 import stage "kargo.akuity.io/stage/v1alpha1"
 
@@ -11,29 +10,20 @@ import stage "kargo.akuity.io/stage/v1alpha1"
 // have to use it and can instead define your own to produce the desired kargo
 // stage spec.
 #StageSpecBuilder: {
-	// Component name without the stage prefix, e.g. "podinfo"
-	Component: string
 	// Prior stage to promote from.  If "direct", freight is promoted directly
 	// from the Warehouse.
 	Prior: string
 	// The warehouse to pull from, defaults to the component name.
 	Warehouse: {
 		kind: "Warehouse"
-		name: string | *Component
+		name: string
 	}
 
 	spec: stage.#StageSpec & {
 		requestedFreight: [{
 			origin: Warehouse
 			if Prior == "direct" {sources: direct: true}
-			if Prior != "direct" {sources: stages: ["\(Prior)-\(Component)"]}
+			if Prior != "direct" {sources: stages: [Prior]}
 		}]
 	}
-}
-
-// Mix Kargo Stage resource fields into the holos stage definition.  The
-// #KargoProjectBuilder definition uses these fields to construct the promotion
-// pipeline for each promotable component in the project.
-#Stage: {
-	prior: string
 }

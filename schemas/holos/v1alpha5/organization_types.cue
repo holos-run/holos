@@ -1,4 +1,4 @@
-package holos
+package v1alpha5
 
 #Organization: {
 	DisplayName: string

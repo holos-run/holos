@@ -1,4 +1,4 @@
-package holos
+package v1alpha5
 
 import core "k8s.io/api/core/v1"
 
