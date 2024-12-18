@@ -8,7 +8,7 @@ Component: #Helm & {
 	Chart: {
 		name:    "oci://ghcr.io/stefanprodan/charts/podinfo"
 		release: "podinfo"
-		version: "6.6.0"
+		version: "6.7.0"
 	}
 	Values: #ComponentValues & {
 		ui: {
