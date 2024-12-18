@@ -3,12 +3,15 @@ package holos
 holos: Component.BuildPlan
 
 _NamespaceName: string @tag(NamespaceName)
+// image is the oci image repository to configure.
+_image:   string            @tag(image)
+_version: string | *"6.7.0" @tag(version)
 
 Component: #Helm & {
 	Chart: {
 		name:    "oci://ghcr.io/stefanprodan/charts/podinfo"
 		release: "podinfo"
-		version: "6.7.0"
+		version: _version
 	}
 	Values: #ComponentValues & {
 		ui: {
@@ -16,7 +19,7 @@ Component: #Helm & {
 		}
 		image: {
 			tag:        Chart.version
-			repository: string @tag(image)
+			repository: _image
 		}
 	}
 	// Ensure all resources are located in this namespace.

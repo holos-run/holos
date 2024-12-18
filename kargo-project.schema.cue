@@ -1,6 +1,8 @@
 @if(!NoKargo)
 package holos
 
+import stage "kargo.akuity.io/stage/v1alpha1"
+
 // #KargoProjects defines the structure of a kargo project, useful for kargo
 // related components to look up data given a ProjectName.
 #KargoProjects: [NAME=string]: #KargoProject & {name: NAME}
@@ -10,8 +12,7 @@ package holos
 	stages: #Stages
 
 	// promotions maps the promotable component names to pipeline stages.
-	// TODO: Define requestedFreight values properly.
-	promotions: [COMPONENT_NAME=string]: {requestedFreight: [...{...}]}
+	promotions: [COMPONENT_NAME=string]: requestedFreight: stage.#StageSpec.requestedFreight
 
 	// Automatically promote non-prod stages.
 	promotionPolicies: [for STAGE in stages if STAGE.tier == "nonprod" {stage: STAGE.name, autoPromotionEnabled: true}]
@@ -74,6 +75,8 @@ package holos
 					parameters: ProjectName:   Name
 					parameters: StageName:     STAGE.name
 					parameters: NamespaceName: name
+					// Mix in the stage parameters
+					parameters: STAGE.parameters
 
 					// Store the stage as a hidden field so it is not output but allows us
 					// to select components by stage attributes.  Useful to select all
@@ -91,5 +94,16 @@ package holos
 	KargoProject: #KargoProject & {
 		name:   Name
 		stages: Stages
+
+		for STAGE in Stages {
+			for COMPONENT in Components {
+				let NAME = "\(STAGE.name)-\(COMPONENT.name)"
+				let PARAMS = {
+					Component: COMPONENT.name
+					Prior:     STAGE.prior
+				}
+				promotions: (NAME): requestedFreight: (#StageSpecBuilder & PARAMS).spec.requestedFreight
+			}
+		}
 	}
 }

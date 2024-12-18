@@ -10,13 +10,22 @@ let PODINFO = #KargoProjectBuilder & {
 	// Stages organized by prod and nonprod so we can easily get a handle on all
 	// prod stages, for example in the HTTPRoute below.
 	Stages: {
-		dev: tier:               "nonprod"
-		test: tier:              "nonprod"
-		uat: tier:               "nonprod"
-		"prod-us-east": tier:    "prod"
-		"prod-us-central": tier: "prod"
-		"prod-us-west": tier:    "prod"
+		let NONPROD = {
+			tier: "nonprod"
+			parameters: version: "6.7.0"
+		}
+		dev: NONPROD & {prior: "direct"}
+		test: NONPROD & {prior: "dev"}
+		uat: NONPROD & {prior: "test"}
+		let PROD = {
+			tier:  "prod"
+			prior: "uat"
+		}
+		"prod-us-east": PROD & {parameters: version: "6.6.0"}
+		"prod-us-central": PROD & {parameters: version: "6.6.1"}
+		"prod-us-west": PROD & {parameters: version: "6.6.2"}
 	}
+
 	Components: podinfo: {
 		name: "podinfo"
 		path: "projects/podinfo/components/podinfo"
@@ -32,43 +41,6 @@ let PODINFO = #KargoProjectBuilder & {
 		path: "components/kargo-stages"
 		parameters: image:            IMAGE
 		parameters: semverConstraint: "^6.0.0"
-	}
-
-	KargoProject: {
-		name: _
-
-		// We need to use a let variable otherwise name: name is a cyclical
-		// reference error.
-		let NAME = name
-		let WAREHOUSE = {
-			kind: "Warehouse"
-			name: NAME
-		}
-
-		// TODO Figure out a better way to define the promotion process.  This is
-		// nice and clear though.  It would be better to pull the information from
-		// the stages structure though.
-		promotions: {
-			"dev-podinfo": requestedFreight: [{
-				origin: WAREHOUSE
-				sources: direct: true
-			}]
-			"test-podinfo": requestedFreight: [{
-				origin: WAREHOUSE
-				sources: stages: ["dev-podinfo"]
-			}]
-			"uat-podinfo": requestedFreight: [{
-				origin: WAREHOUSE
-				sources: stages: ["test-podinfo"]
-			}]
-			// We can at least aggregate all prod stages
-			for STAGE in KargoProject.stages if STAGE.tier == "prod" {
-				"\(STAGE.name)-podinfo": requestedFreight: [{
-					origin: WAREHOUSE
-					sources: stages: ["uat-podinfo"]
-				}]
-			}
-		}
 	}
 }
 
