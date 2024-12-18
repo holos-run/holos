@@ -29,6 +29,12 @@ import stage "kargo.akuity.io/stage/v1alpha1"
 	Namespaces: [NAME=string]: {name: NAME}
 	// Components to manage in each Stage.
 	Components: #Components
+	// BackendRefs  organized by component names.  The builder will populate the
+	// namespace field.
+	BackendRefs: [COMPONENT_NAME=string]: [SERVICE_NAME=string]: {
+		name: string | *SERVICE_NAME
+		port: int | *80
+	}
 
 	Project: #Project & {
 		name: Name
@@ -87,6 +93,17 @@ import stage "kargo.akuity.io/stage/v1alpha1"
 				}
 				namespaces: (STAGE_COMPONENT._namespace): _
 				components: (COMPONENT_KEY):              STAGE_COMPONENT
+				// Register HTTPRoutes for each stage.  The backend refs are expected to
+				// be composed in from outside the builder so the builder doesn't have
+				// to concern itself with service details.  We do this so we know how to
+				// build a route for each stage.
+				if BackendRefs[COMPONENT.name] != _|_ {
+					for BACKEND_REF in BackendRefs[COMPONENT.name] {
+						httpRoutes: (STAGE_COMPONENT._namespace): _backendRefs: (BACKEND_REF.name): BACKEND_REF & {
+							namespace: STAGE_COMPONENT._namespace
+						}
+					}
+				}
 			}
 		}
 	}

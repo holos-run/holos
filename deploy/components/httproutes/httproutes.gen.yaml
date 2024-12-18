@@ -87,9 +87,6 @@ spec:
   rules:
   - backendRefs:
     - name: podinfo
-      namespace: podinfo
-      port: 9898
-    - name: podinfo
       namespace: prod-us-east-podinfo
       port: 9898
     - name: podinfo

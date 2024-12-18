@@ -32,6 +32,13 @@ let PODINFO = #KargoProjectBuilder & {
 		parameters: image: IMAGE
 	}
 
+	// The builder builds a httproute to each backend stage namespace using this
+	// template.
+	BackendRefs: podinfo: podinfo: {
+		name: "podinfo"
+		port: 9898
+	}
+
 	// Compose the Kargo promotion stages into the holos project components.
 	// Project owners are expected to copy the component path into
 	// projects/<project name>/components/kargo-stages and customize it as needed
@@ -44,30 +51,23 @@ let PODINFO = #KargoProjectBuilder & {
 	}
 }
 
-// Register podinfo as a Holos Project
+// Register podinfo as a Holos Project.
 Projects: podinfo: PODINFO.Project
 
-// Register podinfo as a Kargo Project
+// Register podinfo as a Kargo Project.
 KargoProjects: podinfo: PODINFO.KargoProject
 
-// Manage an HTTPRoute for the podinfo service in each namespace.
-for NAMESPACE in PODINFO.Project.namespaces {
-	HTTPRoutes: (NAMESPACE.metadata.name): _backendRefs: podinfo: {
-		namespace: NAMESPACE.metadata.name
-		port:      9898
-	}
-}
+// Compose stage specific httproutes with the platform.
+HTTPRoutes: PODINFO.Project.httpRoutes
 
+// Manage a backend ref for all prod tier stages.
 HTTPRoutes: podinfo: _backendRefs: {
-	// Manage a backend ref for all prod tier stages.
 	for COMPONENT in PODINFO.Project.components {
 		if COMPONENT._stage != _|_ {
 			if COMPONENT._stage.tier == "prod" {
 				// The field name just needs to be unique, we don't output it.
-				(COMPONENT._namespace): {
-					name:      "podinfo"
+				(COMPONENT._namespace): PODINFO.BackendRefs.podinfo.podinfo & {
 					namespace: COMPONENT._namespace
-					port:      9898
 				}
 			}
 		}
