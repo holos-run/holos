@@ -1,0 +1,356 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  labels:
+    argocd.argoproj.io/instance: podinfo-kargo-stages
+  name: dev-podinfo
+  namespace: podinfo
+spec:
+  promotionTemplate:
+    spec:
+      steps:
+      - config:
+          checkout:
+          - branch: main
+            path: ./src
+          - branch: stage/dev
+            path: ./out
+          repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: git-clone
+      - config:
+          path: ./out
+        uses: git-clear
+      - as: update-image
+        config:
+          images:
+          - image: ghcr.io/stefanprodan/podinfo
+          path: ./src/deploy/projects/podinfo/components/dev-podinfo
+        uses: kustomize-set-image
+      - config:
+          outPath: ./out/deploy/projects/podinfo/components/dev-podinfo/dev-podinfo.gen.yaml
+          path: ./src/deploy/projects/podinfo/components/dev-podinfo
+        uses: kustomize-build
+      - as: commit
+        config:
+          messageFromSteps:
+          - update-image
+          path: ./out
+        uses: git-commit
+      - config:
+          path: ./out
+          targetBranch: stage/dev
+        uses: git-push
+      - config:
+          apps:
+          - name: podinfo-dev-podinfo
+            sources:
+            - desiredCommitFromStep: commit
+              repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: argocd-update
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: podinfo
+    sources:
+      direct: true
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  labels:
+    argocd.argoproj.io/instance: podinfo-kargo-stages
+  name: prod-us-central-podinfo
+  namespace: podinfo
+spec:
+  promotionTemplate:
+    spec:
+      steps:
+      - config:
+          checkout:
+          - branch: main
+            path: ./src
+          - branch: stage/prod-us-central
+            path: ./out
+          repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: git-clone
+      - config:
+          path: ./out
+        uses: git-clear
+      - as: update-image
+        config:
+          images:
+          - image: ghcr.io/stefanprodan/podinfo
+          path: ./src/deploy/projects/podinfo/components/prod-us-central-podinfo
+        uses: kustomize-set-image
+      - config:
+          outPath: ./out/deploy/projects/podinfo/components/prod-us-central-podinfo/prod-us-central-podinfo.gen.yaml
+          path: ./src/deploy/projects/podinfo/components/prod-us-central-podinfo
+        uses: kustomize-build
+      - as: commit
+        config:
+          messageFromSteps:
+          - update-image
+          path: ./out
+        uses: git-commit
+      - config:
+          path: ./out
+          targetBranch: stage/prod-us-central
+        uses: git-push
+      - config:
+          apps:
+          - name: podinfo-prod-us-central-podinfo
+            sources:
+            - desiredCommitFromStep: commit
+              repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: argocd-update
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: podinfo
+    sources:
+      stages:
+      - uat-podinfo
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  labels:
+    argocd.argoproj.io/instance: podinfo-kargo-stages
+  name: prod-us-east-podinfo
+  namespace: podinfo
+spec:
+  promotionTemplate:
+    spec:
+      steps:
+      - config:
+          checkout:
+          - branch: main
+            path: ./src
+          - branch: stage/prod-us-east
+            path: ./out
+          repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: git-clone
+      - config:
+          path: ./out
+        uses: git-clear
+      - as: update-image
+        config:
+          images:
+          - image: ghcr.io/stefanprodan/podinfo
+          path: ./src/deploy/projects/podinfo/components/prod-us-east-podinfo
+        uses: kustomize-set-image
+      - config:
+          outPath: ./out/deploy/projects/podinfo/components/prod-us-east-podinfo/prod-us-east-podinfo.gen.yaml
+          path: ./src/deploy/projects/podinfo/components/prod-us-east-podinfo
+        uses: kustomize-build
+      - as: commit
+        config:
+          messageFromSteps:
+          - update-image
+          path: ./out
+        uses: git-commit
+      - config:
+          path: ./out
+          targetBranch: stage/prod-us-east
+        uses: git-push
+      - config:
+          apps:
+          - name: podinfo-prod-us-east-podinfo
+            sources:
+            - desiredCommitFromStep: commit
+              repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: argocd-update
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: podinfo
+    sources:
+      stages:
+      - uat-podinfo
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  labels:
+    argocd.argoproj.io/instance: podinfo-kargo-stages
+  name: prod-us-west-podinfo
+  namespace: podinfo
+spec:
+  promotionTemplate:
+    spec:
+      steps:
+      - config:
+          checkout:
+          - branch: main
+            path: ./src
+          - branch: stage/prod-us-west
+            path: ./out
+          repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: git-clone
+      - config:
+          path: ./out
+        uses: git-clear
+      - as: update-image
+        config:
+          images:
+          - image: ghcr.io/stefanprodan/podinfo
+          path: ./src/deploy/projects/podinfo/components/prod-us-west-podinfo
+        uses: kustomize-set-image
+      - config:
+          outPath: ./out/deploy/projects/podinfo/components/prod-us-west-podinfo/prod-us-west-podinfo.gen.yaml
+          path: ./src/deploy/projects/podinfo/components/prod-us-west-podinfo
+        uses: kustomize-build
+      - as: commit
+        config:
+          messageFromSteps:
+          - update-image
+          path: ./out
+        uses: git-commit
+      - config:
+          path: ./out
+          targetBranch: stage/prod-us-west
+        uses: git-push
+      - config:
+          apps:
+          - name: podinfo-prod-us-west-podinfo
+            sources:
+            - desiredCommitFromStep: commit
+              repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: argocd-update
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: podinfo
+    sources:
+      stages:
+      - uat-podinfo
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  labels:
+    argocd.argoproj.io/instance: podinfo-kargo-stages
+  name: test-podinfo
+  namespace: podinfo
+spec:
+  promotionTemplate:
+    spec:
+      steps:
+      - config:
+          checkout:
+          - branch: main
+            path: ./src
+          - branch: stage/test
+            path: ./out
+          repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: git-clone
+      - config:
+          path: ./out
+        uses: git-clear
+      - as: update-image
+        config:
+          images:
+          - image: ghcr.io/stefanprodan/podinfo
+          path: ./src/deploy/projects/podinfo/components/test-podinfo
+        uses: kustomize-set-image
+      - config:
+          outPath: ./out/deploy/projects/podinfo/components/test-podinfo/test-podinfo.gen.yaml
+          path: ./src/deploy/projects/podinfo/components/test-podinfo
+        uses: kustomize-build
+      - as: commit
+        config:
+          messageFromSteps:
+          - update-image
+          path: ./out
+        uses: git-commit
+      - config:
+          path: ./out
+          targetBranch: stage/test
+        uses: git-push
+      - config:
+          apps:
+          - name: podinfo-test-podinfo
+            sources:
+            - desiredCommitFromStep: commit
+              repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: argocd-update
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: podinfo
+    sources:
+      stages:
+      - dev-podinfo
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  labels:
+    argocd.argoproj.io/instance: podinfo-kargo-stages
+  name: uat-podinfo
+  namespace: podinfo
+spec:
+  promotionTemplate:
+    spec:
+      steps:
+      - config:
+          checkout:
+          - branch: main
+            path: ./src
+          - branch: stage/uat
+            path: ./out
+          repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: git-clone
+      - config:
+          path: ./out
+        uses: git-clear
+      - as: update-image
+        config:
+          images:
+          - image: ghcr.io/stefanprodan/podinfo
+          path: ./src/deploy/projects/podinfo/components/uat-podinfo
+        uses: kustomize-set-image
+      - config:
+          outPath: ./out/deploy/projects/podinfo/components/uat-podinfo/uat-podinfo.gen.yaml
+          path: ./src/deploy/projects/podinfo/components/uat-podinfo
+        uses: kustomize-build
+      - as: commit
+        config:
+          messageFromSteps:
+          - update-image
+          path: ./out
+        uses: git-commit
+      - config:
+          path: ./out
+          targetBranch: stage/uat
+        uses: git-push
+      - config:
+          apps:
+          - name: podinfo-uat-podinfo
+            sources:
+            - desiredCommitFromStep: commit
+              repoURL: https://github.com/holos-run/kargo-demo.git
+        uses: argocd-update
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: podinfo
+    sources:
+      stages:
+      - test-podinfo
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  labels:
+    argocd.argoproj.io/instance: podinfo-kargo-stages
+  name: podinfo
+  namespace: podinfo
+spec:
+  interval: 5m0s
+  subscriptions:
+  - image:
+      discoveryLimit: 5
+      repoURL: ghcr.io/stefanprodan/podinfo
+      semverConstraint: ^6.0.0
+      strictSemvers: true
