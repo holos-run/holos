@@ -5,7 +5,7 @@ package holos
 // null values need to be converted to optional fields in cue.
 #ComponentValues: {
 	// Default values for podinfo.
-	replicaCount: 1
+	replicaCount: int | *1
 	logLevel:     "info"
 	//0.0.0.0
 	host?: string

@@ -9,6 +9,13 @@ _NamespaceName: string @tag(NamespaceName)
 _image:   string            @tag(image)
 _version: string | *"6.7.0" @tag(version)
 
+TierName: Stages[StageName].tier
+
+ValuesByTier: {
+	prod: replicaCount:    2
+	nonprod: replicaCount: 1
+}
+
 Component: #Helm & {
 	Chart: {
 		name:    "oci://ghcr.io/stefanprodan/charts/podinfo"
@@ -16,6 +23,9 @@ Component: #Helm & {
 		version: _version
 	}
 	Values: #ComponentValues & {
+		// Embed the values for this tier.
+		ValuesByTier[Stages[StageName].tier]
+
 		ui: {
 			message: "Hello! Stage: \(StageName)"
 		}

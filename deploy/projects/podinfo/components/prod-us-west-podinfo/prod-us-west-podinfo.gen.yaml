@@ -35,7 +35,7 @@ metadata:
   name: podinfo
   namespace: prod-us-west-podinfo
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: podinfo

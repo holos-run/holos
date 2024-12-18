@@ -6,10 +6,18 @@ import holos "example.com/platform/schemas/holos/v1alpha5"
 StageName: string | *"dev" @tag(StageName)
 
 Stages: holos.#Stages & {
-	dev:               _
-	test:              _
-	uat:               _
-	"prod-us-east":    _
-	"prod-us-central": _
-	"prod-us-est":     _
+	let NONPROD = {
+		tier: "nonprod"
+	}
+	dev: NONPROD
+	test: NONPROD & {prior: dev.name}
+	uat: NONPROD & {prior: test.name}
+
+	let PROD = {
+		tier:  "prod"
+		prior: uat.name
+	}
+	"prod-us-east":    PROD
+	"prod-us-central": PROD
+	"prod-us-west":    PROD
 }
