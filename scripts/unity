@@ -1,0 +1,15 @@
+#! /bin/bash
+
+# cd to the repository root
+TOPLEVEL="$(cd $(dirname "$0") && cd .. && pwd)"
+cd "$TOPLEVEL"
+
+set -xeuo pipefail
+
+# this should work
+export CUE_EXPERIMENT=evalv3=0
+holos show buildplans
+
+# this should also work but probably doesn't
+export CUE_EXPERIMENT=evalv3=1
+holos show buildplans
