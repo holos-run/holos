@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+    labels: {}
+    name: httpbin-kargo-project
+    namespace: argocd
+spec:
+    destination:
+        server: https://kubernetes.default.svc
+    project: httpbin
+    source:
+        path: deploy/projects/httpbin/components/kargo-project
+        repoURL: https://github.com/holos-run/kargo-demo.git
+        targetRevision: main

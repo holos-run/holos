@@ -1,0 +1,2 @@
+resources:
+    - prod-us-west-httpbin.gen.yaml

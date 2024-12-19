@@ -26,6 +26,30 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   labels:
+    app: dev-httpbin
+    argocd.argoproj.io/instance: network-httproutes
+  name: dev-httpbin
+  namespace: istio-ingress
+spec:
+  hostnames:
+  - dev-httpbin.holos.localhost
+  parentRefs:
+  - name: default
+    namespace: istio-ingress
+  rules:
+  - backendRefs:
+    - name: httpbin
+      namespace: dev-httpbin
+      port: 80
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
     app: dev-podinfo
     argocd.argoproj.io/instance: network-httproutes
   name: dev-podinfo
@@ -41,6 +65,36 @@ spec:
     - name: podinfo
       namespace: dev-podinfo
       port: 9898
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    app: httpbin
+    argocd.argoproj.io/instance: network-httproutes
+  name: httpbin
+  namespace: istio-ingress
+spec:
+  hostnames:
+  - httpbin.holos.localhost
+  parentRefs:
+  - name: default
+    namespace: istio-ingress
+  rules:
+  - backendRefs:
+    - name: httpbin
+      namespace: prod-us-east-httpbin
+      port: 80
+    - name: httpbin
+      namespace: prod-us-central-httpbin
+      port: 80
+    - name: httpbin
+      namespace: prod-us-west-httpbin
+      port: 80
     matches:
     - path:
         type: PathPrefix
@@ -104,6 +158,30 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   labels:
+    app: prod-us-central-httpbin
+    argocd.argoproj.io/instance: network-httproutes
+  name: prod-us-central-httpbin
+  namespace: istio-ingress
+spec:
+  hostnames:
+  - prod-us-central-httpbin.holos.localhost
+  parentRefs:
+  - name: default
+    namespace: istio-ingress
+  rules:
+  - backendRefs:
+    - name: httpbin
+      namespace: prod-us-central-httpbin
+      port: 80
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
     app: prod-us-central-podinfo
     argocd.argoproj.io/instance: network-httproutes
   name: prod-us-central-podinfo
@@ -119,6 +197,30 @@ spec:
     - name: podinfo
       namespace: prod-us-central-podinfo
       port: 9898
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    app: prod-us-east-httpbin
+    argocd.argoproj.io/instance: network-httproutes
+  name: prod-us-east-httpbin
+  namespace: istio-ingress
+spec:
+  hostnames:
+  - prod-us-east-httpbin.holos.localhost
+  parentRefs:
+  - name: default
+    namespace: istio-ingress
+  rules:
+  - backendRefs:
+    - name: httpbin
+      namespace: prod-us-east-httpbin
+      port: 80
     matches:
     - path:
         type: PathPrefix
@@ -152,6 +254,30 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   labels:
+    app: prod-us-west-httpbin
+    argocd.argoproj.io/instance: network-httproutes
+  name: prod-us-west-httpbin
+  namespace: istio-ingress
+spec:
+  hostnames:
+  - prod-us-west-httpbin.holos.localhost
+  parentRefs:
+  - name: default
+    namespace: istio-ingress
+  rules:
+  - backendRefs:
+    - name: httpbin
+      namespace: prod-us-west-httpbin
+      port: 80
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
     app: prod-us-west-podinfo
     argocd.argoproj.io/instance: network-httproutes
   name: prod-us-west-podinfo
@@ -176,6 +302,30 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
   labels:
+    app: test-httpbin
+    argocd.argoproj.io/instance: network-httproutes
+  name: test-httpbin
+  namespace: istio-ingress
+spec:
+  hostnames:
+  - test-httpbin.holos.localhost
+  parentRefs:
+  - name: default
+    namespace: istio-ingress
+  rules:
+  - backendRefs:
+    - name: httpbin
+      namespace: test-httpbin
+      port: 80
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
     app: test-podinfo
     argocd.argoproj.io/instance: network-httproutes
   name: test-podinfo
@@ -191,6 +341,30 @@ spec:
     - name: podinfo
       namespace: test-podinfo
       port: 9898
+    matches:
+    - path:
+        type: PathPrefix
+        value: /
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  labels:
+    app: uat-httpbin
+    argocd.argoproj.io/instance: network-httproutes
+  name: uat-httpbin
+  namespace: istio-ingress
+spec:
+  hostnames:
+  - uat-httpbin.holos.localhost
+  parentRefs:
+  - name: default
+    namespace: istio-ingress
+  rules:
+  - backendRefs:
+    - name: httpbin
+      namespace: uat-httpbin
+      port: 80
     matches:
     - path:
         type: PathPrefix

@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+    annotations:
+        kargo.akuity.io/authorized-stage: httpbin:prod-us-west
+    labels: {}
+    name: httpbin-prod-us-west-httpbin
+    namespace: argocd
+spec:
+    destination:
+        server: https://kubernetes.default.svc
+    project: httpbin
+    source:
+        path: ./
+        repoURL: https://github.com/holos-run/kargo-demo.git
+        targetRevision: project/httpbin/component/prod-us-west-httpbin

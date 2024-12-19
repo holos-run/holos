@@ -2,50 +2,38 @@ package holos
 
 import "example.com/platform/schemas/kargo"
 
-let IMAGE = "ghcr.io/stefanprodan/podinfo"
+let IMAGE = "quay.io/holos/mccutchen/go-httpbin"
 let HTTPROUTE_LABEL = "holos.run/httproute.project"
 
-let PODINFO = kargo.#ProjectBuilder & {
-	Name: "podinfo"
+let PROJECT = kargo.#ProjectBuilder & {
+	Name: "httpbin"
 	// Namespaces are used as a template, KargoProjectBuilder will prefix each
 	// namespace with the stage name.
-	Namespaces: podinfo: metadata: labels: (HTTPROUTE_LABEL): Name
+	Namespaces: (Name): metadata: labels: (HTTPROUTE_LABEL): Name
 
 	// Stages organized by prod and nonprod so we can easily get a handle on all
 	// prod stages, for example in the HTTPRoute below.
 	Stages: {
-		let PARAMS = {
-			name: string
-			parameters: message: "Hello! Stage: \(name)"
-		}
-		let NONPROD = PARAMS & {
-			tier: "nonprod"
-			parameters: version: "6.7.0"
-		}
+		let NONPROD = {tier: "nonprod"}
 		dev: NONPROD & {prior: "direct"}
 		test: NONPROD & {prior: "dev"}
 		uat: NONPROD & {prior: "test"}
-		let PROD = PARAMS & {
+		let PROD = {
 			tier:  "prod"
 			prior: "uat"
 			// We have to stringify all injected tags.  This is a reason to switch to
 			// passing the component over standard input as structured data.
 			parameters: replicaCount: "2"
+			parameters: version:      "v2.14.0"
 		}
-		"prod-us-east": PROD & {
-			parameters: version: "6.6.1"
-		}
-		"prod-us-central": PROD & {
-			parameters: version: "6.6.2"
-		}
-		"prod-us-west": PROD & {
-			parameters: version: "6.7.0"
-		}
+		"prod-us-east":    PROD
+		"prod-us-central": PROD
+		"prod-us-west":    PROD
 	}
 
-	Components: podinfo: {
-		name: "podinfo"
-		path: "projects/podinfo/components/podinfo"
+	Components: (Name): {
+		name: Name
+		path: "projects/\(Name)/components/\(Name)"
 		parameters: image: IMAGE
 	}
 
@@ -57,32 +45,37 @@ let PODINFO = kargo.#ProjectBuilder & {
 		name: "kargo-stages"
 		path: "components/kargo-stages"
 		parameters: image:            IMAGE
-		parameters: semverConstraint: "^6.0.0"
+		parameters: semverConstraint: "^2.0.0"
 	}
 }
 
-// Register podinfo as a Holos Project.
-Projects: podinfo: PODINFO.Project.HolosProject
+// Register the project as a Holos Project.
+Projects: (PROJECT.Name): PROJECT.Project.HolosProject
 
-// Register podinfo as a Kargo Project.
-KargoProjects: podinfo: PODINFO.Project
+// Register the project as a Kargo Project.
+KargoProjects: (PROJECT.Name): PROJECT.Project
 
 // Compose stage specific httproutes with the platform selecting namespaces.
-for NS in PODINFO.Project.HolosProject.namespaces {
+for NS in PROJECT.Project.HolosProject.namespaces {
 	for K, V in NS.metadata.labels {
-		if K == HTTPROUTE_LABEL && V == "podinfo" {
-			HTTPRoutes: (NS.metadata.name): _backendRefs: podinfo: {
+		if K == HTTPROUTE_LABEL && V == PROJECT.Name {
+			// Note we assume the backend service name is the project name.  Consider
+			// adding a service name field to the project to let the differ.
+			HTTPRoutes: (NS.metadata.name): _backendRefs: (NS.metadata.name): {
+				name:      PROJECT.Name
 				namespace: NS.metadata.name
-				port:      9898
+				port:      80
 			}
 		}
 
 		// Manage a backend ref for all prod tier stages.
 		if K == "holos.run/stage.tier" && V == "prod" {
-			HTTPRoutes: podinfo: _backendRefs: (NS.metadata.name): {
-				name:      "podinfo"
+			// Note we assume the backend service name is the project name.  Consider
+			// adding a service name field to the project to let the differ.
+			HTTPRoutes: (PROJECT.Name): _backendRefs: (NS.metadata.name): {
+				name:      PROJECT.Name
 				namespace: NS.metadata.name
-				port:      9898
+				port:      80
 			}
 		}
 	}

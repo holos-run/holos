@@ -1,0 +1,2 @@
+resources:
+    - dev-httpbin.gen.yaml

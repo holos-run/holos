@@ -1,0 +1,2 @@
+resources:
+    - prod-us-central-httpbin.gen.yaml

@@ -1,0 +1,14 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  labels:
+    argocd.argoproj.io/instance: httpbin-kargo-project
+  name: httpbin
+spec:
+  promotionPolicies:
+  - autoPromotionEnabled: true
+    stage: dev
+  - autoPromotionEnabled: true
+    stage: test
+  - autoPromotionEnabled: true
+    stage: uat

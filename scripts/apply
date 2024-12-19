@@ -56,13 +56,20 @@ apply istio-cni
 apply istio-ztunnel
 apply istio-gateway
 
-# Podinfo across multiple Stages for Kargo Demo
+# podinfo across multiple Stages for Kargo Demo
 applyProject podinfo dev-podinfo
 applyProject podinfo test-podinfo
 applyProject podinfo uat-podinfo
 applyProject podinfo prod-us-east-podinfo
 applyProject podinfo prod-us-central-podinfo
 applyProject podinfo prod-us-west-podinfo
+# httpbin across multiple Stages for Kargo Demo
+applyProject httpbin dev-httpbin
+applyProject httpbin test-httpbin
+applyProject httpbin uat-httpbin
+applyProject httpbin prod-us-east-httpbin
+applyProject httpbin prod-us-central-httpbin
+applyProject httpbin prod-us-west-httpbin
 
 if ! kubectl wait --for=condition=Ready pod -l k8s-app=istio-cni-node --timeout=300s -n istio-system; then
   echo 'istio-cni-node not ready' >&2
@@ -74,6 +81,7 @@ apply httproutes
 # ArgoCD Applications
 kubectl apply --force-conflicts --server-side=true -f deploy/gitops
 kubectl apply --force-conflicts --server-side=true -f deploy/projects/podinfo/gitops
+kubectl apply --force-conflicts --server-side=true -f deploy/projects/httpbin/gitops
 
 # Kargo Projects.  They need the webhook but we don't need them until later.
 kubectl wait --for=condition=Available deployment/kargo-webhooks-server -n kargo --timeout=300s
@@ -81,6 +89,8 @@ kubectl wait --for=condition=Available deployment/kargo-webhooks-server -n kargo
 # Project Kargo Resources (Requires kargo-webhooks-server)
 applyProject podinfo kargo-project
 applyProject podinfo kargo-stages
+applyProject httpbin kargo-project
+applyProject httpbin kargo-stages
 
 set +x
 echo
@@ -88,6 +98,7 @@ echo "httproutes:"
 echo "  - https://argocd.holos.localhost"
 echo "  - https://kargo.holos.localhost"
 echo "  - https://podinfo.holos.localhost"
+echo "  - https://httpbin.holos.localhost"
 echo
 echo "Kargo admin password:"
 echo "  run: kubectl get secret -n kargo admin-credentials -o json | jq --exit-status -r '.data.password | @base64d'"

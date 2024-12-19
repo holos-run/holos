@@ -1,0 +1,2 @@
+resources:
+    - uat-httpbin.gen.yaml

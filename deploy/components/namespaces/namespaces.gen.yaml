@@ -27,6 +27,17 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: httpbin
+    holos.run/stage.name: dev
+    holos.run/stage.tier: nonprod
+    kubernetes.io/metadata.name: dev-httpbin
+  name: dev-httpbin
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
     holos.run/httproute.project: podinfo
     holos.run/stage.name: dev
     holos.run/stage.tier: nonprod
@@ -40,6 +51,15 @@ metadata:
     argocd.argoproj.io/instance: security-namespaces
     kubernetes.io/metadata.name: external-secrets
   name: external-secrets
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
+    kargo.akuity.io/project: "true"
+    kubernetes.io/metadata.name: httpbin
+  name: httpbin
 ---
 apiVersion: v1
 kind: Namespace
@@ -79,11 +99,33 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: httpbin
+    holos.run/stage.name: prod-us-central
+    holos.run/stage.tier: prod
+    kubernetes.io/metadata.name: prod-us-central-httpbin
+  name: prod-us-central-httpbin
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
     holos.run/httproute.project: podinfo
     holos.run/stage.name: prod-us-central
     holos.run/stage.tier: prod
     kubernetes.io/metadata.name: prod-us-central-podinfo
   name: prod-us-central-podinfo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: httpbin
+    holos.run/stage.name: prod-us-east
+    holos.run/stage.tier: prod
+    kubernetes.io/metadata.name: prod-us-east-httpbin
+  name: prod-us-east-httpbin
 ---
 apiVersion: v1
 kind: Namespace
@@ -101,6 +143,17 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: httpbin
+    holos.run/stage.name: prod-us-west
+    holos.run/stage.tier: prod
+    kubernetes.io/metadata.name: prod-us-west-httpbin
+  name: prod-us-west-httpbin
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
     holos.run/httproute.project: podinfo
     holos.run/stage.name: prod-us-west
     holos.run/stage.tier: prod
@@ -112,11 +165,33 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: httpbin
+    holos.run/stage.name: test
+    holos.run/stage.tier: nonprod
+    kubernetes.io/metadata.name: test-httpbin
+  name: test-httpbin
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
     holos.run/httproute.project: podinfo
     holos.run/stage.name: test
     holos.run/stage.tier: nonprod
     kubernetes.io/metadata.name: test-podinfo
   name: test-podinfo
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
+    holos.run/httproute.project: httpbin
+    holos.run/stage.name: uat
+    holos.run/stage.tier: nonprod
+    kubernetes.io/metadata.name: uat-httpbin
+  name: uat-httpbin
 ---
 apiVersion: v1
 kind: Namespace
