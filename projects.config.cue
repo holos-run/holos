@@ -33,6 +33,7 @@ Projects: holos.#Projects & {
 			"cert-manager": {
 				name: "cert-manager"
 				path: "projects/security/components/cert-manager"
+				instances: [{extractYAML: path: "./data/cert-manager/cert-manager.yaml"}]
 			}
 			"local-ca": {
 				name: "local-ca"

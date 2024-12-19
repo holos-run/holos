@@ -334,6 +334,10 @@ package core
 	// Injected as the tag variable "holos_component_path".
 	path: string @go(Path)
 
+	// Instances represents additional cue instance paths to unify with Path.
+	// Useful to unify data files into a component BuildPlan.
+	instances?: [...#Instance] @go(Instances,[]Instance)
+
 	// WriteTo represents the holos render component --write-to flag.  If empty,
 	// the default value for the --write-to flag is used.
 	writeTo?: string @go(WriteTo)
@@ -352,4 +356,29 @@ package core
 	// Annotations represents arbitrary non-identifying metadata.  Use the
 	// `cli.holos.run/description` to customize the log message of each BuildPlan.
 	annotations?: {[string]: string} @go(Annotations,map[string]string)
+}
+
+// Instance represents a data instance to unify with the configuration.
+//
+// Useful to unify json and yaml files with cue configuration files for
+// integration with other tools.  For example, executing holos render platform
+// from a pull request workflow after [Kargo] executes the [yaml update] and
+// [git wait for pr] promotion steps.
+//
+// [Kargo]: https://docs.kargo.io/
+// [yaml update]: https://docs.kargo.io/references/promotion-steps#yaml-update
+// [git wait for pr]: https://docs.kargo.io/references/promotion-steps#git-wait-for-pr
+#Instance: {
+	// Kind is a discriminator.
+	kind: string & "ExtractYAML" @go(Kind)
+
+	// Ignored unless kind is ExtractYAML.
+	extractYAML?: #ExtractYAML @go(ExtractYAML)
+}
+
+// ExtractYAML represents a cue data instance encoded as yaml or json. If Path
+// refers to a directory all files in the directory are extracted
+// non-recursively.  Otherwise, path must refer to a file.
+#ExtractYAML: {
+	path: string @go(Path)
 }
