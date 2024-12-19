@@ -10,6 +10,6 @@ set -xeuo pipefail
 export CUE_EXPERIMENT=evalv3=0
 holos show buildplans
 
-# this should also work but probably doesn't
+# this should also work but probably does not
 export CUE_EXPERIMENT=evalv3=1
 holos show buildplans
