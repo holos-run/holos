@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	cue "cuelang.org/go/cmd/cue/cmd"
-	"github.com/holos-run/holos/internal/cli"
+	"github.com/holos-run/holos/cmd"
 	"github.com/rogpeppe/go-internal/testscript"
 )
 
 func TestMain(m *testing.M) {
 	os.Exit(testscript.RunMain(m, map[string]func() int{
-		"holos": cli.MakeMain(),
+		"holos": cmd.MakeMain(),
 		"cue":   cue.Main,
 	}))
 }

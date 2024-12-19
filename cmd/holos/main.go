@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/holos-run/holos/internal/cli"
+	"github.com/holos-run/holos/cmd"
 )
 
 func main() {
-	os.Exit(cli.MakeMain()())
+	os.Exit(cmd.MakeMain()())
 }
