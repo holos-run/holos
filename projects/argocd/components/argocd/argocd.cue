@@ -14,7 +14,7 @@ Component: #Helm & {
 
 	Chart: {
 		name:    "argo-cd"
-		version: "7.5.2"
+		version: "7.7.10"
 		release: Name
 		repository: {
 			name: "argocd"

@@ -4,7 +4,7 @@ package holos
 import ap "argoproj.io/appproject/v1alpha1"
 
 ArgoCD: #ArgoCD & {
-	Version:   "2.12.3"
+	Version:   "2.13.2"
 	Namespace: "argocd"
 }
 

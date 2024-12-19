@@ -4,7 +4,6 @@ metadata:
   labels:
     app.kubernetes.io/name: applications.argoproj.io
     app.kubernetes.io/part-of: argocd
-    argocd.argoproj.io/instance: argocd-argocd-crds
   name: applications.argoproj.io
 spec:
   group: argoproj.io
@@ -5362,7 +5361,6 @@ metadata:
   labels:
     app.kubernetes.io/name: applicationsets.argoproj.io
     app.kubernetes.io/part-of: argocd
-    argocd.argoproj.io/instance: argocd-argocd-crds
   name: applicationsets.argoproj.io
 spec:
   group: argoproj.io
@@ -21655,7 +21653,6 @@ metadata:
   labels:
     app.kubernetes.io/name: appprojects.argoproj.io
     app.kubernetes.io/part-of: argocd
-    argocd.argoproj.io/instance: argocd-argocd-crds
   name: appprojects.argoproj.io
 spec:
   group: argoproj.io
