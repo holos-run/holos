@@ -1,0 +1,3 @@
+exec holos --version
+# want version with no v on stdout
+stdout -count=1 '^\d+\.\d+\.\d+$'
