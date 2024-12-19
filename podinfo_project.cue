@@ -2,7 +2,8 @@ package holos
 
 import "example.com/platform/schemas/kargo"
 
-let IMAGE = "ghcr.io/stefanprodan/podinfo"
+// let IMAGE = "ghcr.io/stefanprodan/podinfo"
+let IMAGE = "quay.io/holos/stefanprodan/podinfo"
 let HTTPROUTE_LABEL = "holos.run/httproute.project"
 
 let PROJECT = kargo.#ProjectBuilder & {

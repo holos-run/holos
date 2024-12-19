@@ -67,7 +67,7 @@ spec:
           value: 'Hello! Stage: prod-us-east'
         - name: PODINFO_UI_COLOR
           value: '#34577c'
-        image: ghcr.io/stefanprodan/podinfo:6.6.1
+        image: quay.io/holos/stefanprodan/podinfo:6.6.1
         imagePullPolicy: IfNotPresent
         livenessProbe:
           exec:

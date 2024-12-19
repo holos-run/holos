@@ -24,7 +24,7 @@ spec:
       - as: update-image
         config:
           images:
-          - image: ghcr.io/stefanprodan/podinfo
+          - image: quay.io/holos/stefanprodan/podinfo
           path: ./src/deploy/projects/podinfo/components/dev-podinfo
         uses: kustomize-set-image
       - config:
@@ -81,7 +81,7 @@ spec:
       - as: update-image
         config:
           images:
-          - image: ghcr.io/stefanprodan/podinfo
+          - image: quay.io/holos/stefanprodan/podinfo
           path: ./src/deploy/projects/podinfo/components/prod-us-central-podinfo
         uses: kustomize-set-image
       - config:
@@ -139,7 +139,7 @@ spec:
       - as: update-image
         config:
           images:
-          - image: ghcr.io/stefanprodan/podinfo
+          - image: quay.io/holos/stefanprodan/podinfo
           path: ./src/deploy/projects/podinfo/components/prod-us-east-podinfo
         uses: kustomize-set-image
       - config:
@@ -197,7 +197,7 @@ spec:
       - as: update-image
         config:
           images:
-          - image: ghcr.io/stefanprodan/podinfo
+          - image: quay.io/holos/stefanprodan/podinfo
           path: ./src/deploy/projects/podinfo/components/prod-us-west-podinfo
         uses: kustomize-set-image
       - config:
@@ -255,7 +255,7 @@ spec:
       - as: update-image
         config:
           images:
-          - image: ghcr.io/stefanprodan/podinfo
+          - image: quay.io/holos/stefanprodan/podinfo
           path: ./src/deploy/projects/podinfo/components/test-podinfo
         uses: kustomize-set-image
       - config:
@@ -313,7 +313,7 @@ spec:
       - as: update-image
         config:
           images:
-          - image: ghcr.io/stefanprodan/podinfo
+          - image: quay.io/holos/stefanprodan/podinfo
           path: ./src/deploy/projects/podinfo/components/uat-podinfo
         uses: kustomize-set-image
       - config:
@@ -357,6 +357,6 @@ spec:
   subscriptions:
   - image:
       discoveryLimit: 5
-      repoURL: ghcr.io/stefanprodan/podinfo
+      repoURL: quay.io/holos/stefanprodan/podinfo
       semverConstraint: ^6.0.0
       strictSemvers: true
