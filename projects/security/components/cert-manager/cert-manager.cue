@@ -5,15 +5,9 @@ holos: Component.BuildPlan
 
 Component: #Helm & {
 	Name:      "cert-manager"
-	Namespace: CertManager.Namespace
+	Namespace: CertManager.namespace
+	Chart:     CertManager.chart
 
-	Chart: {
-		version: CertManager.Version
-		repository: {
-			name: "jetstack"
-			url:  "https://charts.jetstack.io"
-		}
-	}
 	EnableHooks: true
 
 	Values: #Values & {

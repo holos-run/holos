@@ -15,7 +15,7 @@ Projects: holos.#Projects & {
 	security: {
 		namespaces: {
 			"external-secrets": _
-			"cert-manager":     _
+			(CertManager.namespace): metadata: labels: "kargo.akuity.io/project": "true"
 		}
 		components: {
 			"namespaces": {
@@ -33,7 +33,16 @@ Projects: holos.#Projects & {
 			"cert-manager": {
 				name: "cert-manager"
 				path: "projects/security/components/cert-manager"
-				instances: [{extractYAML: path: "./data/cert-manager/cert-manager.yaml"}]
+				instances: [{extractYAML: path: CertManager.datafile}]
+				parameters: KargoProjectName: "cert-manager"
+				parameters: KargoStageName:   "main"
+			}
+			// Defines the Kargo promotion pipeline for cert-manager.
+			"cert-manager-kargo": {
+				name: "cert-manager-kargo"
+				path: "projects/security/components/cert-manager-kargo"
+				parameters: KargoProjectName: "cert-manager"
+				parameters: KargoStageName:   "main"
 			}
 			"local-ca": {
 				name: "local-ca"

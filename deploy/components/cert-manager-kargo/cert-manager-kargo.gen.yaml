@@ -1,0 +1,83 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Project
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-cert-manager-kargo
+  name: cert-manager
+spec:
+  promotionPolicies:
+  - autoPromotionEnabled: true
+    stage: main
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-cert-manager-kargo
+  name: main
+  namespace: cert-manager
+spec:
+  promotionTemplate:
+    spec:
+      steps:
+      - config:
+          checkout:
+          - branch: main
+            path: ./src
+          repoURL: https://github.com/jeffmccune/kargo-demo.git
+        uses: git-clone
+      - as: update
+        config:
+          path: src/data/cert-manager/cert-manager.yaml
+          updates:
+          - key: CertManager.chart.version
+            value: ${{ chartFrom('https://charts.jetstack.io', 'cert-manager', warehouse('cert-manager')).Version
+              }}
+        uses: yaml-update
+      - as: commit
+        config:
+          message: 'cert-manager: update to ${{ chartFrom(''https://charts.jetstack.io'',
+            ''cert-manager'', warehouse(''cert-manager'')).Version }}'
+          path: ./src
+        uses: git-commit
+      - as: push
+        config:
+          generateTargetBranch: true
+          path: ./src
+        uses: git-push
+      - as: pull
+        config:
+          repoURL: https://github.com/jeffmccune/kargo-demo.git
+          sourceBranch: ${{ outputs.push.branch }}
+          targetBranch: main
+        uses: git-open-pr
+      - as: merge-pr
+        config:
+          prNumber: ${{ outputs.pull.prNumber }}
+          repoURL: https://github.com/jeffmccune/kargo-demo.git
+        uses: git-wait-for-pr
+      - config:
+          apps:
+          - name: security-cert-manager
+        uses: argocd-update
+  requestedFreight:
+  - origin:
+      kind: Warehouse
+      name: cert-manager
+    sources:
+      direct: true
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-cert-manager-kargo
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  freightCreationPolicy: Automatic
+  interval: 5m0s
+  subscriptions:
+  - chart:
+      name: cert-manager
+      repoURL: https://charts.jetstack.io

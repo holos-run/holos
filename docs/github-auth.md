@@ -32,6 +32,16 @@ Under `Permissions` → `Repository permissions` → `Contents`, select `Read an
 write` permissions.  _The App will receive these permissions on all repositories
 into which it is installed._
 
+The `git-open-pr` step requires write permission to pull requests.  Add this
+permission if you get the following error:
+
+```
+step execution failed: step 4 met error threshold of 1: failed to run step
+"git-open-pr": error creating pull request: POST
+https://api.github.com/repos/jeffmccune/kargo-demo/pulls: 403 Resource not
+accessible by integration []
+```
+
 Under `Where can this GitHub App be installed?`, leave `Only on this account`
 selected.
 
