@@ -10,7 +10,7 @@ require (
 	connectrpc.com/grpcreflect v1.2.0
 	connectrpc.com/otelconnect v0.7.0
 	connectrpc.com/validate v0.1.0
-	cuelang.org/go v0.11.0
+	cuelang.org/go v0.11.1
 	entgo.io/ent v0.13.1
 	github.com/bufbuild/buf v1.35.1
 	github.com/choria-io/machine-room v0.0.0-20240417064836-c604da2f005e
