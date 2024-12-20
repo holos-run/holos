@@ -119,12 +119,12 @@ here to help.
 
 Holos is licensed under Apache 2.0 as found in the [LICENSE file](LICENSE).
 
-[Holos]: https://holos.run
+[Holos]: https://holos.run/docs/overview/
 [rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern
 [CUE]: https://cuelang.org/
 [Discord]: https://discord.gg/JgDVbNpye7
 [GitHub discussions]: https://github.com/holos-run/holos/discussions
 [Why CUE for Configuration]: https://holos.run/blog/why-cue-for-configuration/
-[topics]: https://holos.run/docs/topics/
+[tutorial]: https://holos.run/docs/overview/
 [setup]: https://holos.run/docs/setup/
-[tutorial]: https://holos.run/docs/tutorial/
+[topics]: https://holos.run/docs/topics/
