@@ -1,7 +1,5 @@
 ---
-# TODO: This is really just a cspell job and could be sped up if we skip the
-# make tools step.
-name: Lint
+name: Spelling
 "on":
   push:
     branches:
@@ -9,31 +7,11 @@ name: Lint
       - test
   pull_request:
     types: [opened, synchronize]
-
 permissions:
   contents: read
-
 jobs:
-  lint:
-    name: lint
+  cspell:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: stable
-
-      - name: Install Tools
-        run: make tools
-
-      - name: Lint
-        # golangci-lint runs in a separate workflow.
-        run: make lint -o golangci-lint
+      - uses: actions/checkout@v4
+      - run: ./hack/cspell
