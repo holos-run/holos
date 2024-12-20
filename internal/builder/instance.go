@@ -11,6 +11,7 @@ import (
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
+	"cuelang.org/go/cue/interpreter/embed"
 	"cuelang.org/go/cue/load"
 	"cuelang.org/go/encoding/yaml"
 	"github.com/holos-run/holos/internal/errors"
@@ -76,7 +77,7 @@ func LoadInstance(path string, filepaths []string, tags []string) (*Instance, er
 		ModuleRoot: root,
 		Tags:       tags,
 	}
-	ctxt := cuecontext.New()
+	ctxt := cuecontext.New(cuecontext.Interpreter(embed.New()))
 
 	bis := load.Instances([]string{path}, cfg)
 	values, err := ctxt.BuildInstances(bis)
