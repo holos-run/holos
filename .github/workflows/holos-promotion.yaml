@@ -1,43 +1,19 @@
 name: holos render platform
-
 on:
   push:
     branches:
       - 'kargo/promotion/*'
-
 jobs:
   holos:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    container:
+      image: quay.io/holos-run/holos:bookworm
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: 'go.mod'
-
-      - name: Install Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: 'v3.16.3'
-
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: 'v1.32.0'
-
-      - name: Install Holos
-        # holos version pinned in go.mod
-        run: |
-          go install github.com/holos-run/holos/cmd/holos
-
       - name: Run holos render platform
         run: holos render platform -t ${{ github.repository_owner }}
-
       - name: Commit and push changes
         run: |
           git config --global user.name 'GitHub Actions'
