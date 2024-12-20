@@ -49,10 +49,6 @@ kubectl wait --for=condition=Available deployment/external-secrets-webhook -n ex
 apply kargo-secrets
 apply kargo # includes crds
 
-# Kargo promoter components for cluster add-ons
-apply cert-manager-kargo
-apply istio-promoter
-
 # Istio
 apply istio-base
 apply istiod
@@ -87,14 +83,18 @@ kubectl apply --force-conflicts --server-side=true -f deploy/gitops
 kubectl apply --force-conflicts --server-side=true -f deploy/projects/podinfo/gitops
 kubectl apply --force-conflicts --server-side=true -f deploy/projects/httpbin/gitops
 
-# Kargo Projects.  They need the webhook but we don't need them until later.
+# Kargo resources (Project, Warehouse, Stage) need the webhook.
 kubectl wait --for=condition=Available deployment/kargo-webhooks-server -n kargo --timeout=300s
 
-# Project Kargo Resources (Requires kargo-webhooks-server)
+# Kargo Resources (Requires kargo-webhooks-server)
 applyProject podinfo kargo-project
 applyProject podinfo kargo-stages
+# httpbin
 applyProject httpbin kargo-project
 applyProject httpbin kargo-stages
+# Kargo promoter components for cluster add-ons
+apply cert-manager-kargo
+apply istio-promoter
 
 set +x
 echo
@@ -105,7 +105,7 @@ echo "  - https://podinfo.holos.localhost"
 echo "  - https://httpbin.holos.localhost"
 echo
 echo "Kargo admin password:"
-echo "  run: kubectl get secret -n kargo admin-credentials -o json | jq --exit-status -r '.data.password | @base64d'"
+echo "  kubectl get secret -n kargo admin-credentials -o json | jq --exit-status -r '.data.password | @base64d'"
 echo
 set -x
 
