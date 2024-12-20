@@ -2,13 +2,13 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
     labels: {}
-    name: security-cert-manager-kargo
+    name: network-istio-promoter
     namespace: argocd
 spec:
     destination:
         server: https://kubernetes.default.svc
-    project: security
+    project: network
     source:
-        path: deploy/components/cert-manager-kargo
+        path: deploy/components/istio-promoter
         repoURL: https://github.com/holos-run/kargo-demo.git
         targetRevision: main

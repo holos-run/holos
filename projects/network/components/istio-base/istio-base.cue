@@ -13,12 +13,9 @@ Component: #Helm & {
 	Namespace: Istio.System.Namespace
 
 	Chart: {
-		name:    "base"
-		version: Istio.Version
-		repository: {
-			name: "istio"
-			url:  "https://istio-release.storage.googleapis.com/charts"
-		}
+		name:       "base"
+		version:    Istio.chart.version
+		repository: Istio.chart.repository
 	}
 
 	KustomizeConfig: Kustomization: patches: [for x in KustomizePatches {x}]

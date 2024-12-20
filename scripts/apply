@@ -49,8 +49,9 @@ kubectl wait --for=condition=Available deployment/external-secrets-webhook -n ex
 apply kargo-secrets
 apply kargo # includes crds
 
-# Cert Manager Promotion steps
+# Kargo promoter components for cluster add-ons
 apply cert-manager-kargo
+apply istio-promoter
 
 # Istio
 apply istio-base

@@ -2,8 +2,8 @@ apiVersion: kargo.akuity.io/v1alpha1
 kind: Project
 metadata:
   labels:
-    argocd.argoproj.io/instance: security-cert-manager-kargo
-  name: cert-manager
+    argocd.argoproj.io/instance: network-istio-promoter
+  name: istio
 spec:
   promotionPolicies:
   - autoPromotionEnabled: true
@@ -13,9 +13,9 @@ apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
   labels:
-    argocd.argoproj.io/instance: security-cert-manager-kargo
+    argocd.argoproj.io/instance: network-istio-promoter
   name: main
-  namespace: cert-manager
+  namespace: istio
 spec:
   promotionTemplate:
     spec:
@@ -28,16 +28,16 @@ spec:
         uses: git-clone
       - as: update
         config:
-          path: src/data/cert-manager/cert-manager.yaml
+          path: src/data/istio/istio.yaml
           updates:
-          - key: CertManager.chart.version
-            value: ${{ chartFrom('https://charts.jetstack.io', 'cert-manager', warehouse('cert-manager')).Version
-              }}
+          - key: Istio.chart.version
+            value: ${{ chartFrom('https://istio-release.storage.googleapis.com/charts',
+              'base', warehouse('istio')).Version }}
         uses: yaml-update
       - as: commit
         config:
-          message: 'cert-manager: update to ${{ chartFrom(''https://charts.jetstack.io'',
-            ''cert-manager'', warehouse(''cert-manager'')).Version }}'
+          message: 'istio: update to ${{ chartFrom(''https://istio-release.storage.googleapis.com/charts'',
+            ''base'', warehouse(''istio'')).Version }}'
           path: ./src
         uses: git-commit
       - as: push
@@ -51,19 +51,10 @@ spec:
           sourceBranch: ${{ outputs.push.branch }}
           targetBranch: main
         uses: git-open-pr
-      - as: merge-pr
-        config:
-          prNumber: ${{ outputs.pull.prNumber }}
-          repoURL: https://github.com/holos-run/kargo-demo.git
-        uses: git-wait-for-pr
-      - config:
-          apps:
-          - name: security-cert-manager
-        uses: argocd-update
   requestedFreight:
   - origin:
       kind: Warehouse
-      name: cert-manager
+      name: istio
     sources:
       direct: true
 ---
@@ -71,13 +62,13 @@ apiVersion: kargo.akuity.io/v1alpha1
 kind: Warehouse
 metadata:
   labels:
-    argocd.argoproj.io/instance: security-cert-manager-kargo
-  name: cert-manager
-  namespace: cert-manager
+    argocd.argoproj.io/instance: network-istio-promoter
+  name: istio
+  namespace: istio
 spec:
   freightCreationPolicy: Automatic
   interval: 5m0s
   subscriptions:
   - chart:
-      name: cert-manager
-      repoURL: https://charts.jetstack.io
+      name: base
+      repoURL: https://istio-release.storage.googleapis.com/charts

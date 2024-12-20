@@ -67,6 +67,15 @@ kind: Namespace
 metadata:
   labels:
     argocd.argoproj.io/instance: security-namespaces
+    kargo.akuity.io/project: "true"
+    kubernetes.io/metadata.name: istio
+  name: istio
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    argocd.argoproj.io/instance: security-namespaces
     kubernetes.io/metadata.name: istio-ingress
   name: istio-ingress
 ---
