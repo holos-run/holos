@@ -28,19 +28,11 @@ jobs:
         with:
           go-version: stable
 
-      - name: Install Packages
-        run: sudo apt update && sudo apt -qq -y install git curl zip unzip tar bzip2 make
-
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
       - name: Set up Kubectl
         uses: azure/setup-kubectl@v4
-
-      - name: Install Tools
-        run: |
-          set -x
-          make tools
 
       - name: Test
         run: ./scripts/test

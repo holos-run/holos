@@ -1,5 +1,6 @@
 ---
-# https://github.com/golangci/golangci-lint-action?tab=readme-ov-file#how-to-use
+# TODO: This is really just a cspell job and could be sped up if we skip the
+# make tools step.
 name: Lint
 "on":
   push:
@@ -29,10 +30,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: stable
-
-      ## Not needed on ubuntu-latest
-      # - name: Install Packages
-      #   run: sudo apt update && sudo apt -qq -y install git curl zip unzip tar bzip2 make
 
       - name: Install Tools
         run: make tools
