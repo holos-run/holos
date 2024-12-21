@@ -35,6 +35,7 @@ jobs:
           fi
       - name: Checkout
         uses: actions/checkout@v4
+        with:
           ref: ${{ steps.opts.outputs.ref }}
       - name: SHA
         id: sha
