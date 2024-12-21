@@ -6,6 +6,7 @@ package tools
 // https://go.dev/wiki/Modules
 
 import (
+  _ "sigs.k8s.io/kustomize/kustomize/v5"
 	_ "connectrpc.com/connect/cmd/protoc-gen-connect-go"
 	_ "cuelang.org/go/cmd/cue"
 	_ "github.com/bufbuild/buf/cmd/buf"
