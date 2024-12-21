@@ -1,0 +1,92 @@
+name: Container
+
+# Only allow actors with write permission to the repository to trigger this
+# workflow.
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag to build (e.g., v1.2.3)'
+        required: true
+        type: string
+
+jobs:
+  buildx:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Set tag from trigger event
+        id: opts
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ steps.opts.outputs.tag }}
+      - name: SHA
+        id: sha
+        run: echo "sha=$(/usr/bin/git log -1 --format='%H')" >> $GITHUB_OUTPUT
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to quay.io
+        uses: docker/login-action@v3
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_TOKEN }}
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Fetch tags
+        run: git fetch --prune --unshallow --tags
+      - name: Set Tags
+        id: tags
+        run: |
+          echo "detail=$(/usr/bin/git describe --tags HEAD)" >> $GITHUB_OUTPUT
+          echo "suffix=$(test -n "$(git status --porcelain)" && echo '-dirty' || echo '')" >> $GITHUB_OUTPUT
+          echo "date_stamp=$(date +"%F")" >> $GITHUB_OUTPUT
+          echo "week_stamp=$(date +"%Y-%U")" >> $GITHUB_OUTPUT
+      - name: Setup Cosign to sign container images
+        uses: sigstore/cosign-installer@v3.7.0
+      - name: Build and push container images
+        id: build-and-push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: true
+          tags: |
+            ghcr.io/holos-run/holos:${{ steps.opts.outputs.tag}}${{ steps.tags.outputs.suffix }}
+            ghcr.io/holos-run/holos:${{ steps.sha.outputs.sha}}${{ steps.tags.outputs.suffix }}
+            quay.io/holos-run/holos:${{ steps.opts.outputs.tag}}${{ steps.tags.outputs.suffix }}
+            quay.io/holos-run/holos:${{ steps.sha.outputs.sha}}${{ steps.tags.outputs.suffix }}
+      - name: Sign with GitHub OIDC Token
+        env:
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          cosign sign --yes ghcr.io/holos-run/holos:${{ steps.opts.outputs.tag}}${{ steps.tags.outputs.suffix }}@${DIGEST}
+          cosign sign --yes ghcr.io/holos-run/holos:${{ steps.sha.outputs.sha}}${{ steps.tags.outputs.suffix }}@${DIGEST}
+          cosign sign --yes quay.io/holos-run/holos:${{ steps.opts.outputs.tag}}${{ steps.tags.outputs.suffix }}@${DIGEST}
+          cosign sign --yes quay.io/holos-run/holos:${{ steps.sha.outputs.sha}}${{ steps.tags.outputs.suffix }}@${DIGEST}
+    outputs:
+      sha: ${{ steps.sha.outputs.sha }}
+      detail: ${{ steps.tags.outputs.detail }}
