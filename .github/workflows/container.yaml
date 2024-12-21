@@ -46,6 +46,7 @@ jobs:
           echo "suffix=$(test -n "$(git status --porcelain)" && echo '-dirty' || echo '')" >> $GITHUB_OUTPUT
           echo "date_stamp=$(date +"%F")" >> $GITHUB_OUTPUT
           echo "week_stamp=$(date +"%Y-%U")" >> $GITHUB_OUTPUT
+      - uses: sigstore/cosign-installer@v3.7.0
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
@@ -57,6 +58,13 @@ jobs:
             quay.io/holos-run/holos:${{ steps.tags.outputs.detail}}${{ steps.tags.outputs.suffix }}
             ghcr.io/holos-run/holos:latest
             ghcr.io/holos-run/holos:${{ steps.tags.outputs.detail}}${{ steps.tags.outputs.suffix }}
+      - name: Sign with GitHub OIDC Token
+        env:
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+          TAGS: ${{ steps.docker_meta.outputs.tags }}
+        run: |
+          cosign sign --yes quay.io/holos-run/holos:${{ steps.tags.outputs.detail}}${{ steps.tags.outputs.suffix }}@${DIGEST}
+          cosign sign --yes ghcr.io/holos-run/holos:${{ steps.tags.outputs.detail}}${{ steps.tags.outputs.suffix }}@${DIGEST}
     outputs:
       sha: ${{ steps.sha.outputs.sha }}
       detail: ${{ steps.tags.outputs.detail }}
