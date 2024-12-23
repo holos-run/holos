@@ -40,22 +40,11 @@ jobs:
       - name: SHA
         id: sha
         run: echo "sha=$(/usr/bin/git log -1 --format='%H')" >> $GITHUB_OUTPUT
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      - name: Login to quay.io
-        uses: docker/login-action@v3
-        with:
-          registry: quay.io
-          username: ${{ secrets.QUAY_USER }}
-          password: ${{ secrets.QUAY_TOKEN }}
-      - name: Login to ghcr.io
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Fetch tags
         run: git fetch --prune --unshallow --tags
       - name: Set Tags
@@ -63,8 +52,14 @@ jobs:
         run: |
           echo "detail=$(/usr/bin/git describe --tags HEAD)" >> $GITHUB_OUTPUT
           echo "suffix=$(test -n "$(git status --porcelain)" && echo '-dirty' || echo '')" >> $GITHUB_OUTPUT
-      - name: Setup Cosign to sign container images
-        uses: sigstore/cosign-installer@v3.7.0
+          echo "tag=$(/usr/bin/git describe --tags HEAD)$(test -n "$(git status --porcelain)" && echo '-dirty' || echo '')" >> $GITHUB_OUTPUT
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push container images
         id: build-and-push
         uses: docker/build-push-action@v6
@@ -73,18 +68,16 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/holos-run/holos:${{ steps.tags.outputs.detail }}${{ steps.tags.outputs.suffix }}
+            ghcr.io/holos-run/holos:${{ steps.tags.outputs.tag }}
             ghcr.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}
-            quay.io/holos-run/holos:${{ steps.tags.outputs.detail }}${{ steps.tags.outputs.suffix }}
-            quay.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}
+      - name: Setup Cosign to sign container images
+        uses: sigstore/cosign-installer@v3.7.0
       - name: Sign with GitHub OIDC Token
         env:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: |
-          cosign sign --yes ghcr.io/holos-run/holos:${{ steps.tags.outputs.detail }}${{ steps.tags.outputs.suffix }}@${DIGEST}
+          cosign sign --yes ghcr.io/holos-run/holos:${{ steps.tags.outputs.tag }}@${DIGEST}
           cosign sign --yes ghcr.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST}
-          cosign sign --yes quay.io/holos-run/holos:${{ steps.tags.outputs.detail }}${{ steps.tags.outputs.suffix }}@${DIGEST}
-          cosign sign --yes quay.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST}
 
       - uses: actions/create-github-app-token@v1
         id: app-token
@@ -92,13 +85,57 @@ jobs:
           owner: ${{ github.repository_owner }}
           app-id: ${{ vars.GORELEASER_APP_ID }}
           private-key: ${{ secrets.GORELEASER_APP_PRIVATE_KEY }}
-      - name: Update holos-run/action default version
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+      - run: |
+          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+      - name: Update holos-run/holos-action
+        env:
+          IMAGE: ghcr.io/holos-run/holos:v0.102.1
+          VERSION: ${{ steps.tags.outputs.tag }}
+          USER_ID: ${{ steps.get-user-id.outputs.user-id }}
+          TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git clone https://github.com/holos-run/holos-action
-          ./scripts/update-version '${{ steps.tags.output.detail }}'
+          set -euo pipefail
+          git clone "https://github.com/holos-run/holos-action"
+          cd holos-action
+          git remote set-url origin https://${USER_ID}:${TOKEN}@github.com/holos-run/holos-action
+          docker pull --quiet "${IMAGE}"
+          docker run -v $(pwd):/app --workdir /app --rm "${IMAGE}"  \
+            holos cue export --out yaml action.cue -t "version=${VERSION}" > action.yml
+          git add action.yml
+          git commit -m "ci: update holos to ${VERSION} - https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" || (echo "No changes to commit"; exit 0)
+          git push origin HEAD:main HEAD:v0 HEAD:v1
+
+      - name: Login to quay.io
+        uses: docker/login-action@v3
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_TOKEN }}
+      - name: Push to quay.io
+        env:
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          # docker push quay.io/holos-run/holos:${{ steps.tags.outputs.tag }}
+          docker tag ghcr.io/holos-run/holos:${{ steps.tags.outputs.tag }}@${DIGEST} \
+                     quay.io/holos-run/holos:${{ steps.tags.outputs.tag }}
+          docker push quay.io/holos-run/holos:${{ steps.tags.outputs.tag }}@${DIGEST}
+
+          docker tag ghcr.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST} \
+                     quay.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}
+          docker push quay.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST}
+      - name: Sign quay.io image
+        env:
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          cosign sign --yes quay.io/holos-run/holos:${{ steps.tags.outputs.tag }}@${DIGEST}
+          cosign sign --yes quay.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST}
 
     outputs:
-      sha: ${{ steps.sha.outputs.sha }}
+      tag: ${{ steps.tags.outputs.tag }}
       detail: ${{ steps.tags.outputs.detail }}
