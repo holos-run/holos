@@ -122,13 +122,15 @@ jobs:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: |
           # docker push quay.io/holos-run/holos:${{ steps.tags.outputs.tag }}
+          docker pull --quiet ghcr.io/holos-run/holos:${{ steps.tags.outputs.tag }}@${DIGEST}
           docker tag ghcr.io/holos-run/holos:${{ steps.tags.outputs.tag }}@${DIGEST} \
                      quay.io/holos-run/holos:${{ steps.tags.outputs.tag }}
-          docker push quay.io/holos-run/holos:${{ steps.tags.outputs.tag }}@${DIGEST}
+          docker push quay.io/holos-run/holos:${{ steps.tags.outputs.tag }}
 
+          docker pull --quiet ghcr.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST}
           docker tag ghcr.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST} \
                      quay.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}
-          docker push quay.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST}
+          docker push quay.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}
       - name: Sign quay.io image
         env:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
