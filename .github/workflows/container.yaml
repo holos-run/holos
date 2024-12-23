@@ -85,6 +85,20 @@ jobs:
           cosign sign --yes ghcr.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST}
           cosign sign --yes quay.io/holos-run/holos:${{ steps.tags.outputs.detail }}${{ steps.tags.outputs.suffix }}@${DIGEST}
           cosign sign --yes quay.io/holos-run/holos:${{ steps.sha.outputs.sha }}${{ steps.tags.outputs.suffix }}@${DIGEST}
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          owner: ${{ github.repository_owner }}
+          app-id: ${{ vars.GORELEASER_APP_ID }}
+          private-key: ${{ secrets.GORELEASER_APP_PRIVATE_KEY }}
+      - name: Update holos-run/action default version
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git clone https://github.com/holos-run/holos-action
+          ./scripts/update-version '${{ steps.tags.output.detail }}'
+
     outputs:
       sha: ${{ steps.sha.outputs.sha }}
       detail: ${{ steps.tags.outputs.detail }}
