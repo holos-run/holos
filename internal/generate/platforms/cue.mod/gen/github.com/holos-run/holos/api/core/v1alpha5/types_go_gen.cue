@@ -290,7 +290,7 @@ package core
 	labels?: {[string]: string} @go(Labels,map[string]string)
 
 	// Annotations represents arbitrary non-identifying metadata.  For example
-	// holos uses the `cli.holos.run/description` annotation to log resources in a
+	// holos uses the `app.holos.run/description` annotation to log resources in a
 	// user customized way.
 	annotations?: {[string]: string} @go(Annotations,map[string]string)
 }
@@ -355,7 +355,7 @@ package core
 	labels?: {[string]: string} @go(Labels,map[string]string)
 
 	// Annotations represents arbitrary non-identifying metadata.  Use the
-	// `cli.holos.run/description` to customize the log message of each BuildPlan.
+	// `app.holos.run/description` to customize the log message of each BuildPlan.
 	annotations?: {[string]: string} @go(Annotations,map[string]string)
 }
 

@@ -263,7 +263,7 @@ type Metadata struct {
 	// Labels represents a resource selector.
 	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 	// Annotations represents arbitrary non-identifying metadata.  For example
-	// holos uses the `cli.holos.run/description` annotation to log resources in a
+	// holos uses the `app.holos.run/description` annotation to log resources in a
 	// user customized way.
 	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
@@ -320,7 +320,7 @@ type Component struct {
 	// resulting BuildPlan.
 	Labels map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 	// Annotations represents arbitrary non-identifying metadata.  Use the
-	// `cli.holos.run/description` to customize the log message of each BuildPlan.
+	// `app.holos.run/description` to customize the log message of each BuildPlan.
 	Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
