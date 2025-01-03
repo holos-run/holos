@@ -1,49 +1,47 @@
-rendered kargo-promoter for stack argocd in 408.232625ms
-rendered kargo-project for project httpbin in 411.547458ms
-rendered argocd-secrets for stack argocd in 416.480417ms
-rendered kargo-stages for project podinfo in 416.427791ms
-rendered kargo-stages for project httpbin in 416.533125ms
-rendered kargo-secrets for stack argocd in 416.488541ms
-rendered rollouts for stack argocd in 416.555625ms
-rendered app-projects for stack argocd in 416.50025ms
-rendered kargo-project for project podinfo in 416.620833ms
-rendered gateway-api for stack network in 513.560084ms
-rendered istio-gateway for stack network in 218.011667ms
-rendered istio-promoter for stack network in 248.014ms
-rendered namespaces for stack security in 400.769084ms
-rendered rollouts-crds for stack argocd in 845.777334ms
-rendered local-ca for stack security in 188.453ms
-rendered argocd-crds for stack argocd in 967.7255ms
-rendered external-secrets-crds for stack security in 568.929292ms
-rendered cert-manager-promoter for stack security in 206.533666ms
-rendered external-secrets-promoter for stack security in 188.654917ms
-rendered dev-httpbin for project httpbin in 247.560458ms
-rendered test-httpbin for project httpbin in 248.072042ms
-rendered uat-httpbin for project httpbin in 278.755709ms
-rendered prod-us-east-httpbin for project httpbin in 335.351166ms
-rendered prod-us-central-httpbin for project httpbin in 335.100791ms
-rendered istio-cni for stack network in 954.0995ms
-rendered prod-us-west-httpbin for project httpbin in 298.012791ms
-rendered istiod for stack network in 1.004283125s
-rendered istio-ztunnel for stack network in 1.002868291s
-Pulled: ghcr.io/akuity/kargo-charts/kargo:1.1.1
-Digest: sha256:4055c72418db85b85979da2fe12136c0e275709efc2e36a505b158e8234ad443
-rendered kargo for stack argocd in 1.600439834s
-rendered argocd for stack argocd in 1.615872375s
-rendered istio-base for stack network in 1.267729708s
-rendered cert-manager for stack security in 1.058015333s
-rendered httproutes for stack network in 1.392976375s
-rendered external-secrets for stack security in 1.402818833s
-Pulled: ghcr.io/stefanprodan/charts/podinfo:6.6.2
-Digest: sha256:83295d47de6d6ca634ed4b952a7572fc176bcc38854d0c11ca0fa197bc5f1154
-rendered prod-us-central-podinfo for project podinfo in 1.063009916s
-Pulled: ghcr.io/stefanprodan/charts/podinfo:6.6.1
-Digest: sha256:0cc9a8446c95009ef382f5eade883a67c257f77d50f84e78ecef2aac9428d1e5
-rendered prod-us-east-podinfo for project podinfo in 1.066127292s
+rendered argocd-secrets for stack argocd in 414.44ms
+rendered kargo-project for project podinfo in 414.560458ms
+rendered rollouts for stack argocd in 416.403042ms
+rendered app-projects for stack argocd in 416.750417ms
+rendered kargo-secrets for stack argocd in 417.130416ms
+rendered kargo-promoter for stack argocd in 421.088792ms
+rendered kargo-stages for project podinfo in 421.607166ms
+rendered kargo-project for project httpbin in 422.029458ms
+rendered kargo-stages for project httpbin in 422.166791ms
+rendered gateway-api for stack network in 524.156667ms
+rendered istio-gateway for stack network in 238.222458ms
+rendered namespaces for stack security in 373.691792ms
+rendered rollouts-crds for stack argocd in 805.860291ms
+rendered local-ca for stack security in 170.724875ms
+rendered argocd-crds for stack argocd in 878.929208ms
+rendered external-secrets-crds for stack security in 504.312375ms
+rendered cert-manager-promoter for stack security in 186.718ms
+rendered dev-httpbin for project httpbin in 204.02775ms
+rendered test-httpbin for project httpbin in 208.622375ms
+rendered uat-httpbin for project httpbin in 253.336ms
+rendered prod-us-east-httpbin for project httpbin in 291.838375ms
+rendered prod-us-central-httpbin for project httpbin in 263.255833ms
+rendered prod-us-west-httpbin for project httpbin in 256.850292ms
+rendered istio-ztunnel for stack network in 944.060291ms
+rendered istio-cni for stack network in 946.895458ms
+rendered istiod for stack network in 1.000126292s
+rendered argocd for stack argocd in 1.587457083s
+rendered istio-base for stack network in 1.185511667s
+rendered cert-manager for stack security in 1.110636958s
+rendered httproutes for stack network in 1.261078125s
+rendered external-secrets for stack security in 1.464216625s
 Pulled: ghcr.io/stefanprodan/charts/podinfo:6.7.0
 Digest: sha256:104d101017e501c63b3aa71b20d5edd2ca6d5d58cbc57ff8163770110f92b9db
-rendered dev-podinfo for project podinfo in 1.389359s
-rendered prod-us-west-podinfo for project podinfo in 1.20637675s
-rendered uat-podinfo for project podinfo in 1.263071625s
-rendered test-podinfo for project podinfo in 1.358542042s
-rendered platform in 2.623438666s
+rendered dev-podinfo for project podinfo in 1.135666375s
+rendered test-podinfo for project podinfo in 1.047599459s
+rendered uat-podinfo for project podinfo in 1.027484583s
+rendered prod-us-west-podinfo for project podinfo in 885.832083ms
+Pulled: ghcr.io/akuity/kargo-charts/kargo:1.1.1
+Digest: sha256:4055c72418db85b85979da2fe12136c0e275709efc2e36a505b158e8234ad443
+rendered kargo for stack argocd in 2.377781709s
+Pulled: ghcr.io/stefanprodan/charts/podinfo:6.6.1
+Digest: sha256:0cc9a8446c95009ef382f5eade883a67c257f77d50f84e78ecef2aac9428d1e5
+rendered prod-us-east-podinfo for project podinfo in 1.154370584s
+Pulled: ghcr.io/stefanprodan/charts/podinfo:6.6.2
+Digest: sha256:83295d47de6d6ca634ed4b952a7572fc176bcc38854d0c11ca0fa197bc5f1154
+rendered prod-us-central-podinfo for project podinfo in 1.14709075s
+rendered platform in 2.414075334s

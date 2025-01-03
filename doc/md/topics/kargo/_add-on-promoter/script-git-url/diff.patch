@@ -20,50 +20,6 @@ index 55a6a49..ab483d5 100644
            sourceBranch: ${{ outputs.push.branch }}
            targetBranch: main
          uses: git-open-pr
-diff --git a/deploy/components/external-secrets-promoter/external-secrets-promoter.gen.yaml b/deploy/components/external-secrets-promoter/external-secrets-promoter.gen.yaml
-index c08299b..7902d40 100644
---- a/deploy/components/external-secrets-promoter/external-secrets-promoter.gen.yaml
-+++ b/deploy/components/external-secrets-promoter/external-secrets-promoter.gen.yaml
-@@ -28,7 +28,7 @@ spec:
-           checkout:
-           - branch: main
-             path: ./src
--          repoURL: https://github.com/holos-run/kargo-demo.git
-+          repoURL: https://github.com/jeffmccune/kargo-demo.git
-         uses: git-clone
-       - as: update
-         config:
-@@ -51,7 +51,7 @@ spec:
-         uses: git-push
-       - as: pull
-         config:
--          repoURL: https://github.com/holos-run/kargo-demo.git
-+          repoURL: https://github.com/jeffmccune/kargo-demo.git
-           sourceBranch: ${{ outputs.push.branch }}
-           targetBranch: main
-         uses: git-open-pr
-diff --git a/deploy/components/istio-promoter/istio-promoter.gen.yaml b/deploy/components/istio-promoter/istio-promoter.gen.yaml
-index c67f38d..a740d9f 100644
---- a/deploy/components/istio-promoter/istio-promoter.gen.yaml
-+++ b/deploy/components/istio-promoter/istio-promoter.gen.yaml
-@@ -28,7 +28,7 @@ spec:
-           checkout:
-           - branch: main
-             path: ./src
--          repoURL: https://github.com/holos-run/kargo-demo.git
-+          repoURL: https://github.com/jeffmccune/kargo-demo.git
-         uses: git-clone
-       - as: update
-         config:
-@@ -51,7 +51,7 @@ spec:
-         uses: git-push
-       - as: pull
-         config:
--          repoURL: https://github.com/holos-run/kargo-demo.git
-+          repoURL: https://github.com/jeffmccune/kargo-demo.git
-           sourceBranch: ${{ outputs.push.branch }}
-           targetBranch: main
-         uses: git-open-pr
 diff --git a/deploy/components/kargo-promoter/kargo-promoter.gen.yaml b/deploy/components/kargo-promoter/kargo-promoter.gen.yaml
 index 87e4bfd..a2eb91d 100644
 --- a/deploy/components/kargo-promoter/kargo-promoter.gen.yaml
@@ -163,17 +119,6 @@ index 5515a52..c86bbf8 100644
 -        repoURL: https://github.com/holos-run/kargo-demo.git
 +        repoURL: https://github.com/jeffmccune/kargo-demo.git
          targetRevision: main
-diff --git a/deploy/gitops/external-secrets-promoter.application.gen.yaml b/deploy/gitops/external-secrets-promoter.application.gen.yaml
-index b737f98..26bced6 100644
---- a/deploy/gitops/external-secrets-promoter.application.gen.yaml
-+++ b/deploy/gitops/external-secrets-promoter.application.gen.yaml
-@@ -16,5 +16,5 @@ spec:
-     project: security
-     source:
-         path: deploy/components/external-secrets-promoter
--        repoURL: https://github.com/holos-run/kargo-demo.git
-+        repoURL: https://github.com/jeffmccune/kargo-demo.git
-         targetRevision: main
 diff --git a/deploy/gitops/external-secrets.application.gen.yaml b/deploy/gitops/external-secrets.application.gen.yaml
 index b1b2434..a1a90d2 100644
 --- a/deploy/gitops/external-secrets.application.gen.yaml
@@ -237,17 +182,6 @@ index 9561e06..0267f9b 100644
      project: network
      source:
          path: deploy/components/istio-gateway
--        repoURL: https://github.com/holos-run/kargo-demo.git
-+        repoURL: https://github.com/jeffmccune/kargo-demo.git
-         targetRevision: main
-diff --git a/deploy/gitops/istio-promoter.application.gen.yaml b/deploy/gitops/istio-promoter.application.gen.yaml
-index e67a389..fcab8ed 100644
---- a/deploy/gitops/istio-promoter.application.gen.yaml
-+++ b/deploy/gitops/istio-promoter.application.gen.yaml
-@@ -16,5 +16,5 @@ spec:
-     project: network
-     source:
-         path: deploy/components/istio-promoter
 -        repoURL: https://github.com/holos-run/kargo-demo.git
 +        repoURL: https://github.com/jeffmccune/kargo-demo.git
          targetRevision: main

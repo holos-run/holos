@@ -1,3 +1,3 @@
-[main 1ff0f3d] Switch to jeffmccune fork
- 47 files changed, 76 insertions(+), 72 deletions(-)
+[main d1dea10] Switch to jeffmccune fork
+ 43 files changed, 70 insertions(+), 66 deletions(-)
  create mode 100644 config/platform/organization_jeffmccune.cue
