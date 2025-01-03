@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"cuelang.org/go/cue"
 	"cuelang.org/go/cue/cuecontext"
@@ -18,6 +19,9 @@ import (
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/util"
 )
+
+// cue context and loading is not safe for concurrent use.
+var cueMutex sync.Mutex
 
 // ExtractYAML extracts yaml encoded data from file paths.  The data is unified
 // into one [cue.Value].  If a path element is a directory, all files in the
@@ -67,6 +71,8 @@ func ExtractYAML(ctxt *cue.Context, filepaths []string) (cue.Value, error) {
 // extracted data values are unified with the platform configuration [cue.Value]
 // in the returned [Instance].
 func LoadInstance(path string, filepaths []string, tags []string) (*Instance, error) {
+	cueMutex.Lock()
+	defer cueMutex.Unlock()
 	root, leaf, err := util.FindRootLeaf(path)
 	if err != nil {
 		return nil, errors.Wrap(err)
