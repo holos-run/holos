@@ -28,6 +28,7 @@ var cueMutex sync.Mutex
 // directory are loaded non-recursively.
 //
 // Attribution: https://github.com/cue-lang/cue/issues/3504
+// Deprecated: Use cue embed instead.
 func ExtractYAML(ctxt *cue.Context, filepaths []string) (cue.Value, error) {
 	value := ctxt.CompileString("")
 	files := make([]string, 0, 10*len(filepaths))
@@ -95,7 +96,6 @@ func LoadInstance(path string, filepaths []string, tags []string) (*Instance, er
 	if err != nil {
 		return nil, errors.Wrap(err)
 	}
-	// TODO: https://cuelang.org/docs/howto/place-data-go-api/
 	value = value.Unify(values[0])
 
 	inst := &Instance{
