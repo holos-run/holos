@@ -1,0 +1,8 @@
+cd ../script-setup/kargo-demo
+# Execute the example capture stdout and stderr to one file.
+exec bash -c 'bash -euo pipefail $WORK/tree.sh 2>&1'
+# Copy standard output to a file to embed in the docs.
+cp stdout $WORK/tree.txt
+
+-- tree.sh --
+tree -L3 -d platform stacks config

@@ -1,0 +1,37 @@
+env GH_USER=jeffmccune
+cd ../script-01-clone/kargo-demo
+
+## Walk the reader from entrypoint to the deployment pipeline
+# holos render platform entrypoint
+exec bash -c 'cat $(<$WORK/entrypoint.path)'
+cp stdout $WORK/entrypoint.txt
+exec bash -c 'basename $(<$WORK/entrypoint.path)'
+cp stdout $WORK/entrypoint.basename
+
+# platform.stacks location
+exec bash -c 'cat $(<$WORK/stacks.path)'
+cp stdout $WORK/stacks.txt
+exec bash -c 'basename $(<$WORK/stacks.path)'
+cp stdout $WORK/stacks.basename
+
+# certmanager.config location
+exec bash -c 'cat $(<$WORK/config.path)'
+cp stdout $WORK/config.txt
+exec bash -c 'basename $(<$WORK/config.path)'
+cp stdout $WORK/config.basename
+
+# Cert Manager Component.
+exec bash -c 'cat $(<$WORK/component.path)'
+cp stdout $WORK/component.txt
+# Get the path basename for the docs.
+exec bash -c 'basename $(<$WORK/component.path)'
+cp stdout $WORK/component.basename
+
+-- config.path --
+config/certmanager/certmanager.cue
+-- stacks.path --
+config/platform/security.cue
+-- entrypoint.path --
+platform/stacks.cue
+-- component.path --
+stacks/security/components/cert-manager/cert-manager.cue

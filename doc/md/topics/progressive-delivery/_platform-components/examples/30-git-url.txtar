@@ -1,0 +1,56 @@
+env GH_USER=jeffmccune
+env HOME=$WORK/.tmp
+cd ../script-01-clone/kargo-demo
+chmod 0755 $WORK/update.sh
+
+# Combine the steps separated in the doc.
+exec cat $WORK/header.sh $WORK/body.txt $WORK/trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+cmp config/platform/organization_$GH_USER.cue $WORK/code.want.cue
+
+# Render the platform
+exec bash -c 'bash -euo pipefail $WORK/command.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/output.txt
+
+# Get the diff
+exec bash -c 'bash -euo pipefail $WORK/diff.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/diff.patch
+
+# Set the author
+exec git config --global user.name 'Holos Docs'
+exec git config --global user.email 'hello@holos.run'
+
+# Make the commit
+exec bash -c 'bash -euo pipefail $WORK/commit.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/commit.txt
+
+-- update.sh --
+#! /bin/bash
+set -euo pipefail
+[[ -s "$1" ]] && [[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
+cat > "$1"
+-- header.sh --
+cat <<EOF > config/platform/organization_${GH_USER}.cue
+-- body.txt --
+@if(${GH_USER})
+package platform
+
+organization: repoURL: "https://github.com/${GH_USER}/kargo-demo.git"
+-- trailer.sh --
+EOF
+-- code.want.cue --
+@if(jeffmccune)
+package platform
+
+organization: repoURL: "https://github.com/jeffmccune/kargo-demo.git"
+-- command.sh --
+holos render platform -t ${GH_USER}
+-- commit.sh --
+git add .
+git commit -m "Switch to $GH_USER fork"
+-- diff.sh --
+git diff

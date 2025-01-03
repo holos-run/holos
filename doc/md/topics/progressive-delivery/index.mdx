@@ -1,0 +1,40 @@
+---
+title: Progressive Delivery
+description: Learn how to manage progressive delivery pipelines with Holos.
+sidebar_position: 110
+---
+import DocCardList from '@theme/DocCardList';
+
+# Progressive Delivery
+
+Holos pairs nicely with [Kargo], offering a holistic way to manage the
+configuration of reusable progressive rollout deployment pipelines for Holos
+components.
+
+> Kargo is a next-generation continuous delivery and application lifecycle
+> orchestration platform for Kubernetes. It builds upon GitOps principles and
+> integrates with existing technologies, like Argo CD, to streamline and automate
+> the progressive rollout of changes across the many stages of an application's
+> lifecycle. ([ref](https://github.com/akuity/kargo#:~:text=Kargo%20is%20a%20next%2Dgeneration,stages%20of%20an%20application's%20lifecycle.))
+
+Two main use cases are addressed within this topic.
+
+1. **Platform Components**:  Platform operators want pull requests automatically
+opened when new versions of cluster add-ons are available so they can see
+upcoming changes clearly.
+2. **Workloads**: Product development teams want a well defined deployment
+pipeline to automatically and safely promote new features and bug fixes.  For
+example, from dev to test to staging, then across multiple production regions
+globally.
+
+:::tip
+Holos pairs well with Kargo to progressively deploy changes across multiple
+clusters.  Contact us for personalized [support] for your use case.
+:::
+
+---
+
+<DocCardList />
+
+[Kargo]: https://kargo.io/
+[support]: ../support.mdx
