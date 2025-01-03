@@ -2,6 +2,9 @@
 description: Learn how to automatically open pull requests when cluster addon updates are available.
 sidebar_position: 100
 ---
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import ThemedImage from '@theme/ThemedImage';
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
@@ -14,6 +17,22 @@ We'll use Holos to configure Kargo to automatically watch for new versions of
 the Istio, cert-manager, and external-secrets cluster add-ons.  We'll learn how
 to define a reusable technique to mix-in the deployment pipeline to any other
 cluster add-ons, like Kargo and ArgoCD.
+
+<ThemedImage
+  alt="Pull Request summary for an available cert-manager update"
+  sources= {{
+    light: useBaseUrl('/img/kargo/add-on-promoter/kargo-pr-small.light.png'),
+    dark: useBaseUrl('/img/kargo/add-on-promoter/kargo-pr-small.dark.png'),
+  }}
+/>
+
+<ThemedImage
+  alt="Pull Request diff for an available cert-manager update"
+  sources= {{
+    light: useBaseUrl('/img/kargo/add-on-promoter/diff.light.png'),
+    dark: useBaseUrl('/img/kargo/add-on-promoter/diff.dark.png'),
+  }}
+/>
 
 ## Setup
 
@@ -107,7 +126,7 @@ import CommitOutput from '!!raw-loader!./_add-on-promoter/script-git-url/commit.
     <CodeBlock language="txt">{CommitOutput}</CodeBlock>
   </TabItem>
 </Tabs>
-
+<CodeBlock language="bash">git push</CodeBlock>
 
 [kargo-demo]: https://github.com/holos-run/kargo-demo
 [fork]: https://github.com/holos-run/kargo-demo/fork
