@@ -31,7 +31,7 @@ exec $WORK/update.sh $WORK/commit.txt
 -- update.sh --
 #! /bin/bash
 set -euo pipefail
-[[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
+[[ -s "$1" ]] && [[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
 cat > "$1"
 -- header.sh --
 cat <<EOF > config/platform/organization_${GH_USER}.cue
