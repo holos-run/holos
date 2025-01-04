@@ -1,0 +1,17 @@
+env GH_USER=holos-run
+# Remove the directory if it already exists
+exec rm -rf kargo-demo
+# Clone your fork of the kargo-demo repository
+exec bash -c 'bash -euo pipefail command.sh 2>&1'
+cmp stdout output.txt
+
+# Get the git commit
+cd kargo-demo
+exec git rev-parse --verify origin/HEAD
+cp stdout $WORK/git.commit
+
+-- command.sh --
+git clone https://github.com/${GH_USER}/kargo-demo.git
+cd kargo-demo
+-- output.txt --
+Cloning into 'kargo-demo'...

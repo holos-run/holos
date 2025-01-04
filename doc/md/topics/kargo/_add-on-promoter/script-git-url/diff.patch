@@ -1,0 +1,686 @@
+diff --git a/deploy/components/cert-manager-promoter/cert-manager-promoter.gen.yaml b/deploy/components/cert-manager-promoter/cert-manager-promoter.gen.yaml
+index 55a6a49..ab483d5 100644
+--- a/deploy/components/cert-manager-promoter/cert-manager-promoter.gen.yaml
++++ b/deploy/components/cert-manager-promoter/cert-manager-promoter.gen.yaml
+@@ -28,7 +28,7 @@ spec:
+           checkout:
+           - branch: main
+             path: ./src
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - as: update
+         config:
+@@ -51,7 +51,7 @@ spec:
+         uses: git-push
+       - as: pull
+         config:
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+           sourceBranch: ${{ outputs.push.branch }}
+           targetBranch: main
+         uses: git-open-pr
+diff --git a/deploy/components/kargo-promoter/kargo-promoter.gen.yaml b/deploy/components/kargo-promoter/kargo-promoter.gen.yaml
+index 87e4bfd..a2eb91d 100644
+--- a/deploy/components/kargo-promoter/kargo-promoter.gen.yaml
++++ b/deploy/components/kargo-promoter/kargo-promoter.gen.yaml
+@@ -28,7 +28,7 @@ spec:
+           checkout:
+           - branch: main
+             path: ./src
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - as: update
+         config:
+@@ -51,7 +51,7 @@ spec:
+         uses: git-push
+       - as: pull
+         config:
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+           sourceBranch: ${{ outputs.push.branch }}
+           targetBranch: main
+         uses: git-open-pr
+diff --git a/deploy/gitops/app-projects.application.gen.yaml b/deploy/gitops/app-projects.application.gen.yaml
+index a98a52e..a58f7fb 100644
+--- a/deploy/gitops/app-projects.application.gen.yaml
++++ b/deploy/gitops/app-projects.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: argocd
+     source:
+         path: deploy/components/app-projects
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/argocd-crds.application.gen.yaml b/deploy/gitops/argocd-crds.application.gen.yaml
+index 6aba002..4ce8835 100644
+--- a/deploy/gitops/argocd-crds.application.gen.yaml
++++ b/deploy/gitops/argocd-crds.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: argocd
+     source:
+         path: deploy/components/argocd-crds
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/argocd-secrets.application.gen.yaml b/deploy/gitops/argocd-secrets.application.gen.yaml
+index 245fb00..0a5b79d 100644
+--- a/deploy/gitops/argocd-secrets.application.gen.yaml
++++ b/deploy/gitops/argocd-secrets.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: argocd
+     source:
+         path: deploy/components/argocd-secrets
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/argocd.application.gen.yaml b/deploy/gitops/argocd.application.gen.yaml
+index 764a55f..6c4cfad 100644
+--- a/deploy/gitops/argocd.application.gen.yaml
++++ b/deploy/gitops/argocd.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: argocd
+     source:
+         path: deploy/components/argocd
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/cert-manager-promoter.application.gen.yaml b/deploy/gitops/cert-manager-promoter.application.gen.yaml
+index c28bb66..a98c0ef 100644
+--- a/deploy/gitops/cert-manager-promoter.application.gen.yaml
++++ b/deploy/gitops/cert-manager-promoter.application.gen.yaml
+@@ -16,5 +16,5 @@ spec:
+     project: security
+     source:
+         path: deploy/components/cert-manager-promoter
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/cert-manager.application.gen.yaml b/deploy/gitops/cert-manager.application.gen.yaml
+index 14e15f0..d6a24d3 100644
+--- a/deploy/gitops/cert-manager.application.gen.yaml
++++ b/deploy/gitops/cert-manager.application.gen.yaml
+@@ -12,5 +12,5 @@ spec:
+     project: security
+     source:
+         path: deploy/components/cert-manager
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/external-secrets-crds.application.gen.yaml b/deploy/gitops/external-secrets-crds.application.gen.yaml
+index 5515a52..c86bbf8 100644
+--- a/deploy/gitops/external-secrets-crds.application.gen.yaml
++++ b/deploy/gitops/external-secrets-crds.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: security
+     source:
+         path: deploy/components/external-secrets-crds
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/external-secrets.application.gen.yaml b/deploy/gitops/external-secrets.application.gen.yaml
+index b1b2434..a1a90d2 100644
+--- a/deploy/gitops/external-secrets.application.gen.yaml
++++ b/deploy/gitops/external-secrets.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: security
+     source:
+         path: deploy/components/external-secrets
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/gateway-api.application.gen.yaml b/deploy/gitops/gateway-api.application.gen.yaml
+index a567685..1209068 100644
+--- a/deploy/gitops/gateway-api.application.gen.yaml
++++ b/deploy/gitops/gateway-api.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: network
+     source:
+         path: deploy/components/gateway-api
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/httproutes.application.gen.yaml b/deploy/gitops/httproutes.application.gen.yaml
+index 01e7eea..ba17725 100644
+--- a/deploy/gitops/httproutes.application.gen.yaml
++++ b/deploy/gitops/httproutes.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: network
+     source:
+         path: deploy/components/httproutes
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/istio-base.application.gen.yaml b/deploy/gitops/istio-base.application.gen.yaml
+index 344bba2..32d4f4b 100644
+--- a/deploy/gitops/istio-base.application.gen.yaml
++++ b/deploy/gitops/istio-base.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: network
+     source:
+         path: deploy/components/istio-base
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/istio-cni.application.gen.yaml b/deploy/gitops/istio-cni.application.gen.yaml
+index 478e7c4..5fdf222 100644
+--- a/deploy/gitops/istio-cni.application.gen.yaml
++++ b/deploy/gitops/istio-cni.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: network
+     source:
+         path: deploy/components/istio-cni
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/istio-gateway.application.gen.yaml b/deploy/gitops/istio-gateway.application.gen.yaml
+index 9561e06..0267f9b 100644
+--- a/deploy/gitops/istio-gateway.application.gen.yaml
++++ b/deploy/gitops/istio-gateway.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: network
+     source:
+         path: deploy/components/istio-gateway
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/istio-ztunnel.application.gen.yaml b/deploy/gitops/istio-ztunnel.application.gen.yaml
+index a6da24e..ac21566 100644
+--- a/deploy/gitops/istio-ztunnel.application.gen.yaml
++++ b/deploy/gitops/istio-ztunnel.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: network
+     source:
+         path: deploy/components/istio-ztunnel
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/istiod.application.gen.yaml b/deploy/gitops/istiod.application.gen.yaml
+index 57d3fdc..a09c8b9 100644
+--- a/deploy/gitops/istiod.application.gen.yaml
++++ b/deploy/gitops/istiod.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: network
+     source:
+         path: deploy/components/istiod
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/kargo-promoter.application.gen.yaml b/deploy/gitops/kargo-promoter.application.gen.yaml
+index 079ee37..f6db555 100644
+--- a/deploy/gitops/kargo-promoter.application.gen.yaml
++++ b/deploy/gitops/kargo-promoter.application.gen.yaml
+@@ -16,5 +16,5 @@ spec:
+     project: argocd
+     source:
+         path: deploy/components/kargo-promoter
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/kargo-secrets.application.gen.yaml b/deploy/gitops/kargo-secrets.application.gen.yaml
+index c1d048b..308560d 100644
+--- a/deploy/gitops/kargo-secrets.application.gen.yaml
++++ b/deploy/gitops/kargo-secrets.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: argocd
+     source:
+         path: deploy/components/kargo-secrets
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/kargo.application.gen.yaml b/deploy/gitops/kargo.application.gen.yaml
+index 22408e1..04f92fc 100644
+--- a/deploy/gitops/kargo.application.gen.yaml
++++ b/deploy/gitops/kargo.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: argocd
+     source:
+         path: deploy/components/kargo
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/local-ca.application.gen.yaml b/deploy/gitops/local-ca.application.gen.yaml
+index 38901f2..16caa18 100644
+--- a/deploy/gitops/local-ca.application.gen.yaml
++++ b/deploy/gitops/local-ca.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: security
+     source:
+         path: deploy/components/local-ca
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/namespaces.application.gen.yaml b/deploy/gitops/namespaces.application.gen.yaml
+index e35f41c..2fd01a8 100644
+--- a/deploy/gitops/namespaces.application.gen.yaml
++++ b/deploy/gitops/namespaces.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: security
+     source:
+         path: deploy/components/namespaces
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/rollouts-crds.application.gen.yaml b/deploy/gitops/rollouts-crds.application.gen.yaml
+index 221cb50..761a823 100644
+--- a/deploy/gitops/rollouts-crds.application.gen.yaml
++++ b/deploy/gitops/rollouts-crds.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: argocd
+     source:
+         path: deploy/components/rollouts-crds
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/gitops/rollouts.application.gen.yaml b/deploy/gitops/rollouts.application.gen.yaml
+index f96f85c..d1fc696 100644
+--- a/deploy/gitops/rollouts.application.gen.yaml
++++ b/deploy/gitops/rollouts.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: argocd
+     source:
+         path: deploy/components/rollouts
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/projects/httpbin/components/kargo-stages/kargo-stages.gen.yaml b/deploy/projects/httpbin/components/kargo-stages/kargo-stages.gen.yaml
+index 815f6a3..bbf1f89 100644
+--- a/deploy/projects/httpbin/components/kargo-stages/kargo-stages.gen.yaml
++++ b/deploy/projects/httpbin/components/kargo-stages/kargo-stages.gen.yaml
+@@ -16,7 +16,7 @@ spec:
+           - branch: project/httpbin/component/dev-httpbin
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -46,7 +46,7 @@ spec:
+           - name: httpbin-dev-httpbin
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -73,7 +73,7 @@ spec:
+           - branch: project/httpbin/component/prod-us-central-httpbin
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -103,7 +103,7 @@ spec:
+           - name: httpbin-prod-us-central-httpbin
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -131,7 +131,7 @@ spec:
+           - branch: project/httpbin/component/prod-us-east-httpbin
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -161,7 +161,7 @@ spec:
+           - name: httpbin-prod-us-east-httpbin
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -189,7 +189,7 @@ spec:
+           - branch: project/httpbin/component/prod-us-west-httpbin
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -219,7 +219,7 @@ spec:
+           - name: httpbin-prod-us-west-httpbin
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -247,7 +247,7 @@ spec:
+           - branch: project/httpbin/component/test-httpbin
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -277,7 +277,7 @@ spec:
+           - name: httpbin-test-httpbin
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -305,7 +305,7 @@ spec:
+           - branch: project/httpbin/component/uat-httpbin
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -335,7 +335,7 @@ spec:
+           - name: httpbin-uat-httpbin
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+diff --git a/deploy/projects/httpbin/gitops/dev-httpbin.application.gen.yaml b/deploy/projects/httpbin/gitops/dev-httpbin.application.gen.yaml
+index 03136e0..8b207ff 100644
+--- a/deploy/projects/httpbin/gitops/dev-httpbin.application.gen.yaml
++++ b/deploy/projects/httpbin/gitops/dev-httpbin.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: httpbin
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/httpbin/component/dev-httpbin
+diff --git a/deploy/projects/httpbin/gitops/kargo-project.application.gen.yaml b/deploy/projects/httpbin/gitops/kargo-project.application.gen.yaml
+index 9e666a7..07ebce2 100644
+--- a/deploy/projects/httpbin/gitops/kargo-project.application.gen.yaml
++++ b/deploy/projects/httpbin/gitops/kargo-project.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: httpbin
+     source:
+         path: deploy/projects/httpbin/components/kargo-project
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/projects/httpbin/gitops/kargo-stages.application.gen.yaml b/deploy/projects/httpbin/gitops/kargo-stages.application.gen.yaml
+index df82b81..157a1e0 100644
+--- a/deploy/projects/httpbin/gitops/kargo-stages.application.gen.yaml
++++ b/deploy/projects/httpbin/gitops/kargo-stages.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: httpbin
+     source:
+         path: deploy/projects/httpbin/components/kargo-stages
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/projects/httpbin/gitops/prod-us-central-httpbin.application.gen.yaml b/deploy/projects/httpbin/gitops/prod-us-central-httpbin.application.gen.yaml
+index d3eb9ee..3e5e8b3 100644
+--- a/deploy/projects/httpbin/gitops/prod-us-central-httpbin.application.gen.yaml
++++ b/deploy/projects/httpbin/gitops/prod-us-central-httpbin.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: httpbin
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/httpbin/component/prod-us-central-httpbin
+diff --git a/deploy/projects/httpbin/gitops/prod-us-east-httpbin.application.gen.yaml b/deploy/projects/httpbin/gitops/prod-us-east-httpbin.application.gen.yaml
+index 2d768f4..e43d1f6 100644
+--- a/deploy/projects/httpbin/gitops/prod-us-east-httpbin.application.gen.yaml
++++ b/deploy/projects/httpbin/gitops/prod-us-east-httpbin.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: httpbin
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/httpbin/component/prod-us-east-httpbin
+diff --git a/deploy/projects/httpbin/gitops/prod-us-west-httpbin.application.gen.yaml b/deploy/projects/httpbin/gitops/prod-us-west-httpbin.application.gen.yaml
+index 8903303..a7012b0 100644
+--- a/deploy/projects/httpbin/gitops/prod-us-west-httpbin.application.gen.yaml
++++ b/deploy/projects/httpbin/gitops/prod-us-west-httpbin.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: httpbin
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/httpbin/component/prod-us-west-httpbin
+diff --git a/deploy/projects/httpbin/gitops/test-httpbin.application.gen.yaml b/deploy/projects/httpbin/gitops/test-httpbin.application.gen.yaml
+index 5426c31..296e3ed 100644
+--- a/deploy/projects/httpbin/gitops/test-httpbin.application.gen.yaml
++++ b/deploy/projects/httpbin/gitops/test-httpbin.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: httpbin
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/httpbin/component/test-httpbin
+diff --git a/deploy/projects/httpbin/gitops/uat-httpbin.application.gen.yaml b/deploy/projects/httpbin/gitops/uat-httpbin.application.gen.yaml
+index 717e608..264d1c4 100644
+--- a/deploy/projects/httpbin/gitops/uat-httpbin.application.gen.yaml
++++ b/deploy/projects/httpbin/gitops/uat-httpbin.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: httpbin
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/httpbin/component/uat-httpbin
+diff --git a/deploy/projects/podinfo/components/kargo-stages/kargo-stages.gen.yaml b/deploy/projects/podinfo/components/kargo-stages/kargo-stages.gen.yaml
+index 1107e34..2ebbbd1 100644
+--- a/deploy/projects/podinfo/components/kargo-stages/kargo-stages.gen.yaml
++++ b/deploy/projects/podinfo/components/kargo-stages/kargo-stages.gen.yaml
+@@ -16,7 +16,7 @@ spec:
+           - branch: project/podinfo/component/dev-podinfo
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -46,7 +46,7 @@ spec:
+           - name: podinfo-dev-podinfo
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -73,7 +73,7 @@ spec:
+           - branch: project/podinfo/component/prod-us-central-podinfo
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -103,7 +103,7 @@ spec:
+           - name: podinfo-prod-us-central-podinfo
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -131,7 +131,7 @@ spec:
+           - branch: project/podinfo/component/prod-us-east-podinfo
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -161,7 +161,7 @@ spec:
+           - name: podinfo-prod-us-east-podinfo
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -189,7 +189,7 @@ spec:
+           - branch: project/podinfo/component/prod-us-west-podinfo
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -219,7 +219,7 @@ spec:
+           - name: podinfo-prod-us-west-podinfo
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -247,7 +247,7 @@ spec:
+           - branch: project/podinfo/component/test-podinfo
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -277,7 +277,7 @@ spec:
+           - name: podinfo-test-podinfo
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+@@ -305,7 +305,7 @@ spec:
+           - branch: project/podinfo/component/uat-podinfo
+             create: true
+             path: ./out
+-          repoURL: https://github.com/holos-run/kargo-demo.git
++          repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: git-clone
+       - config:
+           path: ./out
+@@ -335,7 +335,7 @@ spec:
+           - name: podinfo-uat-podinfo
+             sources:
+             - desiredCommitFromStep: commit
+-              repoURL: https://github.com/holos-run/kargo-demo.git
++              repoURL: https://github.com/jeffmccune/kargo-demo.git
+         uses: argocd-update
+   requestedFreight:
+   - origin:
+diff --git a/deploy/projects/podinfo/gitops/dev-podinfo.application.gen.yaml b/deploy/projects/podinfo/gitops/dev-podinfo.application.gen.yaml
+index 9b3108e..9ac4849 100644
+--- a/deploy/projects/podinfo/gitops/dev-podinfo.application.gen.yaml
++++ b/deploy/projects/podinfo/gitops/dev-podinfo.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: podinfo
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/podinfo/component/dev-podinfo
+diff --git a/deploy/projects/podinfo/gitops/kargo-project.application.gen.yaml b/deploy/projects/podinfo/gitops/kargo-project.application.gen.yaml
+index 3878efa..ab934d5 100644
+--- a/deploy/projects/podinfo/gitops/kargo-project.application.gen.yaml
++++ b/deploy/projects/podinfo/gitops/kargo-project.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: podinfo
+     source:
+         path: deploy/projects/podinfo/components/kargo-project
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/projects/podinfo/gitops/kargo-stages.application.gen.yaml b/deploy/projects/podinfo/gitops/kargo-stages.application.gen.yaml
+index 0d4ade7..1b5eb9f 100644
+--- a/deploy/projects/podinfo/gitops/kargo-stages.application.gen.yaml
++++ b/deploy/projects/podinfo/gitops/kargo-stages.application.gen.yaml
+@@ -10,5 +10,5 @@ spec:
+     project: podinfo
+     source:
+         path: deploy/projects/podinfo/components/kargo-stages
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: main
+diff --git a/deploy/projects/podinfo/gitops/prod-us-central-podinfo.application.gen.yaml b/deploy/projects/podinfo/gitops/prod-us-central-podinfo.application.gen.yaml
+index 59b3f98..182a3c9 100644
+--- a/deploy/projects/podinfo/gitops/prod-us-central-podinfo.application.gen.yaml
++++ b/deploy/projects/podinfo/gitops/prod-us-central-podinfo.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: podinfo
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/podinfo/component/prod-us-central-podinfo
+diff --git a/deploy/projects/podinfo/gitops/prod-us-east-podinfo.application.gen.yaml b/deploy/projects/podinfo/gitops/prod-us-east-podinfo.application.gen.yaml
+index 0165d40..6101a9b 100644
+--- a/deploy/projects/podinfo/gitops/prod-us-east-podinfo.application.gen.yaml
++++ b/deploy/projects/podinfo/gitops/prod-us-east-podinfo.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: podinfo
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/podinfo/component/prod-us-east-podinfo
+diff --git a/deploy/projects/podinfo/gitops/prod-us-west-podinfo.application.gen.yaml b/deploy/projects/podinfo/gitops/prod-us-west-podinfo.application.gen.yaml
+index 3422981..88b7409 100644
+--- a/deploy/projects/podinfo/gitops/prod-us-west-podinfo.application.gen.yaml
++++ b/deploy/projects/podinfo/gitops/prod-us-west-podinfo.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: podinfo
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/podinfo/component/prod-us-west-podinfo
+diff --git a/deploy/projects/podinfo/gitops/test-podinfo.application.gen.yaml b/deploy/projects/podinfo/gitops/test-podinfo.application.gen.yaml
+index 7ca895f..c3c32a1 100644
+--- a/deploy/projects/podinfo/gitops/test-podinfo.application.gen.yaml
++++ b/deploy/projects/podinfo/gitops/test-podinfo.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: podinfo
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/podinfo/component/test-podinfo
+diff --git a/deploy/projects/podinfo/gitops/uat-podinfo.application.gen.yaml b/deploy/projects/podinfo/gitops/uat-podinfo.application.gen.yaml
+index cb28add..63cf194 100644
+--- a/deploy/projects/podinfo/gitops/uat-podinfo.application.gen.yaml
++++ b/deploy/projects/podinfo/gitops/uat-podinfo.application.gen.yaml
+@@ -14,5 +14,5 @@ spec:
+     project: podinfo
+     source:
+         path: ./
+-        repoURL: https://github.com/holos-run/kargo-demo.git
++        repoURL: https://github.com/jeffmccune/kargo-demo.git
+         targetRevision: project/podinfo/component/uat-podinfo

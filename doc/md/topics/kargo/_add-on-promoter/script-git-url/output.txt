@@ -1,0 +1,47 @@
+rendered kargo-project for project podinfo in 432.575208ms
+rendered argocd-secrets for stack argocd in 433.268209ms
+rendered app-projects for stack argocd in 434.333917ms
+rendered kargo-promoter for stack argocd in 435.00575ms
+rendered kargo-secrets for stack argocd in 435.904917ms
+rendered kargo-stages for project podinfo in 439.733ms
+rendered rollouts for stack argocd in 439.807375ms
+rendered kargo-stages for project httpbin in 439.814ms
+rendered kargo-project for project httpbin in 440.139375ms
+rendered gateway-api for stack network in 616.678958ms
+rendered istio-gateway for stack network in 230.265833ms
+rendered namespaces for stack security in 420.764041ms
+rendered local-ca for stack security in 198.11775ms
+rendered rollouts-crds for stack argocd in 865.463875ms
+rendered argocd-crds for stack argocd in 915.111917ms
+rendered external-secrets-crds for stack security in 501.949875ms
+rendered cert-manager-promoter for stack security in 192.792417ms
+rendered dev-httpbin for project httpbin in 203.349584ms
+rendered test-httpbin for project httpbin in 206.880209ms
+rendered uat-httpbin for project httpbin in 182.161584ms
+rendered prod-us-east-httpbin for project httpbin in 212.58575ms
+rendered istio-ztunnel for stack network in 827.238167ms
+rendered prod-us-central-httpbin for project httpbin in 213.702875ms
+rendered prod-us-west-httpbin for project httpbin in 220.740541ms
+rendered istiod for stack network in 872.832125ms
+rendered istio-cni for stack network in 895.353166ms
+Pulled: ghcr.io/akuity/kargo-charts/kargo:1.1.1
+Digest: sha256:4055c72418db85b85979da2fe12136c0e275709efc2e36a505b158e8234ad443
+rendered kargo for stack argocd in 1.367326958s
+rendered istio-base for stack network in 1.010915s
+rendered argocd for stack argocd in 1.445089333s
+rendered httproutes for stack network in 1.078666542s
+rendered cert-manager for stack security in 966.506875ms
+rendered external-secrets for stack security in 1.253991541s
+Pulled: ghcr.io/stefanprodan/charts/podinfo:6.7.0
+Digest: sha256:104d101017e501c63b3aa71b20d5edd2ca6d5d58cbc57ff8163770110f92b9db
+rendered dev-podinfo for project podinfo in 1.0724355s
+rendered uat-podinfo for project podinfo in 1.049824958s
+rendered prod-us-west-podinfo for project podinfo in 940.492333ms
+rendered test-podinfo for project podinfo in 1.148385625s
+Pulled: ghcr.io/stefanprodan/charts/podinfo:6.6.1
+Digest: sha256:0cc9a8446c95009ef382f5eade883a67c257f77d50f84e78ecef2aac9428d1e5
+rendered prod-us-east-podinfo for project podinfo in 983.599208ms
+Pulled: ghcr.io/stefanprodan/charts/podinfo:6.6.2
+Digest: sha256:83295d47de6d6ca634ed4b952a7572fc176bcc38854d0c11ca0fa197bc5f1154
+rendered prod-us-central-podinfo for project podinfo in 979.61625ms
+rendered platform in 2.247060708s
