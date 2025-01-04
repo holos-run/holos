@@ -32,6 +32,7 @@ func TestKargo(t *testing.T) {
 		{"Setup", "setup"},
 		{"HolosVersion", "holos-version"},
 		{"GitURL", "git-url"},
+		{"CertManager", "cert-manager"},
 	}
 
 	for _, tt := range addOnPromoterTests {

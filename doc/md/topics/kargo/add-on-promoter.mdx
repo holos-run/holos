@@ -1,5 +1,5 @@
 ---
-description: Learn how to automatically open pull requests when cluster addon updates are available.
+description: Automatic gitops pull requests for cluster add-on updates.
 sidebar_position: 100
 ---
 import useBaseUrl from '@docusaurus/useBaseUrl';
@@ -57,6 +57,59 @@ import SetupOutput from '!!raw-loader!./_add-on-promoter/script-setup/output.txt
     <CodeBlock language="txt">{SetupOutput}</CodeBlock>
   </TabItem>
 </Tabs>
+
+## Configuration Tour
+
+Let's review what happens when the `holos render platform` command renders the
+Kargo deployment pipeline configuration for `cert-manager`.
+
+import GitHubLink from '@site/src/components/GitHubLink';
+import GitCommit from '!!raw-loader!./_add-on-promoter/script-setup/git.commit';
+
+import CertManagerEntrypointPath from '!!raw-loader!./_add-on-promoter/script-cert-manager/entrypoint.path';
+import CertManagerEntrypointBaseName from '!!raw-loader!./_add-on-promoter/script-cert-manager/entrypoint.basename';
+import CertManagerEntrypointCode from '!!raw-loader!./_add-on-promoter/script-cert-manager/entrypoint.txt';
+
+import CertManagerStacksPath from '!!raw-loader!./_add-on-promoter/script-cert-manager/stacks.path';
+import CertManagerStacksBaseName from '!!raw-loader!./_add-on-promoter/script-cert-manager/stacks.basename';
+import CertManagerStacksCode from '!!raw-loader!./_add-on-promoter/script-cert-manager/stacks.txt';
+
+import CertManagerComponentPath from '!!raw-loader!./_add-on-promoter/script-cert-manager/component.path';
+import CertManagerComponentBaseName from '!!raw-loader!./_add-on-promoter/script-cert-manager/component.basename';
+import CertManagerComponentCode from '!!raw-loader!./_add-on-promoter/script-cert-manager/component.txt';
+
+import CertManagerConfigPath from '!!raw-loader!./_add-on-promoter/script-cert-manager/config.path';
+import CertManagerConfigBaseName from '!!raw-loader!./_add-on-promoter/script-cert-manager/config.basename';
+import CertManagerConfigCode from '!!raw-loader!./_add-on-promoter/script-cert-manager/config.txt';
+
+1. <GitHubLink repo="holos-run/kargo-demo" tree={GitCommit} path={CertManagerEntrypointPath}>{CertManagerEntrypointPath}</GitHubLink> is the main entrypoint for the `holos render platform` command.  Each platform stack's components are composed into the Platform spec `holos` uses to render each component.
+1. <GitHubLink repo="holos-run/kargo-demo" tree={GitCommit} path={`${CertManagerStacksPath}#L32-L39`}>{CertManagerStacksBaseName}</GitHubLink> in the platform config package is where cert-manager is added to the platform as a holos component.
+1. <GitHubLink repo="holos-run/kargo-demo" tree={GitCommit} path={CertManagerComponentPath}>{CertManagerComponentBaseName}</GitHubLink> is the component definition.  The component imports the certmanager config package to get the chart version.
+1. <GitHubLink repo="holos-run/kargo-demo" tree={GitCommit} path={CertManagerConfigPath}>{CertManagerConfigBaseName}</GitHubLink> in the certmanager config package defines configuration imported by multiple components.  This file uses the CUE embed feature to load data from a yaml file in the same directory.  Kargo promotion steps update the cert manager version in this file.
+
+Cert Manager is managed as a Holos Component wrapping the official helm chart.
+See 
+
+<Tabs groupId="render-git-url">
+  <TabItem value="entrypoint" label={CertManagerEntrypointBaseName}>
+    <CodeBlock language="txt">{CertManagerEntrypointPath}</CodeBlock>
+    <CodeBlock language="cue">{CertManagerEntrypointCode}</CodeBlock>
+  </TabItem>
+  <TabItem value="stacks" label={CertManagerStacksBaseName}>
+    <CodeBlock language="txt">{CertManagerStacksPath}</CodeBlock>
+    <CodeBlock language="cue">{CertManagerStacksCode}</CodeBlock>
+  </TabItem>
+  <TabItem value="component" label={CertManagerComponentBaseName}>
+    <CodeBlock language="txt">{CertManagerComponentPath}</CodeBlock>
+    <CodeBlock language="cue">{CertManagerComponentCode}</CodeBlock>
+  </TabItem>
+  <TabItem value="config" label={CertManagerConfigBaseName}>
+    <CodeBlock language="txt">{CertManagerConfigPath}</CodeBlock>
+    <CodeBlock language="cue">{CertManagerConfigCode}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+
 
 ## Holos Version
 
