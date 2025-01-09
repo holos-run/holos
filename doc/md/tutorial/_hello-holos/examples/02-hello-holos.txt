@@ -1,0 +1,126 @@
+# Set $HOME because:
+#   - Helm uses it for temporary files
+#   - Git requires it for setting author name/email globally
+env HOME=$WORK/.tmp
+chmod 0755 $WORK/update.sh
+
+# Configure git author for testscript execution
+exec git config --global user.name 'Holos Docs'
+exec git config --global user.email 'hello@holos.run'
+exec git config --global init.defaultBranch main
+
+# Remove the tutorial directory if it already exists
+exec rm -rf holos-tutorial
+
+# Create and change to the tutorial directory, and then initialize the Holos platform
+exec bash -c 'bash -euo pipefail $WORK/mkdir-and-init.sh'
+cd holos-tutorial
+
+# Create the components directory
+exec bash -c 'bash -euo pipefail $WORK/mkdir-components.sh'
+
+# Combine and execute the multiline podinfo component header/body/trailer files
+exec cat $WORK/podinfo-component-header.sh ../podinfo-component-body.cue ../eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Combine and execute the multiline platform registration header/body/trailer files
+exec cat $WORK/register-podinfo-header.sh ../register-podinfo-body.cue ../eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Render the platform, capture stdout, and use update.sh to gate whether the
+# output file should be updated.
+#
+# NOTE: The [net] condition will test whether external network access is available
+[net] exec bash -c 'bash -euo pipefail $WORK/render.sh 2>&1'
+[net] stdin stdout
+exec $WORK/update.sh $WORK/register-components-output.txt
+
+# Generate and update the tree of the tutorial directory (omitting the cue.mod directory)
+exec bash -c 'bash -euo pipefail $WORK/tree.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/tree.txt
+
+# Split the rendered manifest into two separate files to display separately
+exec bash -c 'bash -euo pipefail $WORK/split-rendered-manifest.sh $WORK/holos-tutorial/deploy/components/podinfo/podinfo.gen.yaml $WORK'
+
+# Grep for the Hello Holos message and write the output file
+exec bash -c 'bash -euo pipefail $WORK/grep-for-message.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/grepped-output.txt
+
+# Clean up the tutorial directory and tmp $HOME directory
+cd $WORK
+exec rm -rf holos-tutorial
+exec rm -rf $HOME
+
+-- update.sh --
+#! /bin/bash
+set -euo pipefail
+[[ -s "$1" ]] && [[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
+cat > "$1"
+-- mkdir-and-init.sh --
+mkdir holos-tutorial && cd holos-tutorial
+holos init platform v1alpha5
+-- tree.sh --
+tree -L 3 -I cue.mod .
+-- mkdir-components.sh --
+mkdir -p components/podinfo
+-- podinfo-component-header.sh --
+cat <<EOF > components/podinfo/podinfo.cue
+-- podinfo-component-body.cue --
+package holos
+
+// Produce a helm chart build plan.
+holos: HelmChart.BuildPlan
+
+HelmChart: #Helm & {
+	Name: "podinfo"
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+	// Holos marshals Values into values.yaml for Helm.
+	Values: {
+		// message is a string with a default value.  @tag indicates a value may
+		// be injected from the platform spec component parameters.
+		ui: {
+			message: string | *"Hello World" @tag(greeting, type=string)
+		}
+	}
+}
+-- eof-trailer.sh --
+EOF
+-- register-podinfo-header.sh --
+cat <<EOF > platform/podinfo.cue
+-- register-podinfo-body.cue --
+package holos
+
+Platform: Components: podinfo: {
+	name: "podinfo"
+	path: "components/podinfo"
+	// Inject a value into the component.
+	parameters: greeting: "Hello Holos!"
+}
+-- render.sh --
+holos render platform
+-- register-components-output.txt --
+cached podinfo 6.6.2
+rendered podinfo in 1.938665041s
+rendered platform in 1.938759417s
+-- podinfo-rendered-path.sh --
+deploy/components/podinfo/podinfo.gen.yaml
+-- split-rendered-manifest.sh --
+awk 'BEGIN {RS="---"} NR==1 {print > "service.yaml"} NR==2 {print > "deployment.yaml"}' $1
+mv service.yaml $2/rendered-service.yaml
+mv deployment.yaml $2/rendered-deployment.yaml
+-- grep-for-message.sh --
+grep -B2 Hello deploy/components/podinfo/podinfo.gen.yaml
+-- grepped-output.txt --
+        env:
+        - name: PODINFO_UI_MESSAGE
+          value: Hello Holos!
