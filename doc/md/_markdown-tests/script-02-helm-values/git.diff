@@ -1,0 +1,64 @@
+diff --git a/deploy/components/blackbox/blackbox.gen.yaml b/deploy/components/blackbox/blackbox.gen.yaml
+index 3db20cd..5336f44 100644
+--- a/deploy/components/blackbox/blackbox.gen.yaml
++++ b/deploy/components/blackbox/blackbox.gen.yaml
+@@ -7,7 +7,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ ---
+ apiVersion: v1
+@@ -31,7 +31,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ ---
+ apiVersion: v1
+@@ -43,7 +43,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ spec:
+   ports:
+@@ -65,7 +65,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ spec:
+   replicas: 1
+@@ -119,8 +119,8 @@ spec:
+           name: config
+       hostNetwork: false
+       restartPolicy: Always
+-      serviceAccountName: prometheus-blackbox-exporter
++      serviceAccountName: blackbox
+       volumes:
+       - configMap:
+-          name: prometheus-blackbox-exporter
++          name: blackbox
+         name: config
+diff --git a/deploy/components/prometheus/prometheus.gen.yaml b/deploy/components/prometheus/prometheus.gen.yaml
+index 9e02bce..ab638f0 100644
+--- a/deploy/components/prometheus/prometheus.gen.yaml
++++ b/deploy/components/prometheus/prometheus.gen.yaml
+@@ -589,7 +589,7 @@ data:
+       - source_labels:
+         - __address__
+         target_label: __param_target
+-      - replacement: blackbox
++      - replacement: blackbox:9115
+         target_label: __address__
+       - source_labels:
+         - __param_target
