@@ -70,8 +70,8 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 	cmd.Flags().Var(&extractYAMLs, "extract-yaml", "data file paths to extract and unify with the platform config")
 	var format string
 	cmd.Flags().StringVar(&format, "format", "yaml", "yaml or json format")
-	var selector holos.Selector
-	cmd.Flags().VarP(&selector, "selector", "l", "label selector (e.g. label==string,label!=string)")
+	var selectors holos.Selectors
+	cmd.Flags().VarP(&selectors, "selector", "l", "label selector (e.g. label==string,label!=string)")
 	tagMap := make(holos.TagMap)
 	cmd.Flags().VarP(&tagMap, "inject", "t", "set the value of a cue @tag field from a key=value pair")
 	var concurrency int
@@ -102,7 +102,7 @@ func newShowBuildPlanCmd() (cmd *cobra.Command) {
 
 		platformOpts := builder.PlatformOpts{
 			Fn:          makeBuildFunc(encoder, buildPlanOpts),
-			Selector:    selector,
+			Selectors:   selectors,
 			Concurrency: concurrency,
 		}
 

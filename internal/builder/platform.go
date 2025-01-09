@@ -16,7 +16,7 @@ import (
 // platform.
 type PlatformOpts struct {
 	Fn          func(context.Context, int, holos.Component) error
-	Selector    holos.Selector
+	Selectors   holos.Selectors
 	Concurrency int
 	InfoEnabled bool
 }
@@ -31,7 +31,7 @@ type Platform struct {
 func (p *Platform) Build(ctx context.Context, opts PlatformOpts) error {
 	limit := max(opts.Concurrency, 1)
 	parentStart := time.Now()
-	components := p.Select(opts.Selector)
+	components := p.Select(opts.Selectors...)
 	total := len(components)
 
 	g, ctx := errgroup.WithContext(ctx)

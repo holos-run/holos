@@ -107,6 +107,28 @@ func (e *EnvFlagger) Flag(name feature) bool {
 
 type Labels map[string]string
 
+type Selectors []Selector
+
+// String implements the flag.Value interface.
+func (s *Selectors) String() string {
+	return fmt.Sprint(*s)
+}
+
+// Type implements the pflag.Value interface and describes the type.
+func (s *Selectors) Type() string {
+	return "selectors"
+}
+
+// Set implements the flag.Value interface.
+func (s *Selectors) Set(value string) error {
+	selector := Selector{}
+	if err := selector.Set(value); err != nil {
+		return err
+	}
+	*s = append(*s, selector)
+	return nil
+}
+
 type Selector struct {
 	Positive map[string]string
 	Negative map[string]string
@@ -118,14 +140,9 @@ func (s *Selector) IsSelected(labels Labels) bool {
 		return true // Nil selector selects everything
 	}
 
-	if len(s.Positive) == 0 && len(s.Negative) == 0 {
-		return true // Empty selector selects everything
-	}
-
 	// Check positive matches
 	for k, v := range s.Positive {
-		val, ok := labels[k]
-		if !ok || v != val {
+		if val, ok := labels[k]; !ok || v != val {
 			return false
 		}
 	}
@@ -251,15 +268,18 @@ func (y *yamlEncoder) Close() error {
 	return errors.Wrap(y.enc.Close())
 }
 
-// IsSelected returns true if all selectors select the given labels or no
+// IsSelected returns true if any one selector selects the given labels or no
 // selectors are given.
 func IsSelected(labels Labels, selectors ...Selector) bool {
+	if len(selectors) == 0 {
+		return true
+	}
 	for _, selector := range selectors {
-		if !selector.IsSelected(labels) {
-			return false
+		if selector.IsSelected(labels) {
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 type orderedEncoder struct {

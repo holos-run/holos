@@ -45,8 +45,8 @@ func newPlatform(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd.Flags().StringVar(&platform, "platform", "./platform", "platform directory path")
 	var extractYAMLs holos.StringSlice
 	cmd.Flags().Var(&extractYAMLs, "extract-yaml", "data file paths to extract and unify with the platform config")
-	var selector holos.Selector
-	cmd.Flags().VarP(&selector, "selector", "l", "label selector (e.g. label==string,label!=string)")
+	var selectors holos.Selectors
+	cmd.Flags().VarP(&selectors, "selector", "l", "label selector (e.g. label==string,label!=string)")
 	tagMap := make(holos.TagMap)
 	cmd.Flags().VarP(&tagMap, "inject", "t", tagHelp)
 
@@ -75,7 +75,7 @@ func newPlatform(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 		}
 		opts := builder.PlatformOpts{
 			Fn:          makeComponentRenderFunc(cmd.ErrOrStderr(), prefixArgs, tagMap.Tags()),
-			Selector:    selector,
+			Selectors:   selectors,
 			Concurrency: concurrency,
 			InfoEnabled: true,
 		}
