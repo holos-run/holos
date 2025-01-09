@@ -1,4 +1,4 @@
-[main b5df111] add blackbox and prometheus
+[main 8971a74] add blackbox and prometheus
  5 files changed, 1550 insertions(+)
  create mode 100644 components/blackbox/blackbox.cue
  create mode 100644 components/prometheus/prometheus.cue

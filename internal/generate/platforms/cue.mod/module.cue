@@ -1,2 +1,2 @@
-module: "example.com/platform"
-language: version: "v0.11.0"
+module: "holos.example"
+language: version: "v0.11.1"
