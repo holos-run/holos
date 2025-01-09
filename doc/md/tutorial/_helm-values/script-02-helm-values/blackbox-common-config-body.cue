@@ -1,4 +1,4 @@
-package holos
+package prometheus
 
 // Schema Definition
 #Blackbox: {
@@ -9,7 +9,7 @@ package holos
 }
 
 // Concrete values must validate against the schema.
-Blackbox: #Blackbox & {
+blackbox: #Blackbox & {
 	host: "blackbox"
 	port: 9115
 }

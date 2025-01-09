@@ -47,8 +47,8 @@ resource.
 Ensure you have a current version of `holos` installed.  This document was
 tested with the following version.
 
-import HolosVersionCommand from '!!raw-loader!../_markdown-tests/script-01-holos-version/command.sh';
-import HolosVersionOutput from '!!raw-loader!../_markdown-tests/script-01-holos-version/output.txt';
+import HolosVersionCommand from '!!raw-loader!./_helm-values/script-01-holos-version/command.sh';
+import HolosVersionOutput from '!!raw-loader!./_helm-values/script-01-holos-version/output.txt';
 
 <CodeBlock language="bash">{HolosVersionCommand}</CodeBlock>
 <CodeBlock language="txt">{HolosVersionOutput}</CodeBlock>
@@ -58,13 +58,13 @@ import HolosVersionOutput from '!!raw-loader!../_markdown-tests/script-01-holos-
 Use `holos` to generate a minimal platform directory structure. First, create
 and navigate into a blank directory, then use the `holos init platform` command:
 
-import MkdirAndInit from '!!raw-loader!../_markdown-tests/script-02-helm-values/mkdir.and.init.sh';
+import MkdirAndInit from '!!raw-loader!./_helm-values/script-02-helm-values/mkdir-and-init.sh';
 
 <CodeBlock language="bash">{MkdirAndInit}</CodeBlock>
 
 Make an initial commit to track changes:
 
-import GitInit from '!!raw-loader!../_markdown-tests/script-02-helm-values/git.init.sh';
+import GitInit from '!!raw-loader!./_helm-values/script-02-helm-values/git-init.sh';
 
 <CodeBlock language="bash">{GitInit}</CodeBlock>
 
@@ -73,12 +73,12 @@ import GitInit from '!!raw-loader!../_markdown-tests/script-02-helm-values/git.i
 Create the `prometheus` and `blackbox` component directories, then add each of
 the following file contents.
 
-import MkdirComponents from '!!raw-loader!../_markdown-tests/script-02-helm-values/mkdir.components.sh';
-import PrometheusComponentHeader from '!!raw-loader!../_markdown-tests/script-02-helm-values/prometheus.component.header.sh';
-import PrometheusComponentBody from '!!raw-loader!../_markdown-tests/script-02-helm-values/prometheus.component.body.cue';
-import BlackboxComponentHeader from '!!raw-loader!../_markdown-tests/script-02-helm-values/blackbox.component.header.sh';
-import BlackboxComponentBody from '!!raw-loader!../_markdown-tests/script-02-helm-values/blackbox.component.body.cue';
-import EofTrailer from '!!raw-loader!../_markdown-tests/script-02-helm-values/eof.trailer.sh';
+import MkdirComponents from '!!raw-loader!./_helm-values/script-02-helm-values/mkdir-components.sh';
+import PrometheusComponentHeader from '!!raw-loader!./_helm-values/script-02-helm-values/prometheus-component-header.sh';
+import PrometheusComponentBody from '!!raw-loader!./_helm-values/script-02-helm-values/prometheus-component-body.cue';
+import BlackboxComponentHeader from '!!raw-loader!./_helm-values/script-02-helm-values/blackbox-component-header.sh';
+import BlackboxComponentBody from '!!raw-loader!./_helm-values/script-02-helm-values/blackbox-component-body.cue';
+import EofTrailer from '!!raw-loader!./_helm-values/script-02-helm-values/eof-trailer.sh';
 
 
 <CodeBlock language="bash">{MkdirComponents}</CodeBlock>
@@ -100,8 +100,8 @@ import EofTrailer from '!!raw-loader!../_markdown-tests/script-02-helm-values/eo
 
 Register the components with the platform by adding the following file to the platform directory.
 
-import RegisterComponentsHeader from '!!raw-loader!../_markdown-tests/script-02-helm-values/register.components.header.sh';
-import RegisterComponentsBody from '!!raw-loader!../_markdown-tests/script-02-helm-values/register.components.body.cue';
+import RegisterComponentsHeader from '!!raw-loader!./_helm-values/script-02-helm-values/register-components-header.sh';
+import RegisterComponentsBody from '!!raw-loader!./_helm-values/script-02-helm-values/register-components-body.cue';
 
 <CodeBlock language="bash">{RegisterComponentsHeader}</CodeBlock>
 <CodeBlock language="cue" showLineNumbers>{RegisterComponentsBody}</CodeBlock>
@@ -109,8 +109,8 @@ import RegisterComponentsBody from '!!raw-loader!../_markdown-tests/script-02-he
 
 Render the platform.
 
-import RenderCommand from '!!raw-loader!../_markdown-tests/script-02-helm-values/render.sh';
-import RegisterComponentsRenderOutput from '!!raw-loader!../_markdown-tests/script-02-helm-values/register.components.output.txt';
+import RenderCommand from '!!raw-loader!./_helm-values/script-02-helm-values/render.sh';
+import RegisterComponentsRenderOutput from '!!raw-loader!./_helm-values/script-02-helm-values/register-components-output.txt';
 
 <Tabs groupId="33D6BFED-62D8-4A42-A26A-F3121D57C4E5">
   <TabItem value="command" label="Command">
@@ -123,8 +123,8 @@ import RegisterComponentsRenderOutput from '!!raw-loader!../_markdown-tests/scri
 
 Commit the results.
 
-import GitCommitRegisterComponents from '!!raw-loader!../_markdown-tests/script-02-helm-values/register.components.git.commit.sh';
-import RegisterComponentsGitOutput from '!!raw-loader!../_markdown-tests/script-02-helm-values/register.components.git.commit.output.txt';
+import GitCommitRegisterComponents from '!!raw-loader!./_helm-values/script-02-helm-values/register-components-git-commit.sh';
+import RegisterComponentsGitOutput from '!!raw-loader!./_helm-values/script-02-helm-values/register-components-git-commit-output.txt';
 
 <Tabs groupId="446CC550-A634-45C0-BEC7-992E5C56D4FA">
   <TabItem value="command" label="Command">
@@ -140,8 +140,8 @@ import RegisterComponentsGitOutput from '!!raw-loader!../_markdown-tests/script-
 Holos renders Helm charts with their default values. We can import these default
 values into CUE to work with them as structured data instead of text markup.
 
-import ImportPrometheusValues from '!!raw-loader!../_markdown-tests/script-02-helm-values/import.prometheus.values.sh';
-import ImportBlackboxValues from '!!raw-loader!../_markdown-tests/script-02-helm-values/import.blackbox.values.sh';
+import ImportPrometheusValues from '!!raw-loader!./_helm-values/script-02-helm-values/import-prometheus-values.sh';
+import ImportBlackboxValues from '!!raw-loader!./_helm-values/script-02-helm-values/import-blackbox-values.sh';
 
 <CodeBlock language="bash">{ImportPrometheusValues}</CodeBlock>
 <CodeBlock language="bash">{ImportBlackboxValues}</CodeBlock>
@@ -155,9 +155,9 @@ CUE unifies `values.cue` with the other `\*.cue` files in the same directory.
 
 Render the platform using `holos render platform` and commit the results.
 
-import ImportValuesRenderOutput from '!!raw-loader!../_markdown-tests/script-02-helm-values/import.values.render.output.txt';
-import ImportValuesGitCommit from '!!raw-loader!../_markdown-tests/script-02-helm-values/import.values.git.commit.sh';
-import ImportValuesGitOutput from '!!raw-loader!../_markdown-tests/script-02-helm-values/import.values.git.output.txt';
+import ImportValuesRenderOutput from '!!raw-loader!./_helm-values/script-02-helm-values/import-values-render-output.txt';
+import ImportValuesGitCommit from '!!raw-loader!./_helm-values/script-02-helm-values/import-values-git-commit.sh';
+import ImportValuesGitOutput from '!!raw-loader!./_helm-values/script-02-helm-values/import-values-git-output.txt';
 
 <Tabs groupId="BDDCD65A-2E9D-4BA6-AAE2-8099494D5E4B">
   <TabItem value="command" label="Command">
@@ -180,12 +180,15 @@ import ImportValuesGitOutput from '!!raw-loader!../_markdown-tests/script-02-hel
 ### Managing Common Configuration
 
 To manage shared configuration for both Helm charts, define a structure that
-holds the common configuration values. Place this configuration in the
-`components` directory to ensure it is accessible to all components.
+holds the common configuration values. Create a `config` directory at the root
+of the repository, and place the configuration file there to ensure it is
+accessible to all components.
 
-import BlackboxCommonConfigHeader from '!!raw-loader!../_markdown-tests/script-02-helm-values/blackbox.common.config.header.sh';
-import BlackboxCommonConfigBody from '!!raw-loader!../_markdown-tests/script-02-helm-values/blackbox.common.config.body.cue';
+import BlackboxCommonConfigMkdir from '!!raw-loader!./_helm-values/script-02-helm-values/mkdir-common-config.sh';
+import BlackboxCommonConfigHeader from '!!raw-loader!./_helm-values/script-02-helm-values/blackbox-common-config-header.sh';
+import BlackboxCommonConfigBody from '!!raw-loader!./_helm-values/script-02-helm-values/blackbox-common-config-body.cue';
 
+<CodeBlock language="bash">{BlackboxCommonConfigMkdir}</CodeBlock>
 <CodeBlock language="bash">{BlackboxCommonConfigHeader}</CodeBlock>
 <CodeBlock language="cue" showLineNumbers>{BlackboxCommonConfigBody}</CodeBlock>
 <CodeBlock language="bash" showLineNumbers>{EofTrailer}</CodeBlock>
@@ -199,8 +202,8 @@ languages with only type checking.
 
 Add and commit the configuration.
 
-import BlackboxCommonConfigGit from '!!raw-loader!../_markdown-tests/script-02-helm-values/blackbox.common.config.git.commit.sh';
-import BlackboxCommonConfigGitOutput from '!!raw-loader!../_markdown-tests/script-02-helm-values/blackbox.common.config.git.output.txt';
+import BlackboxCommonConfigGit from '!!raw-loader!./_helm-values/script-02-helm-values/blackbox-common-config-git-commit.sh';
+import BlackboxCommonConfigGitOutput from '!!raw-loader!./_helm-values/script-02-helm-values/blackbox-common-config-git-output.txt';
 
 <Tabs groupId="A738CCE4-F0C6-4CC7-BE1F-2B92F0E86FDC">
   <TabItem value="command" label="Command">
@@ -214,14 +217,16 @@ import BlackboxCommonConfigGitOutput from '!!raw-loader!../_markdown-tests/scrip
 ### Using Common Configuration Across Components
 
 Referencing common configuration across multiple components is straightforward
-and reliable using Holos and CUE.
+and reliable using Holos and CUE. Configuration can be imported where necessary
+following [CUE module standards], which are similar to Golang.
 
 To apply the common configuration, patch the two `values.cue` files, or manually
-edit them to reference `Blackbox.host` and `Blackbox.port`.
+edit them to import the configuration and reference `prometheus.blackbox.host`
+and `prometheus.blackbox.port`.
 
-import CommonConfigPatchCommand from '!!raw-loader!../_markdown-tests/script-02-helm-values/common.config.patch.sh';
-import CommonConfigPatchDiff from '!!raw-loader!../_markdown-tests/script-02-helm-values/values.patch';
-import CommonConfigPatchOutput from '!!raw-loader!../_markdown-tests/script-02-helm-values/common.config.patch.txt';
+import CommonConfigPatchCommand from '!!raw-loader!./_helm-values/script-02-helm-values/common-config-patch.sh';
+import CommonConfigPatchDiff from '!!raw-loader!./_helm-values/script-02-helm-values/values.patch';
+import CommonConfigPatchOutput from '!!raw-loader!./_helm-values/script-02-helm-values/common-config-patch.txt';
 
 <Tabs groupId="5FFCE892-B8D4-4F5B-B2E2-39EC9E9F87A4">
   <TabItem value="command" label="Command">
@@ -242,9 +247,9 @@ safely and easily.
 
 Remove the patch file, then commit the changes.
 
-import CommonConfigPatchRm from '!!raw-loader!../_markdown-tests/script-02-helm-values/common.config.rm.sh';
-import CommonConfigPatchGitCommit from '!!raw-loader!../_markdown-tests/script-02-helm-values/common.config.git.sh';
-import CommonConfigPatchGitCommitOutput from '!!raw-loader!../_markdown-tests/script-02-helm-values/common.config.git.output.txt';
+import CommonConfigPatchRm from '!!raw-loader!./_helm-values/script-02-helm-values/common-config-rm.sh';
+import CommonConfigPatchGitCommit from '!!raw-loader!./_helm-values/script-02-helm-values/common-config-git.sh';
+import CommonConfigPatchGitCommitOutput from '!!raw-loader!./_helm-values/script-02-helm-values/common-config-git-output.txt';
 
 <Tabs groupId="6498B00E-FADA-4EB2-885C-808F1D22E04D">
   <TabItem value="command" label="Command">
@@ -261,7 +266,7 @@ import CommonConfigPatchGitCommitOutput from '!!raw-loader!../_markdown-tests/sc
 Holos makes it easy to view and review platform-wide changes. Render the
 platform to observe how both Prometheus and Blackbox update in sync.
 
-import ReviewingChangesRenderOutput from '!!raw-loader!../_markdown-tests/script-02-helm-values/reviewing.changes.render.output.txt';
+import ReviewingChangesRenderOutput from '!!raw-loader!./_helm-values/script-02-helm-values/reviewing-changes-render-output.txt';
 
 <Tabs groupId="E7F6D8B1-22FA-4075-9B44-D9F2815FE0D3">
   <TabItem value="command" label="Command">
@@ -274,8 +279,8 @@ import ReviewingChangesRenderOutput from '!!raw-loader!../_markdown-tests/script
 
 Changes are easily visible in version control.
 
-import GitDiffCommand from '!!raw-loader!../_markdown-tests/script-02-helm-values/git.diff.sh';
-import GitDiff from '!!raw-loader!../_markdown-tests/script-02-helm-values/git.diff';
+import GitDiffCommand from '!!raw-loader!./_helm-values/script-02-helm-values/git-diff.sh';
+import GitDiff from '!!raw-loader!./_helm-values/script-02-helm-values/git.diff';
 
 <Tabs groupId="9789A0EF-24D4-4FB9-978A-3895C2778789">
   <TabItem value="command" label="Command">
@@ -299,8 +304,8 @@ Blackbox host or port will reconfigure both charts correctly.
 
 Commit the changes and proceed to deploy them.
 
-import ReviewingChangesGitCommit from '!!raw-loader!../_markdown-tests/script-02-helm-values/reviewing.changes.git.commit.sh';
-import ReviewingChangesGitOutput from '!!raw-loader!../_markdown-tests/script-02-helm-values/reviewing.changes.git.output.txt';
+import ReviewingChangesGitCommit from '!!raw-loader!./_helm-values/script-02-helm-values/reviewing-changes-git-commit.sh';
+import ReviewingChangesGitOutput from '!!raw-loader!./_helm-values/script-02-helm-values/reviewing-changes-git-output.txt';
 
 <Tabs groupId="F8C9A98D-DE1E-4EF6-92C1-017A9166F6C7">
   <TabItem value="command" label="Command">
@@ -327,7 +332,7 @@ service endpoint.
 [prometheus]: https://github.com/prometheus-community/helm-charts/tree/prometheus-25.27.0/charts/prometheus
 [blackbox]: https://github.com/prometheus-community/helm-charts/tree/prometheus-blackbox-exporter-9.0.1/charts/prometheus-blackbox-exporter
 [httpbin]: https://github.com/mccutchen/go-httpbin/tree/v2.15.0
-
+[CUE module standards]: https://cuelang.org/docs/concept/modules-packages-instances/
 [Config Schema]: #config-schema
 
 [Technical Overview]: ./overview.mdx
