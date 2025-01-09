@@ -22,10 +22,10 @@ func TestMain(m *testing.M) {
 }
 
 // Run these with go test -v to see the verbose names
-func TestMarkdown(t *testing.T) {
-	t.Run("AddOnPromoter", func(t *testing.T) {
+func TestHelmValues(t *testing.T) {
+	t.Run("TestHelmValues", func(t *testing.T) {
 		// Get an ordered list of test script files.
-		dir := "_markdown-tests"
+		dir := "_helm-values"
 		for _, file := range sortedTestScripts(t, filepath.Join(dir, "examples")) {
 			t.Run("examples", func(t *testing.T) {
 				runOneScript(t, dir, file)

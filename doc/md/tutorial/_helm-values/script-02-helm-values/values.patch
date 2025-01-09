@@ -1,31 +1,43 @@
 --- a/components/blackbox/values.cue
 +++ b/components/blackbox/values.cue
-@@ -1,6 +1,8 @@
+@@ -1,6 +1,11 @@
  package holos
  
++// Import common blackbox configuration
++import "holos.example/config/prometheus"
++
  Helm: Values: {
-+	fullnameOverride: Blackbox.host
++	fullnameOverride: prometheus.blackbox.host
 +
  	global: {
  		//# Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...)
  		//#
-@@ -192,7 +194,7 @@ Helm: Values: {
+@@ -192,7 +197,7 @@ Helm: Values: {
  		annotations: {}
  		labels: {}
  		type: "ClusterIP"
 -		port: 9115
-+		port: Blackbox.port
++		port: prometheus.blackbox.port
  		ipDualStack: {
  			enabled: false
  			ipFamilies: ["IPv6", "IPv4"]
 --- a/components/prometheus/values.cue
 +++ b/components/prometheus/values.cue
-@@ -1083,7 +1083,7 @@ Helm: Values: {
+@@ -1,5 +1,8 @@
+ package holos
+
++// Import common blackbox configuration
++import "holos.example/config/prometheus"
++
+ Helm: Values: {
+        // yaml-language-server: $schema=values.schema.json
+        // Default values for prometheus.
+@@ -1083,7 +1086,7 @@ Helm: Values: {
  					target_label: "__param_target"
  				}, {
  					target_label: "__address__"
 -					replacement:  "blackbox"
-+					replacement:  "\(Blackbox.host):\(Blackbox.port)"
++					replacement:  "\(prometheus.blackbox.host):\(prometheus.blackbox.port)"
  				}, {
  					source_labels: ["__param_target"]
  					target_label: "instance"

@@ -1,3 +1,0 @@
-rendered blackbox in 1.324044833s
-rendered prometheus in 1.336657625s
-rendered platform in 1.33672525s
