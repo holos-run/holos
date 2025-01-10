@@ -27,3 +27,5 @@
 # Redirect to our own take on the pattern once we figure out what to call it.
 # See: https://discord.com/channels/1299051862418395216/1299055980738383882/1327347525354524805
 /blog/the-rendered-manifests-pattern https://akuity.io/blog/the-rendered-manifests-pattern 301
+# without the s which I always forget
+/blog/the-rendered-manifest-pattern  https://akuity.io/blog/the-rendered-manifests-pattern 301
