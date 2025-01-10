@@ -24,3 +24,6 @@
 /docs/support/       /docs/v1alpha5/tutorial/overview/#getting-help 301
 /docs/api/author     /docs/v1alpha5/api/author/ 301
 /docs/api/author/    /docs/v1alpha5/api/author/ 301
+# Redirect to our own take on the pattern once we figure out what to call it.
+# See: https://discord.com/channels/1299051862418395216/1299055980738383882/1327347525354524805
+/blog/the-rendered-manifests-pattern https://akuity.io/blog/the-rendered-manifests-pattern 301
