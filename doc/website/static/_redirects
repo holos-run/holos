@@ -6,14 +6,14 @@
 /docs/quickstart/    /docs/v1alpha5/tutorial/overview/ 301
 /docs/overview       /docs/v1alpha5/tutorial/overview/ 301
 /docs/overview/      /docs/v1alpha5/tutorial/overview/ 301
+/docs/guides         /docs/v1alpha5/tutorial/overview/ 301
+/docs/guides/        /docs/v1alpha5/tutorial/overview/ 301
 /docs/topics         /docs/v1alpha5/topics/ 301
 /docs/topics/        /docs/v1alpha5/topics/ 301
 /docs/setup          /docs/v1alpha5/tutorial/setup/ 301
 /docs/setup/         /docs/v1alpha5/tutorial/setup/ 301
 /docs/local-cluster  /docs/v1alpha5/topics/local-cluster/ 301
 /docs/local-cluster/ /docs/v1alpha5/topics/local-cluster/ 301
-/docs/guides         /docs/v1alpha5/tutorial/ 301
-/docs/guides/        /docs/v1alpha5/tutorial/ 301
 /docs/guides/helm    /docs/v1alpha5/tutorial/helm-values/ 301
 /docs/guides/helm/   /docs/v1alpha5/tutorial/helm-values/ 301
 /docs/kargo          /docs/v1alpha5/topics/kargo/ 301
