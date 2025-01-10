@@ -22,6 +22,8 @@
 /docs/comparison/    /docs/v1alpha5/topics/comparison/ 301
 /docs/support        /docs/v1alpha5/tutorial/overview/#getting-help 301
 /docs/support/       /docs/v1alpha5/tutorial/overview/#getting-help 301
+/docs/api/core       /docs/v1alpha5/api/core/ 301
+/docs/api/core/      /docs/v1alpha5/api/core/ 301
 /docs/api/author     /docs/v1alpha5/api/author/ 301
 /docs/api/author/    /docs/v1alpha5/api/author/ 301
 # Redirect to our own take on the pattern once we figure out what to call it.
