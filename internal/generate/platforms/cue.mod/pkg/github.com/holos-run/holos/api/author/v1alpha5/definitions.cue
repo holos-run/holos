@@ -95,6 +95,7 @@ import (
 		release: string | *name
 	}
 	Values:       _
+	ValueFiles?:  _
 	EnableHooks:  _
 	Namespace?:   _
 	APIVersions?: _
@@ -110,8 +111,11 @@ import (
 					kind:   "Helm"
 					output: HelmOutput
 					helm: core.#Helm & {
-						chart:       Chart
-						values:      Values
+						chart:  Chart
+						values: Values
+						if ValueFiles != _|_ {
+							valueFiles: ValueFiles
+						}
 						enableHooks: EnableHooks
 						if Namespace != _|_ {
 							namespace: Namespace

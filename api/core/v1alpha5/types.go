@@ -118,8 +118,12 @@ type Helm struct {
 	// Chart represents a helm chart to manage.
 	Chart Chart `json:"chart" yaml:"chart"`
 	// Values represents values for holos to marshal into values.yaml when
-	// rendering the chart.
+	// rendering the chart.  Values follow ValueFiles when both are provided.
 	Values Values `json:"values" yaml:"values"`
+	// ValueFiles represents hierarchial value files passed in order to the helm
+	// template -f flag.  Useful for migration from an ApplicationSet.  Use Values
+	// instead.  ValueFiles precede Values when both are provided.
+	ValueFiles []ValueFile `json:"valueFiles,omitempty" yaml:"valueFiles,omitempty"`
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	EnableHooks bool `json:"enableHooks,omitempty" yaml:"enableHooks,omitempty"`
 	// Namespace represents the helm namespace flag
@@ -128,6 +132,17 @@ type Helm struct {
 	APIVersions []string `json:"apiVersions,omitempty" yaml:"apiVersions,omitempty"`
 	// KubeVersion represents the helm template --kube-version flag
 	KubeVersion string `json:"kubeVersion,omitempty" yaml:"kubeVersion,omitempty"`
+}
+
+// ValueFile represents one Helm value file produced from CUE.
+type ValueFile struct {
+	// Name represents the file name, e.g. "region-values.yaml"
+	Name string `json:"name" yaml:"name"`
+	// Kind is a discriminator.
+	Kind string `json:"kind" yaml:"kind" cue:"\"Values\""`
+	// Values represents values for holos to marshal into the file name specified
+	// by Name when rendering the chart.
+	Values Values `json:"values,omitempty" yaml:"values,omitempty"`
 }
 
 // Values represents [Helm] Chart values generated from CUE.

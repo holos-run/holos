@@ -219,13 +219,38 @@ func (t generatorTask) helm(ctx context.Context) error {
 		}
 	}
 
-	// Write values file
+	// Write value files
 	tempDir, err := os.MkdirTemp("", "holos.helm")
 	if err != nil {
 		return errors.Format("could not make temp dir: %w", err)
 	}
 	defer util.Remove(ctx, tempDir)
 
+	// valueFiles represents the ordered list of value files to pass to helm
+	// template -f
+	var valueFiles []string
+
+	// valueFiles for the use case of migration from helm value hierarchies.
+	for _, valueFile := range t.generator.Helm.ValueFiles {
+		var data []byte
+		switch valueFile.Kind {
+		case "Values":
+			if data, err = yaml.Marshal(valueFile.Values); err != nil {
+				return errors.Format("could not marshal value file %s: %w", valueFile.Name, err)
+			}
+		default:
+			return errors.Format("could not marshal value file %s: unknown kind %s", valueFile.Name, valueFile.Kind)
+		}
+
+		valuesPath := filepath.Join(tempDir, valueFile.Name)
+		if err := os.WriteFile(valuesPath, data, 0666); err != nil {
+			return errors.Wrap(fmt.Errorf("could not write value file %s: %w", valueFile.Name, err))
+		}
+		log.DebugContext(ctx, fmt.Sprintf("wrote: %s", valuesPath))
+		valueFiles = append(valueFiles, valuesPath)
+	}
+
+	// The final values files
 	data, err := yaml.Marshal(t.generator.Helm.Values)
 	if err != nil {
 		return errors.Format("could not marshal values: %w", err)
@@ -235,7 +260,8 @@ func (t generatorTask) helm(ctx context.Context) error {
 	if err := os.WriteFile(valuesPath, data, 0666); err != nil {
 		return errors.Wrap(fmt.Errorf("could not write values: %w", err))
 	}
-	log.DebugContext(ctx, "wrote"+valuesPath)
+	log.DebugContext(ctx, fmt.Sprintf("wrote: %s", valuesPath))
+	valueFiles = append(valueFiles, valuesPath)
 
 	// Run charts
 	args := []string{"template"}
@@ -248,9 +274,11 @@ func (t generatorTask) helm(ctx context.Context) error {
 	if kubeVersion := t.generator.Helm.KubeVersion; kubeVersion != "" {
 		args = append(args, "--kube-version", kubeVersion)
 	}
+	args = append(args, "--include-crds")
+	for _, valueFilePath := range valueFiles {
+		args = append(args, "--values", valueFilePath)
+	}
 	args = append(args,
-		"--include-crds",
-		"--values", valuesPath,
 		"--namespace", t.generator.Helm.Namespace,
 		"--kubeconfig", "/dev/null",
 		"--version", t.generator.Helm.Chart.Version,

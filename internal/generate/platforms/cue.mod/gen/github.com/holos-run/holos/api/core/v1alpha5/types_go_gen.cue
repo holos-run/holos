@@ -129,8 +129,13 @@ package core
 	chart: #Chart @go(Chart)
 
 	// Values represents values for holos to marshal into values.yaml when
-	// rendering the chart.
+	// rendering the chart.  Values follow ValueFiles when both are provided.
 	values: #Values @go(Values)
+
+	// ValueFiles represents hierarchial value files passed in order to the helm
+	// template -f flag.  Useful for migration from an ApplicationSet.  Use Values
+	// instead.  ValueFiles precede Values when both are provided.
+	valueFiles?: [...#ValueFile] @go(ValueFiles,[]ValueFile)
 
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	enableHooks?: bool @go(EnableHooks)
@@ -143,6 +148,19 @@ package core
 
 	// KubeVersion represents the helm template --kube-version flag
 	kubeVersion?: string @go(KubeVersion)
+}
+
+// ValueFile represents one Helm value file produced from CUE.
+#ValueFile: {
+	// Name represents the file name, e.g. "region-values.yaml"
+	name: string @go(Name)
+
+	// Kind is a discriminator.
+	kind: string & "Values" @go(Kind)
+
+	// Values represents values for holos to marshal into the file name specified
+	// by Name when rendering the chart.
+	values?: #Values @go(Values)
 }
 
 // Values represents [Helm] Chart values generated from CUE.

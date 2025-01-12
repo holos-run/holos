@@ -95,6 +95,10 @@ import "github.com/holos-run/holos/api/core/v1alpha5:core"
 	// Values represents data to marshal into a values.yaml for helm.
 	Values: core.#Values
 
+	// ValueFiles represents value files for migration from helm value
+	// hierarchies.  Use Values instead.
+	ValueFiles?: [...core.#ValueFile] @go(,[]core.ValueFile)
+
 	// EnableHooks enables helm hooks when executing the `helm template` command.
 	EnableHooks: bool & (true | *false)
 

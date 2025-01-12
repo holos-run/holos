@@ -86,6 +86,9 @@ type Helm struct {
     Chart core.Chart
     // Values represents data to marshal into a values.yaml for helm.
     Values core.Values
+    // ValueFiles represents value files for migration from helm value
+    // hierarchies.  Use Values instead.
+    ValueFiles []core.ValueFile `json:",omitempty"`
     // EnableHooks enables helm hooks when executing the `helm template` command.
     EnableHooks bool `cue:"true | *false"`
     // Namespace sets the helm chart namespace flag if provided.
