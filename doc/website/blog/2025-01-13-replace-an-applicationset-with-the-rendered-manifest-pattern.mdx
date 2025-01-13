@@ -1,0 +1,627 @@
+---
+unlisted: true
+slug: trade-in-argocd-appsets-for-rendered-manifests
+title: Trade in the complexity of ArgoCD AppSets for fully rendered manifests
+authors: [jeff]
+tags: [holos, helm, gitops]
+# image: /img/cards/validators.png
+description: Migrate an ApplicationSet to the rendered manifest pattern with Holos, removing unnecessary complexity.
+keywords:
+  - Holos
+  - CUE
+  - Configuration
+  - Structure
+  - Kubernetes
+  - Hydrated
+  - Rendered
+  - Manifest
+  - Pattern
+  - Unification
+  - ArgoCD
+  - ApplicationSet
+  - Application
+  - Multi Source
+  - Values Hierarchy
+  - Rendered Manifest Pattern
+  - GitOps
+  - Complexity
+---
+
+Kubernetes has a reputation for being too complex.  Complexity in software
+engineering is often categorized as essential or accidental.  Methods to expose
+services to the internet, deploy replicas, manage secrets, configure network
+connectivity, and control access are examples of essential complexity.  They're
+unavoidable no matter what tools we use.
+
+Nevertheless, popular tools in the ecosystem bolster this reputation by
+accidentally piling up layers of complexity unnecessarily.  For example, Helm
+value override hierarchies and ArgoCD ApplicationSet templates.  Both tools
+solve challenging, pervasive problems resulting in their widespread adoption.
+Unfortunately the trade offs each one makes independently combine together
+poorly.  Helm and ArgoCD ApplicationSets contribute more than their fair share
+of accidental complexity to the Kubernetes ecosystem.
+
+Consider the use case of deploying different versions of the same service to
+multiple environments.  An ArgoCD ApplicationSet passing sets of values to one
+Helm chart is a commonly recommended solution contributing three forms of
+accidental complexity.
+
+1. There are multiple layers of Go template abstractions.
+2. Config values are silently written over at multiple layers in a hierarchy.
+3. The intermediate and final configuration is remote and out of reach.
+
+The rendered manifests pattern is an alternative solution leveraging Helm and
+ArgoCD with less complexity.  The pattern reduces complexity by collapsing
+multiple layers of Go templates and brings the configuration local, within our
+reach.  It still relies on Helm value hierarchies when charts are reused across
+environments, so it's no silver bullet, but we'll explain in follow up post how
+Holos can eliminate the accidental complexity of a Helm value files hierarchy.
+
+There is no widely agreed upon, freely available implementation of the rendered
+manifest pattern.  Engineering teams have to decide whether to implement the
+pattern from scratch or stick with the more complex, but built-in features of
+Helm and ArgoCD.  These few options indicate a tooling gap in the ecosystem.
+This gap pushes many organizations toward the accidental complexity of the
+ApplicationSet solution.
+
+Holos fills this gap by offering a thoughtful and complete implementation of the
+rendered manifest pattern in one command line tool.  This article is the first
+in a series exploring how Holos solves the same use case while avoiding the
+accidental complexity.
+
+This article walks step-by-step through the process of migrating an
+ApplicationSet to Holos.  I'll explain why we feel the trades we made in Holos
+are a net improvement.  At the end of the article you'll see how you can
+continue leveraging GitOps with ArgoCD and Helm while gaining the ability to see
+and comprehend complex configurations clearly, with fewer layers of abstraction.
+
+{/* truncate */}
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+## Layers of Complexity
+
+Before diving into the step by step migration, let's explore exactly what we
+mean by accidental complexity.  Consider the ApplicationSet and Helm value
+hierarchy described in the final recommendation of _[Using Helm Hierarchies in
+Multi-Source Argo CD Applications for Promoting to Different GitOps
+Environments][tfa]_.  This particular ApplicationSet is a prime example because
+the approach it takes is often recommended as a solution for deploying a service
+to multiple clusters and environments.
+
+Unfortunately the example provided requires us to hold _at least 7 layers of
+abstraction_ in mind while considering the impact of a change.
+
+- The ApplicationSet renders an Application template for each `config.json` file.
+- Each Application `valueFiles` field introduces 5 more layers of potential overrides.
+- The Helm Chart is another layer of text templates.
+
+:::important
+Consider the multiple layers of abstraction in the example provided compared
+with their replacements shown in the [Goals](#goals) section.
+:::
+
+import AppSetPath from '!!raw-loader!./_migrate_appset/script-02-layers-of-complexity/appset.path';
+import AppSetYAML from '!!raw-loader!./_migrate_appset/script-02-layers-of-complexity/appset.yaml';
+import DeploymentPath from '!!raw-loader!./_migrate_appset/script-02-layers-of-complexity/deployment.path';
+import DeploymentYAML from '!!raw-loader!./_migrate_appset/script-02-layers-of-complexity/deployment.yaml';
+
+<Tabs groupId="layers-of-complexity">
+  <TabItem value="Application Template" label="Application Template">
+    The ApplicationSet template renders a Helm template.
+    <CodeBlock language="txt">{AppSetPath}</CodeBlock>
+    <CodeBlock language="yaml">{AppSetYAML}</CodeBlock>
+  </TabItem>
+  <TabItem value="Deployment Template" label="Deployment Template">
+    The Helm template renders the final Deployment configuration.
+    <CodeBlock language="txt">{DeploymentPath}</CodeBlock>
+    <CodeBlock language="yaml">{DeploymentYAML}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+
+These templates would be easier to comprehend if their intermediate state and
+final configuration were within reach.  Unfortunately, it's stored in multiple
+remote repositories and processed remotely in ArgoCD.   ArgoCD is like a black
+box.  Intermediate state is inaccessible.  The final configuration is only
+accessible after it's been applied, far too late to consider what impact a
+change might have.
+
+We know the complexity is accidental because we bypass these layers when we run
+`kubectl edit`.  The configuration is fetched, manipulated locally, then pushed
+back to the cluster without obfuscation.
+
+We also know the complexity is real.  It's too easy to make mistakes when
+configuration values are silently written over many times along the way.  For
+example, we'll see how the very ApplicationSet we're migrating contains errors
+which are difficult to fix without insight a tool like `holos` provides.
+
+## Goals
+
+We want to eliminate as many layers of accidental complexity as possible with as
+few changes as possible.  Ideally we'll be able to directly see and manipulate
+the final manifests as they will be applied to the cluster.  We also want the
+migration to balance the conventions and idioms of Holos, Helm, and ArgoCD as
+much as possible.
+
+1. Eliminate as many layers of accidental complexity as possible.
+2. Make as few changes as possible.
+3. Bring intermediate state and the final configuration within our reach.
+4. Use each tool idiomatically.
+
+We'll relocate the unmodified Helm chart, config.json files, and value files to
+make as few changes as possible.   We'll also generate Applications for ArgoCD
+identical to those generated by the ApplicationSet, but we'll do so with the
+same [CUE] layer that configures everything else in Holos.
+
+The migration achieves these goals by rendering clearly readable Application and
+Deployment resources to local files for ArgoCD to sync via GitOps.  Here's how
+it will look.
+
+:::important
+Compare the Application and Deployment with the templates in the [Layers of
+Complexity](#layers-of-complexity) section.
+:::
+
+import AppTreeCommand from '!!raw-loader!./_migrate_appset/script-05-application/tree-deploy.sh'
+import AppTreeOutput from '!!raw-loader!./_migrate_appset/script-05-application/tree-deploy.txt'
+import AppPath from '!!raw-loader!./_migrate_appset/script-05-application/app.path'
+import AppYAML from '!!raw-loader!./_migrate_appset/script-05-application/app.yaml'
+import ManifestPath from '!!raw-loader!./_migrate_appset/script-05-application/manifest.path'
+import ManifestYAML from '!!raw-loader!./_migrate_appset/script-05-application/manifest.yaml'
+
+<Tabs groupId="goal-summary">
+  <TabItem value="Application" label="Application">
+    <CodeBlock language="yaml">
+      {"# "+AppPath}
+      {AppYAML}
+    </CodeBlock>
+  </TabItem>
+  <TabItem value="Deployment" label="Deployment">
+    <CodeBlock language="yaml">
+      {"# "+ManifestPath}
+      {ManifestYAML}
+    </CodeBlock>
+  </TabItem>
+  <TabItem value="Tree" label="Tree">
+    <CodeBlock language="bash">{AppTreeCommand}</CodeBlock>
+    <CodeBlock language="txt">{AppTreeOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+The manifests rendered at the end of the migration achieve the goals.
+
+1. The Application rendered by Holos is readable and complete, replacing the ApplicationSet template rendered remotely.
+2. The Application is equivalent to those produced by the ApplicationSet.
+3. The final configuration is within reach in local files.  We'll see how Holos exposes intermediate state as we step through the migration in the next section.
+4. Both ArgoCD and Helm are used idiomatically, passing the value files to render the chart for GitOps.
+
+## Migration Steps
+
+We'll migrate each of the three major behaviors of the ApplicationSet to Holos
+to achieve the goals and complete the migration.
+
+1. Generate an Application from a template using values provided by each `config.json` file.
+2. Render `my-chart` to a manifest by providing a hierarchy of helm values determined by `config.json` values.
+3. Reconcile the rendered manifest with the cluster state.
+
+We'll start by loading the `config.json` environment data files into CUE without
+modifying the original data.  Then we'll manage a Holos [Platform] [Component]
+for each environment.  We'll wrap `my-chart` in a component definition
+and pass the value hierarchy to `helm template` the same as ArgoCD does.
+Finally, we'll mix an ArgoCD Application into each platform component to achieve
+the same output as the ApplicationSet.
+
+Along the way we'll see how Holos eliminates accidental complexity and makes it
+easier to work with the intermediate and final configuration.
+
+### Initial Setup
+
+The main branch of the [multi-sources-example] is a fork of the example code
+from the original article that has already been migrated.  We'll roll back to
+the fork point then step through each of the commits to complete the migration.
+
+First, clone the repository.
+
+import GitCloneCommand from '!!raw-loader!./_migrate_appset/script-01-clone/clone.sh';
+import GitCloneOutput from '!!raw-loader!./_migrate_appset/script-01-clone/clone.txt';
+
+<Tabs groupId="clone">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{GitCloneCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{GitCloneOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Then, reset to where it was forked from upstream.
+
+import GitResetCommand from '!!raw-loader!./_migrate_appset/script-01-clone/reset.sh';
+import GitResetOutput from '!!raw-loader!./_migrate_appset/script-01-clone/reset.txt';
+
+
+<Tabs groupId="reset">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{GitResetCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{GitResetOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+[Install Holos] if you haven't already.  This article has been tested with version:
+
+import HolosVersionCmd from '!!raw-loader!./_migrate_appset/script-01-clone/version.sh';
+import HolosVersionTxt from '!!raw-loader!./_migrate_appset/script-01-clone/version.txt';
+
+
+<Tabs groupId="version">
+  <TabItem value="Version" label="Version">
+    <CodeBlock language="txt">{HolosVersionTxt}</CodeBlock>
+  </TabItem>
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{HolosVersionCmd}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+### Holos Structure
+
+Holos is organized for use as a GitOps repository.  The main folders are:
+
+| Folder | Description |
+| - | - |
+| platform | Entry point for `holos render platform` which renders all manifests. |
+| config | Configuration data, we'll move the `config.json` files here. |
+| components | Component definitions live here.  Components produce build plans for `holos` to render manifests.  We'll wrap `my-chart` in a reusable component definition. |
+| deploy | Fully rendered manifests are written here for ArgoCD to sync. |
+| cue.mod | [CUE] type definitions and schemas reside here. |
+
+
+Initialize the platform.
+
+import HolosInit from '!!raw-loader!./_migrate_appset/script-03-holos-structure/holos-init.sh';
+
+<CodeBlock language="bash">{"# --force is necessary when the current directory is not empty\n"+HolosInit}</CodeBlock>
+
+Now that we've initialized the current directory as a Holos platform repository
+we can move the example files from the original article into their conventional
+locations in Holos.
+
+import MoveFiles from '!!raw-loader!./_migrate_appset/script-03-holos-structure/move-files-around.sh';
+
+<CodeBlock language="bash">{MoveFiles}</CodeBlock>
+
+### Environment Configs
+
+The ApplicationSet generators field iterates over 8 config.json files to
+instantiate each Application from the spec.template field.  We'll migrate this
+to a similar mechanism in Holos by using CUE's `@embed` feature to load the same
+files into one struct.  We'll manage one Helm Component for each config.json
+value in the struct.  This struct will reside in the `config` field of the
+`environments` package.  Like Go, CUE supports package imports for reuse.
+
+These `config.json` files moved to the `config/environments/` folder.  The
+`config` folder is the conventional place in Holos for reusable config values
+like these.
+
+:::important
+Holos offers one unified layer with CUE to configure an entire platform
+holistically, different from other tools like Helm and Kustomize.
+:::
+
+Here's how the environments package is defined in CUE.
+
+import EnvironmentsPackageHeader from '!!raw-loader!./_migrate_appset/script-03-holos-structure/environments-header.sh';
+import EnvironmentsPackageBody from '!!raw-loader!./_migrate_appset/script-03-holos-structure/environments.cue';
+import EnvironmentsPackageTrailer from '!!raw-loader!./_migrate_appset/script-03-holos-structure/environments-trailer.sh';
+
+<CodeBlock language="bash">{EnvironmentsPackageHeader}</CodeBlock>
+<CodeBlock language="cue" showLineNumbers>{EnvironmentsPackageBody}</CodeBlock>
+<CodeBlock language="bash">{EnvironmentsPackageTrailer}</CodeBlock>
+
+We moved the original `config.json` files without modifying them, then used
+CUE's `@embed` feature to load them into the `config` struct.  This structure is
+accessible in CUE by importing the `environments` package, then referencing
+`environments.config`.
+
+:::tip
+Holos and CUE offer fast, local query and manipulation of your configuration
+data, even in intermediate states.
+:::
+
+Here's how the environments package exports to YAML.  `cue export` and `cue
+eval` are handy ways to query intermediate state.
+
+import InspectEnvironmentsCommand from '!!raw-loader!./_migrate_appset/script-03-holos-structure/inspect-environments.sh';
+import InspectEnvironmentsOutput from '!!raw-loader!./_migrate_appset/script-03-holos-structure/inspect-environments.txt';
+
+<Tabs groupId="inspect-environments">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{InspectEnvironmentsCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="yaml" showLineNumbers>{InspectEnvironmentsOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+:::important
+CUE populates the `config` field on the first line of output from the `config: _ @embed(...)`
+lines in `environments.cue`.
+:::
+
+Holos and CUE offer multiple improvements over the ApplicationSet we're
+migrating from.
+
+1. **Validation** - Each `config.json` file is validated against the `#Config` schema we defined.
+2. **Ergonomics** - Holos enables fast, local queries over one unified
+configuration.  The data is at hand.  We don't need a controller running in a
+remote cluster.  We can query the intermediate config data structure, improving
+our ability to troubleshoot problems the same way an interactive debugger gives
+access to intermediate state.
+3. **Flexibility** - We're no longer locked into ArgoCD functionality.  The
+`environments` package can be imported and re-used across the unified platform
+configuration layer.  We're able to continue processing the rendered manifests
+with other tools beyond just ArgoCD.
+
+We've successfully migrated the ApplicationSet generator field to Holos.  Next,
+we'll iterate over this structure to render `my-chart` for each environment.
+
+### Rendering my-chart
+
+The next step is to render `my-chart` into complete configuration manifests.
+Holos implements the same behavior as the Application's `spec.sources.helm`
+field.  Both tools use Helm to render the chart.  Holos is different though, it
+offers a flexible way to transform and validate the output of Helm, then stops
+once the manifest is written to a local file.  ArgoCD doesn't persist rendered
+manifests, instead it applies them directly to the cluster.
+
+Where Holos stops is another major difference from ArgoCD and all other tools
+operating as a controller in the cluster.  Holos is designed for GitOps and
+integration with the rest of the Kubernetes ecosystem.  Holos stops after it
+writes manifests to local files.  This clear cut responsibility leaves ample
+space for subsequent automated workflow operating on the configuration Holos
+produces.
+
+For example, consider a progressive delivery pipeline at the right side of this
+diagram to incrementally roll out configuration changes.  ApplicationSets with a
+Helm source prevents this kind of integration.  Holos with an Application Git
+source enables this kind of integration.
+
+import RenderingOverview from '@site/src/diagrams/rendering-overview.mdx';
+
+<RenderingOverview />
+
+ArgoCD pairs well with other ecosystem tools when it keeps to what it does best:
+drift detection and reconciliation following GitOps principles.  ArgoCD locks
+out other tools when it renders manifests.  The configuration is transient and
+locked away in the cluster.
+
+:::important
+Holos renders `my-chart` to local files, one for each of the environment configs
+we migrated to the `environments` package.
+:::
+
+### Platform Components
+
+The primary entrypoint for Holos is the `platform/` directory.  The `holos
+render platform` command processes a [Platform] specification exported by CUE
+from this directory.
+
+Each Application produced by the ApplicationSet we're migrating maps to a
+[Component] listed in the `Platform.spec.components` field.  Here's how the
+components are added to the Platform in CUE.
+
+{/* 987df87 add platform components to replace ApplicationSets.spec.generators */}
+
+import PlatformChartHeader from '!!raw-loader!./_migrate_appset/script-04-helm-component/platform-my-chart-header.sh';
+import PlatformChartBody from '!!raw-loader!./_migrate_appset/script-04-helm-component/platform-my-chart.cue';
+import PlatformChartTrailer from '!!raw-loader!./_migrate_appset/script-04-helm-component/platform-my-chart-trailer.sh';
+
+<CodeBlock language="bash">{PlatformChartHeader}</CodeBlock>
+<CodeBlock language="cue" showLineNumbers>{PlatformChartBody}</CodeBlock>
+<CodeBlock language="bash">{PlatformChartTrailer}</CodeBlock>
+
+For each of the data objects defined in the `config.json` files, we define a
+field in the `Platform.Components` struct.  We use a struct for convenience,
+it's easier to compose components into a struct than it is into an ordered list.
+The Platform author schema converts this struct into the `spec.components` list.
+
+`#MyChart` is a schema  definition acting as a reusable template.  For each of
+the environment config files we build the component configuration from
+parameters.  This is an example of how we compose configuration.  The
+`outputBaseDir` field is composed in from the `env` field configured in the
+original `config.json` files migrated to CUE.
+
+We need to add a configuration snippet so each component accepts this parameter
+and renders manifests into folders organized by environment.  The use of `@tag`
+with the `OutputBaseDir` field indicates the field value is provided by the
+Platform spec when we run `holos render platform`.
+
+import ComponentConfigHeader from '!!raw-loader!./_migrate_appset/script-04-helm-component/componentconfig-header.sh';
+import ComponentConfigBody from '!!raw-loader!./_migrate_appset/script-04-helm-component/componentconfig.cue';
+import ComponentConfigTrailer from '!!raw-loader!./_migrate_appset/script-04-helm-component/componentconfig-trailer.sh';
+
+<CodeBlock language="bash">{ComponentConfigHeader}</CodeBlock>
+<CodeBlock language="cue" showLineNumbers>{ComponentConfigBody}</CodeBlock>
+<CodeBlock language="bash">{ComponentConfigTrailer}</CodeBlock>
+
+We can gain insight into how `holos` renders the helm charts from the
+`config.json` files with the following command.  CUE exports the `Platform`
+specification to `holos`, which iterates over each of the listed components to
+produce a `BuildPlan`.
+
+import ShowPlatformCommand from '!!raw-loader!./_migrate_appset/script-04-helm-component/holos-show-platform.sh';
+import ShowPlatformOutput from '!!raw-loader!./_migrate_appset/script-04-helm-component/holos-show-platform.txt';
+
+<Tabs groupId="show-platform">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{ShowPlatformCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="yaml" showLineNumbers>{ShowPlatformOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+### Component Definition
+
+The next step is to wrap `my-chart` in a Holos [Helm] component definition.
+Here's how:
+
+import ComponentHeader from '!!raw-loader!./_migrate_appset/script-04-helm-component/component-my-chart-header.sh';
+import ComponentBody from '!!raw-loader!./_migrate_appset/script-04-helm-component/component-my-chart.cue';
+import ComponentFooter from '!!raw-loader!./_migrate_appset/script-04-helm-component/component-my-chart-trailer.sh';
+
+<CodeBlock language="bash">{ComponentHeader}</CodeBlock>
+<CodeBlock language="cue" showLineNumbers>{ComponentBody}</CodeBlock>
+<CodeBlock language="bash">{ComponentFooter}</CodeBlock>
+
+Note how each parameter we added in the Platform spec is reflected in the
+component definition with a `@tag`.  These are CUE build tags, and the mechanism
+by which parameters are passed from `holos render platform` to each component.
+
+Similar to the `config.json` files we migrated, we moved the Helm value files
+without modifying them.   These files are loaded into one struct in CUE using
+`valueFiles: _ @embed(...)`.
+
+Like the Platform spec, we can inspect the BuildPlans `holos` executes to render
+each component to manifest files.
+
+import ShowBuildPlansCmd from '!!raw-loader!./_migrate_appset/script-04-helm-component/show-buildplans.sh'
+import ShowBuildPlansOut from '!!raw-loader!./_migrate_appset/script-04-helm-component/show-buildplans.txt'
+
+<Tabs groupId="show-buildplans">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{ShowBuildPlansCmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="yaml" showLineNumbers>{ShowBuildPlansOut}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+We can also inspect intermediate configuration like the `valueFiles` struct.
+
+import ValueFilesCommand from '!!raw-loader!./_migrate_appset/script-04-helm-component/inspect-value-files.sh'
+import ValueFilesOutput from '!!raw-loader!./_migrate_appset/script-04-helm-component/inspect-value-files.txt'
+
+<Tabs groupId="inspect-value-files">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{ValueFilesCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="yaml" showLineNumbers>{ValueFilesOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Render the platform to render `my-chart` for each of the configured
+environments.
+
+import RenderCommand from '!!raw-loader!./_migrate_appset/script-04-helm-component/render.sh'
+import RenderOutput from '!!raw-loader!./_migrate_appset/script-04-helm-component/render.txt'
+
+<CodeBlock language="bash">{RenderCommand}</CodeBlock>
+<CodeBlock language="txt">{RenderOutput}</CodeBlock>
+
+Holos processes the Platform spec.components field concurrently, rendering each
+environment to a manifest file into the `deploy` folder.  The output looks like:
+
+import TreeCommand from '!!raw-loader!./_migrate_appset/script-04-helm-component/tree-deploy.sh'
+import TreeOutput from '!!raw-loader!./_migrate_appset/script-04-helm-component/tree-deploy.txt'
+
+<Tabs groupId="tree-deploy">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{TreeCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{TreeOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+### ArgoCD Application
+
+At this point we're rendering `my-chart` with Holos for each environment.  The
+intermediate and final configuration is within our reach.  The final step is to
+render an Application resource for each environment like the original
+ApplicationSet did.
+
+Holos offers [ComponentConfig] for the purpose of mixing in configuration to
+components.  The feature is often used to pass each component through
+`kustomize` to add common labels and annotations.  It's also used to mix in
+GitOps resources like ArgoCD Applications and Flux Kustomizations.
+
+Here's how to add an Application for every one of the `Platform` components:
+
+{/* d9125b8 compose argocd application resources into every component */}
+
+import ComponentConfigGitOpsHeader from '!!raw-loader!./_migrate_appset/script-05-application/componentconfig-gitops-header.sh';
+import ComponentConfigGitOpsBody from '!!raw-loader!./_migrate_appset/script-05-application/componentconfig-gitops.cue';
+import ComponentConfigGitOpsTrailer from '!!raw-loader!./_migrate_appset/script-05-application/componentconfig-gitops-trailer.sh';
+
+<CodeBlock language="bash">{ComponentConfigGitOpsHeader}</CodeBlock>
+<CodeBlock language="cue" showLineNumbers>{ComponentConfigGitOpsBody}</CodeBlock>
+<CodeBlock language="bash">{ComponentConfigGitOpsTrailer}</CodeBlock>
+
+More information about how this works is available in the following pages.  For
+now, it's sufficient to know the ComponentConfig is something we usually set and
+forget.
+
+1. [ComponentConfig]
+2. [GitOps](/docs/v1alpha5/topics/gitops/)
+
+Now we can render the platform and see each of the Application manifest files.
+They go into a `gitops` folder so it easy to apply them individually or all at
+once for ArgoCD to sync the component manifests.
+
+import AppRenderCommand from '!!raw-loader!./_migrate_appset/script-05-application/render.sh'
+import AppRenderOutput from '!!raw-loader!./_migrate_appset/script-05-application/render.txt'
+
+<CodeBlock language="bash">{AppRenderCommand}</CodeBlock>
+<CodeBlock language="txt">{AppRenderOutput}</CodeBlock>
+
+<Tabs groupId="tree-deploy-with-application">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{AppTreeCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{AppTreeOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+The Applications are also fully rendered.
+
+<CodeBlock language="txt">{AppPath}</CodeBlock>
+<CodeBlock language="yaml">{AppYAML}</CodeBlock>
+
+Note how the Application resources Holos produces are easier to read and
+understand than the original ApplicationSet.
+
+1. There is no templating.
+2. There is no helm source, no value hierarchy to comprehend.
+
+We also have the fully rendered manifest clearly readable and within reach locally.
+
+<CodeBlock language="yaml">{"# "+ManifestPath+ManifestYAML}</CodeBlock>
+
+## Wrapping it all up
+
+1. The manifests are fully rendered and within our reach.
+2. The Application is clear and at-hand.
+3. We now have a unified platform configuration layer.
+
+## Next Steps
+
+- Part 2 - Why are there 8 config.json files but only 7 components rendered?  There's a bug!
+- Part 3 - Can we eliminate the layers of helm value overrides?  Yes!
+- Part 4 - Progressive Delivery.  Maybe?
+
+[tfa]: https://medium.com/containers-101/using-helm-hierarchies-in-multi-source-argo-cd-applications-for-promoting-to-different-gitops-133c3bc93678
+[ApplicationSet]: https://github.com/holos-run/multi-sources-example/blob/v0.1.0/appsets/4-final/all-my-envs-appset-with-version.yaml
+[multi-sources-example]: https://github.com/holos-run/multi-sources-example
+[Platform]: https://holos.run/docs/api/core/#Platform
+[Component]: https://holos.run/docs/api/core/#Component
+[ComponentConfig]: https://holos.run/docs/api/author/#ComponentConfig
+[Helm]: https://holos.run/docs/api/core/#Helm
+[CUE]: https://cuelang.org
+[Install Holos]: https://holos.run/docs/setup/

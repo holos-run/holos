@@ -1,9 +1,19 @@
 holos:
   label: Holos
   permalink: /holos
-  description: Holos Platform
+  description: Holos Articles
 
 tech:
   label: Technical
   permalink: /tech
   description: Technical Articles
+
+helm:
+  label: Helm
+  permalink: /helm
+  description: Helm Articles
+
+gitops:
+  label: GitOps
+  permalink: /gitops
+  description: GitOps Articles

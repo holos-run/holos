@@ -1,0 +1,49 @@
+config:
+  qa/config.json:
+    env: qa
+    region: us
+    type: non-prod
+    version: qa
+    chart: 0.2.0
+  staging/asia/config.json:
+    env: qa
+    region: us
+    type: non-prod
+    version: qa
+    chart: 0.2.0
+  staging/eu/config.json:
+    env: staging-eu
+    region: eu
+    type: non-prod
+    version: staging
+    chart: 0.2.0
+  prod/eu/config.json:
+    env: prod-eu
+    region: eu
+    type: prod
+    version: prod
+    chart: 0.1.0
+  integration/gpu/config.json:
+    env: integration-gpu
+    region: us
+    type: non-prod
+    version: prod
+    chart: 0.1.0
+  staging/us/config.json:
+    env: staging-us
+    region: us
+    type: non-prod
+    version: staging
+    chart: 0.2.0
+  prod/us/config.json:
+    env: prod-us
+    region: us
+    type: prod
+    version: prod
+    chart: 0.1.0
+  integration/non-gpu/config.json:
+    env: integration-non-gpu
+    region: us
+    type: non-prod
+    version: qa
+    chart: 0.2.0

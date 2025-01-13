@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    argocd.argoproj.io/instance: prod-us-my-chart
+  name: simple-service
+  namespace: prod-us
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: trivial-go-web-app
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    argocd.argoproj.io/instance: prod-us-my-chart
+  name: simple-deployment
+  namespace: prod-us
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: trivial-go-web-app
+  template:
+    metadata:
+      labels:
+        app: trivial-go-web-app
+    spec:
+      containers:
+      - env:
+        - name: ENV
+          value: prod-us
+        - name: ENV_TYPE
+          value: production
+        - name: REGION
+          value: us
+        - name: PAYPAL_URL
+          value: production.paypal.com
+        - name: DB_USER
+          value: prod_username
+        - name: DB_PASSWORD
+          value: prod_password
+        - name: GPU_ENABLED
+          value: "1"
+        - name: UI_THEME
+          value: dark
+        - name: CACHE_SIZE
+          value: 1024kb
+        - name: PAGE_LIMIT
+          value: "25"
+        - name: SORTING
+          value: Ascending
+        - name: N_BUCKETS
+          value: "42"
+        image: docker.io/kostiscodefresh/simple-env-app:1.0
+        imagePullPolicy: Always
+        name: webserver-simple
+        ports:
+        - containerPort: 8080

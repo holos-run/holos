@@ -1,0 +1,97 @@
+apiVersion: v1alpha5
+kind: Platform
+metadata:
+  name: default
+spec:
+  components:
+    - annotations:
+        app.holos.run/description: my-chart 0.2.0 for environment qa
+      labels:
+        env: qa
+      name: my-chart
+      parameters:
+        chart: 0.2.0
+        env: qa
+        outputBaseDir: environments/qa
+        region: us
+        type: non-prod
+        version: qa
+      path: components/my-chart
+    - annotations:
+        app.holos.run/description: my-chart 0.2.0 for environment staging-eu
+      labels:
+        env: staging-eu
+      name: my-chart
+      parameters:
+        chart: 0.2.0
+        env: staging-eu
+        outputBaseDir: environments/staging-eu
+        region: eu
+        type: non-prod
+        version: staging
+      path: components/my-chart
+    - annotations:
+        app.holos.run/description: my-chart 0.2.0 for environment staging-us
+      labels:
+        env: staging-us
+      name: my-chart
+      parameters:
+        chart: 0.2.0
+        env: staging-us
+        outputBaseDir: environments/staging-us
+        region: us
+        type: non-prod
+        version: staging
+      path: components/my-chart
+    - annotations:
+        app.holos.run/description: my-chart 0.1.0 for environment prod-eu
+      labels:
+        env: prod-eu
+      name: my-chart
+      parameters:
+        chart: 0.1.0
+        env: prod-eu
+        outputBaseDir: environments/prod-eu
+        region: eu
+        type: prod
+        version: prod
+      path: components/my-chart
+    - annotations:
+        app.holos.run/description: my-chart 0.1.0 for environment prod-us
+      labels:
+        env: prod-us
+      name: my-chart
+      parameters:
+        chart: 0.1.0
+        env: prod-us
+        outputBaseDir: environments/prod-us
+        region: us
+        type: prod
+        version: prod
+      path: components/my-chart
+    - annotations:
+        app.holos.run/description: my-chart 0.1.0 for environment integration-gpu
+      labels:
+        env: integration-gpu
+      name: my-chart
+      parameters:
+        chart: 0.1.0
+        env: integration-gpu
+        outputBaseDir: environments/integration-gpu
+        region: us
+        type: non-prod
+        version: prod
+      path: components/my-chart
+    - annotations:
+        app.holos.run/description: my-chart 0.2.0 for environment integration-non-gpu
+      labels:
+        env: integration-non-gpu
+      name: my-chart
+      parameters:
+        chart: 0.2.0
+        env: integration-non-gpu
+        outputBaseDir: environments/integration-non-gpu
+        region: us
+        type: non-prod
+        version: qa
+      path: components/my-chart

@@ -1,0 +1,49 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: simple-deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: trivial-go-web-app
+  template:
+    metadata:
+      labels:
+        app: trivial-go-web-app
+    spec:
+      containers:
+      - name: webserver-simple
+        imagePullPolicy: Always
+        image: docker.io/kostiscodefresh/simple-env-app:{{ .Values.imageVersion }}
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ENV
+          value: {{ quote .Values.environment }}
+        - name: ENV_TYPE
+          value: {{ quote .Values.environmentType }}
+        - name: REGION
+          value: {{ quote .Values.region }}
+        - name: PAYPAL_URL
+          value: {{ quote .Values.paypalUrl }}
+        - name: DB_USER
+          value: {{ quote .Values.dbUser }}
+        - name: DB_PASSWORD
+          value: {{ quote .Values.dbPassword }}
+        - name: GPU_ENABLED
+          value: {{ quote .Values.gpuEnabled }}
+        - name: UI_THEME
+          value: {{ quote .Values.userInterfaceTheme }}
+        - name: CACHE_SIZE
+          value: {{ quote .Values.cacheSize }}
+        - name: PAGE_LIMIT
+          value: {{ quote .Values.pageLimit }}
+        - name: SORTING
+          value: {{ quote .Values.sorting }}    
+        - name: N_BUCKETS
+          value: {{ quote .Values.nBuckets }}            
+
+
+

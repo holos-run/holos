@@ -1,0 +1,500 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: my-chart
+  labels:
+    env: qa
+  annotations:
+    app.holos.run/description: my-chart 0.2.0 for environment qa
+spec:
+  artifacts:
+    - artifact: environments/qa/components/my-chart/my-chart.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: my-chart
+              version: 0.2.0
+              release: my-chart
+              repository:
+                name: multi-sources-example
+                url: https://kostis-codefresh.github.io/multi-sources-example
+            values: {}
+            valueFiles:
+              - name: common-values.yaml
+                kind: Values
+                values:
+                  replicaCount: 1
+              - name: version-values.yaml
+                kind: Values
+                values:
+                  imageVersion: "3.0"
+              - name: type-values.yaml
+                kind: Values
+                values:
+                  dbPassword: non-prod-password
+                  dbUser: non-prod-user
+                  environmentType: non-prod
+                  paypalUrl: staging2.paypal.com
+                  replicaCount: 3
+              - name: region-values.yaml
+                kind: Values
+                values:
+                  region: us
+              - name: env-values.yaml
+                kind: Values
+                values:
+                  cacheSize: 1024kb
+                  environment: qa
+                  gpuEnabled: "1"
+                  nBuckets: "42"
+                  pageLimit: "25"
+                  sorting: ascending
+                  userInterfaceTheme: dark
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: environments/qa/components/my-chart/my-chart.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              namespace: qa
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: my-chart
+  labels:
+    env: staging-eu
+  annotations:
+    app.holos.run/description: my-chart 0.2.0 for environment staging-eu
+spec:
+  artifacts:
+    - artifact: environments/staging-eu/components/my-chart/my-chart.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: my-chart
+              version: 0.2.0
+              release: my-chart
+              repository:
+                name: multi-sources-example
+                url: https://kostis-codefresh.github.io/multi-sources-example
+            values: {}
+            valueFiles:
+              - name: common-values.yaml
+                kind: Values
+                values:
+                  replicaCount: 1
+              - name: version-values.yaml
+                kind: Values
+                values:
+                  imageVersion: "2.0"
+              - name: type-values.yaml
+                kind: Values
+                values:
+                  dbPassword: non-prod-password
+                  dbUser: non-prod-user
+                  environmentType: non-prod
+                  paypalUrl: staging2.paypal.com
+                  replicaCount: 3
+              - name: region-values.yaml
+                kind: Values
+                values:
+                  region: eu
+              - name: env-values.yaml
+                kind: Values
+                values:
+                  cacheSize: 1024kb
+                  environment: staging-eu
+                  gpuEnabled: "1"
+                  nBuckets: "42"
+                  pageLimit: "25"
+                  replicaCount: 3
+                  sorting: Ascending
+                  userInterfaceTheme: dark
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: environments/staging-eu/components/my-chart/my-chart.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              namespace: staging-eu
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: my-chart
+  labels:
+    env: staging-us
+  annotations:
+    app.holos.run/description: my-chart 0.2.0 for environment staging-us
+spec:
+  artifacts:
+    - artifact: environments/staging-us/components/my-chart/my-chart.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: my-chart
+              version: 0.2.0
+              release: my-chart
+              repository:
+                name: multi-sources-example
+                url: https://kostis-codefresh.github.io/multi-sources-example
+            values: {}
+            valueFiles:
+              - name: common-values.yaml
+                kind: Values
+                values:
+                  replicaCount: 1
+              - name: version-values.yaml
+                kind: Values
+                values:
+                  imageVersion: "2.0"
+              - name: type-values.yaml
+                kind: Values
+                values:
+                  dbPassword: non-prod-password
+                  dbUser: non-prod-user
+                  environmentType: non-prod
+                  paypalUrl: staging2.paypal.com
+                  replicaCount: 3
+              - name: region-values.yaml
+                kind: Values
+                values:
+                  region: us
+              - name: env-values.yaml
+                kind: Values
+                values:
+                  cacheSize: 1024kb
+                  environment: staging-us
+                  gpuEnabled: "1"
+                  nBuckets: "24"
+                  pageLimit: "25"
+                  replicaCount: 3
+                  sorting: Ascending
+                  userInterfaceTheme: light
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: environments/staging-us/components/my-chart/my-chart.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              namespace: staging-us
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: my-chart
+  labels:
+    env: prod-eu
+  annotations:
+    app.holos.run/description: my-chart 0.1.0 for environment prod-eu
+spec:
+  artifacts:
+    - artifact: environments/prod-eu/components/my-chart/my-chart.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: my-chart
+              version: 0.1.0
+              release: my-chart
+              repository:
+                name: multi-sources-example
+                url: https://kostis-codefresh.github.io/multi-sources-example
+            values: {}
+            valueFiles:
+              - name: common-values.yaml
+                kind: Values
+                values:
+                  replicaCount: 1
+              - name: version-values.yaml
+                kind: Values
+                values:
+                  imageVersion: "1.0"
+              - name: type-values.yaml
+                kind: Values
+                values:
+                  dbPassword: prod_password
+                  dbUser: prod_username
+                  environmentType: production
+                  paypalUrl: production.paypal.com
+                  replicaCount: 5
+              - name: region-values.yaml
+                kind: Values
+                values:
+                  region: eu
+              - name: env-values.yaml
+                kind: Values
+                values:
+                  cacheSize: 1024kb
+                  environment: prod-eu
+                  gpuEnabled: "1"
+                  nBuckets: "42"
+                  pageLimit: "25"
+                  replicaCount: 8
+                  sorting: Ascending
+                  userInterfaceTheme: dark
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: environments/prod-eu/components/my-chart/my-chart.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              namespace: prod-eu
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: my-chart
+  labels:
+    env: prod-us
+  annotations:
+    app.holos.run/description: my-chart 0.1.0 for environment prod-us
+spec:
+  artifacts:
+    - artifact: environments/prod-us/components/my-chart/my-chart.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: my-chart
+              version: 0.1.0
+              release: my-chart
+              repository:
+                name: multi-sources-example
+                url: https://kostis-codefresh.github.io/multi-sources-example
+            values: {}
+            valueFiles:
+              - name: common-values.yaml
+                kind: Values
+                values:
+                  replicaCount: 1
+              - name: version-values.yaml
+                kind: Values
+                values:
+                  imageVersion: "1.0"
+              - name: type-values.yaml
+                kind: Values
+                values:
+                  dbPassword: prod_password
+                  dbUser: prod_username
+                  environmentType: production
+                  paypalUrl: production.paypal.com
+                  replicaCount: 5
+              - name: region-values.yaml
+                kind: Values
+                values:
+                  region: us
+              - name: env-values.yaml
+                kind: Values
+                values:
+                  cacheSize: 1024kb
+                  environment: prod-us
+                  gpuEnabled: "1"
+                  nBuckets: "42"
+                  pageLimit: "25"
+                  replicaCount: 10
+                  sorting: Ascending
+                  userInterfaceTheme: dark
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: environments/prod-us/components/my-chart/my-chart.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              namespace: prod-us
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: my-chart
+  labels:
+    env: integration-gpu
+  annotations:
+    app.holos.run/description: my-chart 0.1.0 for environment integration-gpu
+spec:
+  artifacts:
+    - artifact: environments/integration-gpu/components/my-chart/my-chart.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: my-chart
+              version: 0.1.0
+              release: my-chart
+              repository:
+                name: multi-sources-example
+                url: https://kostis-codefresh.github.io/multi-sources-example
+            values: {}
+            valueFiles:
+              - name: common-values.yaml
+                kind: Values
+                values:
+                  replicaCount: 1
+              - name: version-values.yaml
+                kind: Values
+                values:
+                  imageVersion: "1.0"
+              - name: type-values.yaml
+                kind: Values
+                values:
+                  dbPassword: non-prod-password
+                  dbUser: non-prod-user
+                  environmentType: non-prod
+                  paypalUrl: staging2.paypal.com
+                  replicaCount: 3
+              - name: region-values.yaml
+                kind: Values
+                values:
+                  region: us
+              - name: env-values.yaml
+                kind: Values
+                values:
+                  cacheSize: 1024kb
+                  environment: integration-gpu
+                  gpuEnabled: "1"
+                  nBuckets: "42"
+                  pageLimit: "50"
+                  sorting: Ascending
+                  userInterfaceTheme: light
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: environments/integration-gpu/components/my-chart/my-chart.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              namespace: integration-gpu
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: my-chart
+  labels:
+    env: integration-non-gpu
+  annotations:
+    app.holos.run/description: my-chart 0.2.0 for environment integration-non-gpu
+spec:
+  artifacts:
+    - artifact: environments/integration-non-gpu/components/my-chart/my-chart.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: my-chart
+              version: 0.2.0
+              release: my-chart
+              repository:
+                name: multi-sources-example
+                url: https://kostis-codefresh.github.io/multi-sources-example
+            values: {}
+            valueFiles:
+              - name: common-values.yaml
+                kind: Values
+                values:
+                  replicaCount: 1
+              - name: version-values.yaml
+                kind: Values
+                values:
+                  imageVersion: "3.0"
+              - name: type-values.yaml
+                kind: Values
+                values:
+                  dbPassword: non-prod-password
+                  dbUser: non-prod-user
+                  environmentType: non-prod
+                  paypalUrl: staging2.paypal.com
+                  replicaCount: 3
+              - name: region-values.yaml
+                kind: Values
+                values:
+                  region: us
+              - name: env-values.yaml
+                kind: Values
+                values:
+                  cacheSize: 1024kb
+                  environment: integration-non-gpu
+                  gpuEnabled: "0"
+                  nBuckets: "48"
+                  pageLimit: "50"
+                  sorting: descending
+                  userInterfaceTheme: dark
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: environments/integration-non-gpu/components/my-chart/my-chart.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              namespace: integration-non-gpu
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
