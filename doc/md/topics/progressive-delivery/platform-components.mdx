@@ -1,0 +1,184 @@
+---
+description: Automatic pull requests for platform components.
+sidebar_position: 100
+---
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import ThemedImage from '@theme/ThemedImage';
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# Platform Components
+
+## Overview
+
+We'll use Holos to configure Kargo to automatically watch for new versions of
+the Istio, cert-manager, and external-secrets cluster platform components.
+We'll learn how to define a reusable technique to mix-in the deployment pipeline
+to any other cluster add-ons, like Kargo and ArgoCD.
+
+<ThemedImage
+  alt="Pull Request summary for an available cert-manager update"
+  sources= {{
+    light: useBaseUrl('/img/kargo/add-on-promoter/kargo-pr-small.light.png'),
+    dark: useBaseUrl('/img/kargo/add-on-promoter/kargo-pr-small.dark.png'),
+  }}
+/>
+
+<ThemedImage
+  alt="Pull Request diff for an available cert-manager update"
+  sources= {{
+    light: useBaseUrl('/img/kargo/add-on-promoter/diff.light.png'),
+    dark: useBaseUrl('/img/kargo/add-on-promoter/diff.dark.png'),
+  }}
+/>
+
+## Setup
+
+First, [fork] the [kargo-demo] repository to your personal account.  Set your
+GitHub user name for use through the rest of this tutorial.
+
+```bash
+export GH_USER=<your username>
+```
+
+Clone your fork.  We'll run the rest of the commands from the root of the
+repository.
+
+import SetupCommand from '!!raw-loader!./_platform-components/script-01-clone/command.sh';
+import SetupOutput from '!!raw-loader!./_platform-components/script-01-clone/output.txt';
+
+<Tabs groupId="setup">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{SetupCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="txt">{SetupOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+## Configuration Tour
+
+Let's review what happens when the `holos render platform` command renders the
+Kargo deployment pipeline configuration for `cert-manager`.
+
+import GitHubLink from '@site/src/components/GitHubLink';
+import GitCommit from '!!raw-loader!./_platform-components/script-01-clone/git.commit';
+
+import CertManagerEntrypointPath from '!!raw-loader!./_platform-components/script-10-cert-manager/entrypoint.path';
+import CertManagerEntrypointBaseName from '!!raw-loader!./_platform-components/script-10-cert-manager/entrypoint.basename';
+import CertManagerEntrypointCode from '!!raw-loader!./_platform-components/script-10-cert-manager/entrypoint.txt';
+
+import CertManagerStacksPath from '!!raw-loader!./_platform-components/script-10-cert-manager/stacks.path';
+import CertManagerStacksBaseName from '!!raw-loader!./_platform-components/script-10-cert-manager/stacks.basename';
+import CertManagerStacksCode from '!!raw-loader!./_platform-components/script-10-cert-manager/stacks.txt';
+
+import CertManagerComponentPath from '!!raw-loader!./_platform-components/script-10-cert-manager/component.path';
+import CertManagerComponentBaseName from '!!raw-loader!./_platform-components/script-10-cert-manager/component.basename';
+import CertManagerComponentCode from '!!raw-loader!./_platform-components/script-10-cert-manager/component.txt';
+
+import CertManagerConfigPath from '!!raw-loader!./_platform-components/script-10-cert-manager/config.path';
+import CertManagerConfigBaseName from '!!raw-loader!./_platform-components/script-10-cert-manager/config.basename';
+import CertManagerConfigCode from '!!raw-loader!./_platform-components/script-10-cert-manager/config.txt';
+
+1. <GitHubLink repo="holos-run/kargo-demo" tree={GitCommit} path={CertManagerEntrypointPath}>{CertManagerEntrypointPath}</GitHubLink> is the main entrypoint for the `holos render platform` command.  Each platform stack's components are composed into the Platform spec `holos` uses to render each component.
+1. <GitHubLink repo="holos-run/kargo-demo" tree={GitCommit} path={`${CertManagerStacksPath}#L32-L39`}>{CertManagerStacksBaseName}</GitHubLink> in the platform config package is where cert-manager is added to the platform as a holos component.
+1. <GitHubLink repo="holos-run/kargo-demo" tree={GitCommit} path={CertManagerComponentPath}>{CertManagerComponentBaseName}</GitHubLink> is the component definition.  The component imports the certmanager config package to get the chart version.
+1. <GitHubLink repo="holos-run/kargo-demo" tree={GitCommit} path={CertManagerConfigPath}>{CertManagerConfigBaseName}</GitHubLink> in the certmanager config package defines configuration imported by multiple components.  This file uses the CUE embed feature to load data from a yaml file in the same directory.  Kargo promotion steps update the cert manager version in this file.
+
+Cert Manager is managed as a Holos Component wrapping the official helm chart.
+See 
+
+<Tabs groupId="render-git-url">
+  <TabItem value="entrypoint" label={CertManagerEntrypointBaseName}>
+    <CodeBlock language="txt">{CertManagerEntrypointPath}</CodeBlock>
+    <CodeBlock language="cue">{CertManagerEntrypointCode}</CodeBlock>
+  </TabItem>
+  <TabItem value="stacks" label={CertManagerStacksBaseName}>
+    <CodeBlock language="txt">{CertManagerStacksPath}</CodeBlock>
+    <CodeBlock language="cue">{CertManagerStacksCode}</CodeBlock>
+  </TabItem>
+  <TabItem value="component" label={CertManagerComponentBaseName}>
+    <CodeBlock language="txt">{CertManagerComponentPath}</CodeBlock>
+    <CodeBlock language="cue">{CertManagerComponentCode}</CodeBlock>
+  </TabItem>
+  <TabItem value="config" label={CertManagerConfigBaseName}>
+    <CodeBlock language="txt">{CertManagerConfigPath}</CodeBlock>
+    <CodeBlock language="cue">{CertManagerConfigCode}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+## Holos Version
+
+Ensure you have a current version of `holos` installed.  This document was
+tested with the following version.
+
+import HolosVersionCommand from '!!raw-loader!./_platform-components/script-20-holos-version/command.sh';
+import HolosVersionOutput from '!!raw-loader!./_platform-components/script-20-holos-version/output.txt';
+
+<CodeBlock language="bash">{HolosVersionCommand}</CodeBlock>
+<CodeBlock language="txt">{HolosVersionOutput}</CodeBlock>
+
+## Configure Git URL
+
+We need to configure gitops tools like ArgoCD and Kargo to use our fork instead
+of the upstream repository when reconciling changes and opening pull requests.
+
+Create the following file to configure your fork url.
+
+import GitURLHeader from '!!raw-loader!./_platform-components/script-30-git-url/header.sh';
+import GitURLBody from '!!raw-loader!./_platform-components/script-30-git-url/body.txt';
+import GitURLTrailer from '!!raw-loader!./_platform-components/script-30-git-url/trailer.sh';
+
+<CodeBlock language="bash">{GitURLHeader}</CodeBlock>
+<CodeBlock language="cue">{GitURLBody}</CodeBlock>
+<CodeBlock language="bash">{GitURLTrailer}</CodeBlock>
+
+Then render the platform with your GitHub user name as a cue build tag.
+
+import RenderCommand from '!!raw-loader!./_platform-components/script-30-git-url/command.sh';
+import RenderOutput from '!!raw-loader!./_platform-components/script-30-git-url/output.txt';
+
+<Tabs groupId="render-git-url">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{RenderCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="txt">{RenderOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Holos reconfigures the Application resources for all components in the platform
+to point to your git url.  Take a look at the diff.
+
+import DiffCommand from '!!raw-loader!./_platform-components/script-30-git-url/diff.sh';
+import DiffOutput from '!!raw-loader!./_platform-components/script-30-git-url/diff.patch';
+
+<Tabs groupId="git-diff">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{DiffCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="diff">{DiffOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Commit and push the changes.
+
+import CommitCommand from '!!raw-loader!./_platform-components/script-30-git-url/commit.sh';
+import CommitOutput from '!!raw-loader!./_platform-components/script-30-git-url/commit.txt';
+
+<Tabs groupId="git-commit">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{CommitCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="txt">{CommitOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+<CodeBlock language="bash">git push</CodeBlock>
+
+[kargo-demo]: https://github.com/holos-run/kargo-demo
+[fork]: https://github.com/holos-run/kargo-demo/fork
+[installed]: ../../tutorial/setup.mdx

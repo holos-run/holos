@@ -1,0 +1,38 @@
+---
+description: Progressive delivery for your Workloads.
+sidebar_position: 200
+---
+
+# Workloads
+
+{/*
+Based on my experience with enterprise Kubernetes platforms, "Workloads" or
+"Applications" are the two most common terms, with "Workloads" being more
+technically precise and common in platform engineering circles.
+
+Here's why:
+
+1. "Workloads" is preferred because:
+   - It's the term Kubernetes itself uses (Deployments, StatefulSets etc. are "workload" resources)
+   - It encompasses both services and batch jobs
+   - It clearly distinguishes from platform infrastructure
+   - Major cloud providers (AWS, GCP, Azure) use this terminology
+
+2. "Applications" is also common but has some drawbacks:
+   - Can be ambiguous whether it means a single service or a group of services
+   - Doesn't naturally include batch jobs or data processing
+   - More of a business/product term than a technical one
+
+3. Less common terms:
+   - "Services" - Too specific, excludes jobs/tasks
+   - "Business Applications" - Too wordy
+   - "User Applications" - Ambiguous about which users
+   - "Customer Workloads" - Implies external customers
+
+Looking at your question about "software my internal teams build for our
+business", these are classic workloads - the business logic, services, and jobs
+that run on top of the platform you provide.
+
+So while both "Workloads" and "Applications" are acceptable, "Workloads" is the
+more precise and commonly used technical term in platform engineering contexts.
+*/}
