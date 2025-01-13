@@ -1,0 +1,32 @@
+deploy
+`-- environments
+    |-- integration-gpu
+    |   `-- components
+    |       `-- my-chart
+    |           `-- my-chart.gen.yaml
+    |-- integration-non-gpu
+    |   `-- components
+    |       `-- my-chart
+    |           `-- my-chart.gen.yaml
+    |-- prod-eu
+    |   `-- components
+    |       `-- my-chart
+    |           `-- my-chart.gen.yaml
+    |-- prod-us
+    |   `-- components
+    |       `-- my-chart
+    |           `-- my-chart.gen.yaml
+    |-- qa
+    |   `-- components
+    |       `-- my-chart
+    |           `-- my-chart.gen.yaml
+    |-- staging-eu
+    |   `-- components
+    |       `-- my-chart
+    |           `-- my-chart.gen.yaml
+    `-- staging-us
+        `-- components
+            `-- my-chart
+                `-- my-chart.gen.yaml
+
+23 directories, 7 files
