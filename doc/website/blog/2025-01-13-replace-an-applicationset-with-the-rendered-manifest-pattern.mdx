@@ -112,11 +112,11 @@ invites more layers of abstraction through utility functions like `default`,
 `tpl`, conditionals and loops that all mutate the configuration.
 
 It would be easier to comprehend if the intermediate state and final
-configuration were within our reach.  Unfortunately, it's stored in multiple far
-off places fetched for processing in a remote cluster.  ArgoCD is like an opaque
-black box.  Intermediate state is inaccessible.  The final configuration is only
-accessible after it's been applied, far too late to consider what impact a
-change might have.
+configuration were within reach.  Unfortunately, it's stored in multiple remote
+repositories and processed remotely in ArgoCD.   ArgoCD is like a black box.
+Intermediate state is inaccessible.  The final configuration is only accessible
+after it's been applied, far too late to consider what impact a change might
+have.
 
 We know the complexity is accidental because we bypass these layers when we run
 `kubectl edit`.  The configuration is fetched, manipulated locally, then pushed
