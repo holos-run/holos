@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: all-my-envs-from-repo-with-version
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/kostis-codefresh/multi-sources-example.git
+      revision: HEAD
+      files:
+      - path: "appsets/4-final/env-config/**/config.json"       
+  template:      
+    metadata:
+      name: '{{.env}}' 
+    spec:
+      # The project the application belongs to.
+      project: default
+
+      sources:
+        - repoURL: https://kostis-codefresh.github.io/multi-sources-example
+          chart: my-chart
+          targetRevision: '{{.chart}}'
+          helm:
+            valueFiles:
+            - $values/my-values/common-values.yaml          
+            - $values/my-values/app-version/{{.version}}-values.yaml               
+            - $values/my-values/env-type/{{.type}}-values.yaml  
+            - $values/my-values/regions/{{.region}}-values.yaml                
+            - $values/my-values/envs/{{.env}}-values.yaml
+        - repoURL: 'https://github.com/kostis-codefresh/multi-sources-example.git'
+          targetRevision: HEAD
+          ref: values
+      
+      # Destination cluster and namespace to deploy the application
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{.env}}'
+
+      # Sync policy
+      syncPolicy:
+        syncOptions:
+          - CreateNamespace=true  
+        automated: 
+          prune: true 
+          selfHeal: true 
+      

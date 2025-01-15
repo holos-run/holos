@@ -1,0 +1,13 @@
+# Work in the root of the example repo
+cd ../script-01-clone/multi-sources-example
+
+# Reset to where 01-clone left us.
+exec git clean -fdx
+exec git reset --hard start
+
+# Consider the ApplicationSet from the final recommendation...
+exec bash -c 'cat $(<$WORK/appset.path)'
+cp stdout $WORK/appset.yaml
+
+-- appset.path --
+appsets/4-final/all-my-envs-appset-with-version.yaml

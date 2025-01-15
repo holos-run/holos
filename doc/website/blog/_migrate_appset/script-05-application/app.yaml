@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+    labels:
+        env: prod-us
+    name: prod-us-my-chart
+    namespace: argocd
+spec:
+    destination:
+        namespace: prod-us
+        server: https://kubernetes.default.svc
+    project: default
+    source:
+        path: deploy/environments/prod-us/components/my-chart
+        repoURL: https://github.com/holos-run/multi-sources-example
+        targetRevision: main
+    syncPolicy:
+        automated:
+            prune: true
+            selfHeal: true
+        syncOptions:
+            - CreateNamespace=true

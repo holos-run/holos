@@ -12,3 +12,4 @@ tmp/
 /holos-k3d/
 /holos-infra/
 node_modules/
+.tmp/
