@@ -85,20 +85,15 @@ import CodeBlock from '@theme/CodeBlock';
 ## Layers of Complexity
 
 Before diving into the step by step migration, let's explore exactly what we
-mean by accidental complexity.  ArgoCD ApplicationSets make certain trade-offs
-to integrate Helm value hierarchies with GitOps.  These trade-offs accidentally
-increase complexity with layers templated yaml.  Holos makes different trades to
-achieve the same goal in a comprehensive way in one unified layer.
-
-Consider the ApplicationSet and Helm value hierarchy described in the final
-recommendation of _[Using Helm Hierarchies in Multi-Source Argo CD Applications
-for Promoting to Different GitOps Environments][tfa]_.  This particular
-ApplicationSet is a prime example because the approach it takes is the most
-often recommended way to reuse one chart across multiple environments with
-ArgoCD.
+mean by accidental complexity.  Consider the ApplicationSet and Helm value
+hierarchy described in the final recommendation of _[Using Helm Hierarchies in
+Multi-Source Argo CD Applications for Promoting to Different GitOps
+Environments][tfa]_.  This particular ApplicationSet is a prime example because
+the approach it takes is often recommended as a solution for deploying a service
+to multiple environments.
 
 Unfortunately the approach requires us to hold _at least 7 layers of
-abstraction_ in our mind to consider the impact of any change to the system.
+abstraction_ in mind while considering the impact of a change.
 
 - The ApplicationSet generates an Application by rendering a template for each of the 8 `env-config/**/config.json` glob matches. (+1)
 - Each Application `valueFiles` field introduces 5 more layers of potential overrides. (+5)
