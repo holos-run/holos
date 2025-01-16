@@ -1,0 +1,226 @@
+# Set $HOME because:
+#   - Helm uses it for temporary files
+#   - Git requires it for setting author name/email globally
+env HOME=$WORK/.tmp
+chmod 0755 $WORK/update.sh
+
+# Configure git author for testscript execution
+exec git config --global user.name 'Holos Docs'
+exec git config --global user.email 'hello@holos.run'
+exec git config --global init.defaultBranch main
+
+# Remove the tutorial directory if it already exists
+exec rm -rf holos-kustomize-tutorial
+
+# Create and change to the tutorial directory, and then initialize the Holos platform
+exec bash -c 'bash -euo pipefail $WORK/mkdir-and-init.sh'
+cd holos-kustomize-tutorial
+
+# Initialize git
+exec bash -c 'bash -euo pipefail $WORK/git-init.sh'
+
+# Create the component directory
+exec bash -c 'bash -euo pipefail $WORK/mkdir-component.sh'
+
+# Combine and execute the multiline httpbin component header/body/trailer files
+exec cat $WORK/httpbin-component-header.sh $WORK/httpbin-component-body.cue $WORK/eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Combine and execute the multiline httpbin yaml header/body/trailer files
+exec cat $WORK/httpbin-yaml-header.sh $WORK/httpbin-yaml-body.yaml $WORK/eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Combine and execute the multiline registration header/body/trailer files
+exec cat $WORK/register-component-header.sh $WORK/register-component-body.cue $WORK/eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Render the platform, capture stdout, and use update.sh to gate whether the
+# output file should be updated.
+#
+# NOTE: The [net] condition will test whether external network access is available
+[net] exec bash -c 'bash -euo pipefail $WORK/render.sh 2>&1'
+[net] stdin stdout
+exec $WORK/update.sh $WORK/register-component-output.txt
+
+# Git commit and capture output
+exec bash -c 'bash -euo pipefail $WORK/git-commit-component.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/git-commit-component-output.txt
+
+# Export Build Plan and capture output
+exec bash -c 'bash -euo pipefail $WORK/cue-export.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/buildplan-output.cue
+
+# Combine and execute the multiline kustomize patch header/body/trailer files
+exec cat $WORK/httpbin-patch-header.sh $WORK/httpbin-patch-body.cue $WORK/eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Render the platform and capture output
+[net] exec bash -c 'bash -euo pipefail $WORK/render.sh 2>&1'
+[net] stdin stdout
+exec $WORK/update.sh $WORK/kustomize-patch-render-output.txt
+
+# Git diff and capture output
+exec bash -c 'bash -euo pipefail $WORK/git-diff.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/git.diff
+
+# Git commit and capture output
+exec bash -c 'bash -euo pipefail $WORK/git-commit-final.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/git-commit-final-output.txt
+
+# Clean up the tutorial directory and tmp $HOME directory
+cd $WORK
+exec rm -rf holos-kustomize-tutorial
+exec rm -rf $HOME
+
+-- update.sh --
+#! /bin/bash
+set -euo pipefail
+[[ -s "$1" ]] && [[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
+cat > "$1"
+-- mkdir-and-init.sh --
+mkdir holos-kustomize-tutorial
+cd holos-kustomize-tutorial
+holos init platform v1alpha5
+-- git-init.sh --
+git init . && git add . && git commit -m initial
+-- mkdir-component.sh --
+mkdir -p components/httpbin
+-- httpbin-component-header.sh --
+cat <<EOF > components/httpbin/httpbin.cue
+-- httpbin-component-body.cue --
+package holos
+
+// Produce a Kustomize BuildPlan for Holos
+holos: Kustomize.BuildPlan
+
+// https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/README.md
+Kustomize: #Kustomize & {
+	KustomizeConfig: {
+		// Files tells Holos to copy the file from the component path to the
+		// temporary directory Holos uses for BuildPlan execution.
+		Files: {
+			"httpbin.yaml": _
+		}
+		CommonLabels: {
+			"app.kubernetes.io/name": "httpbin"
+		}
+		// Kustomization represents a kustomization.yaml file in CUE.  Holos
+		// marshals this field into a `kustomization.yaml` while processing a
+		// BuildPlan.  See
+		// https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
+		Kustomization: {
+			images: [{name: "mccutchen/go-httpbin"}]
+			// Use a hidden field to compose patches easily with a struct.  Hidden
+			// fields are not included in exported structures.
+			_patches: {}
+			// Convert the hidden struct to a list.
+			patches: [for x in _patches {x}]
+		}
+	}
+}
+-- eof-trailer.sh --
+EOF
+-- httpbin-yaml-header.sh --
+cat <<EOF > components/httpbin/httpbin.yaml
+-- httpbin-yaml-body.yaml --
+# https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/resources.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpbin
+spec:
+  template:
+    spec:
+      containers:
+        - name: httpbin
+          image: mccutchen/go-httpbin
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /status/200
+              port: http
+          resources: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+spec:
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+      appProtocol: http
+-- register-component-header.sh --
+cat <<EOF > platform/httpbin.cue
+-- register-component-body.cue --
+package holos
+
+Platform: Components: {
+	httpbin: {
+		name: "httpbin"
+		path: "components/httpbin"
+	}
+}
+-- git-commit-component.sh --
+git add . && git commit -m 'add httpbin'
+-- cue-export.sh --
+holos cue export --expression holos --out=yaml ./components/httpbin
+-- httpbin-patch-header.sh --
+cat <<EOF > components/httpbin/patches.cue
+-- httpbin-patch-body.cue --
+package holos
+
+import "encoding/yaml"
+
+// Mix in a Kustomize patch to the configuration.
+Kustomize: KustomizeConfig: Kustomization: _patches: {
+	probe: {
+		target: kind: "Service"
+		target: name: "httpbin"
+		patch: yaml.Marshal([{
+			op:    "add"
+			path:  "/metadata/annotations/prometheus.io~1probe"
+			value: "true"
+		}])
+	}
+}
+-- httpbin-component-output.txt --
+rendered httpbin in 197.030208ms
+rendered platform in 197.416416ms
+-- render.sh --
+holos render platform
+-- git-diff.sh --
+git diff
+-- git.diff --
+diff --git a/deploy/components/httpbin/httpbin.gen.yaml b/deploy/components/httpbin/httpbin.gen.yaml
+index 298b9a8..a16bd1a 100644
+--- a/deploy/components/httpbin/httpbin.gen.yaml
++++ b/deploy/components/httpbin/httpbin.gen.yaml
+@@ -1,6 +1,8 @@
+ apiVersion: v1
+ kind: Service
+ metadata:
++  annotations:
++    prometheus.io/probe: "true"
+   labels:
+     app.kubernetes.io/name: httpbin
+   name: httpbin
+-- git-commit-final.sh --
+git add . && git commit -m 'annotate httpbin for prometheus probes'

@@ -7,6 +7,7 @@ sidebar_position: 45
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
 
 # Kustomize
 
@@ -24,6 +25,17 @@ covered in the [Helm Values] tutorial.
 
 ## The Code
 
+### Holos Version
+
+Ensure you have a current version of `holos` installed.  This document was
+tested with the following version.
+
+import HolosVersionCommand from '!!raw-loader!./_kustomize/script-01-holos-version/command.sh';
+import HolosVersionOutput from '!!raw-loader!./_kustomize/script-01-holos-version/output.txt';
+
+<CodeBlock language="bash">{HolosVersionCommand}</CodeBlock>
+<CodeBlock language="txt">{HolosVersionOutput}</CodeBlock>
+
 ### Generating the structure
 
 <Tabs>
@@ -39,18 +51,14 @@ Use `holos` to generate a minimal platform directory structure. First, create
 and navigate into a blank directory. Then, run the `holos init platform`
 command.
 
-```shell
-mkdir holos-kustomize-tutorial
-cd holos-kustomize-tutorial
-holos init platform v1alpha5
-```
+import MkdirAndInit from '!!raw-loader!./_kustomize/script-02-kustomize/mkdir-and-init.sh';
+import GitInit from '!!raw-loader!./_kustomize/script-02-kustomize/git-init.sh';
+
+<CodeBlock language="bash">{MkdirAndInit}</CodeBlock>
 
 Make a commit to track changes.
 
-```bash
-git init . && git add . && git commit -m initial
-```
-
+<CodeBlock language="bash">{GitInit}</CodeBlock>
   </TabItem>
 </Tabs>
 
@@ -59,97 +67,26 @@ git init . && git add . && git commit -m initial
 Create the `httpbin` component directory, and add the `httpbin.cue` and
 `httpbin.yaml` files to it for configuration and setup.
 
+import MkdirComponent from '!!raw-loader!./_kustomize/script-02-kustomize/mkdir-component.sh';
+import HttpbinComponentHeader from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-component-header.sh';
+import HttpbinComponentBody from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-component-body.cue';
+import EofTrailer from '!!raw-loader!./_kustomize/script-02-kustomize/eof-trailer.sh';
+import HttpbinYamlHeader from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-yaml-header.sh';
+import HttpbinYamlBody from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-yaml-body.yaml';
+
 <Tabs groupId="800C3AE7-E7F8-4AFC-ABF1-6AFECD945958">
   <TabItem value="setup" label="Setup">
-```bash
-mkdir -p components/httpbin
-```
+    <CodeBlock language="bash">{MkdirComponent}</CodeBlock>
   </TabItem>
   <TabItem value="components/httpbin/httpbin.cue" label="httpbin.cue">
-```bash
-cat <<EOF > components/httpbin/httpbin.cue
-```
-```cue showLineNumbers
-package holos
-
-// Produce a Kustomize BuildPlan for Holos
-holos: Kustomize.BuildPlan
-
-// https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/README.md
-Kustomize: #Kustomize & {
-	KustomizeConfig: {
-		// Files tells Holos to copy the file from the component path to the
-		// temporary directory Holos uses for BuildPlan execution.
-		Files: {
-			"httpbin.yaml": _
-		}
-		CommonLabels: {
-			"app.kubernetes.io/name": "httpbin"
-		}
-		// Kustomization represents a kustomization.yaml file in CUE.  Holos
-		// marshals this field into a `kustomization.yaml` while processing a
-		// BuildPlan.  See
-		// https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
-		Kustomization: {
-			images: [{name: "mccutchen/go-httpbin"}]
-			// Use a hidden field to compose patches easily with a struct.  Hidden
-			// fields are not included in exported structures.
-			_patches: {}
-			// Convert the hidden struct to a list.
-			patches: [for x in _patches {x}]
-		}
-	}
-}
-```
-```bash
-EOF
-```
+    <CodeBlock language="bash">{HttpbinComponentHeader}</CodeBlock>
+    <CodeBlock language="cue" showLineNumbers>{HttpbinComponentBody}</CodeBlock>
+    <CodeBlock language="bash">{EofTrailer}</CodeBlock>
   </TabItem>
   <TabItem value="components/httpbin/httpbin.yaml" label="httpbin.yaml">
-```bash
-cat <<EOF > components/httpbin/httpbin.yaml
-```
-```yaml showLineNumbers
-# https://github.com/mccutchen/go-httpbin/blob/v2.15.0/kustomize/resources.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: httpbin
-spec:
-  template:
-    spec:
-      containers:
-        - name: httpbin
-          image: mccutchen/go-httpbin
-          ports:
-            - name: http
-              containerPort: 8080
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /status/200
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /status/200
-              port: http
-          resources: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: httpbin
-spec:
-  ports:
-    - port: 80
-      targetPort: http
-      protocol: TCP
-      name: http
-      appProtocol: http
-```
-```bash
-EOF
-```
+    <CodeBlock language="bash">{HttpbinYamlHeader}</CodeBlock>
+    <CodeBlock language="yaml" showLineNumbers>{HttpbinYamlBody}</CodeBlock>
+    <CodeBlock language="bash">{EofTrailer}</CodeBlock>
   </TabItem>
 </Tabs>
 
@@ -161,56 +98,38 @@ Holos knows the `httpbin.yaml` file is part of the BuildPlan because of the
 Register `httpbin` with the platform by adding the following file to the
 platform directory.
 
-```bash
-cat <<EOF > platform/httpbin.cue
-```
-```cue showLineNumbers
-package holos
+import RegisterComponentHeader from '!!raw-loader!./_kustomize/script-02-kustomize/register-component-header.sh';
+import RegisterComponentBody from '!!raw-loader!./_kustomize/script-02-kustomize/register-component-body.cue';
 
-Platform: Components: {
-	httpbin: {
-		name: "httpbin"
-		path: "components/httpbin"
-	}
-}
-```
-```bash
-EOF
-```
+<CodeBlock language="bash">{RegisterComponentHeader}</CodeBlock>
+<CodeBlock language="cue">{RegisterComponentBody}</CodeBlock>
+<CodeBlock language="bash">{EofTrailer}</CodeBlock>
 
 Render the platform.
 
+import RenderCommand from '!!raw-loader!./_kustomize/script-02-kustomize/render.sh';
+import RegisterComponentOutput from '!!raw-loader!./_kustomize/script-02-kustomize/register-component-output.txt';
+
 <Tabs groupId="B120D5D1-0EAB-41E0-AD21-15526EBDD53D">
   <TabItem value="command" label="Command">
-```bash
-holos render platform
-```
+    <CodeBlock language="bash">{RenderCommand}</CodeBlock>
   </TabItem>
   <TabItem value="output" label="Output">
-```txt
-rendered httpbin in 707.554666ms
-rendered platform in 707.9845ms
-```
+    <CodeBlock language="txt">{RegisterComponentOutput}</CodeBlock>
   </TabItem>
 </Tabs>
 
 Commit the results.
 
+import GitCommitComponent from '!!raw-loader!./_kustomize/script-02-kustomize/git-commit-component.sh';
+import GitCommitComponentOutput from '!!raw-loader!./_kustomize/script-02-kustomize/git-commit-component-output.txt';
+
 <Tabs groupId="446CC550-A634-45C0-BEC7-992E5C56D4FA">
   <TabItem value="command" label="Command">
-```bash
-git add . && git commit -m 'add httpbin'
-```
+    <CodeBlock language="bash">{GitCommitComponent}</CodeBlock>
   </TabItem>
   <TabItem value="output" label="Output">
-```txt
-[main c05f9ef] add httpbin
- 4 files changed, 118 insertions(+)
- create mode 100644 components/httpbin/httpbin.cue
- create mode 100644 components/httpbin/httpbin.yaml
- create mode 100644 deploy/components/httpbin/httpbin.gen.yaml
- create mode 100644 platform/httpbin.cue
-```
+    <CodeBlock language="txt">{GitCommitComponentOutput}</CodeBlock>
   </TabItem>
 </Tabs>
 
@@ -220,55 +139,15 @@ We can see the [BuildPlan] exported to `holos` by the `holos:
 Kustomize.BuildPlan` line in `httpbin.cue`. Holos processes this build plan to
 produce the fully rendered manifests.
 
+import CueExport from '!!raw-loader!./_kustomize/script-02-kustomize/cue-export.sh';
+import BuildplanOutput from '!!raw-loader!./_kustomize/script-02-kustomize/buildplan-output.cue';
+
 <Tabs groupId="DD697D65-5BEC-4B92-BB33-59BE4FEC112F">
   <TabItem value="command" label="Command">
-```bash
-holos cue export --expression holos --out=yaml ./components/httpbin
-```
+    <CodeBlock language="bash">{CueExport}</CodeBlock>
   </TabItem>
   <TabItem value="output" label="Output">
-```yaml showLineNumbers
-kind: BuildPlan
-apiVersion: v1alpha5
-metadata:
-  name: no-name
-spec:
-  artifacts:
-    - artifact: components/no-name/no-name.gen.yaml
-      generators:
-        - kind: Resources
-          output: resources.gen.yaml
-          resources: {}
-        - kind: File
-          output: httpbin.yaml
-          file:
-            source: httpbin.yaml
-      transformers:
-        - kind: Kustomize
-          inputs:
-            - resources.gen.yaml
-            - httpbin.yaml
-          output: components/no-name/no-name.gen.yaml
-          kustomize:
-            kustomization:
-              labels:
-                - includeSelectors: false
-                  pairs:
-                    app.kubernetes.io/name: httpbin
-              patches: []
-              images:
-                - name: mccutchen/go-httpbin
-              resources:
-                - resources.gen.yaml
-                - httpbin.yaml
-              kind: Kustomization
-              apiVersion: kustomize.config.k8s.io/v1beta1
-source:
-  component:
-    name: no-name
-    path: no-path
-    parameters: {}
-```
+    <CodeBlock language="yaml">{BuildplanOutput}</CodeBlock>
   </TabItem>
 </Tabs>
 
@@ -291,30 +170,12 @@ need to edit any YAML files manually.
 Add a new `patches.cue` file to the `httpbin` component with the following
 content.
 
-```bash
-cat <<EOF > components/httpbin/patches.cue
-```
-```cue showLineNumbers
-package holos
+import HttpbinPatchHeader from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-patch-header.sh';
+import HttpbinPatchBody from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-patch-body.cue';
 
-import "encoding/yaml"
-
-// Mix in a Kustomize patch to the configuration.
-Kustomize: KustomizeConfig: Kustomization: _patches: {
-	probe: {
-		target: kind: "Service"
-		target: name: "httpbin"
-		patch: yaml.Marshal([{
-			op:    "add"
-			path:  "/metadata/annotations/prometheus.io~1probe"
-			value: "true"
-		}])
-	}
-}
-```
-```bash
-EOF
-```
+<CodeBlock language="bash">{HttpbinPatchHeader}</CodeBlock>
+<CodeBlock language="bash" showLineNumbers>{HttpbinPatchBody}</CodeBlock>
+<CodeBlock language="bash">{EofTrailer}</CodeBlock>
 
 :::note
 We use a hidden `_patches` field to easily unify data into a struct, then
@@ -325,62 +186,43 @@ convert the struct into a list for export.
 
 Render the platform to see the result of the kustomization patch.
 
+import KustomizePatchRenderOutput from '!!raw-loader!./_kustomize/script-02-kustomize/kustomize-patch-render-output.txt';
+
 <Tabs groupId="5D1812DD-8E7B-4F97-B349-275214F38B6E">
   <TabItem value="command" label="Command">
-```bash
-holos render platform
-```
+    <CodeBlock language="bash">{RenderCommand}</CodeBlock>
   </TabItem>
   <TabItem value="output" label="Output">
-```txt
-rendered httpbin in 197.030208ms
-rendered platform in 197.416416ms
-```
+    <CodeBlock language="txt">{KustomizePatchRenderOutput}</CodeBlock>
   </TabItem>
 </Tabs>
 
 Holos is configuring Kustomize to patch the plain `httpbin.yaml` file with the
 annotation.
 
+import GitDiff from '!!raw-loader!./_kustomize/script-02-kustomize/git-diff.sh';
+import GitDiffOutput from '!!raw-loader!./_kustomize/script-02-kustomize/git.diff';
+
 <Tabs groupId="3D80279E-8EDE-4B3E-9269-50F5D1C1CA42">
   <TabItem value="command" label="Command">
-```bash
-git diff
-```
+    <CodeBlock language="bash">{GitDiff}</CodeBlock>
   </TabItem>
   <TabItem value="output" label="Output">
-```diff
-diff --git a/deploy/components/httpbin/httpbin.gen.yaml b/deploy/components/httpbin/httpbin.gen.yaml
-index 298b9a8..a16bd1a 100644
---- a/deploy/components/httpbin/httpbin.gen.yaml
-+++ b/deploy/components/httpbin/httpbin.gen.yaml
-@@ -1,6 +1,8 @@
- apiVersion: v1
- kind: Service
- metadata:
-+  annotations:
-+    prometheus.io/probe: "true"
-   labels:
-     app.kubernetes.io/name: httpbin
-   name: httpbin
-
-```
+    <CodeBlock language="diff">{GitDiffOutput}</CodeBlock>
   </TabItem>
 </Tabs>
 
 Add and commit the final changes.
 
+import GitCommitFinal from '!!raw-loader!./_kustomize/script-02-kustomize/git-commit-final.sh';
+import GitCommitFinalOutput from '!!raw-loader!./_kustomize/script-02-kustomize/git-commit-final-output.txt';
+
 <Tabs groupId="54C335C8-B382-4277-AE87-0D6556921955">
   <TabItem value="command" label="Command">
-```bash
-git add . && git commit -m 'annotate httpbin for prometheus probes'
-```
+    <CodeBlock language="bash">{GitCommitFinal}</CodeBlock>
   </TabItem>
   <TabItem value="output" label="Output">
-```txt
-[main 6eeeadb] annotate httpbin for prometheus probes
- 2 files changed, 3 insertions(+), 1 deletion(-)
-```
+    <CodeBlock language="txt">{GitCommitFinalOutput}</CodeBlock>
   </TabItem>
 </Tabs>
 
