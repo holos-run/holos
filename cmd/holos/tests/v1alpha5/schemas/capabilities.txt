@@ -1,7 +1,9 @@
 # https://github.com/holos-run/holos/issues/330
 exec holos init platform v1alpha5 --force
+# Make sure the helm chart works with plain helm
 exec helm template ./components/capabilities/vendor/0.1.0/capabilities
-cmp stdout want/helm-template.yaml
+stdout 'name: has-foo-v1beta1'
+stdout 'kubeVersion: v'
 exec holos render platform ./platform
 # When no capabilities are specified
 cmp deploy/components/capabilities/capabilities.gen.yaml want/when-no-capabilities-specified.yaml

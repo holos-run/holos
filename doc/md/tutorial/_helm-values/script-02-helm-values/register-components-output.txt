@@ -1,3 +1,5 @@
-rendered blackbox in 1.794799666s
-rendered prometheus in 1.835097625s
-rendered platform in 1.835185792s
+cached prometheus-blackbox-exporter 9.0.1
+rendered blackbox in 3.825430417s
+cached prometheus 25.27.0
+rendered prometheus in 4.840089667s
+rendered platform in 4.840137792s
