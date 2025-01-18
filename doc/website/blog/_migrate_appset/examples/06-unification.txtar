@@ -1,0 +1,198 @@
+# Work in the root of the example repo
+cd ../script-01-clone/multi-sources-example
+chmod 0755 $WORK/update.sh
+
+# Find use values
+exec bash -c 'bash -euo pipefail $WORK/grep.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/grep.txt
+
+# Common values
+exec bash -c 'cp $(<$WORK/common.path) $WORK/common.yaml'
+
+# Remove common values
+exec cat $WORK/remove.head $WORK/remove.body $WORK/remove.tail
+stdin stdout
+exec bash -xeuo pipefail
+cp stdout $WORK/remove.out
+
+# Render platform
+exec bash -c 'bash -euo pipefail $WORK/render.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/render.txt
+
+# Check results
+exec bash -c 'bash -euo pipefail $WORK/check.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/check.txt
+
+# Commit 1
+exec bash -c 'bash -euo pipefail $WORK/commit1.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/commit1.txt
+
+# Unification Section
+# Unify Values
+exec cat $WORK/unify.head $WORK/unify.body $WORK/unify.tail
+stdin stdout
+exec bash -xeuo pipefail
+cp stdout $WORK/unify.out
+
+# Render the platform to see the conflicts
+! exec bash -euo pipefail -c 'bash -euo pipefail $WORK/render2.sh 2>&1 | sed s,$(pwd)/,,g'
+stdin stdout
+exec $WORK/update.sh $WORK/render2.txt
+
+# Copy the value files to show the conflict
+mkdir $WORK/conflict
+cp components/my-chart/my-values/env-type/prod-values.yaml $WORK/conflict/prod-values.yaml
+cp components/my-chart/my-values/envs/prod-eu-values.yaml $WORK/conflict/prod-eu-values.yaml
+
+# Commit 2
+exec bash -c 'bash -euo pipefail $WORK/commit2.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/commit2.txt
+
+# Remove replicaCount: 5 from env-type/prod-values.yaml
+exec cat $WORK/unify2.head $WORK/unify2.body $WORK/unify2.tail
+stdin stdout
+exec bash -xeuo pipefail
+cp stdout $WORK/unify2.out
+
+# Render the platform again: no conflicts
+exec bash -euo pipefail -c 'bash -euo pipefail $WORK/render3.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/render3.txt
+
+# Verify there are no changes to the deploy directory
+exec bash -c 'bash -euo pipefail $WORK/status3.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/status3.txt
+
+# Commit 3
+exec bash -c 'bash -euo pipefail $WORK/commit3.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/commit3.txt
+
+# Final wrap up - show build plan
+exec bash -c 'bash -euo pipefail $WORK/buildplan.sh 2>&1'
+cp stdout $WORK/buildplan.txt
+
+-- buildplan.sh --
+holos show buildplans --selector env=prod-us
+-- status3.sh --
+git status deploy
+-- render3.sh --
+rm -rf deploy
+holos render platform
+-- unify2.head --
+patch -p1 <<'EOF'
+-- unify2.tail --
+EOF
+-- unify2.body --
+diff --git a/components/my-chart/my-values/env-type/prod-values.yaml b/components/my-chart/my-values/env-type/prod-values.yaml
+index fef58f4..a3cce4a 100644
+--- a/components/my-chart/my-values/env-type/prod-values.yaml
++++ b/components/my-chart/my-values/env-type/prod-values.yaml
+@@ -1,11 +1,5 @@
+-# Kubernetes settings
+-replicaCount: 5
+-
+ # Environment settings
+ environmentType: production
+ paypalUrl: "production.paypal.com"
+ dbUser: "prod_username"
+ dbPassword: "prod_password"
+-
+-
+-
+-- render2.sh --
+holos render platform --concurrency 1
+-- unify.head --
+patch -p1 <<'EOF'
+-- unify.tail --
+EOF
+-- unify.body --
+diff --git a/components/my-chart/my-chart.cue b/components/my-chart/my-chart.cue
+index cf1dae4..4f01828 100644
+--- a/components/my-chart/my-chart.cue
++++ b/components/my-chart/my-chart.cue
+@@ -31,23 +31,14 @@ component: #Helm & {
+ 	// article uses the ApplicationSet template to specify the namespace.
+ 	KustomizeConfig: Kustomization: namespace: parameters.env
+ 
+-	// Migrate the Helm Hierarchy preserving the behavior of over writing values.
+-	// Migrated from [valueFiles].  Later files win.
++	// Migrate the Helm Hierarchy to CUE.  Conflicts are errors.
++	// Migrated from [valueFiles].
+ 	//
+ 	// [valueFiles]: https://github.com/holos-run/multi-sources-example/blob/v0.1.0/appsets/4-final/all-my-envs-appset-with-version.yaml#L27-L32
+-	ValueFiles: [{
+-		name:   "version-values.yaml"
+-		values: valueFiles["my-values/app-version/\(parameters.version)-values.yaml"]
+-	}, {
+-		name:   "type-values.yaml"
+-		values: valueFiles["my-values/env-type/\(parameters.type)-values.yaml"]
+-	}, {
+-		name:   "region-values.yaml"
+-		values: valueFiles["my-values/regions/\(parameters.region)-values.yaml"]
+-	}, {
+-		name:   "env-values.yaml"
+-		values: valueFiles["my-values/envs/\(parameters.env)-values.yaml"]
+-	}]
++	Values: valueFiles["my-values/app-version/\(parameters.version)-values.yaml"]
++	Values: valueFiles["my-values/env-type/\(parameters.type)-values.yaml"]
++	Values: valueFiles["my-values/regions/\(parameters.region)-values.yaml"]
++	Values: valueFiles["my-values/envs/\(parameters.env)-values.yaml"]
+ }
+ 
+ // holos represents the output for the holos command line to process.  The holos
+-- commit3.sh --
+git add .
+git commit -m '06-unification step 3'
+-- commit2.sh --
+git add .
+git commit -m '06-unification step 2'
+-- commit1.sh --
+git add .
+git commit -m '06-unification step 1'
+-- render.sh --
+rm -rf deploy
+holos render platform
+-- check.sh --
+git status deploy
+-- remove.head --
+git rm -f components/my-chart/my-values/common-values.yaml
+patch -p1 <<'EOF'
+-- remove.tail --
+EOF
+-- remove.body --
+diff --git a/components/my-chart/my-chart.cue b/components/my-chart/my-chart.cue
+index 2809d1a..cf1dae4 100644
+--- a/components/my-chart/my-chart.cue
++++ b/components/my-chart/my-chart.cue
+@@ -36,9 +36,6 @@ component: #Helm & {
+ 	//
+ 	// [valueFiles]: https://github.com/holos-run/multi-sources-example/blob/v0.1.0/appsets/4-final/all-my-envs-appset-with-version.yaml#L27-L32
+ 	ValueFiles: [{
+-		name:   "common-values.yaml"
+-		values: valueFiles["my-values/common-values.yaml"]
+-	}, {
+ 		name:   "version-values.yaml"
+ 		values: valueFiles["my-values/app-version/\(parameters.version)-values.yaml"]
+ 	}, {
+@@ -61,5 +58,4 @@ component: #Helm & {
+ holos: component.BuildPlan
+ 
+ // Migrated from https://github.com/holos-run/multi-sources-example/blob/v0.1.0/appsets/4-final/all-my-envs-appset-with-version.yaml#L27-L32
+-valueFiles: _ @embed(glob=my-values/*.yaml)
+ valueFiles: _ @embed(glob=my-values/*/*-values.yaml)
+-- common.path --
+components/my-chart/my-values/common-values.yaml
+-- grep.sh --
+grep -r replicas: deploy
+-- update.sh --
+#! /bin/bash
+set -euo pipefail
+[[ -s "$1" ]] && [[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
+cat > "$1"

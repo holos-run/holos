@@ -1,0 +1,2 @@
+git rm -f components/my-chart/my-values/common-values.yaml
+patch -p1 <<'EOF'

@@ -1,0 +1,13 @@
+# Kubernetes settings
+replicaCount: 8
+
+# Environment settings
+environment: prod-eu
+
+# Application settings
+userInterfaceTheme: "dark"
+cacheSize: "1024kb"
+gpuEnabled: "1"
+pageLimit: "25"
+sorting: "Ascending"
+nBuckets: "42"

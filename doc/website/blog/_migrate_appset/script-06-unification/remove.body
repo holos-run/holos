@@ -1,0 +1,20 @@
+diff --git a/components/my-chart/my-chart.cue b/components/my-chart/my-chart.cue
+index 2809d1a..cf1dae4 100644
+--- a/components/my-chart/my-chart.cue
++++ b/components/my-chart/my-chart.cue
+@@ -36,9 +36,6 @@ component: #Helm & {
+ 	//
+ 	// [valueFiles]: https://github.com/holos-run/multi-sources-example/blob/v0.1.0/appsets/4-final/all-my-envs-appset-with-version.yaml#L27-L32
+ 	ValueFiles: [{
+-		name:   "common-values.yaml"
+-		values: valueFiles["my-values/common-values.yaml"]
+-	}, {
+ 		name:   "version-values.yaml"
+ 		values: valueFiles["my-values/app-version/\(parameters.version)-values.yaml"]
+ 	}, {
+@@ -61,5 +58,4 @@ component: #Helm & {
+ holos: component.BuildPlan
+ 
+ // Migrated from https://github.com/holos-run/multi-sources-example/blob/v0.1.0/appsets/4-final/all-my-envs-appset-with-version.yaml#L27-L32
+-valueFiles: _ @embed(glob=my-values/*.yaml)
+ valueFiles: _ @embed(glob=my-values/*/*-values.yaml)

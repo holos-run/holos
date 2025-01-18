@@ -1,0 +1,15 @@
+rendered my-chart 0.2.0 for environment qa in 171.565292ms
+rendered my-chart 0.2.0 for environment staging-eu in 176.66775ms
+rendered my-chart 0.2.0 for environment staging-us in 175.3145ms
+could not run: component.Artifacts.HolosComponent.generators.0.helm.values.replicaCount: conflicting values 8 and 5 at internal/builder/instance.go:129
+component.Artifacts.HolosComponent.generators.0.helm.values.replicaCount: conflicting values 8 and 5:
+    components/my-chart/my-chart.cue:18:12
+    components/my-chart/my-chart.cue:39:10
+    components/my-chart/my-chart.cue:41:10
+    components/schema.cue:36:2
+    cue.mod/pkg/github.com/holos-run/holos/api/author/v1alpha5/definitions.cue:115:15
+    my-values/env-type/prod-values.yaml:2:15
+    my-values/envs/prod-eu-values.yaml:2:15
+could not run: could not render component: could not run command:
+	holos '--log-level' 'info' '--log-format' 'console' 'render' 'component' '--inject' 'version=prod' '--inject' 'outputBaseDir=environments/prod-eu' '--inject' 'chart=0.1.0' '--inject' 'env=prod-eu' '--inject' 'region=eu' '--inject' 'type=prod' '--inject' 'holos_component_name=my-chart' '--inject' 'holos_component_path=components/my-chart' '--inject' 'holos_component_labels={"env":"prod-eu"}' '--inject' 'holos_component_annotations={"app.holos.run/description":"my-chart 0.1.0 for environment prod-eu"}' './components/my-chart'
+	exit status 1 at cli/render/render.go:171

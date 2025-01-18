@@ -1,0 +1,7 @@
+deploy/environments/integration-gpu/components/my-chart/my-chart.gen.yaml:  replicas: 3
+deploy/environments/prod-eu/components/my-chart/my-chart.gen.yaml:  replicas: 8
+deploy/environments/integration-non-gpu/components/my-chart/my-chart.gen.yaml:  replicas: 3
+deploy/environments/qa/components/my-chart/my-chart.gen.yaml:  replicas: 3
+deploy/environments/staging-eu/components/my-chart/my-chart.gen.yaml:  replicas: 3
+deploy/environments/prod-us/components/my-chart/my-chart.gen.yaml:  replicas: 10
+deploy/environments/staging-us/components/my-chart/my-chart.gen.yaml:  replicas: 3

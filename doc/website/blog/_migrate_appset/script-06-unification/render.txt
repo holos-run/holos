@@ -1,0 +1,8 @@
+rendered my-chart 0.1.0 for environment prod-us in 228.404875ms
+rendered my-chart 0.1.0 for environment integration-gpu in 228.399292ms
+rendered my-chart 0.2.0 for environment staging-eu in 228.410292ms
+rendered my-chart 0.2.0 for environment qa in 230.796666ms
+rendered my-chart 0.2.0 for environment staging-us in 233.324459ms
+rendered my-chart 0.2.0 for environment integration-non-gpu in 234.242708ms
+rendered my-chart 0.1.0 for environment prod-eu in 234.837084ms
+rendered platform in 234.904209ms
