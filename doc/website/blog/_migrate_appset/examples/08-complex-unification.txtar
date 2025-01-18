@@ -1,0 +1,77 @@
+# Work in the root of the example repo
+cd ../script-01-clone/multi-sources-example
+env HOME=$WORK/.tmp
+env CUSTOMER=customer-zzsbbmfc
+chmod 0755 $WORK/update.sh
+
+mkdir $WORK/files
+
+# Reset
+exec git reset --hard origin/v0.4.x
+
+# Values Generator
+exec bash -c 'bash -euo pipefail $WORK/generator.sh 2>&1'
+# Show the generated structure
+exec bash -c 'bash -eu $WORK/show-deployment-configs.sh 2>&1'
+cp stdout $WORK/show-deployment-configs.txt
+exec bash -c 'bash -euo pipefail $WORK/show-value-files.sh 2>&1'
+cp stdout $WORK/show-value-files.txt
+
+# Show one buildplan
+exec bash -c 'bash -euo pipefail $WORK/show-one-buildplan.sh 2>&1'
+cp stdout $WORK/show-one-buildplan.txt
+
+# Render one customer
+exec bash -c 'bash -euo pipefail $WORK/render-one-customer.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/render-one-customer.txt
+
+# Add and commit
+exec bash -c 'bash -euo pipefail $WORK/add-and-commit-step1.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/add-and-commit-step1.txt
+
+# Flattening Values
+exec bash -c 'bash -euo pipefail $WORK/render-step2.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/render-step2.txt
+
+# Show the flattened values
+exec bash -c 'bash -euo pipefail $WORK/show-flattened-values.sh 2>&1'
+cp stdout $WORK/show-flattened-values.txt
+
+# Step 2 - Take a look at the following files
+cp platform/my-app.cue $WORK/files/platform-my-app.cue
+cp platform/render-values.cue $WORK/files/platform-render-values.cue
+
+-- show-flattened-values.sh --
+# Flattened values written here
+tree deploy/values/customers/$CUSTOMER
+# Note how the input deployment configs now map 1:1 to values files.
+tree config/my-app/deployment/customers/$CUSTOMER
+-- render-step2.sh --
+holos render platform -t flatten -t step2 \
+  --selector customer=$CUSTOMER
+-- add-and-commit-step1.sh --
+git add deploy
+git commit -m 'render step1 with helm value file overrides'
+-- render-one-customer.sh --
+holos render platform -t flatten -t step1 \
+  --selector customer=$CUSTOMER
+-- show-one-buildplan.sh --
+holos show buildplans -t flatten -t step1 \
+  --selector customer=$CUSTOMER,cluster=prod9-management
+-- show-deployment-configs.sh --
+ls config/my-app/deployment/customers/*/clusters/*/config.json | wc -l
+-- show-value-files.sh --
+tree -d components/my-app/values/
+tree components/my-app/values/05-environments
+tree components/my-app/values/06-tiers
+tree components/my-app/values/07-scopes
+-- generator.sh --
+go run ./generator
+-- update.sh --
+#! /bin/bash
+set -euo pipefail
+[[ -s "$1" ]] && [[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
+cat > "$1"

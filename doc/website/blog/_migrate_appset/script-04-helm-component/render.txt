@@ -1,8 +1,8 @@
-rendered my-chart 0.1.0 for environment prod-us in 390.09ms
-rendered my-chart 0.2.0 for environment qa in 390.113208ms
-rendered my-chart 0.2.0 for environment staging-eu in 390.666417ms
-rendered my-chart 0.2.0 for environment staging-us in 391.815417ms
-rendered my-chart 0.1.0 for environment prod-eu in 392.110792ms
-rendered my-chart 0.2.0 for environment integration-non-gpu in 392.37575ms
-rendered my-chart 0.1.0 for environment integration-gpu in 392.810375ms
-rendered platform in 392.911375ms
+rendered my-chart 0.1.0 for environment integration-gpu in 451.061ms
+rendered my-chart 0.1.0 for environment prod-eu in 451.063834ms
+rendered my-chart 0.1.0 for environment prod-us in 451.098417ms
+rendered my-chart 0.2.0 for environment staging-eu in 451.417625ms
+rendered my-chart 0.2.0 for environment staging-us in 471.239083ms
+rendered my-chart 0.2.0 for environment integration-non-gpu in 471.789667ms
+rendered my-chart 0.2.0 for environment qa in 471.892041ms
+rendered platform in 471.935667ms

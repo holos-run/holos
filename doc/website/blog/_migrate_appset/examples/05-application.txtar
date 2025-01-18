@@ -30,6 +30,7 @@ exec $WORK/update.sh $WORK/manifest.yaml
 # Make a commit
 exec git add .
 exec git commit -m '05-application.txtar'
+exec git branch end-of-part-1
 
 -- manifest.path --
 deploy/environments/prod-us/components/my-chart/my-chart.gen.yaml

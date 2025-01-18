@@ -2,7 +2,7 @@
 cd ../script-01-clone/multi-sources-example
 chmod 0755 $WORK/update.sh
 
-# Find use values
+# Grep for replicas: to see what's used
 exec bash -c 'bash -euo pipefail $WORK/grep.sh 2>&1'
 stdin stdout
 exec $WORK/update.sh $WORK/grep.txt

@@ -29,11 +29,13 @@ keywords:
   - Complexity
 ---
 
+## Simplifying a Hierarchy
+
 In [Part 1] of our series on migrating a complex multi environment
-ApplicationSet to Holos, we reduced complexity by replacing the ApplicationSet
-Go template generator with an Application resource exported from CUE.  We
-completed the migration to implement the rendered manifest pattern, but
-complexity remains in the 5 layers of Helm value file overrides.
+ApplicationSet to Holos we reduced complexity by replacing the ApplicationSet Go
+template generator with an Application resource exported from CUE.  We completed
+the migration to implement the rendered manifest pattern, but complexity remains
+in the 5 layers of Helm value file overrides.
 
 We'll continue eliminating accidental complexity by refactoring the Helm value
 file hierarchy into one unified layer.  The data will be visible and within
@@ -50,7 +52,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
 
-## Overrides are problematic
+### Why are overrides a problem?
 
 Consider this snippet form the [original ApplicationSet] we migrated:
 
@@ -120,7 +122,7 @@ Attribution: [Inheritance-based configuration languages](https://cuelang.org/doc
 In CUE, **order is irrelevant**.  This property greatly simplifies configuration
 as we'll see by unifying these value files.
 
-## Goal
+### What's the desired outcome?
 
 For this refactoring, we'd like to achieve the following goals:
 
@@ -132,9 +134,14 @@ For this refactoring, we'd like to achieve the following goals:
 6. Prevent complex layers of abstraction from accumulating.
 7. Add type checks, schema validation, and constraints to Helm values.
 
-## Pruning Unused Values
+### Starting Context
 
-First, let's take a look at what values are _actually_ used in the live system.
+If you didn't work through [Part 1] the final results are available in the
+[end-of-part-1] branch for your reference.
+
+### Pruning Unused Values
+
+We need a way to identify which values are used so we can prune the unused ones.
 Holos simplifies this task by rendering all of the manifests to the local
 filesystem.  We can simply grep the deploy directory to see what values are
 actually used.
@@ -213,7 +220,7 @@ Holos makes it easier to confidently remove values which are never used.
 If we didn't have the rendered manifests in hand this would be a much more
 difficult task.
 
-## Eliminating Complexity
+### Eliminating Complexity
 
 Let's unify all the levels of the value hierarchy into one layer and see where
 the conflicts are.  This is straight forward with `holos`.
@@ -291,7 +298,7 @@ field along two different aspects of our configuration:  specific environments
 (envs) and broad types of environments (env-types).
 :::
 
-## Resolving Conflicts
+### Resolving Conflicts
 
 In Holos and CUE we resolve these conflicts by picking one aspect to specify a
 given field value.  We'll pick specific environments in this case because it's
@@ -350,6 +357,348 @@ Voila!  We've successfully refactored all of the value files for Helm into a
 single unified data structure.  We know we're done because unification succeeds
 and there are no changes to the deploy directory.
 
+## Simplifying a Complex Hierarchy
+
+We've successfully eliminated the complexity of the ApplicationSet Go template
+and the 5 layers of complexity in the Helm values, but the original data didn't
+have many overrides.  The best case scenario.
+
+Holos also helps simplify a complex hierarchy with lots of overrides randomly
+distributed.  In this section we'll create a flattened value file for each of
+the config.json deployment configs.
+
+The layout of the deployment configs is a key aspect of this method.  The
+original data is organized by environment, one dimension.  The generated data in
+this section organizes them by customer and cluster, two dimensions.  The
+artifacts holos renders map 1:1 to the deployment configs, the intermediate Helm
+value files merge deterministically from the deployment config.  We can use the
+deployment configs identified by customer and cluster as coordinates to locate
+all of the configuration for a deployment within the space of the platform.
+
+Using the same deployment configs at each step, we'll:
+
+1. Render my-app using the helm values hierarchy to get a reference point.
+2. Render a special chart, render-values, to flatten the value files hierarchy into one file.
+3. Render my-app using the flattened values file.
+4. Verify there are no changes to the deploy artifacts.
+
+We'll be able to quickly locate and read the configuration given a customer and
+a cluster.
+
+### What's the worst case scenario?
+
+In the worst case scenario there is little rhyme or reason to how values are set
+and overridden in a hierarchy.  We'll start with this worst case scenario,
+spraying data across clusters and override layers.  This starting point looks
+like the following, with the highest precedence values at the top of the table.
+
+| Num | Layer | Description |
+| - | - | - |
+| 1 | Customer | customer-zzsbbmfc, customer-xxxxxxx, ... |
+| 2 | Namespace | prod-myapp, dev-myapp, ... |
+| 3 | Application | myapp, yourapp, ... |
+| 4 | Cluster | prod1-customer, dev2-internal, uat3-management, ... |
+| 5 | Environment | prod, uat, test, dev |
+| 6 | Tier | prod, nonprod |
+| 7 | Scope | customer, internal, management |
+| 8 | Zone | us-east1-a, us-east1-b, ... |
+| 9 | Region | us-east1, us-west1, ... |
+| 10 | Location | us, eu, ap, ... |
+| 11 | Common | Base layer |
+
+Across these layers the following fields may be set:
+
+| Field | Type | Description |
+| - | - | - |
+| enabled | bool | Feature flag |
+| image | string | Container image URI, e.g. "oci://example.com/myservice" |
+| version | string | Version string, e.g. "v0.1.0" |
+| domain | string | DNS domain, e.g. "example.com" |
+| replicas | int | number of replicas |
+| clientID | string | OAuth 2.0 client ID |
+| issuer | string | OIDC issuer uri, e.g. `https://login.example.com` |
+| projectID | string | cloud project id, e.g. "my-project-123456" |
+| accountID | int | cloud account id, e.g. 012345678901 |
+| arn | string | resource name, e.g. "arn:partition:service:region:account-id:resource-type:resource-id" |
+| cores | float | cpu cores, e.g. 2.0 |
+| memory | int | memory in MiB, e.g. 2048 |
+| labels | map[string]string | resource labels |
+
+### Generating complexity
+
+Generate the deployment configs and the value files.  The RNG is seeded with
+constant values so the output is deterministic.  If you'd like truly random data
+set `RANDOMIZE=1` in the environment before running this command..
+
+import GeneratorCmd from '!!raw-loader!./_migrate_appset/script-08-complex-unification/generator.sh';
+
+<CodeBlock language="bash">{GeneratorCmd}</CodeBlock>
+
+{/* Show the generated structure */}
+
+Deployment configs are generated in the following directory.  The `config`
+directory contains concrete values by convention, organized in packages.
+
+import ShowDeploymentConfigsCmd from '!!raw-loader!./_migrate_appset/script-08-complex-unification/show-deployment-configs.sh';
+import ShowDeploymentConfigsOut from '!!raw-loader!./_migrate_appset/script-08-complex-unification/show-deployment-configs.txt';
+
+<CodeBlock language="bash">{ShowDeploymentConfigsCmd}</CodeBlock>
+<CodeBlock language="txt">{ShowDeploymentConfigsOut}</CodeBlock>
+
+Each of these {ShowDeploymentConfigsOut} deployment config files map 1:1 to a
+`holos` `BuildPlan` and an ArgoCD `Application`.
+
+The Helm value files hierarchy files are written into the `my-app` component
+directory.  By convention values reside in the component directory so they're
+closely associated with the helm chart using them.
+
+import ShowValueFilesCmd from '!!raw-loader!./_migrate_appset/script-08-complex-unification/show-value-files.sh';
+import ShowValueFilesOut from '!!raw-loader!./_migrate_appset/script-08-complex-unification/show-value-files.txt';
+
+<Tabs groupId="show-value-files">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{ShowValueFilesCmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{ShowValueFilesOut}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+### Flattening Step 1
+
+We'll use CUE build tags to render `my-app` instead of `my-chart` for this
+example.  Build tags alow us to exclude files used in the previous example, like
+`platform/my-chart.cue`, and include files for this example like
+`platform/my-app.cue`.
+
+This example is about flattening the helm values file, so we use `-t flatten`.
+There are three steps to flatten the hierarchy, so we'll use `-t stepX` for each
+step along the way.
+
+Finally, we'll use selectors to focus on one customer specifically.  It takes a
+few minutes (about 4 on my machine) to render all {ShowDeploymentConfigsOut}
+deployments for all customers, so we can develop and test the migration process
+quickly with one customer, then roll the change out to all customers once we're
+ready.
+
+Let's take a look at one `BuildPlan` for one customer.  Take note of the
+valueFiles hierarchy in the output.  Our goal is to reduce complexity by
+collapsing this down to one layer with at most one override of a default value.
+
+First, set the customer as a variable:
+
+```bash
+export CUSTOMER="customer-zzsbbmfc"
+```
+
+import ShowOneBuildPlanCmd from '!!raw-loader!./_migrate_appset/script-08-complex-unification/show-one-buildplan.sh';
+import ShowOneBuildPlanOut from '!!raw-loader!./_migrate_appset/script-08-complex-unification/show-one-buildplan.txt';
+
+<Tabs groupId="show-one-buildplan">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{ShowOneBuildPlanCmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="yaml" showLineNumbers>{ShowOneBuildPlanOut}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+The other `BuildPlan` specifications are similar. Values are randomly
+distributed through the hierarchy making it a challenge to comprehend which
+value is used in the final configuration.
+
+Render the final manifests for this customer so we have a reference point for
+the rest of the migration.
+
+import RenderOneCustomerCmd from '!!raw-loader!./_migrate_appset/script-08-complex-unification/render-one-customer.sh';
+import RenderOneCustomerOut from '!!raw-loader!./_migrate_appset/script-08-complex-unification/render-one-customer.txt';
+
+<Tabs groupId="render-one-customer">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{RenderOneCustomerCmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{RenderOneCustomerOut}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Add and commit these changes so we can easily see any future changes.  For the
+rest of the migration there should be no changes to the final configuration.
+
+import AddCommitStep1Cmd from '!!raw-loader!./_migrate_appset/script-08-complex-unification/add-and-commit-step1.sh';
+import AddCommitStep1Out from '!!raw-loader!./_migrate_appset/script-08-complex-unification/add-and-commit-step1.txt';
+
+<Tabs groupId="add-commit-step1">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{AddCommitStep1Cmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{AddCommitStep1Out}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+### Flattening Step 2
+
+Now that we have a reference point we can use `holos` to flatten the hierarchy.
+We'll pass the same value files to a special `render-values` chart that simply
+echos back the final merged values.  Holos writes the value files to
+`deploy/values` organized by customer and cluster to match the organization of
+the source deployment configs, the `config.json` files.
+
+import RenderStep2Cmd from '!!raw-loader!./_migrate_appset/script-08-complex-unification/render-step2.sh';
+import RenderStep2Out from '!!raw-loader!./_migrate_appset/script-08-complex-unification/render-step2.txt';
+
+<Tabs groupId="render-step2">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{RenderStep2Cmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{RenderStep2Out}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+This command produces flattened `values.yaml` files for each one of the input
+deployment configs.
+
+import ShowFlattenedValuesCmd from '!!raw-loader!./_migrate_appset/script-08-complex-unification/show-flattened-values.sh';
+import ShowFlattenedValuesOut from '!!raw-loader!./_migrate_appset/script-08-complex-unification/show-flattened-values.txt';
+
+<Tabs groupId="show-flattened-values">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{ShowFlattenedValuesCmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{ShowFlattenedValuesOut}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Now we can proceed to change the `my-app` Holos component to use these flattened
+values in place of the value files hierarchy.
+
+### Flattening Step 3
+
+The final step of the migration is to use the flattened values in place of the
+complex hierarchy.  In the component definition we replace the use of
+`valueFiles` with one `values` struct.
+
+Normally we'd move the `deploy/values` directory into `components/my-app`, but
+for the article we use a symlink instead: `components/my-app/flattened-values ->
+../../deploy/values`
+
+Here's how the final `BuildPlan` looks.  Note how the values are flattened and
+the complexity of the override layers are gone.
+
+import Step3ShowOneBuildPlanCmd from '!!raw-loader!./_migrate_appset/script-09-step3/show-one-buildplan.sh';
+import Step3ShowOneBuildPlanOut from '!!raw-loader!./_migrate_appset/script-09-step3/show-one-buildplan.txt';
+
+<Tabs groupId="step3-show-one-buildplan">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{Step3ShowOneBuildPlanCmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="yaml" showLineNumbers>{Step3ShowOneBuildPlanOut}</CodeBlock>
+  </TabItem>
+  <TabItem value="Step 1" label="Step 1 Comparison">
+    This is the previous BuildPlan from Step 1 for comparison.
+    <CodeBlock language="yaml" showLineNumbers>{ShowOneBuildPlanOut}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Render the platform to ensure we're producing the same output as we did when we
+started in step 1.
+
+import RenderStep3Cmd from '!!raw-loader!./_migrate_appset/script-09-step3/render-one-customer.sh';
+import RenderStep3Out from '!!raw-loader!./_migrate_appset/script-09-step3/render-one-customer.txt';
+
+<Tabs groupId="render-step3">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{RenderStep3Cmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{RenderStep3Out}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+The manifests rendered with the flattened values are identical to those rendered
+with the more complex hierarchy of overrides.
+
+import GitStatusStep3Cmd from '!!raw-loader!./_migrate_appset/script-09-step3/git-status.sh';
+import GitStatusStep3Out from '!!raw-loader!./_migrate_appset/script-09-step3/git-status.txt';
+
+<Tabs groupId="git-status-step3">
+  <TabItem value="Command" label="Command">
+    <CodeBlock language="bash">{GitStatusStep3Cmd}</CodeBlock>
+  </TabItem>
+  <TabItem value="Output" label="Output">
+    <CodeBlock language="txt">{GitStatusStep3Out}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+### Going deeper
+
+If you'd like to dive deeper into these steps, take a look at the following
+files which are the entrypoints for the `holos render platform` command at each
+step.  From there, take a look at the component definitions in
+`components/my-app/*.cue` and `components/render-values/*.cue`
+
+#### Entrypoints
+
+import S2PlatformMyApp from '!!raw-loader!./_migrate_appset/script-08-complex-unification/files/platform-my-app.cue';
+import S2PlatformRenderValues from '!!raw-loader!./_migrate_appset/script-08-complex-unification/files/platform-render-values.cue';
+
+<Tabs groupId="review">
+  <TabItem value="Step 1" label="Step 1">
+    ```
+    platform/my-app.cue
+    ```
+    <CodeBlock language="cue" showLineNumbers>{S2PlatformMyApp}</CodeBlock>
+  </TabItem>
+  <TabItem value="Step 2" label="Step 2">
+    ```
+    platform/render-values.cue
+    ```
+    <CodeBlock language="cue" showLineNumbers>{S2PlatformRenderValues}</CodeBlock>
+  </TabItem>
+  <TabItem value="Step 3" label="Step 3">
+    :::note
+    Step 3 uses the same entrypoint as Step 1, completing the migration.  The
+    main difference is in `components/my-app/step3.cue` where the flattened
+    values are used.
+    :::
+  </TabItem>
+</Tabs>
+
+#### Component Definition
+
+The `my-app` component definition starts off in step 1, is not used in step 2,
+and changes to a flattened values structure in step3.  Here are the changes at
+each step.
+
+import ComponentDefMyAppXMain from '!!raw-loader!./_migrate_appset/script-09-step3/files/my-app.cue';
+import ComponentDefMyAppStep1 from '!!raw-loader!./_migrate_appset/script-09-step3/files/step1.cue';
+import ComponentDefMyAppStep3 from '!!raw-loader!./_migrate_appset/script-09-step3/files/step3.cue';
+
+<Tabs groupId="review-component-definition">
+  <TabItem value="Component Definition" label="Component Definition">
+    ```
+    components/my-app/my-app.cue
+    ```
+    <CodeBlock language="cue" showLineNumbers>{ComponentDefMyAppXMain}</CodeBlock>
+  </TabItem>
+  <TabItem value="Step 1" label="Step 1">
+    ```
+    components/my-app/step1.cue
+    ```
+    <CodeBlock language="cue" showLineNumbers>{ComponentDefMyAppStep1}</CodeBlock>
+  </TabItem>
+  <TabItem value="Step 3" label="Step 3">
+    ```
+    components/my-app/step3.cue
+    ```
+    <CodeBlock language="cue" showLineNumbers>{ComponentDefMyAppStep3}</CodeBlock>
+  </TabItem>
+</Tabs>
+
 ## Concluding Remarks
 
 The original article used 5 layers of Helm value files.  Migrating the
@@ -394,8 +743,6 @@ import ShowBuildPlansOut from '!!raw-loader!./_migrate_appset/script-06-unificat
   </TabItem>
 </Tabs>
 
-Stay tuned for Part 3 in the series where we'll fix a bug in the original
-example related to the staging-asia `config.json` file.
-
 [Part 1]: ./2025-01-13-replace-an-applicationset-with-the-rendered-manifest-pattern.mdx
 [original ApplicationSet]: https://github.com/holos-run/multi-sources-example/blob/v0.1.0/appsets/4-final/all-my-envs-appset-with-version.yaml#L27-L32
+[end-of-part-1]: https://github.com/holos-run/multi-sources-example/tree/end-of-part-1

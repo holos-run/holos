@@ -1,0 +1,38 @@
+# Work in the root of the example repo
+cd ../script-01-clone/multi-sources-example
+env CUSTOMER=customer-zzsbbmfc
+chmod 0755 $WORK/update.sh
+
+# Show one buildplan
+exec bash -c 'bash -euo pipefail $WORK/show-one-buildplan.sh 2>&1'
+cp stdout $WORK/show-one-buildplan.txt
+
+# Render one customer
+exec bash -c 'bash -euo pipefail $WORK/render-one-customer.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/render-one-customer.txt
+
+# Git status
+exec bash -c 'bash -euo pipefail $WORK/git-status.sh 2>&1'
+cp stdout $WORK/git-status.txt
+
+# Component definitions
+mkdir $WORK/files
+cp components/my-app/my-app.cue $WORK/files/my-app.cue
+cp components/my-app/step1.cue $WORK/files/step1.cue
+cp components/my-app/step3.cue $WORK/files/step3.cue
+
+-- git-status.sh --
+git status
+-- render-one-customer.sh --
+find deploy/clusters -name $CUSTOMER -print0 | xargs -0 rm -rf
+holos render platform -t flatten -t step3 \
+  --selector customer=$CUSTOMER
+-- show-one-buildplan.sh --
+holos show buildplans -t flatten -t step3 \
+  --selector customer=$CUSTOMER,cluster=prod9-management
+-- update.sh --
+#! /bin/bash
+set -euo pipefail
+[[ -s "$1" ]] && [[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
+cat > "$1"

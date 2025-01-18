@@ -1,0 +1,40 @@
+deploy/values/customers/customer-zzsbbmfc
+`-- clusters
+    |-- dev12-internal
+    |   `-- values.yaml
+    |-- dev14-management
+    |   `-- values.yaml
+    |-- prod10-internal
+    |   `-- values.yaml
+    |-- prod9-management
+    |   `-- values.yaml
+    |-- test7-internal
+    |   `-- values.yaml
+    |-- test8-management
+    |   `-- values.yaml
+    |-- uat10-management
+    |   `-- values.yaml
+    `-- uat9-internal
+        `-- values.yaml
+
+10 directories, 8 files
+config/my-app/deployment/customers/customer-zzsbbmfc
+`-- clusters
+    |-- dev12-internal
+    |   `-- config.json
+    |-- dev14-management
+    |   `-- config.json
+    |-- prod10-internal
+    |   `-- config.json
+    |-- prod9-management
+    |   `-- config.json
+    |-- test7-internal
+    |   `-- config.json
+    |-- test8-management
+    |   `-- config.json
+    |-- uat10-management
+    |   `-- config.json
+    `-- uat9-internal
+        `-- config.json
+
+10 directories, 8 files

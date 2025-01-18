@@ -1,0 +1,32 @@
+components/my-app/values/
+|-- 01-customers
+|-- 02-namespaces
+|-- 03-applications
+|-- 04-clusters
+|-- 05-environments
+|-- 06-tiers
+|-- 07-scopes
+|-- 08-zones
+|-- 09-regions
+|-- 10-locations
+`-- 11-common
+
+12 directories
+components/my-app/values/05-environments
+|-- dev-values.yaml
+|-- prod-values.yaml
+|-- test-values.yaml
+`-- uat-values.yaml
+
+1 directory, 4 files
+components/my-app/values/06-tiers
+|-- nonprod-values.yaml
+`-- prod-values.yaml
+
+1 directory, 2 files
+components/my-app/values/07-scopes
+|-- customer-values.yaml
+|-- internal-values.yaml
+`-- management-values.yaml
+
+1 directory, 3 files

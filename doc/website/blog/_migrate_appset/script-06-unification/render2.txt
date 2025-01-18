@@ -1,6 +1,6 @@
-rendered my-chart 0.2.0 for environment qa in 171.565292ms
-rendered my-chart 0.2.0 for environment staging-eu in 176.66775ms
-rendered my-chart 0.2.0 for environment staging-us in 175.3145ms
+rendered my-chart 0.2.0 for environment qa in 167.755583ms
+rendered my-chart 0.2.0 for environment staging-eu in 183.818166ms
+rendered my-chart 0.2.0 for environment staging-us in 205.0915ms
 could not run: component.Artifacts.HolosComponent.generators.0.helm.values.replicaCount: conflicting values 8 and 5 at internal/builder/instance.go:129
 component.Artifacts.HolosComponent.generators.0.helm.values.replicaCount: conflicting values 8 and 5:
     components/my-chart/my-chart.cue:18:12
