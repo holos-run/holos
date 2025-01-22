@@ -1,0 +1,13 @@
+diff --git a/deploy/components/httpbin/httpbin.gen.yaml b/deploy/components/httpbin/httpbin.gen.yaml
+index 298b9a8..a16bd1a 100644
+--- a/deploy/components/httpbin/httpbin.gen.yaml
++++ b/deploy/components/httpbin/httpbin.gen.yaml
+@@ -1,6 +1,8 @@
+ apiVersion: v1
+ kind: Service
+ metadata:
++  annotations:
++    prometheus.io/probe: "true"
+   labels:
+     app.kubernetes.io/name: httpbin
+   name: httpbin
