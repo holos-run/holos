@@ -1,0 +1,17 @@
+.
+|-- components
+|   `-- podinfo
+|       |-- podinfo.cue
+|       `-- vendor
+|-- deploy
+|   `-- components
+|       `-- podinfo
+|-- platform
+|   |-- platform.gen.cue
+|   `-- podinfo.cue
+|-- platform.metadata.json
+|-- resources.cue
+|-- schema.cue
+`-- tags.cue
+
+8 directories, 7 files

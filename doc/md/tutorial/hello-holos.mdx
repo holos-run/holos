@@ -10,6 +10,7 @@ import TabItem from '@theme/TabItem';
 import RenderingOverview from '@site/src/diagrams/rendering-overview.mdx';
 import PlatformSequence from '@site/src/diagrams/render-platform-sequence.mdx';
 import ComponentSequence from '@site/src/diagrams/render-component-sequence.mdx';
+import CodeBlock from '@theme/CodeBlock';
 
 # Hello Holos
 
@@ -21,49 +22,37 @@ This introduces the core concept of wrapping Helm charts as Holos Components.
 
 ## Implementation
 
+### Holos Version
+
+Ensure you have a current version of `holos` installed.  This document was
+tested with the following version.
+
+import HolosVersionCommand from '!!raw-loader!./_hello-holos/script-01-holos-version/command.sh';
+import HolosVersionOutput from '!!raw-loader!./_hello-holos/script-01-holos-version/output.txt';
+
+<CodeBlock language="bash">{HolosVersionCommand}</CodeBlock>
+<CodeBlock language="txt">{HolosVersionOutput}</CodeBlock>
+
 ### Initialize Platform Structure
 
 Create and initialize a minimal platform:
 
-```shell
-mkdir holos-tutorial && cd holos-tutorial
-holos init platform v1alpha5
-```
+import MkdirAndInit from '!!raw-loader!./_hello-holos/script-02-hello-holos/mkdir-and-init.sh';
+import TreeOutput from '!!raw-loader!./_hello-holos/script-02-hello-holos/tree.txt';
 
-The resulting directory structure:
+<CodeBlock language="bash">{MkdirAndInit}</CodeBlock>
+
+For reference, the directory structure you will attain by the end of this tutorial
+is listed below (NOTE: we have omitted the `cue.mod` directory for brevity):
 
 <Tabs groupId="80D04C6A-BC83-44D0-95CC-CE01B439B159">
 <TabItem value="tree" label="Tree">
-```text showLineNumbers
-holos-tutorial/
-├── components/
-│   └── podinfo/
-│       └── podinfo.cue
-├── cue.mod/
-├── platform/
-│   ├── platform.gen.cue
-│   └── podinfo.cue
-├── resources.cue
-├── schema.cue
-└── tags.cue
-```
+<CodeBlock language="txt" showLineNumbers>{TreeOutput}</CodeBlock>
 </TabItem>
 <TabItem value="details" label="Details">
 <div style={{display: "flex"}}>
 <div>
-```text showLineNumbers
-holos-tutorial/
-├── components/
-│   └── podinfo/
-│       └── podinfo.cue
-├── cue.mod/
-├── platform/
-│   ├── platform.gen.cue
-│   └── podinfo.cue
-├── resources.cue
-├── schema.cue
-└── tags.cue
-```
+<CodeBlock language="txt" showLineNumbers>{TreeOutput}</CodeBlock>
 </div>
 <div>
 - **Line 1** The platform root is the `holos-tutorial` directory we created.
@@ -72,22 +61,24 @@ anywhere.
 - **Line 3** A component is a collection of `*.cue` files at a path.
 - **Line 4** We'll create this file and configure the podinfo helm chart in the
 next section.
-- **Line 5** The CUE module directory.  Schema definitions for Kubernetes and
-Holos resources reside within the `cue.mod` directory.
-- **Line 6** The platform directory is the **main entrypoint** for the `holos
+- **Line 5** The `vendor` directory contains a cached copy of the Helm chart that
+was fetched for the component.
+- **Line 6**  Rendered manifests are placed within the `deploy` directory following
+the structure of the `components/` directory.
+- **Line 9** The platform directory is the **main entrypoint** for the `holos
 render platform` command.
-- **Line 7** `platform.gen.cue` is initialized by `holos init platform` and
+- **Line 10** `platform.gen.cue` is initialized by `holos init platform` and
 contains the Platform spec.
-- **Line 8** `podinfo.cue` integrates podinfo with the platform by adding the
+- **Line 11** `podinfo.cue` integrates podinfo with the platform by adding the
 component to the platform spec.  We'll add ths file after the next section.
-- **Line 9** `resources.cue` Defines the Kubernetes resources available to
+- **Line 13** `resources.cue` Defines the Kubernetes resources available to
 manage in CUE.
-- **Line 10** `schema.cue` Defines the configuration common to all component
+- **Line 14** `schema.cue` Defines the configuration common to all component
 kinds.
-- **Line 11** `tags.cue` Defines where component parameter values are injected
+- **Line 15** `tags.cue` Defines where component parameter values are injected
 into the overall platform configuration.  We don't need to be concerned with
 this file until we cover component parameters.
-- **Lines 9-11** Initialized by `holos init platform`, user editable after
+- **Lines 9-15** Initialized by `holos init platform`, user editable after
 initialization.
 </div>
 </div>
@@ -98,40 +89,15 @@ initialization.
 
 Configure the `podinfo` component:
 
-```bash
-mkdir -p components/podinfo
-```
-```bash
-cat <<EOF > components/podinfo/podinfo.cue
-```
-```cue showLineNumbers
-package holos
+import MkdirComponents from '!!raw-loader!./_hello-holos/script-02-hello-holos/mkdir-components.sh';
+import PodinfoHeader from '!!raw-loader!./_hello-holos/script-02-hello-holos/podinfo-component-header.sh';
+import PodinfoBody from '!!raw-loader!./_hello-holos/script-02-hello-holos/podinfo-component-body.cue';
+import EofTrailer from '!!raw-loader!./_hello-holos/script-02-hello-holos/eof-trailer.sh';
 
-// Produce a helm chart build plan.
-holos: HelmChart.BuildPlan
-
-HelmChart: #Helm & {
-	Name: "podinfo"
-	Chart: {
-		version: "6.6.2"
-		repository: {
-			name: "podinfo"
-			url:  "https://stefanprodan.github.io/podinfo"
-		}
-	}
-	// Holos marshals Values into values.yaml for Helm.
-	Values: {
-		// message is a string with a default value.  @tag indicates a value may
-		// be injected from the platform spec component parameters.
-		ui: {
-			message: string | *"Hello World" @tag(greeting, type=string)
-		}
-	}
-}
-```
-```bash
-EOF
-```
+<CodeBlock language="bash">{MkdirComponents}</CodeBlock>
+<CodeBlock language="bash">{PodinfoHeader}</CodeBlock>
+<CodeBlock language="cue" showLineNumbers>{PodinfoBody}</CodeBlock>
+<CodeBlock language="bash">{EofTrailer}</CodeBlock>
 
 :::important
 Like Go packages, CUE loads all `*.cue` files in the component directory to
@@ -148,22 +114,12 @@ root-level `schema.cue`.
 
 Register the `podinfo` component in `platform/podinfo.cue`:
 
-```bash
-cat <<EOF > platform/podinfo.cue
-```
-```cue showLineNumbers
-package holos
+import RegisterPodinfoHeader from '!!raw-loader!./_hello-holos/script-02-hello-holos/register-podinfo-header.sh';
+import RegisterPodinfoBody from '!!raw-loader!./_hello-holos/script-02-hello-holos/register-podinfo-body.cue';
 
-Platform: Components: podinfo: {
-	name: "podinfo"
-	path: "components/podinfo"
-	// Inject a value into the component.
-	parameters: greeting: "Hello Holos!"
-}
-```
-```bash
-EOF
-```
+<CodeBlock language="bash">{RegisterPodinfoHeader}</CodeBlock>
+<CodeBlock language="cue" showLineNumbers>{RegisterPodinfoBody}</CodeBlock>
+<CodeBlock language="bash">{EofTrailer}</CodeBlock>
 
 :::tip
 Parameter names are unrestricted, except for the reserved `holos_` prefix.
@@ -173,161 +129,42 @@ Parameter names are unrestricted, except for the reserved `holos_` prefix.
 
 Render the `podinfo` configuration:
 
+import RenderCommand from '!!raw-loader!./_hello-holos/script-02-hello-holos/render.sh';
+import RegisterComponentsOutput from '!!raw-loader!./_hello-holos/script-02-hello-holos/register-components-output.txt';
+
 <Tabs groupId="E150C802-7162-4FBF-82A7-77D9ADAEE847">
   <TabItem value="command" label="Command">
-```bash
-holos render platform
-```
+    <CodeBlock language="bash">{RenderCommand}</CodeBlock>
   </TabItem>
   <TabItem value="output" label="Output">
-```
-cached podinfo 6.6.2
-rendered podinfo in 1.938665041s
-rendered platform in 1.938759417s
-```
+    <CodeBlock language="txt">{RegisterComponentsOutput}</CodeBlock>
   </TabItem>
 </Tabs>
 
 Holos executes `helm template` with locally cached charts to generate:
 
-```txt
-deploy/components/podinfo/podinfo.gen.yaml
-```
+import PodinfoRenderedPath from '!!raw-loader!./_hello-holos/script-02-hello-holos/podinfo-rendered-path.sh';
+import RenderedService from '!!raw-loader!./_hello-holos/script-02-hello-holos/rendered-service.yaml';
+import RenderedDeployment from '!!raw-loader!./_hello-holos/script-02-hello-holos/rendered-deployment.yaml';
+
+<CodeBlock language="txt">{PodinfoRenderedPath}</CodeBlock>
 
 <Tabs groupId="0E9C231D-D0E8-410A-A4A0-601842A086A6">
   <TabItem value="service" label="Service">
-```yaml showLineNumbers
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: podinfo
-    app.kubernetes.io/version: 6.6.2
-    helm.sh/chart: podinfo-6.6.2
-  name: podinfo
-spec:
-  ports:
-  - name: http
-    port: 9898
-    protocol: TCP
-    targetPort: http
-  - name: grpc
-    port: 9999
-    protocol: TCP
-    targetPort: grpc
-  selector:
-    app.kubernetes.io/name: podinfo
-  type: ClusterIP
-```
+    <CodeBlock language="yaml" showLineNumbers>{RenderedService}</CodeBlock>
   </TabItem>
   <TabItem value="deployment" label="Deployment">
-```yaml showLineNumbers
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: podinfo
-    app.kubernetes.io/version: 6.6.2
-    helm.sh/chart: podinfo-6.6.2
-  name: podinfo
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: podinfo
-  strategy:
-    rollingUpdate:
-      maxUnavailable: 1
-    type: RollingUpdate
-  template:
-    metadata:
-      annotations:
-        prometheus.io/port: "9898"
-        prometheus.io/scrape: "true"
-      labels:
-        app.kubernetes.io/name: podinfo
-    spec:
-      containers:
-      - command:
-        - ./podinfo
-        - --port=9898
-        - --cert-path=/data/cert
-        - --port-metrics=9797
-        - --grpc-port=9999
-        - --grpc-service-name=podinfo
-        - --level=info
-        - --random-delay=false
-        - --random-error=false
-        env:
-        - name: PODINFO_UI_MESSAGE
-          value: Hello Holos!
-        - name: PODINFO_UI_COLOR
-          value: '#34577c'
-        image: ghcr.io/stefanprodan/podinfo:6.6.2
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          exec:
-            command:
-            - podcli
-            - check
-            - http
-            - localhost:9898/healthz
-          failureThreshold: 3
-          initialDelaySeconds: 1
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 5
-        name: podinfo
-        ports:
-        - containerPort: 9898
-          name: http
-          protocol: TCP
-        - containerPort: 9797
-          name: http-metrics
-          protocol: TCP
-        - containerPort: 9999
-          name: grpc
-          protocol: TCP
-        readinessProbe:
-          exec:
-            command:
-            - podcli
-            - check
-            - http
-            - localhost:9898/readyz
-          failureThreshold: 3
-          initialDelaySeconds: 1
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 5
-        resources:
-          limits: null
-          requests:
-            cpu: 1m
-            memory: 16Mi
-        volumeMounts:
-        - mountPath: /data
-          name: data
-      terminationGracePeriodSeconds: 30
-      volumes:
-      - emptyDir: {}
-        name: data
-```
+    <CodeBlock language="yaml" showLineNumbers>{RenderedDeployment}</CodeBlock>
   </TabItem>
 </Tabs>
 
 Holos renders the component with the greeting injected from the platform spec.
 
-```shell
-grep -B2 Hello deploy/components/podinfo/podinfo.gen.yaml
-```
-```yaml
-        env:
-        - name: PODINFO_UI_MESSAGE
-          value: Hello Holos!
-```
+import GrepForMessage from '!!raw-loader!./_hello-holos/script-02-hello-holos/grep-for-message.sh';
+import GreppedOutput from '!!raw-loader!./_hello-holos/script-02-hello-holos/grepped-output.txt';
+
+<CodeBlock language="bash">{GrepForMessage}</CodeBlock>
+<CodeBlock language="yaml">{GreppedOutput}</CodeBlock>
 
 ## Breaking it down
 
