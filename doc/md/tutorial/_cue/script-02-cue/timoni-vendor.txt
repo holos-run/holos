@@ -1,0 +1,17 @@
+3:20PM INF schemas vendored: external-secrets.io/clusterexternalsecret/v1beta1
+3:20PM INF schemas vendored: external-secrets.io/clustersecretstore/v1alpha1
+3:20PM INF schemas vendored: external-secrets.io/clustersecretstore/v1beta1
+3:20PM INF schemas vendored: external-secrets.io/externalsecret/v1alpha1
+3:20PM INF schemas vendored: external-secrets.io/externalsecret/v1beta1
+3:20PM INF schemas vendored: external-secrets.io/pushsecret/v1alpha1
+3:20PM INF schemas vendored: external-secrets.io/secretstore/v1alpha1
+3:20PM INF schemas vendored: external-secrets.io/secretstore/v1beta1
+3:20PM INF schemas vendored: generators.external-secrets.io/acraccesstoken/v1alpha1
+3:20PM INF schemas vendored: generators.external-secrets.io/ecrauthorizationtoken/v1alpha1
+3:20PM INF schemas vendored: generators.external-secrets.io/fake/v1alpha1
+3:20PM INF schemas vendored: generators.external-secrets.io/gcraccesstoken/v1alpha1
+3:20PM INF schemas vendored: generators.external-secrets.io/githubaccesstoken/v1alpha1
+3:20PM INF schemas vendored: generators.external-secrets.io/password/v1alpha1
+3:20PM INF schemas vendored: generators.external-secrets.io/uuid/v1alpha1
+3:20PM INF schemas vendored: generators.external-secrets.io/vaultdynamicsecret/v1alpha1
+3:20PM INF schemas vendored: generators.external-secrets.io/webhook/v1alpha1

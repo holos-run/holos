@@ -1,0 +1,166 @@
+# Set $HOME because:
+#   - Helm uses it for temporary files
+#   - Git requires it for setting author name/email globally
+env HOME=$WORK/.tmp
+chmod 0755 $WORK/update.sh
+
+# Configure git author for testscript execution
+exec git config --global user.name 'Holos Docs'
+exec git config --global user.email 'hello@holos.run'
+exec git config --global init.defaultBranch main
+
+# Remove the tutorial directory if it already exists
+exec rm -rf holos-cue-tutorial
+
+# Create and change to the tutorial directory, and then initialize the Holos platform
+exec bash -c 'bash -euo pipefail mkdir-and-init.sh'
+cd holos-cue-tutorial
+
+# Create the components directory, then combine and execute the multiline
+# podinfo component header/body/trailer files
+exec bash -c 'bash -euo pipefail $WORK/mkdir-components.sh'
+exec cat $WORK/podinfo-component-header.sh $WORK/podinfo-component-body.cue $WORK/eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Combine and execute the multiline platform registration header/body/trailer files.
+exec cat $WORK/register-components-header.sh $WORK/register-components-body.cue $WORK/eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Render and capture output
+# NOTE: The [net] condition will test whether external network access is available
+[net] exec bash -c 'bash -euo pipefail $WORK/render.sh 2>&1'
+[net] stdin stdout
+exec $WORK/update.sh $WORK/register-components-output.txt
+
+# Git init and commit
+exec bash -c 'bash -euo pipefail $WORK/git-init.sh'
+
+# Combine and execute the mixin component header/body/trailer files
+exec cat $WORK/mixin-component-header.sh $WORK/mixin-component-body.cue $WORK/eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Import CRDs with Timoni
+exec bash -c 'bash -euo pipefail $WORK/import-crds.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/timoni-vendor.txt
+
+# Render platform
+[net] exec bash -c 'bash -euo pipefail $WORK/render.sh 2>&1'
+
+# Git diff and capture output
+exec bash -c 'bash -euo pipefail $WORK/git-diff.sh 2>&1'
+stdin stdout
+exec $WORK/update.sh $WORK/git.diff
+
+# Clean up the tutorial directory and tmp $HOME directory
+cd $WORK
+exec rm -rf holos-cue-tutorial
+exec rm -rf $HOME
+
+-- update.sh --
+#! /bin/bash
+set -euo pipefail
+[[ -s "$1" ]] && [[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
+cat > "$1"
+-- mkdir-and-init.sh --
+mkdir holos-cue-tutorial && cd holos-cue-tutorial
+holos init platform v1alpha5
+-- mkdir-components.sh --
+mkdir -p components/podinfo
+-- import-crds.sh --
+timoni mod vendor crds -f https://raw.githubusercontent.com/external-secrets/external-secrets/v0.10.5/deploy/crds/bundle.yaml
+-- podinfo-component-header.sh --
+cat <<EOF > components/podinfo/podinfo.cue
+-- podinfo-component-body.cue --
+package holos
+
+// export the component build plan to holos
+holos: Component.BuildPlan
+
+// Component is a Helm chart
+Component: #Helm & {
+	Name:      "podinfo"
+	Namespace: "default"
+	// Add metadata.namespace to all resources with kustomize.
+	KustomizeConfig: Kustomization: namespace: Namespace
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+}
+-- eof-trailer.sh --
+EOF
+-- register-components-header.sh --
+cat <<EOF > platform/podinfo.cue
+-- register-components-body.cue --
+package holos
+
+Platform: Components: podinfo: {
+	name: "podinfo"
+	path: "components/podinfo"
+}
+-- render.sh --
+holos render platform
+-- git-init.sh --
+git init . && git add . && git commit -m initial
+-- mixin-component-header.sh --
+cat <<EOF > components/podinfo/mixins.cue
+-- mixin-component-body.cue --
+package holos
+
+// Component fields are unified with podinfo.cue
+Component: {
+	// Concrete values are defined in podinfo.cue
+	Name:      string
+	Namespace: string
+
+	// Resources represents mix-in resources organized as a struct.
+	Resources: ExternalSecret: (Name): {
+		// Name is consistent with the component name.
+		metadata: name: Name
+		// Namespace is consistent with the component namespace.
+		metadata: namespace: Namespace
+		spec: {
+			// Ensure the target secret name is consistent.
+			target: name: metadata.name
+			// Ensure the name in the SecretStore is consistent.
+			dataFrom: [{extract: {key: metadata.name}}]
+			refreshInterval: "30s"
+			secretStoreRef: kind: "SecretStore"
+			secretStoreRef: name: "default"
+		}
+	}
+}
+-- git-diff.sh --
+git diff deploy
+-- git.diff --
+diff --git a/deploy/components/podinfo/podinfo.gen.yaml b/deploy/components/podinfo/podinfo.gen.yaml
+index 6e4aec0..f79e9d0 100644
+--- a/deploy/components/podinfo/podinfo.gen.yaml
++++ b/deploy/components/podinfo/podinfo.gen.yaml
+@@ -112,3 +112,19 @@ spec:
+       volumes:
+       - emptyDir: {}
+         name: data
++---
++apiVersion: external-secrets.io/v1beta1
++kind: ExternalSecret
++metadata:
++  name: podinfo
++  namespace: default
++spec:
++  dataFrom:
++  - extract:
++      key: podinfo
++  refreshInterval: 30s
++  secretStoreRef:
++    kind: SecretStore
++    name: default
++  target:
++    name: podinfo
