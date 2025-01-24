@@ -359,21 +359,25 @@ and there are no changes to the deploy directory.
 
 ## Simplifying a Complex Hierarchy
 
-We've successfully eliminated the complexity of the ApplicationSet Go template
-and the 5 layers of complexity in the Helm values, but the original data didn't
-have many overrides.  The best case scenario.
+We've removed the complexity of the Go template in the ApplicationSet, and 5
+more layers of complexity in the Helm value files, but the original data didn't
+have many overrides.  It was the best case scenario, flattening the hierarchy by
+trial and error was straight forward.
 
-Holos also helps simplify a complex hierarchy with lots of overrides randomly
-distributed.  In this section we'll create a flattened value file for each of
-the config.json deployment configs.
+What about a complex hierarchy with lots of overrides?  This same trial and
+error approach would take too long.  Holos offers a solution in this scenario.
+In this section we'll use `holos` to create a flattened value file for each of
+the config.json deployment configs without using trial and error.
 
 The layout of the deployment configs is a key aspect of this method.  The
-original data is organized by environment, one dimension.  The generated data in
-this section organizes them by customer and cluster, two dimensions.  The
-artifacts holos renders map 1:1 to the deployment configs, the intermediate Helm
-value files merge deterministically from the deployment config.  We can use the
-deployment configs identified by customer and cluster as coordinates to locate
-all of the configuration for a deployment within the space of the platform.
+deployment config inputs always map 1:1 to the rendered manifests and associated
+Application resource.  Therefore, any intermediate layers of overrides are not
+strictly necessary, an opportunity to reduce complexity significantly.
+
+In this example the deployment configs are organized by customer and cluster, so
+we'll work to flatten the unnecessary levels of the hierarchy while also
+organizing the output around customers and clusters to get everything lined up
+nicely.
 
 Using the same deployment configs at each step, we'll:
 
