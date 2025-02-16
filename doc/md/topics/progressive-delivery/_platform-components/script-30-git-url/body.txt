@@ -1,0 +1,4 @@
+@if(${GH_USER})
+package platform
+
+organization: repoURL: "https://github.com/${GH_USER}/kargo-demo.git"
