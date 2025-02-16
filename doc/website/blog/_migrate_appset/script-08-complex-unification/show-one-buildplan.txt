@@ -1,0 +1,167 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: my-app
+  labels:
+    app: myapp137
+    cluster: prod9-management
+    customer: customer-zzsbbmfc
+  annotations:
+    app.holos.run/description: my-app for customer-zzsbbmfc cluster prod9-management
+spec:
+  artifacts:
+    - artifact: clusters/prod9-management/customers/customer-zzsbbmfc/components/my-app/my-app.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: my-app
+              version: 0.1.0
+              release: my-app
+              repository:
+                name: my-app
+                url: https://chart.holos.example/my-app
+            values: {}
+            valueFiles:
+              - name: common-values.yaml
+                kind: Values
+                values:
+                  accountID: 172493898344
+                  arn: arn:partition:service:region:account-id:oavimhns
+                  clientID: https://cyjewadvav.example
+                  cores: 163.7
+                  domain: zybjphmonu.example
+                  enabled: false
+                  image: oci://example.com/yrktnnrw
+                  issuer: https://zsdxwewkxn.example
+                  labels:
+                    label2: qxampbkyogen
+                    label4: hapfwhjpfjgx
+                    label6: ddpvqwwepnls
+                    label7: jwibgcgojhlr
+                    label9: irpxilumnjzt
+                  memory: 2009
+                  projectID: my-project-364381
+                  replicas: 6
+                  version: v78.27.88
+              - name: location-values.yaml
+                kind: Values
+                values:
+                  clientID: https://ywzjjhdkzz.example
+                  domain: mewkwwyyke.example
+              - name: region-values.yaml
+                kind: Values
+                values:
+                  enabled: false
+                  replicas: 16
+              - name: zone-values.yaml
+                kind: Values
+                values:
+                  cores: 140
+                  domain: hspfndagvo.example
+                  replicas: 14
+              - name: scope-values.yaml
+                kind: Values
+                values:
+                  arn: arn:partition:service:region:account-id:dpqplkbs
+                  cores: 151.1
+                  domain: gzyfnywsic.example
+                  labels:
+                    label1: kkpnnhkrqdwg
+                    label9: alnjyfhuwztu
+                    label10: njmzitgmbexp
+                  replicas: 16
+                  version: v25.44.35
+              - name: tier-values.yaml
+                kind: Values
+                values:
+                  accountID: 278189635112
+                  arn: arn:partition:service:region:account-id:etlwtwvi
+                  clientID: https://wylpmodgfa.example
+                  cores: 37.3
+                  enabled: false
+                  image: oci://example.com/espfwpgu
+                  labels:
+                    label1: tcrlytospgrs
+                    label2: cztrtxfqjgla
+                    label4: liwcndftvgmk
+                    label5: smwvgcitfluw
+                    label6: ijxsdeqrlkmz
+                    label7: hickvgmjamwc
+                    label9: auzshrsnitlr
+                  projectID: my-project-581043
+                  replicas: 4
+                  version: v45.93.24
+              - name: env-values.yaml
+                kind: Values
+                values:
+                  issuer: https://hyaxmrhbtp.example
+                  memory: 4026
+                  version: v78.74.0
+              - name: cluster-values.yaml
+                kind: Values
+                values:
+                  issuer: https://cglabvwppp.example
+              - name: application-values.yaml
+                kind: Values
+                values:
+                  accountID: 751237658348
+                  clientID: https://nsnlzxykos.example
+                  enabled: false
+                  labels:
+                    label1: hxqjehbohozr
+                    label2: lytdqukfawqb
+                    label6: yoreqectsias
+              - name: namespace-values.yaml
+                kind: Values
+                values:
+                  clientID: https://luiqneobvw.example
+                  version: v11.17.85
+              - name: customer-values.yaml
+                kind: Values
+                values:
+                  customerID: customer-zzsbbmfc
+                  enabled: false
+                  replicas: 12
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: clusters/prod9-management/customers/customer-zzsbbmfc/components/my-app/my-app.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs:
+                    argocd.argoproj.io/instance: customer-zzsbbmfc-myapp137-prod9-management
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+    - artifact: apps/customer-zzsbbmfc-myapp137-prod9-management-application.gen.yaml
+      generators:
+        - kind: Resources
+          output: apps/customer-zzsbbmfc-myapp137-prod9-management-application.gen.yaml
+          resources:
+            Application:
+              customer-zzsbbmfc-myapp137-prod9-management:
+                apiVersion: argoproj.io/v1alpha1
+                kind: Application
+                metadata:
+                  labels:
+                    env: prod
+                  name: customer-zzsbbmfc-myapp137-prod9-management
+                  namespace: argocd
+                spec:
+                  destination:
+                    server: https://kubernetes.default.svc
+                  project: default
+                  source:
+                    path: deploy/clusters/prod9-management/customers/customer-zzsbbmfc/components/my-app
+                    repoURL: https://github.com/holos-run/multi-sources-example.git
+                    targetRevision: main

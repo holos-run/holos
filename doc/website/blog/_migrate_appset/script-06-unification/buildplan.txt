@@ -1,0 +1,86 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: my-chart
+  labels:
+    env: prod-us
+  annotations:
+    app.holos.run/description: my-chart 0.1.0 for environment prod-us
+spec:
+  artifacts:
+    - artifact: environments/prod-us/components/my-chart/my-chart.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: my-chart
+              version: 0.1.0
+              release: my-chart
+              repository:
+                name: multi-sources-example
+                url: https://kostis-codefresh.github.io/multi-sources-example
+            values:
+              cacheSize: 1024kb
+              dbPassword: prod_password
+              dbUser: prod_username
+              environment: prod-us
+              environmentType: production
+              gpuEnabled: "1"
+              imageVersion: "1.0"
+              nBuckets: "42"
+              pageLimit: "25"
+              paypalUrl: production.paypal.com
+              region: us
+              replicaCount: 10
+              sorting: Ascending
+              userInterfaceTheme: dark
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: environments/prod-us/components/my-chart/my-chart.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs:
+                    argocd.argoproj.io/instance: prod-us-my-chart
+              namespace: prod-us
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+    - artifact: gitops/prod-us-my-chart-application.gen.yaml
+      generators:
+        - kind: Resources
+          output: gitops/prod-us-my-chart-application.gen.yaml
+          resources:
+            Application:
+              prod-us-my-chart:
+                apiVersion: argoproj.io/v1alpha1
+                kind: Application
+                metadata:
+                  labels:
+                    env: prod-us
+                  name: prod-us-my-chart
+                  namespace: argocd
+                spec:
+                  destination:
+                    namespace: prod-us
+                    server: https://kubernetes.default.svc
+                  project: default
+                  source:
+                    path: deploy/environments/prod-us/components/my-chart
+                    repoURL: https://github.com/holos-run/multi-sources-example
+                    targetRevision: main
+                  syncPolicy:
+                    automated:
+                      prune: true
+                      selfHeal: true
+                    syncOptions:
+                      - CreateNamespace=true

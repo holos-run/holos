@@ -1,0 +1,2 @@
+rm 'components/my-chart/my-values/common-values.yaml'
+patching file 'components/my-chart/my-chart.cue'

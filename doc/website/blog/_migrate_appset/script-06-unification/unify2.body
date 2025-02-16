@@ -1,0 +1,16 @@
+diff --git a/components/my-chart/my-values/env-type/prod-values.yaml b/components/my-chart/my-values/env-type/prod-values.yaml
+index fef58f4..a3cce4a 100644
+--- a/components/my-chart/my-values/env-type/prod-values.yaml
++++ b/components/my-chart/my-values/env-type/prod-values.yaml
+@@ -1,11 +1,5 @@
+-# Kubernetes settings
+-replicaCount: 5
+-
+ # Environment settings
+ environmentType: production
+ paypalUrl: "production.paypal.com"
+ dbUser: "prod_username"
+ dbPassword: "prod_password"
+-
+-
+-

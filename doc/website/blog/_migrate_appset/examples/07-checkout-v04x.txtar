@@ -1,0 +1,5 @@
+# Work in the root of the example repo
+cd ../script-01-clone/multi-sources-example
+
+# Checkout the v0.4.x branch
+exec git checkout v0.4.x
