@@ -16,4 +16,5 @@ import (
 	_ "golang.org/x/tools/cmd/godoc"
 	_ "google.golang.org/protobuf/cmd/protoc-gen-go"
 	_ "honnef.co/go/tools/cmd/staticcheck"
+	- "github.com/stefanprodan/timoni/cmd/timoni"
 )

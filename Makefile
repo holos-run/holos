@@ -124,6 +124,7 @@ go-deps: ## tool versions pinned in tools.go
 	go install golang.org/x/tools/cmd/godoc
 	go install github.com/princjef/gomarkdoc/cmd/gomarkdoc
 	go install github.com/google/ko
+	go install github.com/stefanprodan/timoni/cmd/timoni@v0.23.0
 	# curl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash
 
 .PHONY: frontend-deps

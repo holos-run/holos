@@ -1,0 +1,24 @@
+diff --git a/deploy/components/podinfo/podinfo.gen.yaml b/deploy/components/podinfo/podinfo.gen.yaml
+index 6e4aec0..f79e9d0 100644
+--- a/deploy/components/podinfo/podinfo.gen.yaml
++++ b/deploy/components/podinfo/podinfo.gen.yaml
+@@ -112,3 +112,19 @@ spec:
+       volumes:
+       - emptyDir: {}
+         name: data
++---
++apiVersion: external-secrets.io/v1beta1
++kind: ExternalSecret
++metadata:
++  name: podinfo
++  namespace: default
++spec:
++  dataFrom:
++  - extract:
++      key: podinfo
++  refreshInterval: 30s
++  secretStoreRef:
++    kind: SecretStore
++    name: default
++  target:
++    name: podinfo
