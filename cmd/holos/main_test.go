@@ -11,10 +11,11 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(testscript.RunMain(m, map[string]func() int{
-		"holos": cmd.MakeMain(),
-		"cue":   cue.Main,
-	}))
+	holosMain := cmd.MakeMain()
+	testscript.Main(m, map[string]func(){
+		"holos": func() { os.Exit(holosMain()) },
+		"cue":   func() { os.Exit(cue.Main()) },
+	})
 }
 
 func TestGuides_v1alpha5(t *testing.T) {

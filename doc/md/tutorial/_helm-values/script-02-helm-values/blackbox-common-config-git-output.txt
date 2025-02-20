@@ -1,3 +1,3 @@
-[main 3047579] add blackbox configuration
+[main 1adcd08] add blackbox configuration
  1 file changed, 15 insertions(+)
- create mode 100644 config/prometheus/blackbox.cue
+ create mode 100644 components/blackbox.cue

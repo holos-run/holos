@@ -15,10 +15,12 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Exit(testscript.RunMain(m, map[string]func() int{
-		"holos": cmd.MakeMain(),
-		"cue":   cue.Main,
-	}))
+	holosMain := cmd.MakeMain()
+
+	testscript.Main(m, map[string]func(){
+		"holos": func() { os.Exit(holosMain()) },
+		"cue":   func() { os.Exit(cue.Main()) },
+	})
 }
 
 // Run these with go test -v to see the verbose names
