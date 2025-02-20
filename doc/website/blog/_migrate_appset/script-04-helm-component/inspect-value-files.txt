@@ -1,11 +1,11 @@
-my-values/common-values.yaml:
-  replicaCount: 1
 my-values/app-version/prod-values.yaml:
   imageVersion: "1.0"
 my-values/app-version/qa-values.yaml:
   imageVersion: "3.0"
 my-values/app-version/staging-values.yaml:
   imageVersion: "2.0"
+my-values/common-values.yaml:
+  replicaCount: 1
 my-values/env-type/non-prod-values.yaml:
   replicaCount: 3
   environmentType: non-prod

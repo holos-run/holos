@@ -31,7 +31,6 @@ spec:
         - kind: Resources
           output: resources.gen.yaml
           resources: {}
-      validators: []
       transformers:
         - kind: Kustomize
           inputs:
@@ -39,7 +38,8 @@ spec:
           output: components/no-name/no-name.gen.yaml
           kustomize:
             kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
               resources:
                 - resources.gen.yaml
-              kind: Kustomization
-              apiVersion: kustomize.config.k8s.io/v1beta1
+      validators: []

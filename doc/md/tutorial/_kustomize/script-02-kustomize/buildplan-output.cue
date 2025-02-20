@@ -13,7 +13,6 @@ spec:
           output: httpbin.yaml
           file:
             source: httpbin.yaml
-      validators: []
       transformers:
         - kind: Kustomize
           inputs:
@@ -22,6 +21,8 @@ spec:
           output: components/no-name/no-name.gen.yaml
           kustomize:
             kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
               labels:
                 - includeSelectors: false
                   pairs:
@@ -32,5 +33,4 @@ spec:
               resources:
                 - resources.gen.yaml
                 - httpbin.yaml
-              kind: Kustomization
-              apiVersion: kustomize.config.k8s.io/v1beta1
+      validators: []
