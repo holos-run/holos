@@ -1,3 +1,2 @@
-cached podinfo 6.6.2
-rendered podinfo in 1.938665041s
-rendered platform in 1.938759417s
+rendered podinfo in 312.472625ms
+rendered platform in 312.557375ms

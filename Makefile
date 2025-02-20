@@ -32,17 +32,20 @@ bump: bumppatch
 .PHONY: bumppatch
 bumppatch: ## Bump the patch version.
 	scripts/bump patch
+	HOLOS_UPDATE_SCRIPTS=1 scripts/test
 
 .PHONY: bumpminor
 bumpminor: ## Bump the minor version.
 	scripts/bump minor
 	scripts/bump patch 0
+	HOLOS_UPDATE_SCRIPTS=1 scripts/test
 
 .PHONY: bumpmajor
 bumpmajor: ## Bump the major version.
 	scripts/bump major
 	scripts/bump minor 0
 	scripts/bump patch 0
+	HOLOS_UPDATE_SCRIPTS=1 scripts/test
 
 .PHONY: show-version
 show-version: ## Print the full version.

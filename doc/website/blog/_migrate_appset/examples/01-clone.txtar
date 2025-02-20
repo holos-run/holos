@@ -24,7 +24,7 @@ exec git config user.name 'go test'
 -- version.sh --
 holos --version
 -- version.txt --
-0.104.0
+0.104.1
 -- clone.sh --
 git clone https://github.com/holos-run/multi-sources-example.git
 cd multi-sources-example

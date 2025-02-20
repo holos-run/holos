@@ -1,8 +1,8 @@
-rendered my-chart 0.1.0 for environment integration-gpu in 167.580834ms
-rendered my-chart 0.1.0 for environment prod-eu in 168.064917ms
-rendered my-chart 0.1.0 for environment prod-us in 168.250209ms
-rendered my-chart 0.2.0 for environment integration-non-gpu in 196.914084ms
-rendered my-chart 0.2.0 for environment staging-us in 270.168833ms
-rendered my-chart 0.2.0 for environment staging-eu in 270.676125ms
-rendered my-chart 0.2.0 for environment qa in 270.7255ms
-rendered platform in 270.774084ms
+rendered my-chart 0.1.0 for environment prod-us in 169.0965ms
+rendered my-chart 0.1.0 for environment integration-gpu in 169.146375ms
+rendered my-chart 0.1.0 for environment prod-eu in 171.797375ms
+rendered my-chart 0.2.0 for environment staging-us in 195.439625ms
+rendered my-chart 0.2.0 for environment qa in 270.457708ms
+rendered my-chart 0.2.0 for environment integration-non-gpu in 270.497166ms
+rendered my-chart 0.2.0 for environment staging-eu in 271.18825ms
+rendered platform in 271.252916ms
