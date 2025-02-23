@@ -13,3 +13,7 @@ tmp/
 /holos-infra/
 node_modules/
 .tmp/
+
+# nix
+/.direnv/
+result
