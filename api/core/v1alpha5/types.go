@@ -190,11 +190,13 @@ type AuthSource struct {
 //  1. [Kustomize] - Patch and transform the output from prior generators or
 //     transformers.  See [Introduction to Kustomize].
 //  2. [Join] - Concatenate multiple prior outputs into one output.
+//  3. [Slice] - Slice an artifact into multiple artifacts using [kubectl-slice]
 //
 // [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
+// [kubectl-slice]: https://github.com/patrickdappollonio/kubectl-slice
 type Transformer struct {
 	// Kind represents the kind of transformer. Must be Kustomize, or Join.
-	Kind string `json:"kind" yaml:"kind" cue:"\"Kustomize\" | \"Join\""`
+	Kind string `json:"kind" yaml:"kind" cue:"\"Kustomize\" | \"Join\" | \"Slice\""`
 	// Inputs represents the files to transform. The Output of prior Generators
 	// and Transformers.
 	Inputs []FilePath `json:"inputs" yaml:"inputs"`

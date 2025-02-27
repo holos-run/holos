@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -366,6 +367,10 @@ func (t transformersTask) run(ctx context.Context) error {
 			if err := t.opts.Store.Set(string(transformer.Output), data); err != nil {
 				return errors.Format("%s: %w", msg, err)
 			}
+		case "Slice":
+			if err := slice(ctx, transformer, t.taskParams); err != nil {
+				return errors.Wrap(err)
+			}
 		default:
 			return errors.Format("%s: unsupported kind %s", msg, transformer.Kind)
 		}
@@ -647,6 +652,65 @@ func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {
 	if err := p.opts.Store.Set(string(t.Output), r.Stdout.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
+
+	return nil
+}
+
+func slice(ctx context.Context, t core.Transformer, p taskParams) error {
+	log := logger.FromContext(ctx)
+	tempDir, err := os.MkdirTemp("", "holos.slice")
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	defer util.Remove(ctx, tempDir)
+	msg := fmt.Sprintf(
+		"could not transform %s for %s path %s",
+		t.Output,
+		p.buildPlanName,
+		p.opts.Path,
+	)
+
+	// Write the inputs
+	for _, input := range t.Inputs {
+		path := string(input)
+		if err := p.opts.Store.Save(tempDir, path); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+	}
+
+	// TODO(jjm): plumb output directory to the core schemas
+	var outDir = filepath.Join(tempDir, "slice") // TODO(jjm): hack for expedience
+
+	// Execute kubectl-slice for each input file, writing to one output directory.
+	for _, input := range t.Inputs {
+		in := filepath.Join(tempDir, string(input))
+		_, err := util.RunCmdW(
+			ctx, p.opts.Stderr,
+			"kubectl-slice", "-f", in, "-o", outDir)
+		if err != nil {
+			return errors.Format("%s: could not run kubectl-slice: %w", msg, err)
+		}
+	}
+
+	// Store each file located in the output directory as an artifact.
+	// TODO(jjm): model a directory entry in the artifact map.
+	err = filepath.WalkDir(outDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			log.DebugContext(ctx, fmt.Sprintf("storing: %s", path), "label", "slice")
+			// Read the file
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return errors.Format("%s: %w", msg, err)
+			}
+			if err := p.opts.Store.Set(string(t.Output), data); err != nil {
+				return errors.Format("%s: %w", msg, err)
+			}
+		}
+		return nil
+	})
 
 	return nil
 }
