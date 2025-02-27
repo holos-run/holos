@@ -26,6 +26,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.15
 	github.com/mennanov/fieldmask-utils v1.1.2
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/patrickdappollonio/kubectl-slice v1.4.1
 	github.com/princjef/gomarkdoc v1.1.0
 	github.com/prometheus/client_golang v1.19.1
 	github.com/rogpeppe/go-internal v1.13.2-0.20241226121412-a5dc8ff20d0a
@@ -284,7 +285,6 @@ require (
 	github.com/open-policy-agent/opa v0.63.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
-	github.com/patrickdappollonio/kubectl-slice v1.4.1 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
