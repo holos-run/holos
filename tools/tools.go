@@ -6,14 +6,15 @@ package tools
 // https://go.dev/wiki/Modules
 
 import (
-  _ "sigs.k8s.io/kustomize/kustomize/v5"
 	_ "connectrpc.com/connect/cmd/protoc-gen-connect-go"
 	_ "cuelang.org/go/cmd/cue"
 	_ "github.com/bufbuild/buf/cmd/buf"
 	_ "github.com/fullstorydev/grpcurl/cmd/grpcurl"
 	_ "github.com/google/ko"
+	_ "github.com/patrickdappollonio/kubectl-slice"
 	_ "github.com/princjef/gomarkdoc/cmd/gomarkdoc"
 	_ "golang.org/x/tools/cmd/godoc"
 	_ "google.golang.org/protobuf/cmd/protoc-gen-go"
 	_ "honnef.co/go/tools/cmd/staticcheck"
+	_ "sigs.k8s.io/kustomize/kustomize/v5"
 )
