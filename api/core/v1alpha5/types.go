@@ -190,7 +190,7 @@ type AuthSource struct {
 //  1. [Kustomize] - Patch and transform the output from prior generators or
 //     transformers.  See [Introduction to Kustomize].
 //  2. [Join] - Concatenate multiple prior outputs into one output.
-//  3. [Slice] - Slice an artifact into multiple artifacts using [kubectl-slice]
+//  3. [Slice] - Slice an artifact into multiple artifacts using [kubectl-slice].
 //
 // [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
 // [kubectl-slice]: https://github.com/patrickdappollonio/kubectl-slice

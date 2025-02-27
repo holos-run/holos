@@ -658,17 +658,25 @@ func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {
 
 func slice(ctx context.Context, t core.Transformer, p taskParams) error {
 	log := logger.FromContext(ctx)
-	tempDir, err := os.MkdirTemp("", "holos.slice")
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	defer util.Remove(ctx, tempDir)
 	msg := fmt.Sprintf(
 		"could not transform %s for %s path %s",
 		t.Output,
 		p.buildPlanName,
 		p.opts.Path,
 	)
+	// TODO(jjm): replace this trailing slash hack with proper artifact directory
+	// node support.  This is an expedient hack we use to store a special key with
+	// a trailing / to represent "all keys with this prefix" in the artifact map.
+	// note, this "hack" may be fine.  cloud buckets don't have directories...
+	if !strings.HasSuffix(string(t.Output), "/") {
+		return errors.Format("%s: slice output must end in /", msg)
+	}
+
+	tempDir, err := os.MkdirTemp("", "holos.slice")
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	defer util.Remove(ctx, tempDir)
 
 	// Write the inputs
 	for _, input := range t.Inputs {
@@ -678,15 +686,15 @@ func slice(ctx context.Context, t core.Transformer, p taskParams) error {
 		}
 	}
 
-	// TODO(jjm): plumb output directory to the core schemas
-	var outDir = filepath.Join(tempDir, "slice") // TODO(jjm): hack for expedience
+	// TODO(jjm): useless?
+	var tempDirSlice = filepath.Join(tempDir, "slice") // TODO(jjm): hack for expedience
 
 	// Execute kubectl-slice for each input file, writing to one output directory.
 	for _, input := range t.Inputs {
 		in := filepath.Join(tempDir, string(input))
 		_, err := util.RunCmdW(
 			ctx, p.opts.Stderr,
-			"kubectl-slice", "-f", in, "-o", outDir)
+			"kubectl-slice", "-f", in, "-o", tempDirSlice)
 		if err != nil {
 			return errors.Format("%s: could not run kubectl-slice: %w", msg, err)
 		}
@@ -694,23 +702,29 @@ func slice(ctx context.Context, t core.Transformer, p taskParams) error {
 
 	// Store each file located in the output directory as an artifact.
 	// TODO(jjm): model a directory entry in the artifact map.
-	err = filepath.WalkDir(outDir, func(path string, d fs.DirEntry, err error) error {
+	err = filepath.WalkDir(tempDirSlice, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if !d.IsDir() {
-			log.DebugContext(ctx, fmt.Sprintf("storing: %s", path), "label", "slice")
+			// artifact key, relative to the output field from the transformer
+			artifact := filepath.Join(string(t.Output), filepath.Base(path))
+			log.DebugContext(ctx, fmt.Sprintf("storing: %s to %s", path, artifact), "label", "slice", "artifact", artifact)
 			// Read the file
 			data, err := os.ReadFile(path)
 			if err != nil {
 				return errors.Format("%s: %w", msg, err)
 			}
-			if err := p.opts.Store.Set(string(t.Output), data); err != nil {
+			// Store into the artifact map
+			if err := p.opts.Store.Set(artifact, data); err != nil {
 				return errors.Format("%s: %w", msg, err)
 			}
 		}
 		return nil
 	})
+	if err != nil {
+		return errors.Format("%s: could walk slice output dir: %w", msg, err)
+	}
 
 	return nil
 }

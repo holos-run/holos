@@ -78,6 +78,12 @@ build: ## Build holos executable.
 	@echo "GOPATH=${GOPATH}"
 	go build -trimpath -o bin/$(BIN_NAME) -ldflags $(LD_FLAGS) $(REPO_PATH)/cmd/$(BIN_NAME)
 
+.PHONY: debug
+debug: ## Build debug executable.
+	@echo "building ${BIN_NAME}-debug ${VERSION}"
+	@echo "GOPATH=${GOPATH}"
+	go build -o bin/$(BIN_NAME)-debug $(REPO_PATH)/cmd/$(BIN_NAME)
+
 linux: ## Build holos executable for tilt.
 	@echo "building ${BIN_NAME}.linux ${VERSION}"
 	@echo "GOPATH=${GOPATH}"
