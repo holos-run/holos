@@ -664,10 +664,11 @@ func slice(ctx context.Context, t core.Transformer, p taskParams) error {
 		p.buildPlanName,
 		p.opts.Path,
 	)
-	// TODO(jjm): replace this trailing slash hack with proper artifact directory
-	// node support.  This is an expedient hack we use to store a special key with
-	// a trailing / to represent "all keys with this prefix" in the artifact map.
-	// note, this "hack" may be fine.  cloud buckets don't have directories...
+	// TODO(jjm): replace slash hack with artifact directory support maybe
+	//
+	// NOTE: We do not actually store an artifact with a trailing slash into the
+	// artifact map, this could trigger an infinite recursive loop with the way
+	// this hack is implemented in the artifact Save() method.
 	if !strings.HasSuffix(string(t.Output), "/") {
 		return errors.Format("%s: slice output must end in /", msg)
 	}
@@ -723,7 +724,7 @@ func slice(ctx context.Context, t core.Transformer, p taskParams) error {
 		return nil
 	})
 	if err != nil {
-		return errors.Format("%s: could walk slice output dir: %w", msg, err)
+		return errors.Format("%s: could not walk slice output dir: %w", msg, err)
 	}
 
 	return nil
