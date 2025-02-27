@@ -464,11 +464,12 @@ Transformer combines multiple inputs from prior [Generator](<#Generator>) or [Tr
 
 1. [Kustomize](<#Kustomize>) \- Patch and transform the output from prior generators or transformers. See [Introduction to Kustomize](<https://kubectl.docs.kubernetes.io/guides/config_management/introduction/>).
 2. [Join](<#Join>) \- Concatenate multiple prior outputs into one output.
+3. \[Slice\] \- Slice an artifact into multiple artifacts using [kubectl\\\-slice](<https://github.com/patrickdappollonio/kubectl-slice>).
 
 ```go
 type Transformer struct {
     // Kind represents the kind of transformer. Must be Kustomize, or Join.
-    Kind string `json:"kind" yaml:"kind" cue:"\"Kustomize\" | \"Join\""`
+    Kind string `json:"kind" yaml:"kind" cue:"\"Kustomize\" | \"Join\" | \"Slice\""`
     // Inputs represents the files to transform. The Output of prior Generators
     // and Transformers.
     Inputs []FilePath `json:"inputs" yaml:"inputs"`

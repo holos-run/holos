@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -366,6 +367,10 @@ func (t transformersTask) run(ctx context.Context) error {
 			if err := t.opts.Store.Set(string(transformer.Output), data); err != nil {
 				return errors.Format("%s: %w", msg, err)
 			}
+		case "Slice":
+			if err := slice(ctx, transformer, t.taskParams); err != nil {
+				return errors.Wrap(err)
+			}
 		default:
 			return errors.Format("%s: unsupported kind %s", msg, transformer.Kind)
 		}
@@ -646,6 +651,80 @@ func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {
 	// Store the artifact
 	if err := p.opts.Store.Set(string(t.Output), r.Stdout.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
+	}
+
+	return nil
+}
+
+func slice(ctx context.Context, t core.Transformer, p taskParams) error {
+	log := logger.FromContext(ctx)
+	msg := fmt.Sprintf(
+		"could not transform %s for %s path %s",
+		t.Output,
+		p.buildPlanName,
+		p.opts.Path,
+	)
+	// TODO(jjm): replace slash hack with artifact directory support maybe
+	//
+	// NOTE: We do not actually store an artifact with a trailing slash into the
+	// artifact map, this could trigger an infinite recursive loop with the way
+	// this hack is implemented in the artifact Save() method.
+	if !strings.HasSuffix(string(t.Output), "/") {
+		return errors.Format("%s: slice output must end in /", msg)
+	}
+
+	tempDir, err := os.MkdirTemp("", "holos.slice")
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	defer util.Remove(ctx, tempDir)
+
+	// Write the inputs
+	for _, input := range t.Inputs {
+		path := string(input)
+		if err := p.opts.Store.Save(tempDir, path); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+	}
+
+	// TODO(jjm): useless?
+	var tempDirSlice = filepath.Join(tempDir, "slice") // TODO(jjm): hack for expedience
+
+	// Execute kubectl-slice for each input file, writing to one output directory.
+	for _, input := range t.Inputs {
+		in := filepath.Join(tempDir, string(input))
+		_, err := util.RunCmdW(
+			ctx, p.opts.Stderr,
+			"kubectl-slice", "-f", in, "-o", tempDirSlice)
+		if err != nil {
+			return errors.Format("%s: could not run kubectl-slice: %w", msg, err)
+		}
+	}
+
+	// Store each file located in the output directory as an artifact.
+	// TODO(jjm): model a directory entry in the artifact map.
+	err = filepath.WalkDir(tempDirSlice, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() {
+			// artifact key, relative to the output field from the transformer
+			artifact := filepath.Join(string(t.Output), filepath.Base(path))
+			log.DebugContext(ctx, fmt.Sprintf("storing: %s to %s", path, artifact), "label", "slice", "artifact", artifact)
+			// Read the file
+			data, err := os.ReadFile(path)
+			if err != nil {
+				return errors.Format("%s: %w", msg, err)
+			}
+			// Store into the artifact map
+			if err := p.opts.Store.Set(artifact, data); err != nil {
+				return errors.Format("%s: %w", msg, err)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return errors.Format("%s: could not walk slice output dir: %w", msg, err)
 	}
 
 	return nil

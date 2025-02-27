@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/holos-run/holos/internal/errors"
@@ -60,6 +61,17 @@ func (a *MapStore) Get(path string) (data []byte, ok bool) {
 func (a *MapStore) Save(dir, path string) error {
 	fullPath := filepath.Join(dir, path)
 	msg := fmt.Sprintf("could not save %s", fullPath)
+	// TODO(jjm): replace slash hack with artifact directory support maybe
+	if strings.HasSuffix(path, "/") {
+		for _, key := range a.Keys() {
+			if strings.HasPrefix(key, path) {
+				if err := a.Save(dir, key); err != nil {
+					return errors.Wrap(err)
+				}
+			}
+		}
+		return nil
+	}
 	data, ok := a.Get(path)
 	if !ok {
 		return errors.Format("%s: missing %s", msg, path)
