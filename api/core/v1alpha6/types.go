@@ -25,7 +25,7 @@ type BuildPlan struct {
 	// Kind represents the type of the resource.
 	Kind string `json:"kind" yaml:"kind" cue:"\"BuildPlan\""`
 	// APIVersion represents the versioned schema of the resource.
-	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha5\""`
+	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha6\""`
 	// Metadata represents data about the resource such as the Name.
 	Metadata Metadata `json:"metadata" yaml:"metadata"`
 	// Spec specifies the desired state of the resource.
@@ -244,7 +244,7 @@ type FileContent string
 // it out to the final destination.  Holos may execute validators concurrently.
 // See the [validators] tutorial for an end to end example.
 //
-// [validators]: https://holos.run/docs/v1alpha5/tutorial/validators/
+// [validators]: https://holos.run/docs/v1alpha6/tutorial/validators/
 type Validator struct {
 	// Kind represents the kind of transformer. Must be Kustomize, or Join.
 	Kind string `json:"kind" yaml:"kind" cue:"\"Command\""`
@@ -295,7 +295,7 @@ type Platform struct {
 	// Kind is a string value representing the resource.
 	Kind string `json:"kind" yaml:"kind" cue:"\"Platform\""`
 	// APIVersion represents the versioned schema of this resource.
-	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha5\""`
+	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha6\""`
 	// Metadata represents data about the resource such as the Name.
 	Metadata Metadata `json:"metadata" yaml:"metadata"`
 

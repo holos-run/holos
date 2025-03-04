@@ -108,7 +108,7 @@ type BuildPlan struct {
     // Kind represents the type of the resource.
     Kind string `json:"kind" yaml:"kind" cue:"\"BuildPlan\""`
     // APIVersion represents the versioned schema of the resource.
-    APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha5\""`
+    APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha6\""`
     // Metadata represents data about the resource such as the Name.
     Metadata Metadata `json:"metadata" yaml:"metadata"`
     // Spec specifies the desired state of the resource.
@@ -403,7 +403,7 @@ type Platform struct {
     // Kind is a string value representing the resource.
     Kind string `json:"kind" yaml:"kind" cue:"\"Platform\""`
     // APIVersion represents the versioned schema of this resource.
-    APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha5\""`
+    APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha6\""`
     // Metadata represents data about the resource such as the Name.
     Metadata Metadata `json:"metadata" yaml:"metadata"`
 
@@ -485,7 +485,7 @@ type Transformer struct {
 <a name="Validator"></a>
 ## type Validator {#Validator}
 
-Validator validates files. Useful to validate an [Artifact](<#Artifact>) prior to writing it out to the final destination. Holos may execute validators concurrently. See the [validators](<https://holos.run/docs/v1alpha5/tutorial/validators/>) tutorial for an end to end example.
+Validator validates files. Useful to validate an [Artifact](<#Artifact>) prior to writing it out to the final destination. Holos may execute validators concurrently. See the [validators](<https://holos.run/docs/v1alpha6/tutorial/validators/>) tutorial for an end to end example.
 
 ```go
 type Validator struct {

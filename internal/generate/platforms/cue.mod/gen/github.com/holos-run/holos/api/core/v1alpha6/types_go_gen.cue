@@ -28,7 +28,7 @@ package core
 	kind: string & "BuildPlan" @go(Kind)
 
 	// APIVersion represents the versioned schema of the resource.
-	apiVersion: string & (string | *"v1alpha5") @go(APIVersion)
+	apiVersion: string & (string | *"v1alpha6") @go(APIVersion)
 
 	// Metadata represents data about the resource such as the Name.
 	metadata: #Metadata @go(Metadata)
@@ -270,7 +270,7 @@ package core
 // it out to the final destination.  Holos may execute validators concurrently.
 // See the [validators] tutorial for an end to end example.
 //
-// [validators]: https://holos.run/docs/v1alpha5/tutorial/validators/
+// [validators]: https://holos.run/docs/v1alpha6/tutorial/validators/
 #Validator: {
 	// Kind represents the kind of transformer. Must be Kustomize, or Join.
 	kind: string & "Command" @go(Kind)
@@ -326,7 +326,7 @@ package core
 	kind: string & "Platform" @go(Kind)
 
 	// APIVersion represents the versioned schema of this resource.
-	apiVersion: string & (string | *"v1alpha5") @go(APIVersion)
+	apiVersion: string & (string | *"v1alpha6") @go(APIVersion)
 
 	// Metadata represents data about the resource such as the Name.
 	metadata: #Metadata @go(Metadata)
