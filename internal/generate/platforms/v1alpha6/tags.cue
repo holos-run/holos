@@ -3,7 +3,7 @@ package holos
 import (
 	"encoding/json"
 
-	"github.com/holos-run/holos/api/core/v1alpha5:core"
+	"github.com/holos-run/holos/api/core/v1alpha6:core"
 )
 
 // Note: tags should have a reasonable default value for cue export.

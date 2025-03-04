@@ -1,6 +1,6 @@
 package holos
 
-import "github.com/holos-run/holos/api/author/v1alpha5:author"
+import "github.com/holos-run/holos/api/author/v1alpha6:author"
 
 Platform: author.#Platform & {
 	Name: "default"

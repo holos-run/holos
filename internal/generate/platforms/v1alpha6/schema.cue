@@ -1,6 +1,6 @@
 package holos
 
-import "github.com/holos-run/holos/api/author/v1alpha5:author"
+import "github.com/holos-run/holos/api/author/v1alpha6:author"
 
 #ComponentConfig: author.#ComponentConfig & {
 	Name:      _Tags.component.name
@@ -18,19 +18,19 @@ import "github.com/holos-run/holos/api/author/v1alpha5:author"
 	}
 }
 
-// https://holos.run/docs/api/author/v1alpha5/#Kubernetes
+// https://holos.run/docs/api/author/v1alpha6/#Kubernetes
 #Kubernetes: close({
 	#ComponentConfig
 	author.#Kubernetes
 })
 
-// https://holos.run/docs/api/author/v1alpha5/#Kustomize
+// https://holos.run/docs/api/author/v1alpha6/#Kustomize
 #Kustomize: close({
 	#ComponentConfig
 	author.#Kustomize
 })
 
-// https://holos.run/docs/api/author/v1alpha5/#Helm
+// https://holos.run/docs/api/author/v1alpha6/#Helm
 #Helm: close({
 	#ComponentConfig
 	author.#Helm
