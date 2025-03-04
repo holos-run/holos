@@ -284,12 +284,49 @@ package core
 	command?: #Command @go(Command)
 }
 
-// Command represents a command vetting one or more artifacts.  Holos appends
-// fully qualified input file paths to the end of the args list, then executes
-// the command.  Inputs are written into a temporary directory prior to
-// executing the command and removed afterwards.
+// Command represents a generic command for use as a Generator, Transformer, or
+// Validator.  Holos uses the Go template engine to render the Args field using
+// data provided by the TaskData field.  For example to fill in the fully
+// qualified temporary directory used to provide inputs to the task.
 #Command: {
+	// DisplayName represents a friendly display name for the command.
+	displayName?: string @go(DisplayName)
+
+	// Args represents the complete command argument vector as a go template.
 	args?: [...string] @go(Args,[]string)
+
+	// OutputRef references the source of the output data.
+	outputRef?: #OutputRef @go(OutputRef)
+
+	// TaskData populated by Holos for template rendering.
+	taskData?: #TaskData @go(TaskData)
+}
+
+// TaskData represents data values associated with a pipeline task necessary to
+// execute the task.  For example, the randomly generated temporary directory
+// used to read and write artifact files when executing user defined task
+// commands.  Values of this struct are intended for the Go template engine.
+//
+// Holos populates this struct as needed.  Holos may treat user provided values
+// as an error condition.
+#TaskData: {
+	// TempDir represents the temp directory holos manages for task artifacts.
+	tempDir?: string @go(TempDir)
+}
+
+// OutputRef represents a reference to the data source used as the output of a
+// task.  For example, a Generator output may be sourced from standard output or
+// a file path.
+#OutputRef: {
+	// Kind represents the kind of output produced.
+	kind?: string & (string | *"Pipe" | "Path") @go(Kind)
+
+	// Pipe represents stdout or stderr.  Ignored unless kind is Pipe.
+	pipe?: string & (string | *"stdout" | "stderr") @go(Pipe)
+
+	// Path represents an artifact path relative to the task temp directory.
+	// Ignored unless kind is Path.
+	path?: string @go(Path)
 }
 
 // InternalLabel is an arbitrary unique identifier internal to holos itself.

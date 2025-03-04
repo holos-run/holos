@@ -36,11 +36,13 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 - [type Kustomization](<#Kustomization>)
 - [type Kustomize](<#Kustomize>)
 - [type Metadata](<#Metadata>)
+- [type OutputRef](<#OutputRef>)
 - [type Platform](<#Platform>)
 - [type PlatformSpec](<#PlatformSpec>)
 - [type Repository](<#Repository>)
 - [type Resource](<#Resource>)
 - [type Resources](<#Resources>)
+- [type TaskData](<#TaskData>)
 - [type Transformer](<#Transformer>)
 - [type Validator](<#Validator>)
 - [type ValueFile](<#ValueFile>)
@@ -151,11 +153,18 @@ type Chart struct {
 <a name="Command"></a>
 ## type Command {#Command}
 
-Command represents a command vetting one or more artifacts. Holos appends fully qualified input file paths to the end of the args list, then executes the command. Inputs are written into a temporary directory prior to executing the command and removed afterwards.
+Command represents a generic command for use as a Generator, Transformer, or Validator. Holos uses the Go template engine to render the Args field using data provided by the TaskData field. For example to fill in the fully qualified temporary directory used to provide inputs to the task.
 
 ```go
 type Command struct {
+    // DisplayName represents a friendly display name for the command.
+    DisplayName string `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+    // Args represents the complete command argument vector as a go template.
     Args []string `json:"args,omitempty" yaml:"args,omitempty"`
+    // OutputRef references the source of the output data.
+    OutputRef OutputRef `json:"outputRef,omitempty" yaml:"outputRef,omitempty"`
+    // TaskData populated by Holos for template rendering.
+    TaskData TaskData `json:"taskData,omitempty" yaml:"taskData,omitempty"`
 }
 ```
 
@@ -387,6 +396,23 @@ type Metadata struct {
 }
 ```
 
+<a name="OutputRef"></a>
+## type OutputRef {#OutputRef}
+
+OutputRef represents a reference to the data source used as the output of a task. For example, a Generator output may be sourced from standard output or a file path.
+
+```go
+type OutputRef struct {
+    // Kind represents the kind of output produced.
+    Kind string `json:"kind,omitempty" yaml:"kind,omitempty" cue:"string | *\"Pipe\" | \"Path\""`
+    // Pipe represents stdout or stderr.  Ignored unless kind is Pipe.
+    Pipe string `json:"pipe,omitempty" yaml:"pipe,omitempty" cue:"string | *\"stdout\" | \"stderr\""`
+    // Path represents an artifact path relative to the task temp directory.
+    // Ignored unless kind is Path.
+    Path string `json:"path,omitempty" yaml:"path,omitempty"`
+}
+```
+
 <a name="Platform"></a>
 ## type Platform {#Platform}
 
@@ -455,6 +481,20 @@ Resources represents Kubernetes resources. Most commonly used to mix resources i
 
 ```go
 type Resources map[Kind]map[InternalLabel]Resource
+```
+
+<a name="TaskData"></a>
+## type TaskData {#TaskData}
+
+TaskData represents data values associated with a pipeline task necessary to execute the task. For example, the randomly generated temporary directory used to read and write artifact files when executing user defined task commands. Values of this struct are intended for the Go template engine.
+
+Holos populates this struct as needed. Holos may treat user provided values as an error condition.
+
+```go
+type TaskData struct {
+    // TempDir represents the temp directory holos manages for task artifacts.
+    TempDir string `json:"tempDir,omitempty" yaml:"tempDir,omitempty"`
+}
 ```
 
 <a name="Transformer"></a>
