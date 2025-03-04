@@ -1,0 +1,2 @@
+patching file 'components/blackbox/values.cue'
+patching file 'components/prometheus/values.cue'

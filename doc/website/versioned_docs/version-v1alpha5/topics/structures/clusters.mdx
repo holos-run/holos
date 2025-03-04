@@ -1,0 +1,425 @@
+---
+slug: clusters
+title: Clusters
+description: Managing clusters - management and workload sets.
+sidebar_position: 100
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CommonComponent from '../../common/example-component.mdx';
+
+# Clusters
+
+## Overview
+
+This topic covers one common method to manage multiple clusters with Holos.  We'll
+define two schemas to hold cluster attributes.  First, a single `#Cluster` then
+a `#Clusters` collection.  We'll use a `Clusters: #Clusters` struct to look up
+configuration data using a key.  We'll use the cluster name as the lookup key
+identifying the cluster.
+
+We'll also organize sets of similar clusters by defining `#ClusterSet` and
+`#ClusterSets`.  We'll use a `ClusterSets:
+#ClusterSets` struct to configure a management cluster and iterate over all
+workload clusters.
+
+## The Code
+
+### Initializing the structure
+
+Use `holos` to generate a minimal platform directory structure.  Start by
+creating a blank directory to hold the platform configuration.
+
+```shell
+mkdir holos-multiple-clusters && cd holos-multiple-clusters
+```
+
+```shell
+holos init platform v1alpha5
+```
+
+### Using an example Component
+
+<CommonComponent />
+
+We'll integrate the component with the platform after we define the
+configuration structures.
+
+## Defining Clusters
+
+We'll define a `#Cluster` schema and a `#Clusters` collection in this section.
+We'll use these schemas to define a `Clusters` structure we use to manage
+multiple clusters.
+
+### Assumptions
+
+We'll make the following assumptions, which hold true for many real world
+environments.
+
+1. There are two sets of clusters, workload clusters and management clusters.
+2. There is one management cluster.
+3. There are multiple workload clusters.
+4. Each workload cluster is configured similarly, but not identically, to the
+others.
+
+### Prototyping the data
+
+Before we define the schema, let's prototype the data structure we want to work
+with.  We want a structure that makes it easy to iterate over each cluster in
+two distinct sets of clusters, management clusters and workload clusters.  The
+following `ClusterSets` struct accomplishes this goal.
+
+```yaml showLineNumbers
+management:
+  name: management
+  clusters:
+    management:
+      name: management
+      region: us-central1
+      set: management
+workload:
+  name: workload
+  clusters:
+    e1:
+      name: e1
+      region: us-east1
+      set: workload
+    w1:
+      name: w1
+      region: us-west1
+      set: workload
+```
+
+:::tip
+The `ClusterSets` data structure supports iterating over each cluster in each
+cluster set.
+:::
+
+:::important
+You're free to define your own fields and structures like we define `region` in
+this topic.
+:::
+
+### Defining the schema
+
+Armed with a concrete example of the structure, we can write a schema to define
+and validate the data.
+
+In CUE, schema definitions are usually defined at the root so they're accessible
+in all subdirectories.  The following is one example schema, you're free to
+modify it to your situation.  Holos is flexible, supporting schemas that match
+your unique use case.
+
+```bash
+cat <<EOF > clusters.schema.cue
+```
+```cue showLineNumbers
+package holos
+
+import "strings"
+
+// #Cluster represents one cluster
+#Cluster: {
+	// name represents the cluster name.
+	name: string & =~"[a-z][a-z0-9]+" & strings.MinRunes(2) & strings.MaxRunes(63)
+	// Constrain the regions.  No default, the region must be specified.
+	region: "us-east1" | "us-central1" | "us-west1"
+	// Each cluster must be in only one set of clusters.  All but one cluster are
+	// workload clusters, so make it the default.
+	set: "management" | *"workload"
+}
+
+// #Clusters represents a cluster collection structure
+#Clusters: {
+	// name is the lookup key for the collection.
+	[NAME=string]: #Cluster & {
+		// name must match the struct field name.
+		name: NAME
+	}
+}
+
+// #ClusterSet represents a set of clusters.
+#ClusterSet: {
+	// name represents the cluster set name.
+	name: string & =~"[a-z][a-z0-9]+" & strings.MinRunes(2) & strings.MaxRunes(63)
+	clusters: #Clusters & {
+		// Constrain the cluster set to clusters having the same set.  Ensures
+		// clusters are never mis-categorized.
+		[_]: set: name
+	}
+}
+
+// #ClusterSets represents a cluster set collection.
+#ClusterSets: {
+	// name is the lookup key for the collection.
+	[NAME=string]: #ClusterSet & {
+		// name must match the struct field name.
+		name: NAME
+	}
+}
+```
+```bash
+EOF
+```
+
+### Defining the data
+
+With a schema defined, we also define the data close to the root so it's
+accessible through the unified configuration tree.
+
+```bash
+cat <<EOF > clusters.cue
+```
+```cue showLineNumbers
+package holos
+
+Clusters: #Clusters & {
+	// Management Cluster
+	management: region: "us-central1"
+	management: set:    "management"
+	// Local Cluster
+	local: region: "us-west1"
+	// Some example clusters.  Add new clusters to the Clusters struct like this.
+	e1: region: "us-east1"
+	e2: region: "us-east1"
+	e3: region: "us-east1"
+	w1: region: "us-west1"
+	w2: region: "us-west1"
+	w3: region: "us-west1"
+}
+
+// ClusterSets is dynamically built from the Clusters structure.
+ClusterSets: #ClusterSets & {
+	// Map every cluster into the correct set.
+	for CLUSTER in Clusters {
+		(CLUSTER.set): clusters: (CLUSTER.name): CLUSTER
+	}
+}
+```
+```bash
+EOF
+```
+
+### Inspecting the data
+
+We'll use the `holos cue` command to inspect the `ClusterSets` data structure we
+just defined.
+
+<Tabs groupId="9190BDAD-B4C5-4386-9C94-8E178AA6178A">
+  <TabItem value="command" label="Command">
+```bash
+holos cue export --expression ClusterSets --out=yaml ./
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```yaml showLineNumbers
+management:
+  name: management
+  clusters:
+    management:
+      name: management
+      region: us-central1
+      set: management
+workload:
+  name: workload
+  clusters:
+    local:
+      name: local
+      region: us-west1
+      set: workload
+    e1:
+      name: e1
+      region: us-east1
+      set: workload
+    e2:
+      name: e2
+      region: us-east1
+      set: workload
+    e3:
+      name: e3
+      region: us-east1
+      set: workload
+    w1:
+      name: w1
+      region: us-west1
+      set: workload
+    w2:
+      name: w2
+      region: us-west1
+      set: workload
+    w3:
+      name: w3
+      region: us-west1
+      set: workload
+```
+  </TabItem>
+</Tabs>
+
+This looks like our prototype, we're confident we can iterate over each cluster
+in each set.
+
+## Integrating Components
+
+The `ClusterSets` data structure unlocks the capability to iterate over each
+cluster in each cluster set.  We'll use this capability to integrate the
+`podinfo` component with each cluster in the platform.
+
+### Configuring the Output directory
+
+We need to configure `holos` to write output manifests into a cluster specific
+output directory.  We'll use the [ComponentConfig] `OutputBaseDir` field for
+this purpose.  We'll pass the value of this field as a component parameter.
+
+```bash
+cat <<EOF > componentconfig.cue
+```
+```cue showLineNumbers
+package holos
+
+#ComponentConfig: {
+	// Inject the output base directory from platform component parameters.
+	OutputBaseDir: string @tag(outputBaseDir, type=string)
+}
+```
+```bash
+EOF
+```
+
+### Integrating Podinfo
+
+```bash
+cat <<EOF >platform/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+// Manage podinfo on all workload clusters.
+for CLUSTER in ClusterSets.workload.clusters {
+	// We use the cluster name to disambiguate different podinfo build plans.
+	Platform: Components: "\(CLUSTER.name)-podinfo": {
+		name: "podinfo"
+		// Reuse the same component across multiple workload clusters.
+		path: "components/podinfo"
+		// Configure a cluster-unique message in the podinfo UI.
+		parameters: message: "Hello, I am cluster \(CLUSTER.name) in region \(CLUSTER.region)"
+		// Write to deploy/{outputBaseDir}/components/{name}/{name}.gen.yaml
+		parameters: outputBaseDir: "clusters/\(CLUSTER.name)"
+	}
+}
+```
+```bash
+EOF
+```
+
+## Rendering manifests
+
+### Rendering the Platform
+
+Render the platform to configure `podinfo` on each cluster.
+
+<Tabs groupId="34A2D80B-0E86-4142-B65B-7DF70C47E1D2">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+cached podinfo 6.6.2
+rendered podinfo in 164.278583ms
+rendered podinfo in 165.48525ms
+rendered podinfo in 165.186208ms
+rendered podinfo in 165.831792ms
+rendered podinfo in 166.845208ms
+rendered podinfo in 167.000208ms
+rendered podinfo in 167.012208ms
+rendered platform in 167.06525ms
+```
+  </TabItem>
+</Tabs>
+
+### Inspecting the Tree
+
+Rendering the platform produces the following rendered manifests.
+
+```bash
+tree deploy
+```
+```txt showLineNumbers
+deploy
+└── clusters
+    ├── e1
+    │   └── components
+    │       └── podinfo
+    │           └── podinfo.gen.yaml
+    ├── e2
+    │   └── components
+    │       └── podinfo
+    │           └── podinfo.gen.yaml
+    ├── e3
+    │   └── components
+    │       └── podinfo
+    │           └── podinfo.gen.yaml
+    ├── local
+    │   └── components
+    │       └── podinfo
+    │           └── podinfo.gen.yaml
+    ├── w1
+    │   └── components
+    │       └── podinfo
+    │           └── podinfo.gen.yaml
+    ├── w2
+    │   └── components
+    │       └── podinfo
+    │           └── podinfo.gen.yaml
+    └── w3
+        └── components
+            └── podinfo
+                └── podinfo.gen.yaml
+
+23 directories, 7 files
+```
+
+### Inspecting the Variation
+
+Note how each component has slight variation using the component parameters.
+
+```bash
+diff -U2 deploy/clusters/{e,w}1/components/podinfo/podinfo.gen.yaml
+```
+
+```diff
+--- deploy/clusters/e1/components/podinfo/podinfo.gen.yaml	2024-11-17 14:20:17
++++ deploy/clusters/w1/components/podinfo/podinfo.gen.yaml	2024-11-17 14:20:17
+@@ -61,5 +61,5 @@
+         env:
+         - name: PODINFO_UI_MESSAGE
+-          value: Hello, I am cluster e1 in region us-east1
++          value: Hello, I am cluster w1 in region us-west1
+         - name: PODINFO_UI_COLOR
+           value: '#34577c'
+
+```
+
+## Concluding Remarks
+
+In this topic we covered how to use CUE structures to organize multiple clusters
+into various sets.
+
+1. Clusters are defined in one place at the root of the configuration.
+2. Clusters may be organized into sets by their purpose.
+3. Most organizations have at least two sets, a set of workload clusters and a
+set of management clusters.
+4. Holos uses CUE, a super set of JSON.  New clusters may be added by dropping a
+JSON file into the root of the repository.
+5. The pattern of defining a `#Cluster` and a `#Clusters` collection is a
+general pattern.  We'll see the same pattern for environments, projects, owners,
+and more.
+6. Component parameters are a flexible way to inject user defined configuration
+from the platform level into a reusable component.
+
+[ClusterSet]: https://multicluster.sigs.k8s.io/api-types/cluster-set/
+[Environments]: ./environments.mdx
+[Namespace Sameness - SIG Multicluster Position Statement]: https://github.com/kubernetes/community/blob/master/sig-multicluster/namespace-sameness-position-statement.md
+[ComponentConfig]: ../../api/author.md#ComponentConfig

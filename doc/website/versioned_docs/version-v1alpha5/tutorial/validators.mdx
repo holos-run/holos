@@ -1,0 +1,428 @@
+---
+slug: validators
+title: Validators
+description: Validate rendered manifests against policy definitions.
+sidebar_position: 60
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import RenderingOverview from '@site/src/diagrams/rendering-overview.mdx';
+
+# Validators
+
+## Overview
+
+Sometimes Helm charts render Secrets we do not wanted committed to version
+control for security.  Helm charts often render incorrect manifests, even if
+they're accepted by the api server.  For example, passing `null` to collection
+fields.  We'll solve both of these issues using a [Validator] to block artifacts
+with a Secret resource, and verifying the artifact against Kubernetes type
+definitions.
+
+1. If a Helm chart renders a Secret, Holos errors before writing the artifact
+and suggests an ExternalSecret instead.
+2. Each resource is validated against a field named by the value of the kind
+field.  For example, a `kind: Secret` resource validates against `secret: {}` in
+CUE.  `kind: Deployment` validates against `deployment: {}` in CUE.
+3. The final artifact is validated, covering the output of all generators and
+transformers.
+
+<RenderingOverview />
+
+## The Code
+
+### Generating the Structure
+
+Use `holos` to generate a minimal platform directory structure. First, create
+and navigate into a blank directory. Then, use the `holos generate platform`
+command to generate a minimal platform.
+
+```shell
+mkdir holos-validators-tutorial && cd holos-validators-tutorial
+holos init platform v1alpha5
+```
+
+### Creating the Component
+
+Create the directory for the `podinfo` component. Create an empty file, then add
+the following CUE configuration to it.
+
+```bash
+mkdir -p components/podinfo
+```
+```bash
+cat <<EOF > components/podinfo/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+// export the component build plan to holos
+holos: Component.BuildPlan
+
+// Component is a Helm chart
+Component: #Helm & {
+	Name:      "podinfo"
+	Namespace: "default"
+	// Add metadata.namespace to all resources with kustomize.
+	KustomizeConfig: Kustomization: namespace: Namespace
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+}
+```
+```bash
+EOF
+```
+
+Register the component with the platform.
+
+```bash
+cat <<EOF > platform/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+Platform: Components: podinfo: {
+	name: "podinfo"
+	path: "components/podinfo"
+}
+```
+```bash
+EOF
+```
+
+Render the platform.
+
+<Tabs groupId="tutorial-hello-render-manifests">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```
+cached podinfo 6.6.2
+rendered podinfo in 1.938665041s
+rendered platform in 1.938759417s
+```
+  </TabItem>
+</Tabs>
+
+Add and commit the initial configuration.
+
+```bash
+git init . && git add . && git commit -m initial
+```
+
+### Define the Valid Schema
+
+We'll use a CUE package named `policy` so the entire platform configuration in
+package `holos` isn't loaded every time we validate an artifact.
+
+Create `policy/validation-schema.cue` with the following content.
+
+```shell
+mkdir -p policy
+cat <<EOF > policy/validation-schema.cue
+```
+```cue showLineNumbers
+package policy
+
+import apps "k8s.io/api/apps/v1"
+
+// Organize by kind then name to avoid conflicts.
+kind: [KIND=string]: [NAME=string]: {...}
+
+// Useful when one component manages the same resource kind and name across
+// multiple namespaces.
+let KIND = kind
+namespace: [NS=string]: KIND
+
+// Block Secret resources. kind will not unify with "Secret"
+kind: secret: [NAME=string]: kind: "Use an ExternalSecret instead.  Forbidden by security policy.  secret/\(NAME)"
+
+// Validate Deployment against Kubernetes type definitions.
+kind: deployment: [_]: apps.#Deployment
+```
+```shell
+EOF
+```
+
+### Configuring Validators
+
+Configure the Validators [ComponentConfig] field to configure each [BuildPlan]
+to validate the rendered [Artifact] files.
+
+```shell
+cat <<EOF > validators.cue
+```
+```cue showLineNumbers
+package holos
+
+// Configure all component kinds to validate against the policy directory.
+#ComponentConfig: Validators: cue: {
+	kind: "Command"
+	// Note --path maps each resource to a top level field named by the kind.
+	command: args: [
+		"holos",
+		"cue",
+		"vet",
+		"./policy",
+		"--path=\"namespace\"",
+		"--path=metadata.namespace",
+		"--path=strings.ToLower(kind)",
+		"--path=metadata.name",
+	]
+}
+```
+```shell
+EOF
+```
+
+### Patching Errors
+
+Render the platform to see validation fail.  The podinfo chart has no Secret,
+but it produces an invalid Deployment because it sets the container resource
+limits field to `null`.
+
+```shell
+holos render platform
+```
+
+```txt
+deployment.spec.template.spec.containers.0.resources.limits: conflicting values null and {[string]:"k8s.io/apimachinery/pkg/api/resource".#Quantity} (mismatched types null and struct):
+    ./cue.mod/gen/k8s.io/api/apps/v1/types_go_gen.cue:355:9
+    ./cue.mod/gen/k8s.io/api/apps/v1/types_go_gen.cue:376:12
+    ./cue.mod/gen/k8s.io/api/core/v1/types_go_gen.cue:2840:11
+    ./cue.mod/gen/k8s.io/api/core/v1/types_go_gen.cue:2968:14
+    ./cue.mod/gen/k8s.io/api/core/v1/types_go_gen.cue:3882:15
+    ./cue.mod/gen/k8s.io/api/core/v1/types_go_gen.cue:3882:18
+    ./cue.mod/gen/k8s.io/api/core/v1/types_go_gen.cue:5027:9
+    ./cue.mod/gen/k8s.io/api/core/v1/types_go_gen.cue:6407:16
+    ./policy/validation-schema.cue:9:13
+    ../../../../../var/folders/22/T/holos.validate1636392304/components/podinfo/podinfo.gen.yaml:104:19
+could not run: terminating because of errors
+could not run: could not validate podinfo path ./components/podinfo: could not run command: holos cue vet ./policy --path strings.ToLower(kind) /var/folders/22/T/holos.validate1636392304/components/podinfo/podinfo.gen.yaml: exit status 1 at builder/v1alpha5/builder.go:411
+could not run: could not render component: could not run command: holos --log-level info --log-format console render component --inject holos_component_name=podinfo --inject holos_component_path=components/podinfo ./components/podinfo: exit status 1 at cli/render/render.go:155
+```
+
+We'll use a [Kustomize] patch [Transformer] to replace the `null` limits field
+with a valid equivalent value.
+
+:::important
+This configuration is defined in CUE, not YAML, even though we're configuring a
+Kustomize patch transformer.  CUE gives us access to the unified platform
+configuration.
+:::
+
+```shell
+cat <<EOF > components/podinfo/patch.cue
+```
+```cue showLineNumbers
+package holos
+
+import "encoding/yaml"
+
+Component: KustomizeConfig: Kustomization: {
+	_patches: limits: {
+		target: kind: "Deployment"
+		patch: yaml.Marshal([{
+			op:    "test"
+			path:  "/spec/template/spec/containers/0/resources/limits"
+			value: null
+		}, {
+			op:   "replace"
+			path: "/spec/template/spec/containers/0/resources/limits"
+			value: {}
+		}])
+	}
+	patches: [for x in _patches {x}]
+}
+```
+```shell
+EOF
+```
+
+Now the platform renders.
+
+<Tabs groupId="3A050092-8E56-49D4-84A9-71E544A21276">
+  <TabItem value="command" label="Command">
+```bash
+holos render platform
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```txt
+rendered podinfo in 181.875083ms
+rendered platform in 181.975833ms
+```
+  </TabItem>
+</Tabs>
+
+## Inspecting the BuildPlan
+
+The BuildPlan patches the output of the upstream helm chart without modifying
+it, then validates the artifact against the Kubernetes type definitions.
+
+<Tabs groupId="1DAB4C46-0793-4CCA-8930-7B2E60BDA1BE">
+  <TabItem value="command" label="Command">
+```bash
+holos show buildplans
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```yaml showLineNumbers
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: podinfo
+spec:
+  artifacts:
+    - artifact: components/podinfo/podinfo.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: podinfo
+              version: 6.6.2
+              release: podinfo
+              repository:
+                name: podinfo
+                url: https://stefanprodan.github.io/podinfo
+            values: {}
+            namespace: default
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: components/podinfo/podinfo.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              namespace: default
+              patches:
+                - patch: |
+                    - op: test
+                      path: /spec/template/spec/containers/0/resources/limits
+                      value: null
+                    - op: replace
+                      path: /spec/template/spec/containers/0/resources/limits
+                      value: {}
+                  target:
+                    kind: Deployment
+                    name: ""
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+      validators:
+        - kind: Command
+          inputs:
+            - components/podinfo/podinfo.gen.yaml
+          command:
+            args:
+              - holos
+              - cue
+              - vet
+              - ./policy
+              - --path
+              - strings.ToLower(kind)
+```
+  </TabItem>
+</Tabs>
+
+## Catching Mistakes
+
+Suppose a teammate downloads a helm chart that includes a Secret unbeknown to
+them.  Holos catches the problem and suggests an ExternalSecret instead.
+
+Mix in a Secret to see what happens
+
+```shell
+cat <<EOF > components/podinfo/secret.cue
+```
+```cue showLineNumbers
+package holos
+
+Component: Resources: Secret: example: metadata: name: "example"
+```
+```shell
+EOF
+```
+
+Render the platform to see the error.
+
+```shell
+holos render platform
+```
+```txt
+secret.kind: conflicting values "Use an ExternalSecret instead.  Forbidden by security policy." and "Secret":
+    ./policy/validation-schema.cue:6:15
+    ../../../../../var/folders/22/T/holos.validate2549739170/components/podinfo/podinfo.gen.yaml:1:7
+could not run: terminating because of errors
+could not run: could not validate podinfo path ./components/podinfo: could not run command: holos cue vet ./policy --path strings.ToLower(kind) /var/folders/22/T/holos.validate2549739170/components/podinfo/podinfo.gen.yaml: exit status 1 at builder/v1alpha5/builder.go:411
+could not run: could not render component: could not run command: holos --log-level info --log-format console render component --inject holos_component_name=podinfo --inject holos_component_path=components/podinfo ./components/podinfo: exit status 1 at cli/render/render.go:155
+```
+
+:::important
+Holos quickly returns an error if validated artifacts have a Secret.
+:::
+
+Remove the secret to resolve the issue.
+
+```shell
+rm components/podinfo/secret.cue
+```
+
+## Inspecting the diff
+
+The validation and patch results in a correct Deployment, verified against the
+Kubernetes type definitions.
+
+```shell
+git diff
+```
+```diff
+diff --git a/deploy/components/podinfo/podinfo.gen.yaml b/deploy/components/podinfo/podinfo.gen.yaml
+index 6e4aec0..a145e3f 100644
+--- a/deploy/components/podinfo/podinfo.gen.yaml
++++ b/deploy/components/podinfo/podinfo.gen.yaml
+@@ -101,7 +101,7 @@ spec:
+           successThreshold: 1
+           timeoutSeconds: 5
+         resources:
+-          limits: null
++          limits: {}
+           requests:
+             cpu: 1m
+             memory: 16Mi
+```
+
+## Trying Locally
+
+Optionally, apply the manifests rendered by Holos to a [Local Cluster] for
+testing.
+
+[Local Cluster]: ../topics/local-cluster.mdx
+[ExternalSecret]: https://external-secrets.io/latest/api/externalsecret/
+[Artifact]: ../api/core.md#Artifact
+[BuildPlan]: ../api/core.md#BuildPlan
+[Resources]: ../api/core.md#Resources
+[Validator]: ../api/core.md#Validator
+[Transformer]: ../api/core.md#Transformer
+[Kustomize]: ../api/core.md#Kustomize
+[Generator]: ../api/core.md#Generator
+[Hello Holos]: ./hello-holos.mdx
+[cue.mod/gen/external-secrets.io/externalsecret/v1beta1/types_gen.cue]: https://github.com/holos-run/holos/blob/main/internal/generate/platforms/cue.mod/gen/external-secrets.io/externalsecret/v1beta1/types_gen.cue#L13
+[ComponentConfig]: ../api/author.md#ComponentConfig
+[timoni]: https://timoni.sh/install/
+[resources.cue]: https://github.com/holos-run/holos/blob/main/internal/generate/platforms/v1alpha5/resources.cue#L33

@@ -1,0 +1,34 @@
+Create a directory for the example `podinfo` component we'll use to render
+platform manifests.
+
+```bash
+mkdir -p components/podinfo
+```
+
+Create the CUE configuration for the example `podinfo` component.
+
+```bash
+cat <<EOF >components/podinfo/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+holos: Component.BuildPlan
+
+Component: #Helm & {
+	Name: "podinfo"
+	Chart: {
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+	Values: ui: {
+		message: string | *"Hello World" @tag(message, type=string)
+	}
+}
+```
+```bash
+EOF
+```

@@ -1,0 +1,80 @@
+---
+slug: overview
+title: Overview
+description: Learn how Holos integrates software into a holistic platform.
+sidebar_position: 10
+---
+
+import RenderingOverview from '@site/src/diagrams/rendering-overview.mdx';
+import YouTube from '@site/src/components/YouTube';
+
+# Tutorial
+
+## Overview
+
+Holos is a configuration management tool for Kubernetes implementing the
+[rendered manifests pattern]. It handles configurations ranging from single
+resources to multi-cluster platforms across regions.
+
+{/* truncate */}
+
+Key components:
+- Platform schemas defining component integration
+- Building blocks unifying Helm, Kustomize and Kubernetes configs with CUE
+- BuildPlan pipeline for generating, transforming and validating manifests
+
+<RenderingOverview />
+
+{/* TODO: Replace this with the Advantages diagram we talked about. */}
+
+## Video
+
+The video below offers a basic overview of Holos by walking you through the
+tooling gap at the Kubernetes integration layer and demonstrating how to
+integrate multiple Helm charts using data from CUE.
+
+{/* cspell:disable-next-line */}
+<YouTube id="PSdceGlhHGo"/>
+
+## Holos' role in your organization
+
+Platform engineers use Holos to generate Kubernetes manifests, both locally and
+in CI pipelines. The manifests are committed to version control and deployed via
+GitOps tools like ArgoCD or Flux.
+
+Holos integrates seamlessly with existing Helm charts, Kustomize bases, and
+other version-controlled configurations.
+
+## Advantages of Holos
+
+### Safe
+
+Holos leverages [CUE] for strong typing and validation of configuration data,
+ensuring consistent output from Helm and other tools.
+
+### Consistent
+
+A unified pipeline processes all configurations - whether from CUE, Helm, or
+Kustomize - through the same well-defined stages.
+
+### Flexible
+
+Composable building blocks for generation, transformation, validation and
+integration let teams assemble workflows that match their needs.
+
+The core is intentionally unopinionated about platform configuration patterns.
+Common needs like environments and clusters are provided as customizable
+[topics] recipes rather than enforced structures.
+
+## Getting Help
+
+Get support through our [Discord] channel or [GitHub discussions]. Configuration
+challenges arise at all experience levels - we welcome your questions and are
+here to help.
+
+[rendered manifests pattern]: https://akuity.io/blog/the-rendered-manifests-pattern
+[CUE]: https://cuelang.org/
+[Discord]: https://discord.gg/JgDVbNpye7
+[GitHub discussions]: https://github.com/holos-run/holos/discussions
+[Why CUE for Configuration]: https://holos.run/blog/why-cue-for-configuration/
+[topics]: ../topics.mdx

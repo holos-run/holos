@@ -1,0 +1,7 @@
+[main 654ae06] add blackbox and prometheus
+ 5 files changed, 1550 insertions(+)
+ create mode 100644 components/blackbox/blackbox.cue
+ create mode 100644 components/prometheus/prometheus.cue
+ create mode 100644 deploy/components/blackbox/blackbox.gen.yaml
+ create mode 100644 deploy/components/prometheus/prometheus.gen.yaml
+ create mode 100644 platform/prometheus.cue

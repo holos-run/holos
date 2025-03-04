@@ -1,0 +1,16 @@
+Integrate the `podinfo` component into the platform.
+
+```bash
+cat <<EOF >platform/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+Platform: Components: podinfo: {
+	name: "podinfo"
+	path: "components/podinfo"
+}
+```
+```bash
+EOF
+```

@@ -1,0 +1,65 @@
+---
+description: OCI Helm Charts
+slug: oci-helm-charts
+sidebar_position: 710
+---
+
+# OCI Helm Charts
+
+Holos supports OCI Helm charts.  Use the following example to get started.
+
+```bash
+mkdir -p oci-helm && cd oci-helm
+holos init platform v1alpha5
+```
+
+```bash
+mkdir -p components/podinfo-oci
+cat <<EOF > components/podinfo-oci/podinfo-oci.cue
+```
+```cue showLineNumbers
+package holos
+
+holos: Component.BuildPlan
+
+Component: #Helm & {
+	Chart: {
+		name:    "oci://ghcr.io/stefanprodan/charts/podinfo"
+		release: "podinfo"
+		version: "6.6.2"
+	}
+}
+```
+```bash
+EOF
+```
+
+Register the component with the platform.
+
+```bash
+cat <<EOF >platform/podinfo-oci.cue
+```
+```cue showLineNumbers
+package holos
+
+Platform: Components: podinfo: {
+	name: "podinfo-oci"
+	path: "components/podinfo-oci"
+}
+```
+```bash
+EOF
+```
+
+The OCI chart is cached in the vendor directory and rendered.
+
+```bash
+holos render platform
+```
+
+```txt
+Pulled: ghcr.io/stefanprodan/charts/podinfo:6.6.2
+Digest: sha256:83295d47de6d6ca634ed4b952a7572fc176bcc38854d0c11ca0fa197bc5f1154
+rendered podinfo-oci in 7.21581325s
+rendered platform in 7.216199167s
+```
