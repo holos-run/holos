@@ -23,7 +23,7 @@
 // [topics]: https://holos.run/docs/topics/
 package author
 
-import "github.com/holos-run/holos/api/core/v1alpha5:core"
+import "github.com/holos-run/holos/api/core/v1alpha6:core"
 
 // Platform assembles a core Platform in the Resource field for the holos render
 // platform command.  Use the Components field to register components with the

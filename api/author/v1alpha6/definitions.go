@@ -19,7 +19,7 @@
 // [topics]: https://holos.run/docs/topics/
 package author
 
-import core "github.com/holos-run/holos/api/core/v1alpha5"
+import core "github.com/holos-run/holos/api/core/v1alpha6"
 
 //go:generate ../../../hack/gendoc
 
