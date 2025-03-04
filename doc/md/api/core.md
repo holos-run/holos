@@ -7,7 +7,7 @@ sidebar_position: 100
 
 
 ```go
-import "github.com/holos-run/holos/api/core/v1alpha5"
+import "github.com/holos-run/holos/api/core/v1alpha6"
 ```
 
 Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#BuildPlan>). Holos takes a [Platform](<#Platform>) as input, then iterates over each [Component](<#Component>) to produce a [BuildPlan](<#BuildPlan>). Holos processes the [BuildPlan](<#BuildPlan>) to produce fully rendered manifests, each an [Artifact](<#Artifact>).
