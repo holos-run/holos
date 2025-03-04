@@ -2,7 +2,7 @@ package author
 
 import (
 	ks "sigs.k8s.io/kustomize/api/types"
-	core "github.com/holos-run/holos/api/core/v1alpha5:core"
+	core "github.com/holos-run/holos/api/core/v1alpha6:core"
 )
 
 #Platform: {
