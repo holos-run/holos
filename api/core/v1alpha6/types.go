@@ -30,6 +30,24 @@ type BuildPlan struct {
 	Metadata Metadata `json:"metadata" yaml:"metadata"`
 	// Spec specifies the desired state of the resource.
 	Spec BuildPlanSpec `json:"spec" yaml:"spec"`
+	// Context represents build context values owned by the holos render component
+	// command.  End users should not manage context field values.  End users may
+	// reference context fields from within CUE to refer to late binding concrete
+	// values defined just before holos executes the build plan.
+	Context BuildContext `json:"context" yaml:"context"`
+}
+
+// BuildContext represents build context values provided by the holos render
+// component command.  These values are expected to be randomly generated and
+// late binding, meaning they cannot be known ahead of time in a static
+// configuration.  As such, CUE configuration may refer to the values here which
+// will be populated by holos when the final build plan is exported from CUE.
+type BuildContext struct {
+	// TempDir represents the temporary directory managed and owned by the holos
+	// render component command for the execution of one BuildPlan.  Multiple
+	// tasks in the build plan share this temporary directory and therefore should
+	// avoid reading and writing into the same sub-directories as one another.
+	TempDir string `json:"tempDir" yaml:"tempDir" cue:"string | *\"${TEMP_DIR_PLACEHOLDER}\""`
 }
 
 // BuildPlanSpec represents the specification of the [BuildPlan].
@@ -277,7 +295,8 @@ type Validator struct {
 type Command struct {
 	// DisplayName of the command.  The basename of args[0] is used if empty.
 	DisplayName string `json:"displayName,omitempty" yaml:"displayName,omitempty"`
-	// Args represents the argument vector passed to the system.
+	// Args represents the argument vector passed to the system to execute the
+	// command.
 	Args []string `json:"args,omitempty" yaml:"args,omitempty"`
 	// Env represents environment variables to set in the command context.
 	Env []EnvVar `json:"env,omitempty" yaml:"env,omitempty"`
