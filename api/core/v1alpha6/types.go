@@ -44,28 +44,37 @@ type BuildPlanSpec struct {
 // sequence, which transforms a [Generator] collection.  A [BuildPlan] produces
 // an [Artifact] collection.
 //
-// Each Artifact produces one manifest file artifact.  Generator Output values
-// are used as Transformer Inputs.  The Output field of the final [Transformer]
-// should have the same value as the Artifact field.
+// Each Artifact produces one manifest file or directory artifact.  Generator
+// Output values are used as Transformer Inputs.  The Output field of the final
+// [Transformer] should have the same value as the Artifact field.
 //
-// When there is more than one [Generator] there must be at least one
-// [Transformer] to combine outputs into one Artifact.  If there is a single
-// Generator, it may directly produce the Artifact output.
+// When there is more than one [Generator] there should be at least one
+// [Transformer] to combine outputs into one Artifact file, or the final
+// artifact should be a directory containing the outputs of the generators.  If
+// there is a single Generator, it may directly produce the Artifact output.
 //
 // An Artifact is processed concurrently with other artifacts in the same
-// [BuildPlan].  An Artifact should not use an output from another Artifact as
-// an input.  Each [Generator] may also run concurrently.  Each [Transformer] is
-// executed sequentially starting after all generators have completed.
+// [BuildPlan].  One Artifact must not use an output of another Artifact as an
+// input.  Each [Generator] within an artifact also runs concurrently with
+// generators of the same artifact.  Each [Transformer] is executed sequentially
+// starting after all generators have completed.
 //
 // Output fields are write-once.  It is an error for multiple Generators or
 // Transformers to produce the same Output value within the context of a
 // [BuildPlan].
+//
+// When directories are used as inputs or outputs, they behave similar to how
+// `git` works with directories.  When the output field references a directory,
+// all files within the directory are recursively stored using their relative
+// path as a key.  Similar to git add .  When the input field references an
+// absent file, a / is appended and the resulting value is used as a prefix
+// match against all previous task outputs.
 type Artifact struct {
-	Artifact     FilePath      `json:"artifact,omitempty" yaml:"artifact,omitempty"`
-	Generators   []Generator   `json:"generators,omitempty" yaml:"generators,omitempty"`
-	Transformers []Transformer `json:"transformers,omitempty" yaml:"transformers,omitempty"`
-	Validators   []Validator   `json:"validators,omitempty" yaml:"validators,omitempty"`
-	Skip         bool          `json:"skip,omitempty" yaml:"skip,omitempty"`
+	Artifact     FileOrDirectoryPath `json:"artifact,omitempty" yaml:"artifact,omitempty"`
+	Generators   []Generator         `json:"generators,omitempty" yaml:"generators,omitempty"`
+	Transformers []Transformer       `json:"transformers,omitempty" yaml:"transformers,omitempty"`
+	Validators   []Validator         `json:"validators,omitempty" yaml:"validators,omitempty"`
+	Skip         bool                `json:"skip,omitempty" yaml:"skip,omitempty"`
 }
 
 // Generator generates Kubernetes resources.  [Helm] and [Resources] are the
@@ -79,11 +88,12 @@ type Artifact struct {
 //  1. [Resources] - Generates resources from CUE code.
 //  2. [Helm] - Generates rendered yaml from a [Chart].
 //  3. [File] - Generates data by reading a file from the component directory.
+//  4. [Command] - Generates data by executing an user defined command.
 type Generator struct {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
-	Kind string `json:"kind" yaml:"kind" cue:"\"Resources\" | \"Helm\" | \"File\""`
+	Kind string `json:"kind" yaml:"kind" cue:"\"Resources\" | \"Helm\" | \"File\" | \"Command\""`
 	// Output represents a file for a Transformer or Artifact to consume.
-	Output FilePath `json:"output" yaml:"output"`
+	Output FileOrDirectoryPath `json:"output" yaml:"output"`
 	// Resources generator. Ignored unless kind is Resources.  Resources are
 	// stored as a two level struct.  The top level key is the Kind of resource,
 	// e.g. Namespace or Deployment.  The second level key is an arbitrary
@@ -94,6 +104,8 @@ type Generator struct {
 	Helm Helm `json:"helm,omitempty" yaml:"helm,omitempty"`
 	// File generator. Ignored unless kind is File.
 	File File `json:"file,omitempty" yaml:"file,omitempty"`
+	// Command generator. Ignored unless kind is Command.
+	Command Command `json:"command,omitempty" yaml:"command,omitempty"`
 }
 
 // Resource represents one kubernetes api object.
@@ -190,21 +202,24 @@ type AuthSource struct {
 //  1. [Kustomize] - Patch and transform the output from prior generators or
 //     transformers.  See [Introduction to Kustomize].
 //  2. [Join] - Concatenate multiple prior outputs into one output.
+//  3. [Command] - Transforms data by executing an user defined command.
 //
 // [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
 type Transformer struct {
 	// Kind represents the kind of transformer. Must be Kustomize, or Join.
-	Kind string `json:"kind" yaml:"kind" cue:"\"Kustomize\" | \"Join\""`
+	Kind string `json:"kind" yaml:"kind" cue:"\"Kustomize\" | \"Join\" | \"Command\""`
 	// Inputs represents the files to transform. The Output of prior Generators
 	// and Transformers.
-	Inputs []FilePath `json:"inputs" yaml:"inputs"`
-	// Output represents a file for a subsequent Transformer or Artifact to
-	// consume.
-	Output FilePath `json:"output" yaml:"output"`
+	Inputs []FileOrDirectoryPath `json:"inputs" yaml:"inputs"`
+	// Output represents a file or directory for a subsequent Transformer or
+	// Artifact to consume.
+	Output FileOrDirectoryPath `json:"output" yaml:"output"`
 	// Kustomize transformer. Ignored unless kind is Kustomize.
 	Kustomize Kustomize `json:"kustomize,omitempty" yaml:"kustomize,omitempty"`
 	// Join transformer. Ignored unless kind is Join.
 	Join Join `json:"join,omitempty" yaml:"join,omitempty"`
+	// Command transformer. Ignored unless kind is Command.
+	Command Command `json:"command,omitempty" yaml:"command,omitempty"`
 }
 
 // Join represents a [Transformer] using [bytes.Join] to concatenate multiple
@@ -237,6 +252,9 @@ type FileContentMap map[FilePath]FileContent
 // FilePath represents a file path.
 type FilePath string
 
+// FileOrDirectoryPath represents a file or a directory path.
+type FileOrDirectoryPath string
+
 // FileContent represents file contents.
 type FileContent string
 
@@ -249,17 +267,53 @@ type Validator struct {
 	// Kind represents the kind of transformer. Must be Kustomize, or Join.
 	Kind string `json:"kind" yaml:"kind" cue:"\"Command\""`
 	// Inputs represents the files to validate.  Usually the final Artifact.
-	Inputs []FilePath `json:"inputs" yaml:"inputs"`
+	Inputs []FileOrDirectoryPath `json:"inputs" yaml:"inputs"`
 	// Command represents a validation command.  Ignored unless kind is Command.
 	Command Command `json:"command,omitempty" yaml:"command,omitempty"`
 }
 
-// Command represents a command vetting one or more artifacts.  Holos appends
-// fully qualified input file paths to the end of the args list, then executes
-// the command.  Inputs are written into a temporary directory prior to
-// executing the command and removed afterwards.
+// Command represents a task implemented as a generic system command.  A task is
+// defined as a [Generator], [Transformer], or [Validator].
 type Command struct {
+	// DisplayName of the command.  The basename of args[0] is used if empty.
+	DisplayName string `json:"displayName,omitempty" yaml:"displayName,omitempty"`
+	// Args represents the argument vector passed to the system.
 	Args []string `json:"args,omitempty" yaml:"args,omitempty"`
+	// Env represents environment variables to set in the command context.
+	Env []EnvVar `json:"env,omitempty" yaml:"env,omitempty"`
+	// Stdout captures the command standard output for use as the task output.
+	// Set to false for commands that write output to files.
+	Stdout bool `json:"stdout,omitempty" yaml:"stdout,omitempty"`
+}
+
+// EnvVar represents the configuration of an environment variable within the
+// context of a BuildPlan task.
+type EnvVar struct {
+	// Name of the environment variable. Must be a C_IDENTIFIER.
+	Name string `json:"name" yaml:"name"`
+	// Kind represents a discriminator.
+	Kind string `json:"kind" yaml:"kind" cue:"\"Value\" | \"ValueFrom\""`
+	// Value represents the concrete value of the named environment variable.
+	// Ignored unless kind is Value.
+	Value string `json:"value,omitempty" yaml:"value,omitempty"`
+	// ValueFrom represents the source for the named environment variable's value.
+	// Ignored unless kind is ValueFrom.
+	ValueFrom EnvVarSource `json:"valueFrom,omitempty" yaml:"valueFrom,omitempty"`
+}
+
+// EnvVarSource represents a source for the value of an EnvVar.
+type EnvVarSource struct {
+	// Kind represents a discriminator.
+	Kind string `json:"kind" yaml:"kind" cue:"\"EnvRef\""`
+	// EnvRef represents a reference to an environment variable.  Ignored unless
+	// kind is EnvRef.
+	EnvRef EnvRef `json:"envRef,omitempty" yaml:"envRef,omitempty"`
+}
+
+// EnvRef represents a reference to a value located in the environment.
+type EnvRef struct {
+	// Name of the environment variable. Must be a C_IDENTIFIER.
+	Name string `json:"name" yaml:"name"`
 }
 
 // InternalLabel is an arbitrary unique identifier internal to holos itself.

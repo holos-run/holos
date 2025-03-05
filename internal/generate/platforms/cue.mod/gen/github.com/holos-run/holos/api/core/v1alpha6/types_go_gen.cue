@@ -50,24 +50,33 @@ package core
 // sequence, which transforms a [Generator] collection.  A [BuildPlan] produces
 // an [Artifact] collection.
 //
-// Each Artifact produces one manifest file artifact.  Generator Output values
-// are used as Transformer Inputs.  The Output field of the final [Transformer]
-// should have the same value as the Artifact field.
+// Each Artifact produces one manifest file or directory artifact.  Generator
+// Output values are used as Transformer Inputs.  The Output field of the final
+// [Transformer] should have the same value as the Artifact field.
 //
-// When there is more than one [Generator] there must be at least one
-// [Transformer] to combine outputs into one Artifact.  If there is a single
-// Generator, it may directly produce the Artifact output.
+// When there is more than one [Generator] there should be at least one
+// [Transformer] to combine outputs into one Artifact file, or the final
+// artifact should be a directory containing the outputs of the generators.  If
+// there is a single Generator, it may directly produce the Artifact output.
 //
 // An Artifact is processed concurrently with other artifacts in the same
-// [BuildPlan].  An Artifact should not use an output from another Artifact as
-// an input.  Each [Generator] may also run concurrently.  Each [Transformer] is
-// executed sequentially starting after all generators have completed.
+// [BuildPlan].  One Artifact must not use an output of another Artifact as an
+// input.  Each [Generator] within an artifact also runs concurrently with
+// generators of the same artifact.  Each [Transformer] is executed sequentially
+// starting after all generators have completed.
 //
 // Output fields are write-once.  It is an error for multiple Generators or
 // Transformers to produce the same Output value within the context of a
 // [BuildPlan].
+//
+// When directories are used as inputs or outputs, they behave similar to how
+// `git` works with directories.  When the output field references a directory,
+// all files within the directory are recursively stored using their relative
+// path as a key.  Similar to git add .  When the input field references an
+// absent file, a / is appended and the resulting value is used as a prefix
+// match against all previous task outputs.
 #Artifact: {
-	artifact?: #FilePath @go(Artifact)
+	artifact?: #FileOrDirectoryPath @go(Artifact)
 	generators?: [...#Generator] @go(Generators,[]Generator)
 	transformers?: [...#Transformer] @go(Transformers,[]Transformer)
 	validators?: [...#Validator] @go(Validators,[]Validator)
@@ -85,12 +94,13 @@ package core
 //  1. [Resources] - Generates resources from CUE code.
 //  2. [Helm] - Generates rendered yaml from a [Chart].
 //  3. [File] - Generates data by reading a file from the component directory.
+//  4. [Command] - Generates data by executing an user defined command.
 #Generator: {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
-	kind: string & ("Resources" | "Helm" | "File") @go(Kind)
+	kind: string & ("Resources" | "Helm" | "File" | "Command") @go(Kind)
 
 	// Output represents a file for a Transformer or Artifact to consume.
-	output: #FilePath @go(Output)
+	output: #FileOrDirectoryPath @go(Output)
 
 	// Resources generator. Ignored unless kind is Resources.  Resources are
 	// stored as a two level struct.  The top level key is the Kind of resource,
@@ -104,6 +114,9 @@ package core
 
 	// File generator. Ignored unless kind is File.
 	file?: #File @go(File)
+
+	// Command generator. Ignored unless kind is Command.
+	command?: #Command @go(Command)
 }
 
 // Resource represents one kubernetes api object.
@@ -211,25 +224,29 @@ package core
 //  1. [Kustomize] - Patch and transform the output from prior generators or
 //     transformers.  See [Introduction to Kustomize].
 //  2. [Join] - Concatenate multiple prior outputs into one output.
+//  3. [Command] - Transforms data by executing an user defined command.
 //
 // [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
 #Transformer: {
 	// Kind represents the kind of transformer. Must be Kustomize, or Join.
-	kind: string & ("Kustomize" | "Join") @go(Kind)
+	kind: string & ("Kustomize" | "Join" | "Command") @go(Kind)
 
 	// Inputs represents the files to transform. The Output of prior Generators
 	// and Transformers.
-	inputs: [...#FilePath] @go(Inputs,[]FilePath)
+	inputs: [...#FileOrDirectoryPath] @go(Inputs,[]FileOrDirectoryPath)
 
-	// Output represents a file for a subsequent Transformer or Artifact to
-	// consume.
-	output: #FilePath @go(Output)
+	// Output represents a file or directory for a subsequent Transformer or
+	// Artifact to consume.
+	output: #FileOrDirectoryPath @go(Output)
 
 	// Kustomize transformer. Ignored unless kind is Kustomize.
 	kustomize?: #Kustomize @go(Kustomize)
 
 	// Join transformer. Ignored unless kind is Join.
 	join?: #Join @go(Join)
+
+	// Command transformer. Ignored unless kind is Command.
+	command?: #Command @go(Command)
 }
 
 // Join represents a [Transformer] using [bytes.Join] to concatenate multiple
@@ -263,6 +280,9 @@ package core
 // FilePath represents a file path.
 #FilePath: string
 
+// FileOrDirectoryPath represents a file or a directory path.
+#FileOrDirectoryPath: string
+
 // FileContent represents file contents.
 #FileContent: string
 
@@ -276,18 +296,61 @@ package core
 	kind: string & "Command" @go(Kind)
 
 	// Inputs represents the files to validate.  Usually the final Artifact.
-	inputs: [...#FilePath] @go(Inputs,[]FilePath)
+	inputs: [...#FileOrDirectoryPath] @go(Inputs,[]FileOrDirectoryPath)
 
 	// Command represents a validation command.  Ignored unless kind is Command.
 	command?: #Command @go(Command)
 }
 
-// Command represents a command vetting one or more artifacts.  Holos appends
-// fully qualified input file paths to the end of the args list, then executes
-// the command.  Inputs are written into a temporary directory prior to
-// executing the command and removed afterwards.
+// Command represents a task implemented as a generic system command.  A task is
+// defined as a [Generator], [Transformer], or [Validator].
 #Command: {
+	// DisplayName of the command.  The basename of args[0] is used if empty.
+	displayName?: string @go(DisplayName)
+
+	// Args represents the argument vector passed to the system.
 	args?: [...string] @go(Args,[]string)
+
+	// Env represents environment variables to set in the command context.
+	env?: [...#EnvVar] @go(Env,[]EnvVar)
+
+	// Stdout captures the command standard output for use as the task output.
+	// Set to false for commands that write output to files.
+	stdout?: bool @go(Stdout)
+}
+
+// EnvVar represents the configuration of an environment variable within the
+// context of a BuildPlan task.
+#EnvVar: {
+	// Name of the environment variable. Must be a C_IDENTIFIER.
+	name: string @go(Name)
+
+	// Kind represents a discriminator.
+	kind: string & ("Value" | "ValueFrom") @go(Kind)
+
+	// Value represents the concrete value of the named environment variable.
+	// Ignored unless kind is Value.
+	value?: string @go(Value)
+
+	// ValueFrom represents the source for the named environment variable's value.
+	// Ignored unless kind is ValueFrom.
+	valueFrom?: #EnvVarSource @go(ValueFrom)
+}
+
+// EnvVarSource represents a source for the value of an EnvVar.
+#EnvVarSource: {
+	// Kind represents a discriminator.
+	kind: string & "EnvRef" @go(Kind)
+
+	// EnvRef represents a reference to an environment variable.  Ignored unless
+	// kind is EnvRef.
+	envRef?: #EnvRef @go(EnvRef)
+}
+
+// EnvRef represents a reference to a value located in the environment.
+#EnvRef: {
+	// Name of the environment variable. Must be a C_IDENTIFIER.
+	name: string @go(Name)
 }
 
 // InternalLabel is an arbitrary unique identifier internal to holos itself.
