@@ -335,12 +335,13 @@ func (s *orderedEncoder) Encode(idx int, v any) error {
 // BuildOpts represents options common across BuildPlan api versions.  Use
 // [NewBuildOpts] to create a new concrete value.
 type BuildOpts struct {
-	Store       artifact.Store
-	Concurrency int
-	Stderr      io.Writer
-	WriteTo     string
-	Path        string
-	Tags        []string
+	Store        artifact.Store
+	Concurrency  int
+	Stderr       io.Writer
+	WriteTo      string
+	Path         string
+	Tags         []string
+	BuildContext BuildContext
 }
 
 func NewBuildOpts(path string) BuildOpts {
@@ -352,4 +353,17 @@ func NewBuildOpts(path string) BuildOpts {
 		Path:        path,
 		Tags:        make([]string, 0, 10),
 	}
+}
+
+// BuildContext represents build context values provided by the holos render
+// component command.  These values are expected to be randomly generated and
+// late binding, meaning they cannot be known ahead of time in a static
+// configuration.  As such, CUE configuration may refer to the values here which
+// will be populated by holos when the final build plan is exported from CUE.
+type BuildContext struct {
+	// TempDir represents the temporary directory managed and owned by the holos
+	// render component command for the execution of one BuildPlan.  Multiple
+	// tasks in the build plan share this temporary directory and therefore should
+	// avoid reading and writing into the same sub-directories as one another.
+	TempDir string `json:"tempDir" yaml:"tempDir"`
 }

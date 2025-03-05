@@ -2,8 +2,11 @@ package render
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path"
 	"runtime"
 
 	"github.com/holos-run/holos/internal/builder"
@@ -15,6 +18,8 @@ import (
 	"github.com/holos-run/holos/internal/util"
 	"github.com/spf13/cobra"
 )
+
+const buildContextFile = "components/buildcontext.json"
 
 const tagHelp = "set the value of a cue @tag field in the form key [ = value ]"
 
@@ -116,21 +121,38 @@ func newComponent(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 		ctx := cmd.Root().Context()
 		path := args[0]
 
-		inst, err := builder.LoadInstance(path, extractYAMLs, tagMap.Tags())
+		// Manage a temp directory for the build artifacts.  The concrete value is
+		// needed prior to exporting the BuildPlan from the CUE instance.
+		tempDir, err := os.MkdirTemp("", "holos.render")
 		if err != nil {
-			return errors.Wrap(err)
+			return errors.Format("could not make temp dir: %w", err)
+		}
+		defer util.Remove(ctx, tempDir)
+
+		// Write the build context to the filesystem for cue embed.
+		if err := saveBuildContext(ctx, tempDir); err != nil {
+			return errors.Format("could not save build context: %w", err)
 		}
 
+		// Load the CUE instance to export the BuildPlan.
+		inst, err := builder.LoadInstance(path, extractYAMLs, tagMap.Tags())
+		if err != nil {
+			return errors.Format("could not load cue instance: %w", err)
+		}
+
+		// Runtime configuration of the build.
 		opts := holos.NewBuildOpts(path)
 		opts.Stderr = cmd.ErrOrStderr()
 		opts.Concurrency = concurrency
 		opts.WriteTo = cfg.WriteTo()
 
+		// Export the BuildPlan from the CUE instance.
 		bp, err := builder.LoadBuildPlan(inst, opts)
 		if err != nil {
 			return errors.Wrap(err)
 		}
 
+		// Execute the build.
 		if err := bp.Build(ctx); err != nil {
 			return errors.Wrap(err)
 		}
@@ -173,4 +195,26 @@ func makeComponentRenderFunc(w io.Writer, prefixArgs, cliTags []string) func(con
 		}
 		return nil
 	}
+}
+
+func saveBuildContext(ctx context.Context, tempDir string) error {
+	buildContext := holos.BuildContext{TempDir: tempDir}
+
+	if err := os.MkdirAll(path.Dir(buildContextFile), 0777); err != nil {
+		return errors.Format("could not make components directory: %w", err)
+	}
+
+	data, err := json.MarshalIndent(buildContext, "", "  ")
+	if err != nil {
+		return errors.Format("could not marshal build context: %w", err)
+	}
+	data = append(data, '\n')
+
+	if err := os.WriteFile(buildContextFile, data, 0666); err != nil {
+		return errors.Format("could not write build context file: %w", err)
+	}
+
+	log := logger.FromContext(ctx)
+	log.DebugContext(ctx, fmt.Sprintf("wrote build context to %s", buildContextFile), "path", buildContextFile)
+	return nil
 }

@@ -2,6 +2,7 @@ package builder
 
 import (
 	"github.com/holos-run/holos/internal/builder/v1alpha5"
+	"github.com/holos-run/holos/internal/builder/v1alpha6"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 )
@@ -19,6 +20,8 @@ func LoadBuildPlan(i *Instance, opts holos.BuildOpts) (bp BuildPlan, err error) 
 		switch version := tm.APIVersion; version {
 		case "v1alpha5":
 			bp = BuildPlan{&v1alpha5.BuildPlan{Opts: opts}}
+		case "v1alpha6":
+			bp = BuildPlan{&v1alpha6.BuildPlan{Opts: opts}}
 		default:
 			return errors.Format("unsupported version: %s", version)
 		}
