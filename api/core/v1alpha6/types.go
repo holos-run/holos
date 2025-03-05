@@ -25,7 +25,7 @@ type BuildPlan struct {
 	// Kind represents the type of the resource.
 	Kind string `json:"kind" yaml:"kind" cue:"\"BuildPlan\""`
 	// APIVersion represents the versioned schema of the resource.
-	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha6\""`
+	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"\"v1alpha6\""`
 	// Metadata represents data about the resource such as the Name.
 	Metadata Metadata `json:"metadata" yaml:"metadata"`
 	// Spec specifies the desired state of the resource.

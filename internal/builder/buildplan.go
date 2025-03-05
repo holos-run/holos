@@ -11,6 +11,9 @@ type BuildPlan struct {
 	holos.BuildPlan
 }
 
+// LoadBuildPlan loads a BuildPlan from a CUE Instance.
+//
+// Deprecated: use version specific loaders instead.
 func LoadBuildPlan(i *Instance, opts holos.BuildOpts) (bp BuildPlan, err error) {
 	err = i.Discriminate(func(tm holos.TypeMeta) error {
 		if tm.Kind != "BuildPlan" {

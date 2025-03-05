@@ -133,6 +133,8 @@ func (i *Instance) HolosValue() (v cue.Value, err error) {
 
 // Discriminate calls the discriminate func for side effects.  Useful to switch
 // over the instance kind and apiVersion.
+//
+// Deprecated: use loadTypeMeta() to discriminate without cue instead.
 func (i *Instance) Discriminate(discriminate func(tm holos.TypeMeta) error) error {
 	v, err := i.HolosValue()
 	if err != nil {

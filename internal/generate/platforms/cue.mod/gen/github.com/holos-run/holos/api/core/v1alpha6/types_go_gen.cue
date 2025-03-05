@@ -28,7 +28,7 @@ package core
 	kind: string & "BuildPlan" @go(Kind)
 
 	// APIVersion represents the versioned schema of the resource.
-	apiVersion: string & (string | *"v1alpha6") @go(APIVersion)
+	apiVersion: string & "v1alpha6" @go(APIVersion)
 
 	// Metadata represents data about the resource such as the Name.
 	metadata: #Metadata @go(Metadata)

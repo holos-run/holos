@@ -349,6 +349,10 @@ func (t transformersTask) run(ctx context.Context) error {
 	for idx, transformer := range t.transformers {
 		msg := fmt.Sprintf("could not build %s/%d", t.id(), idx)
 		switch transformer.Kind {
+		case "Command":
+			if err := commandTransformer(ctx, transformer, t.taskParams); err != nil {
+				return errors.Wrap(err)
+			}
 		case "Kustomize":
 			if err := kustomize(ctx, transformer, t.taskParams); err != nil {
 				return errors.Wrap(err)
@@ -606,6 +610,52 @@ func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() 
 	return errors.Wrap(err)
 }
 
+// TODO(jjm): refactor command execution to be useful for generators,
+// transformers, and validators.
+func commandTransformer(ctx context.Context, t core.Transformer, p taskParams) error {
+	msg := fmt.Sprintf(
+		"could not transform %s for %s path %s",
+		t.Output,
+		p.buildPlanName,
+		p.opts.Path,
+	)
+
+	// Sanity checks.
+	tempDir := p.opts.BuildContext.TempDir
+	if tempDir == "" {
+		return errors.Format("%s: programmer error, temp dir not provided", msg)
+	}
+	if len(t.Command.Args) == 0 {
+		return errors.Format("%s: empty args vector", msg)
+	}
+
+	// Write the inputs
+	for _, input := range t.Inputs {
+		if err := p.opts.Store.Save(tempDir, string(input)); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+	}
+
+	// Execute the command
+	r, err := util.RunCmdW(ctx, p.opts.Stderr, t.Command.Args[0], t.Command.Args...)
+	if err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+
+	if t.Command.Stdout {
+		// Store the command stdout as the artifact.
+		if err := p.opts.Store.Set(string(t.Output), r.Stdout.Bytes()); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+	} else {
+		// Store the file tree as the artifact.
+		if err := p.opts.Store.Load(tempDir, string(t.Output)); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+	}
+
+	return nil
+}
 func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {
 	tempDir, err := os.MkdirTemp("", "holos.kustomize")
 	if err != nil {
@@ -684,4 +734,29 @@ func validate(ctx context.Context, validator core.Validator, p taskParams) error
 	}
 
 	return nil
+}
+
+// BuildContext represents a core BuildContext with version specific helper
+// methods.
+type BuildContext struct {
+	core.BuildContext
+}
+
+func (bc BuildContext) Tags() ([]string, error) {
+	tags := make([]string, 0, 1)
+	data, err := json.Marshal(bc.BuildContext)
+	if err != nil {
+		return tags, errors.Format("could not marshall build context to json: %w", err)
+	}
+	tags = append(tags, fmt.Sprintf("context=%s", string(data)))
+	return tags, nil
+}
+
+// NewBuildContext returns a new BuildContext
+func NewBuildContext(bc holos.BuildContext) BuildContext {
+	return BuildContext{
+		BuildContext: core.BuildContext{
+			TempDir: bc.TempDir,
+		},
+	}
 }

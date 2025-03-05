@@ -2,8 +2,11 @@ package artifact
 
 import (
 	"fmt"
+	"io/fs"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/holos-run/holos/internal/errors"
@@ -11,6 +14,13 @@ import (
 
 // NewStore should provide a concrete Store.
 var _ Store = NewStore()
+
+// TODO(jjm): Refactor / Remove the Artifact Store.  The memory store is almost
+// certainly unnecessary now that we're using a single temp directory for the
+// whole build plan context as of v1alpha6.  The Artifact store was originally
+// created to persist intermediate artifacts across per-task temp directories
+// which we no longer have as of v1alpha6, so surely a chesterton fence we can
+// tear down.
 
 // Store sets and gets data for file artifacts.
 //
@@ -20,8 +30,10 @@ var _ Store = NewStore()
 type Store interface {
 	Get(path string) (data []byte, ok bool)
 	Set(path string, data []byte) error
-	// Save previously set path to dir preserving directories.
+	// Save a file or directory from the store to the filesystem.
 	Save(dir, path string) error
+	// Load a file or directory from the filesystem into the store.
+	Load(dir, path string) error
 }
 
 func NewStore() *MapStore {
@@ -45,6 +57,7 @@ func (a *MapStore) Set(path string, data []byte) error {
 		return errors.Format("%s already set", path)
 	}
 	a.m[path] = data
+	slog.Debug(fmt.Sprintf("store: set path %s", path), "component", "store", "op", "set", "path", path, "bytes", len(data))
 	return nil
 }
 
@@ -53,23 +66,75 @@ func (a *MapStore) Get(path string) (data []byte, ok bool) {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	data, ok = a.m[path]
+	slog.Debug(fmt.Sprintf("store: get path %s ok %v", path, ok), "component", "store", "op", "get", "path", path, "bytes", len(data), "ok", ok)
 	return
 }
 
-// Save writes a file to the filesystem.
+// Save writes a file or directory tree to the filesystem.
 func (a *MapStore) Save(dir, path string) error {
+	if strings.HasSuffix(path, "/") {
+		return errors.Format("path must not end in a /")
+	}
+
 	fullPath := filepath.Join(dir, path)
 	msg := fmt.Sprintf("could not save %s", fullPath)
-	data, ok := a.Get(path)
-	if !ok {
-		return errors.Format("%s: missing %s", msg, path)
+
+	// Save a single file and return.
+	if data, ok := a.Get(path); ok {
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0777); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		if err := os.WriteFile(fullPath, data, 0666); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		return nil
 	}
-	if err := os.MkdirAll(filepath.Dir(fullPath), 0777); err != nil {
-		return errors.Format("%s: %w", msg, err)
+
+	// Assume path is a directory, find all prefix matches.
+	keys := a.Keys()
+	prefix := fmt.Sprintf("%s/", path)
+	for _, key := range keys {
+		if strings.HasPrefix(key, prefix) {
+			data, _ := a.Get(key)
+			fullPath = filepath.Join(dir, key)
+			if err := os.MkdirAll(filepath.Dir(fullPath), 0777); err != nil {
+				return errors.Format("%s: %w", msg, err)
+			}
+			if err := os.WriteFile(fullPath, data, 0666); err != nil {
+				return errors.Format("%s: %w", msg, err)
+			}
+		}
 	}
-	if err := os.WriteFile(fullPath, data, 0666); err != nil {
-		return errors.Format("%s: %w", msg, err)
+
+	return nil
+}
+
+// Load saves a file or directory tree to the store.
+func (a *MapStore) Load(dir, path string) error {
+	fileSystem := os.DirFS(dir)
+	err := fs.WalkDir(fileSystem, path, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		// Skip over directories.
+		if d.IsDir() {
+			return nil
+		}
+		// Load files into the store.
+		data, err := fs.ReadFile(fileSystem, path)
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		if err := a.Set(path, data); err != nil {
+			return errors.Wrap(err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return errors.Wrap(err)
 	}
+
 	return nil
 }
 
