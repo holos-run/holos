@@ -48,6 +48,8 @@ func (i *StringSlice) Set(value string) error {
 // [cue/load.Config]: https://pkg.go.dev/cuelang.org/go@v0.10.1/cue/load#Config
 type TagMap map[string]*string
 
+const TagMapHelp = "set the value of a cue @tag field in the form key=value or simply key"
+
 func (t TagMap) Tags() []string {
 	parts := make([]string, 0, len(t))
 	for tag, val := range t {
