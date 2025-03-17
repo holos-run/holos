@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"github.com/holos-run/holos/internal/cli/command"
+	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -52,9 +53,12 @@ func NewCommand(cfg Config, feature holos.Flagger) *cobra.Command {
 	cmd.Flags().AddFlagSet(cfg.flagSet())
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
-		component := New(args[0], cfg)
+		wd, err := os.Getwd()
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		component := New(wd, args[0], cfg)
 		return component.Render(ctx)
-
 	}
 	return cmd
 }

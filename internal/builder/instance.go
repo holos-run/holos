@@ -67,10 +67,42 @@ func ExtractYAML(ctxt *cue.Context, filepaths []string) (cue.Value, error) {
 	return value, nil
 }
 
+// BuildInstance builds the cue configuration instance at leaf relative to the
+// root cue module.
+func BuildInstance(root, leaf string, tags []string) (*Instance, error) {
+	cueMutex.Lock()
+	defer cueMutex.Unlock()
+	leaf = util.DotSlash(leaf)
+
+	cfg := &load.Config{
+		Dir:        root,
+		ModuleRoot: root,
+		Tags:       tags,
+	}
+	ctxt := cuecontext.New(cuecontext.Interpreter(embed.New()))
+
+	bis := load.Instances([]string{leaf}, cfg)
+	values, err := ctxt.BuildInstances(bis)
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+
+	inst := &Instance{
+		path:  leaf,
+		ctx:   ctxt,
+		cfg:   cfg,
+		value: values[0],
+	}
+
+	return inst, nil
+}
+
 // LoadInstance loads the cue configuration instance at path.  External data
 // file paths are loaded by calling [ExtractYAML] providing filepaths.  The
 // extracted data values are unified with the platform configuration [cue.Value]
 // in the returned [Instance].
+//
+// Deprecated: use BuildInstance instead.
 func LoadInstance(path string, filepaths []string, tags []string) (*Instance, error) {
 	cueMutex.Lock()
 	defer cueMutex.Unlock()

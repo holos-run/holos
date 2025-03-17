@@ -12,13 +12,14 @@ import (
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
 	"github.com/holos-run/holos/internal/util"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 // New returns a new Component renderer.
-func New(path string, cfg Config) *Component {
+func New(root string, path string, cfg Config) *Component {
 	return &Component{
 		Config: cfg,
+		Root:   root,
 		Path:   path,
 	}
 }
@@ -26,7 +27,9 @@ func New(path string, cfg Config) *Component {
 // Component implements the holos render component command.
 type Component struct {
 	Config
-	// Path represents the component path relative to the cue module root.
+	// Root represents the cue module root directory.
+	Root string
+	// Path represents the component path relative to Root.
 	Path string
 }
 
@@ -34,7 +37,7 @@ func (c *Component) Render(ctx context.Context) error {
 	log := logger.FromContext(ctx)
 
 	// if typemeta.yaml does not exist, render using <= v1alpha5 behavior.
-	typeMetaPath := filepath.Join(c.Path, holos.TypeMetaFile)
+	typeMetaPath := filepath.Join(c.Root, c.Path, holos.TypeMetaFile)
 	if _, err := os.Stat(typeMetaPath); err != nil {
 		log.DebugContext(ctx, fmt.Sprintf("could not load %s falling back to deprecated builder", typeMetaPath), "path", typeMetaPath, "err", err)
 		return c.renderAlpha5(ctx)
@@ -96,8 +99,7 @@ func (c *Component) render(ctx context.Context, tm holos.TypeMeta) error {
 		return errors.Format("unsupported version: %s, must be at least v1alpha6 when typemeta.yaml is present", version)
 	}
 
-	// Load the CUE instance to export the BuildPlan with version-specific tags.
-	inst, err := builder.LoadInstance(c.Path, nil, tags)
+	inst, err := builder.BuildInstance(c.Root, c.Path, tags)
 	if err != nil {
 		return errors.Format("could not load cue instance: %w", err)
 	}
