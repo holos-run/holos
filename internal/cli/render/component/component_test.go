@@ -11,15 +11,20 @@ import (
 	"testing"
 
 	"github.com/holos-run/holos/internal/cli/render/component"
+	"github.com/holos-run/holos/internal/generate"
 	"github.com/stretchr/testify/assert"
 )
 
 //go:embed all:platform
 var f embed.FS
 
+// must align with embed all:platform directory
+const platform string = "platform"
+
 func TestComponentAlpha6(t *testing.T) {
 	h := newHarness(t, "components/v1alpha6")
-	assert.NoError(t, h.c.Render(h.ctx))
+	err := h.c.Render(h.ctx)
+	assert.NoError(t, err)
 }
 
 type harness struct {
@@ -29,13 +34,29 @@ type harness struct {
 
 func newHarness(t testing.TB, leaf string) *harness {
 	t.Helper()
+
+	// temp directory for the test, contains the platform and components for the
+	// test cases.
 	tempDir := t.TempDir()
+	root := filepath.Join(tempDir, platform)
+	if err := os.MkdirAll(root, 0o777); err != nil {
+		t.Fatalf("could not make platform directory: %v", err)
+	}
+
+	// test cancellation
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	if err := fs.WalkDir(f, ".", walkDirFunc(ctx, tempDir)); err != nil {
+
+	// Initialize the platform
+	if err := generate.GeneratePlatform(ctx, root, "v1alpha6"); err != nil {
+		t.Fatalf("could not generate platform: %v", err)
+	}
+
+	// Copy the components for the test cases
+	if err := fs.WalkDir(f, platform, walkDirFunc(ctx, tempDir)); err != nil {
 		t.Fatalf("could not prepare test directory: %v", err)
 	}
-	root := filepath.Join(tempDir, "platform")
+
 	return &harness{
 		c:   component.New(root, leaf, component.NewConfig()),
 		ctx: ctx,
@@ -58,11 +79,11 @@ func walkDirFunc(ctx context.Context, tempDir string) fs.WalkDirFunc {
 
 			switch {
 			case d.IsDir():
-				if err := os.MkdirAll(fullPath, 0777); err != nil {
+				if err := os.MkdirAll(fullPath, 0o777); err != nil {
 					return err
 				}
 			default:
-				if err := os.MkdirAll(filepath.Dir(fullPath), 0777); err != nil {
+				if err := os.MkdirAll(filepath.Dir(fullPath), 0o777); err != nil {
 					return err
 				}
 				srcFile, err := f.Open(path)

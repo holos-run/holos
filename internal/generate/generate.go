@@ -55,7 +55,7 @@ func copyEmbedFS(ctx context.Context, srcFS embed.FS, srcPath, dstPath string, m
 		}
 
 		buf := mapFunc(data)
-		if err := os.WriteFile(dstFullPath, buf.Bytes(), 0666); err != nil {
+		if err := os.WriteFile(dstFullPath, buf.Bytes(), 0o666); err != nil {
 			return errors.Wrap(err)
 		}
 
