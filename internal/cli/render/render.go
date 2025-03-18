@@ -8,8 +8,8 @@ import (
 
 	"github.com/holos-run/holos/internal/builder"
 	"github.com/holos-run/holos/internal/cli/command"
-	"github.com/holos-run/holos/internal/cli/render/component"
 	"github.com/holos-run/holos/internal/client"
+	"github.com/holos-run/holos/internal/component"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"

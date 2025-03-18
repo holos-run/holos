@@ -6,8 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/holos-run/holos/internal/builder"
-	"github.com/holos-run/holos/internal/builder/v1alpha6"
+	"github.com/holos-run/holos/internal/component/v1alpha6"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
@@ -48,8 +47,16 @@ func (c *Component) Render(ctx context.Context) error {
 	if err != nil {
 		return errors.Format("could not discriminate component type: %w", err)
 	}
-	if err := c.render(ctx, tm); err != nil {
-		return errors.Format("could not render component: %w", err)
+
+	switch tm.APIVersion {
+	case "v1alpha5":
+		if err := c.renderAlpha5(ctx); err != nil {
+			return errors.Format("could not render v1alpha5 component: %w", err)
+		}
+	default:
+		if err := c.render(ctx, tm); err != nil {
+			return errors.Format("could not render component: %w", err)
+		}
 	}
 	return nil
 }
@@ -76,14 +83,14 @@ func (c *Component) render(ctx context.Context, tm holos.TypeMeta) error {
 	opts := holos.NewBuildOpts(c.Path)
 	opts.Stderr = c.Stderr
 	opts.Concurrency = c.Concurrency
-	opts.WriteTo = c.WriteTo
+	opts.WriteTo = filepath.Join(c.Root, c.WriteTo)
 	opts.BuildContext.TempDir = tempDir
 
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, fmt.Sprintf("rendering %s kind %s version %s", c.Path, tm.Kind, tm.APIVersion), "kind", tm.Kind, "apiVersion", tm.APIVersion, "path", c.Path)
 
 	// generic build plan wrapper for all versions.
-	var bp builder.BuildPlan
+	var bp BuildPlan
 	switch version := tm.APIVersion; version {
 	case "v1alpha6":
 		// Prepare runtime build context for injection as a cue tag.
@@ -94,12 +101,12 @@ func (c *Component) render(ctx context.Context, tm holos.TypeMeta) error {
 		}
 		tags = append(tags, buildContextTags...)
 		// the version specific build plan itself embedded into the wrapper.
-		bp = builder.BuildPlan{BuildPlan: &v1alpha6.BuildPlan{Opts: opts}}
+		bp = BuildPlan{BuildPlan: &v1alpha6.BuildPlan{Opts: opts}}
 	default:
-		return errors.Format("unsupported version: %s, must be at least v1alpha6 when typemeta.yaml is present", version)
+		return errors.Format("unsupported version: %s", version)
 	}
 
-	inst, err := builder.BuildInstance(c.Root, c.Path, tags)
+	inst, err := BuildInstance(c.Root, c.Path, tags)
 	if err != nil {
 		return errors.Format("could not load cue instance: %w", err)
 	}
@@ -137,20 +144,20 @@ func (c *Component) renderAlpha5(ctx context.Context) error {
 	}
 	defer util.Remove(ctx, tempDir)
 
-	// Load the CUE instance to export the BuildPlan.
-	inst, err := builder.LoadInstance(c.Path, nil, c.TagMap.Tags())
+	// Build the cue instance to export the BuildPlan to the Holos Go layer.
+	inst, err := BuildInstance(c.Root, c.Path, c.TagMap.Tags())
 	if err != nil {
-		return errors.Format("could not load cue instance: %w", err)
+		return errors.Format("could not build cue instance: %w", err)
 	}
 
 	// Runtime configuration of the build.
 	opts := holos.NewBuildOpts(c.Path)
 	opts.Stderr = c.Stderr
 	opts.Concurrency = c.Concurrency
-	opts.WriteTo = c.WriteTo
+	opts.WriteTo = filepath.Join(c.Root, c.WriteTo)
 
 	// Export the BuildPlan from the CUE instance.
-	bp, err := builder.LoadBuildPlan(inst, opts)
+	bp, err := LoadBuildPlan(inst, opts)
 	if err != nil {
 		return errors.Wrap(err)
 	}

@@ -1,4 +1,4 @@
-package component_test
+package v1alpha5_test
 
 // "github.com/stretchr/testify/require"
 import (
@@ -10,9 +10,11 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/holos-run/holos/internal/cli/render/component"
+	"github.com/holos-run/holos/internal/component"
+	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/generate"
 	"github.com/stretchr/testify/assert"
+	"sigs.k8s.io/yaml"
 )
 
 //go:embed all:platform
@@ -21,18 +23,55 @@ var f embed.FS
 // must align with embed all:platform directory
 const platform string = "platform"
 
-func TestComponentAlpha6(t *testing.T) {
-	h := newHarness(t, "components/v1alpha6")
-	err := h.c.Render(h.ctx)
-	assert.NoError(t, err)
+func TestComponents(t *testing.T) {
+	h := newHarness(t)
+
+	t.Run("TypeMeta", func(t *testing.T) {
+		msg := "Expected a minimal component with only typemeta.yaml to work, but do nothing"
+		err := h.component("components/typemeta").Render(h.ctx)
+		assert.NoError(t, err, msg)
+	})
+
+	t.Run("BasicDeployment", func(t *testing.T) {
+		msg := "Expected a basic cue resources generator to render a Deployment manifest"
+		c := h.component("components/basic")
+		err := c.Render(h.ctx)
+		assert.NoError(t, err, msg)
+
+		// Verify the rendered artifacts.
+		actual, err := h.load("deploy/components/basic/resources.gen.yaml")
+		assert.NoError(t, err, msg)
+		expected, err := h.load("components/basic/expected.yaml")
+		assert.NoError(t, err, msg)
+
+		// Compare in both directions, necessary to catch missing fields.
+		assert.EqualValues(t, expected, actual, msg)
+		assert.EqualValues(t, actual, expected, msg)
+	})
 }
 
 type harness struct {
-	c   *component.Component
-	ctx context.Context
+	root string
+	ctx  context.Context
 }
 
-func newHarness(t testing.TB, leaf string) *harness {
+func (h *harness) component(path string) *component.Component {
+	return component.New(h.root, path, component.NewConfig())
+}
+
+func (h *harness) load(path string) (any, error) {
+	data, err := os.ReadFile(filepath.Join(h.root, path))
+	if err != nil {
+		return nil, errors.Wrap(err)
+	}
+	var result any
+	if err := yaml.Unmarshal(data, &result); err != nil {
+		return nil, errors.Wrap(err)
+	}
+	return result, nil
+}
+
+func newHarness(t testing.TB) *harness {
 	t.Helper()
 
 	// temp directory for the test, contains the platform and components for the
@@ -53,17 +92,17 @@ func newHarness(t testing.TB, leaf string) *harness {
 	}
 
 	// Copy the components for the test cases
-	if err := fs.WalkDir(f, platform, walkDirFunc(ctx, tempDir)); err != nil {
+	if err := fs.WalkDir(f, platform, makeCopyFunc(ctx, tempDir)); err != nil {
 		t.Fatalf("could not prepare test directory: %v", err)
 	}
 
 	return &harness{
-		c:   component.New(root, leaf, component.NewConfig()),
-		ctx: ctx,
+		root: root,
+		ctx:  ctx,
 	}
 }
 
-func walkDirFunc(ctx context.Context, tempDir string) fs.WalkDirFunc {
+func makeCopyFunc(ctx context.Context, tempDir string) fs.WalkDirFunc {
 	return func(path string, d fs.DirEntry, err error) error {
 		select {
 		case <-ctx.Done():

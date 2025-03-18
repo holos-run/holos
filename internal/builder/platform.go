@@ -1,3 +1,4 @@
+// Deprecated: move to the component and platform packages
 package builder
 
 import (
@@ -5,11 +6,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/holos-run/holos/internal/builder/v1alpha5"
-	"github.com/holos-run/holos/internal/builder/v1alpha6"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/platform/v1alpha5"
+	"github.com/holos-run/holos/internal/platform/v1alpha6"
 	"golang.org/x/sync/errgroup"
 )
 

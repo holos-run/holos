@@ -24,39 +24,16 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 )
 
-// Platform represents a platform builder.
-type Platform struct {
-	Platform core.Platform
-}
-
-// Load loads from a cue value.
-func (p *Platform) Load(v cue.Value) error {
-	return errors.Wrap(v.Decode(&p.Platform))
-}
-
-func (p *Platform) Export(encoder holos.Encoder) error {
-	if err := encoder.Encode(&p.Platform); err != nil {
-		return errors.Wrap(err)
-	}
-	return nil
-}
-
-func (p *Platform) Select(selectors ...holos.Selector) []holos.Component {
-	components := make([]holos.Component, 0, len(p.Platform.Spec.Components))
-	for _, component := range p.Platform.Spec.Components {
-		if holos.IsSelected(component.Labels, selectors...) {
-			components = append(components, &Component{component})
-		}
-	}
-	return components
-}
+// Description represents the annotation used to describe the component when
+// printing user feedback.
+const Description string = "app.holos.run/description"
 
 type Component struct {
 	Component core.Component
 }
 
 func (c *Component) Describe() string {
-	if val, ok := c.Component.Annotations["app.holos.run/description"]; ok {
+	if val, ok := c.Component.Annotations[Description]; ok {
 		return val
 	}
 	return c.Component.Name
@@ -108,6 +85,8 @@ func (c *Component) Path() string {
 }
 
 // ExtractYAML returns the path values for the --extract-yaml command line flag.
+//
+// Deprecated: use cue embed instead.  Removed in v1alpha6.
 func (c *Component) ExtractYAML() ([]string, error) {
 	if c == nil {
 		return nil, nil

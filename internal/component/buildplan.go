@@ -1,4 +1,4 @@
-package builder
+package component
 
 import (
 	"github.com/holos-run/holos/internal/component/v1alpha5"
@@ -12,8 +12,6 @@ type BuildPlan struct {
 }
 
 // LoadBuildPlan loads a BuildPlan from a CUE Instance.
-//
-// Deprecated: use version specific loaders instead.
 func LoadBuildPlan(i *Instance, opts holos.BuildOpts) (bp BuildPlan, err error) {
 	err = i.Discriminate(func(tm holos.TypeMeta) error {
 		if tm.Kind != "BuildPlan" {
