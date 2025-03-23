@@ -15,6 +15,7 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/platform"
 	"github.com/holos-run/holos/internal/server"
 
 	"github.com/holos-run/holos/internal/cli/command"
@@ -104,7 +105,7 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	rootCmd.AddCommand(newCueCmd())
 
 	// Show
-	rootCmd.AddCommand(newShowCmd())
+	rootCmd.AddCommand(NewShowCmd(platform.NewConfig()))
 
 	return rootCmd
 }

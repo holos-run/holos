@@ -1,7 +1,11 @@
 package util
 
 import (
+	"context"
+	"embed"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -68,4 +72,50 @@ func DotSlash(path string) string {
 		return clean
 	}
 	return "." + string(filepath.Separator) + clean
+}
+
+// MakeCopyFunc returns a [fs.WalkDirFunc] copying from embed.FS efs to dest.
+// Useful for embedded test case fixtures.
+func MakeCopyFunc(ctx context.Context, efs embed.FS, dest string) fs.WalkDirFunc {
+	return func(path string, d fs.DirEntry, err error) error {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			if err != nil {
+				return err
+			}
+			if path == "." {
+				return nil
+			}
+			fullPath := filepath.Join(dest, path)
+
+			switch {
+			case d.IsDir():
+				if err := os.MkdirAll(fullPath, 0o777); err != nil {
+					return err
+				}
+			default:
+				if err := os.MkdirAll(filepath.Dir(fullPath), 0o777); err != nil {
+					return err
+				}
+				srcFile, err := efs.Open(path)
+				if err != nil {
+					return err
+				}
+				defer srcFile.Close()
+
+				dstFile, err := os.Create(fullPath)
+				if err != nil {
+					return err
+				}
+				defer dstFile.Close()
+
+				if _, err := io.Copy(dstFile, srcFile); err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
 }

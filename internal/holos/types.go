@@ -334,6 +334,8 @@ func (s *orderedEncoder) Encode(idx int, v any) error {
 	return nil
 }
 
+// TODO(jjm): consider moving the BuildOpts struct to the component package.
+
 // BuildOpts represents options common across BuildPlan api versions.  Use
 // [NewBuildOpts] to create a new concrete value.
 type BuildOpts struct {
@@ -346,6 +348,7 @@ type BuildOpts struct {
 	BuildContext BuildContext
 }
 
+// NewBuildOpts returns a [BuildOpts] configured to build the component at path.
 func NewBuildOpts(path string) BuildOpts {
 	return BuildOpts{
 		Store:       artifact.NewStore(),

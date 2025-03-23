@@ -23,6 +23,7 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	cmd := command.New("render")
 	cmd.Args = cobra.NoArgs
 	cmd.Short = "render platforms and components to manifest files"
+	// TODO(jjm) platform.NewCommand like component.NewCommand
 	cmd.AddCommand(newPlatform(cfg, feature))
 	cmd.AddCommand(component.NewCommand(component.NewConfig(), feature))
 	return cmd
@@ -75,10 +76,10 @@ func newPlatform(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 			"--log-format", cfg.LogConfig().Format(),
 		}
 		opts := builder.PlatformOpts{
-			Fn:          makeComponentRenderFunc(cmd.ErrOrStderr(), prefixArgs, tagMap.Tags()),
-			Selectors:   selectors,
-			Concurrency: concurrency,
-			InfoEnabled: true,
+			PerComponentFunc:   makeComponentRenderFunc(cmd.ErrOrStderr(), prefixArgs, tagMap.Tags()),
+			ComponentSelectors: selectors,
+			Concurrency:        concurrency,
+			InfoEnabled:        true,
 		}
 
 		if err := platform.Build(ctx, opts); err != nil {

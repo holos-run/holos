@@ -1,4 +1,5 @@
 // Deprecated: move to the component and platform packages
+// TODO(jjm): remove the builder package entirely.
 package builder
 
 import (
@@ -17,10 +18,10 @@ import (
 // PlatformOpts represents build options when processing the components in a
 // platform.
 type PlatformOpts struct {
-	Fn          func(context.Context, int, holos.Component) error
-	Selectors   holos.Selectors
-	Concurrency int
-	InfoEnabled bool
+	PerComponentFunc   func(context.Context, int, holos.Component) error
+	ComponentSelectors holos.Selectors
+	Concurrency        int
+	InfoEnabled        bool
 }
 
 // Platform represents a common abstraction over different platform schema
@@ -29,11 +30,13 @@ type Platform struct {
 	holos.Platform
 }
 
-// Build calls [PlatformOpts] Fn(ctx, component) concurrently.
+// Build calls [PlatformOpts] PerComponentFunc concurrently.
+//
+// Deprecated: use [platform.Platform.Build] instead.
 func (p *Platform) Build(ctx context.Context, opts PlatformOpts) error {
 	limit := max(opts.Concurrency, 1)
 	parentStart := time.Now()
-	components := p.Select(opts.Selectors...)
+	components := p.Select(opts.ComponentSelectors...)
 	total := len(components)
 
 	g, ctx := errgroup.WithContext(ctx)
@@ -58,7 +61,7 @@ func (p *Platform) Build(ctx context.Context, opts PlatformOpts) error {
 					default:
 						start := time.Now()
 						log := logger.FromContext(ctx).With("num", idx+1, "total", total)
-						if err := opts.Fn(ctx, idx, component); err != nil {
+						if err := opts.PerComponentFunc(ctx, idx, component); err != nil {
 							return errors.Wrap(err)
 						}
 						duration := time.Since(start)

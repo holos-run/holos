@@ -54,11 +54,12 @@ func NewCommand(cfg Config, feature holos.Flagger) *cobra.Command {
 	cmd.Flags().AddFlagSet(cfg.flagSet())
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		ctx := cmd.Root().Context()
-		wd, err := os.Getwd()
+		// TODO(jjm): Handle fully qualified paths for tests where cwd != tempdir
+		root, err := os.Getwd()
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		component := New(wd, args[0], cfg)
+		component := New(root, args[0], cfg)
 		return component.Render(ctx)
 	}
 	return cmd
