@@ -151,13 +151,12 @@ func (p *Platform) Load(ctx context.Context) error {
 type BuildOpts struct {
 	PerComponentFunc   func(context.Context, int, holos.Component) error
 	ComponentSelectors holos.Selectors
-	Concurrency        int
 	InfoEnabled        bool
 }
 
 // Build calls [opts.PerComponentFunc] for each platform component.
 func (p *Platform) Build(ctx context.Context, opts BuildOpts) error {
-	limit := max(opts.Concurrency, 1)
+	limit := max(1, p.cfg.Concurrency)
 	parentStart := time.Now()
 	components := p.Select(opts.ComponentSelectors...)
 	total := len(components)

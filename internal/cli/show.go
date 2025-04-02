@@ -33,7 +33,7 @@ func NewShowCmd(cfg platform.Config) (cmd *cobra.Command) {
 		Format: "yaml",
 		Out:    cfg.Stdout,
 	}
-	buildPlanCmd := platform.NewCommand(platform.NewConfig(), sbp.Run)
+	buildPlanCmd := platform.NewCommand(cfg, sbp.Run)
 	buildPlanCmd.Use = "buildplans"
 	buildPlanCmd.Short = "show buildplans"
 	buildPlanCmd.Long = longShowBuildPlansHelp
@@ -105,7 +105,7 @@ func (s *showBuildPlans) Run(ctx context.Context, p *platform.Platform) error {
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			// Export the build plan using the ordered encoder.
+			// Export the build plan using the sequential encoder.
 			return errors.Wrap(bp.Export(idx, encoder))
 		},
 		ComponentSelectors: s.Selectors,
