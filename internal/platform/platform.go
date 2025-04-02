@@ -22,7 +22,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-func New(cfg Config, root, leaf string) *Platform {
+func New(cfg *Config, root, leaf string) *Platform {
 	return &Platform{
 		cfg:  cfg,
 		root: root,
@@ -30,11 +30,13 @@ func New(cfg Config, root, leaf string) *Platform {
 	}
 }
 
-func NewCommand(cfg Config, run func(context.Context, *Platform) error) *cobra.Command {
+// NewCommand returns a new platform command wired to cfg.  Flags are not wired
+// to cfg automatically to allow callers to compose behavior as needed.  Use
+// cmd.Flags().AddFlagSet(cfg.FlagSet()) to wire them up.
+func NewCommand(cfg *Config, run func(context.Context, *Platform) error) *cobra.Command {
 	cmd := command.New("platform")
 	cmd.Short = "process a platform resource"
 	cmd.Args = cobra.MinimumNArgs(0)
-	cmd.Flags().AddFlagSet(cfg.flagSet())
 	cmd.SetOut(cfg.Stdout)
 	cmd.SetErr(cfg.Stderr)
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
@@ -66,8 +68,8 @@ func NewCommand(cfg Config, run func(context.Context, *Platform) error) *cobra.C
 	return cmd
 }
 
-func NewConfig() Config {
-	cfg := Config{
+func NewConfig() *Config {
+	cfg := &Config{
 		Concurrency: runtime.NumCPU(),
 		TagMap:      make(holos.TagMap),
 		WriteTo:     os.Getenv(holos.WriteToEnvVar),
@@ -81,6 +83,8 @@ func NewConfig() Config {
 }
 
 type Config struct {
+	// ComponentSelectors select platform components to process.
+	ComponentSelectors holos.Selectors
 	// TagMap represents cue tags to inject.
 	TagMap holos.TagMap
 	// Concurrency represents the number of subcommands to execute concurrently.
@@ -94,17 +98,23 @@ type Config struct {
 	Stderr io.Writer
 }
 
-func (c *Config) flagSet() *pflag.FlagSet {
+func (c *Config) FlagSetTags() *pflag.FlagSet {
 	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
-	fs.StringVar(&c.WriteTo, "write-to", c.WriteTo, fmt.Sprintf("write to directory (%s)", holos.WriteToEnvVar))
 	fs.VarP(c.TagMap, "inject", "t", holos.TagMapHelp)
+	return fs
+}
+
+func (c *Config) FlagSet() *pflag.FlagSet {
+	fs := c.FlagSetTags()
+	fs.VarP(&c.ComponentSelectors, "selector", "l", "label selector (e.g. label==string,label!=string)")
 	fs.IntVar(&c.Concurrency, "concurrency", c.Concurrency, "number of concurrent build steps")
+	fs.StringVar(&c.WriteTo, "write-to", c.WriteTo, fmt.Sprintf("write to directory (%s)", holos.WriteToEnvVar))
 	return fs
 }
 
 type Platform struct {
 	holos.Platform
-	cfg  Config
+	cfg  *Config
 	root string
 	leaf string
 }
@@ -149,16 +159,15 @@ func (p *Platform) Load(ctx context.Context) error {
 // BuildOpts represents build options when processing the components in a
 // platform.
 type BuildOpts struct {
-	PerComponentFunc   func(context.Context, int, holos.Component) error
-	ComponentSelectors holos.Selectors
-	InfoEnabled        bool
+	PerComponentFunc func(context.Context, int, holos.Component) error
+	InfoEnabled      bool
 }
 
 // Build calls [opts.PerComponentFunc] for each platform component.
 func (p *Platform) Build(ctx context.Context, opts BuildOpts) error {
 	limit := max(1, p.cfg.Concurrency)
 	parentStart := time.Now()
-	components := p.Select(opts.ComponentSelectors...)
+	components := p.Select(p.cfg.ComponentSelectors...)
 	total := len(components)
 
 	g, ctx := errgroup.WithContext(ctx)

@@ -17,7 +17,7 @@ import (
 //go:embed long-show-buildplans.txt
 var longShowBuildPlansHelp string
 
-func NewShowCmd(cfg platform.Config) (cmd *cobra.Command) {
+func NewShowCmd(cfg *platform.Config) (cmd *cobra.Command) {
 	cmd = command.New("show")
 	cmd.Short = "show a platform or build plans"
 
@@ -25,21 +25,23 @@ func NewShowCmd(cfg platform.Config) (cmd *cobra.Command) {
 		Format: "yaml",
 		Out:    cfg.Stdout,
 	}
-	platformCmd := platform.NewCommand(cfg, spf.Run)
-	platformCmd.Flags().AddFlagSet(spf.flagSet())
-	cmd.AddCommand(platformCmd)
+	spCmd := platform.NewCommand(cfg, spf.Run)
+	spCmd.Flags().AddFlagSet(cfg.FlagSetTags())
+	spCmd.Flags().AddFlagSet(spf.flagSet())
+	cmd.AddCommand(spCmd)
 
 	sbp := &showBuildPlans{
 		Format: "yaml",
 		Out:    cfg.Stdout,
 	}
-	buildPlanCmd := platform.NewCommand(cfg, sbp.Run)
-	buildPlanCmd.Use = "buildplans"
-	buildPlanCmd.Short = "show buildplans"
-	buildPlanCmd.Long = longShowBuildPlansHelp
-	buildPlanCmd.Aliases = []string{"buildplan", "components", "component"}
-	buildPlanCmd.Flags().AddFlagSet(sbp.flagSet())
-	cmd.AddCommand(buildPlanCmd)
+	sbCmd := platform.NewCommand(cfg, sbp.Run)
+	sbCmd.Use = "buildplans"
+	sbCmd.Short = "show buildplans"
+	sbCmd.Long = longShowBuildPlansHelp
+	sbCmd.Aliases = []string{"buildplan", "components", "component"}
+	sbCmd.Flags().AddFlagSet(cfg.FlagSet())
+	sbCmd.Flags().AddFlagSet(sbp.flagSet())
+	cmd.AddCommand(sbCmd)
 	return cmd
 }
 
@@ -64,15 +66,13 @@ func (s *showPlatform) Run(ctx context.Context, p *platform.Platform) error {
 }
 
 type showBuildPlans struct {
-	Format    string
-	Out       io.Writer
-	Selectors holos.Selectors
+	Format string
+	Out    io.Writer
 }
 
 func (s *showBuildPlans) flagSet() *pflag.FlagSet {
 	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
 	fs.StringVar(&s.Format, "format", "yaml", "yaml or json format")
-	fs.VarP(&s.Selectors, "selector", "l", "label selector (e.g. label==string,label!=string)")
 	return fs
 }
 
@@ -108,7 +108,6 @@ func (s *showBuildPlans) Run(ctx context.Context, p *platform.Platform) error {
 			// Export the build plan using the sequential encoder.
 			return errors.Wrap(bp.Export(idx, encoder))
 		},
-		ComponentSelectors: s.Selectors,
 	}
 
 	return errors.Wrap(p.Build(ctx, opts))

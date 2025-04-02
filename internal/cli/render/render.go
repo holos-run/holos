@@ -11,7 +11,6 @@ import (
 	"github.com/holos-run/holos/internal/platform"
 	"github.com/holos-run/holos/internal/util"
 	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 )
 
 func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
@@ -23,27 +22,18 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	return cmd
 }
 
-func NewRenderPlatformCommand(cfg *holos.Config, pcfg platform.Config) (cmd *cobra.Command) {
+func NewRenderPlatformCommand(cfg *holos.Config, pcfg *platform.Config) (cmd *cobra.Command) {
 	rp := &renderPlatform{cfg: cfg, pcfg: pcfg}
 	cmd = platform.NewCommand(pcfg, rp.Run)
 	cmd.Short = "render an entire platform"
-	cmd.Flags().AddFlagSet(rp.flagSet())
+	cmd.Flags().AddFlagSet(pcfg.FlagSet())
 	return cmd
 }
 
 // renderPlatform implements the holos render platform command.
 type renderPlatform struct {
-	Selectors holos.Selectors
-	cfg       *holos.Config
-	pcfg      platform.Config
-}
-
-func (r *renderPlatform) flagSet() *pflag.FlagSet {
-	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
-	// TODO(jjm): move the selector flags to [platform.NewCommand]
-	// TODO(jjm): do not use [platform.NewCommand] for holos show platform because it does not use a selector.
-	fs.VarP(&r.Selectors, "selector", "l", "label selector (e.g. label==string,label!=string)")
-	return fs
+	cfg  *holos.Config
+	pcfg *platform.Config
 }
 
 // Run executes the holos render component command concurrently for each
@@ -100,8 +90,7 @@ func (r *renderPlatform) Run(ctx context.Context, p *platform.Platform) error {
 			}
 			return nil
 		},
-		ComponentSelectors: r.Selectors,
-		InfoEnabled:        true,
+		InfoEnabled: true,
 	}
 
 	return errors.Wrap(p.Build(ctx, opts))
