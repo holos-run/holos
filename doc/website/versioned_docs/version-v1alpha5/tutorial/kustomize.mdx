@@ -1,0 +1,255 @@
+---
+slug: kustomize
+title: Kustomize
+description: Holos makes it easy to Kustomize configuration.
+sidebar_position: 45
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CodeBlock from '@theme/CodeBlock';
+
+# Kustomize
+
+## Overview
+
+In the previous tutorial, we learned how Holos simplifies the holistic
+integration of the [prometheus] and [blackbox] charts, ensuring they are
+configured in sync.
+
+In this tutorial, we'll go a step further by integrating the [httpbin] service
+with Prometheus and Blackbox to automatically probe for availability.
+
+We'll also explore how Holos manages [kustomize] bases, similar to the Helm kind
+covered in the [Helm Values] tutorial.
+
+## The Code
+
+### Holos Version
+
+Ensure you have a current version of `holos` installed.  This document was
+tested with the following version.
+
+import HolosVersionCommand from '!!raw-loader!./_kustomize/script-01-holos-version/command.sh';
+import HolosVersionOutput from '!!raw-loader!./_kustomize/script-01-holos-version/output.txt';
+
+<CodeBlock language="bash">{HolosVersionCommand}</CodeBlock>
+<CodeBlock language="txt">{HolosVersionOutput}</CodeBlock>
+
+### Generating the structure
+
+<Tabs>
+  <TabItem value="optional" label="Optional">
+:::note Skip this step if you completed the [Helm Values] tutorial.
+
+Otherwise click the **Generate** tab to generate a blank platform now.
+:::
+  </TabItem>
+  <TabItem value="generate" label="Generate">
+
+Use `holos` to generate a minimal platform directory structure. First, create
+and navigate into a blank directory. Then, run the `holos init platform`
+command.
+
+import MkdirAndInit from '!!raw-loader!./_kustomize/script-02-kustomize/mkdir-and-init.sh';
+import GitInit from '!!raw-loader!./_kustomize/script-02-kustomize/git-init.sh';
+
+<CodeBlock language="bash">{MkdirAndInit}</CodeBlock>
+
+Make a commit to track changes.
+
+<CodeBlock language="bash">{GitInit}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+### Managing the Component
+
+Create the `httpbin` component directory, and add the `httpbin.cue` and
+`httpbin.yaml` files to it for configuration and setup.
+
+import MkdirComponent from '!!raw-loader!./_kustomize/script-02-kustomize/mkdir-component.sh';
+import HttpbinComponentHeader from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-component-header.sh';
+import HttpbinComponentBody from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-component-body.cue';
+import EofTrailer from '!!raw-loader!./_kustomize/script-02-kustomize/eof-trailer.sh';
+import HttpbinYamlHeader from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-yaml-header.sh';
+import HttpbinYamlBody from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-yaml-body.yaml';
+
+<Tabs groupId="800C3AE7-E7F8-4AFC-ABF1-6AFECD945958">
+  <TabItem value="setup" label="Setup">
+    <CodeBlock language="bash">{MkdirComponent}</CodeBlock>
+  </TabItem>
+  <TabItem value="components/httpbin/httpbin.cue" label="httpbin.cue">
+    <CodeBlock language="bash">{HttpbinComponentHeader}</CodeBlock>
+    <CodeBlock language="cue" showLineNumbers>{HttpbinComponentBody}</CodeBlock>
+    <CodeBlock language="bash">{EofTrailer}</CodeBlock>
+  </TabItem>
+  <TabItem value="components/httpbin/httpbin.yaml" label="httpbin.yaml">
+    <CodeBlock language="bash">{HttpbinYamlHeader}</CodeBlock>
+    <CodeBlock language="yaml" showLineNumbers>{HttpbinYamlBody}</CodeBlock>
+    <CodeBlock language="bash">{EofTrailer}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Holos knows the `httpbin.yaml` file is part of the BuildPlan because of the
+`KustomizeConfig: Files: "httpbin.yaml": _` line in the `httpbin.cue`.
+
+### Register the Components
+
+Register `httpbin` with the platform by adding the following file to the
+platform directory.
+
+import RegisterComponentHeader from '!!raw-loader!./_kustomize/script-02-kustomize/register-component-header.sh';
+import RegisterComponentBody from '!!raw-loader!./_kustomize/script-02-kustomize/register-component-body.cue';
+
+<CodeBlock language="bash">{RegisterComponentHeader}</CodeBlock>
+<CodeBlock language="cue">{RegisterComponentBody}</CodeBlock>
+<CodeBlock language="bash">{EofTrailer}</CodeBlock>
+
+Render the platform.
+
+import RenderCommand from '!!raw-loader!./_kustomize/script-02-kustomize/render.sh';
+import RegisterComponentOutput from '!!raw-loader!./_kustomize/script-02-kustomize/register-component-output.txt';
+
+<Tabs groupId="B120D5D1-0EAB-41E0-AD21-15526EBDD53D">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{RenderCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="txt">{RegisterComponentOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Commit the results.
+
+import GitCommitComponent from '!!raw-loader!./_kustomize/script-02-kustomize/git-commit-component.sh';
+import GitCommitComponentOutput from '!!raw-loader!./_kustomize/script-02-kustomize/git-commit-component-output.txt';
+
+<Tabs groupId="446CC550-A634-45C0-BEC7-992E5C56D4FA">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{GitCommitComponent}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="txt">{GitCommitComponentOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+### Inspecting the Build Plan
+
+We can see the [BuildPlan] exported to `holos` by the `holos:
+Kustomize.BuildPlan` line in `httpbin.cue`. Holos processes this build plan to
+produce the fully rendered manifests.
+
+import CueExport from '!!raw-loader!./_kustomize/script-02-kustomize/cue-export.sh';
+import BuildplanOutput from '!!raw-loader!./_kustomize/script-02-kustomize/buildplan-output.cue';
+
+<Tabs groupId="DD697D65-5BEC-4B92-BB33-59BE4FEC112F">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{CueExport}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="yaml">{BuildplanOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+### Transforming Manifests
+
+Review the BuildPlan exported in the previous command:
+
+1. The [File Generator] copies the plain `httpbin.yaml` file into the build.
+2. The [Kustomize Transformer] uses `httpbin.yaml` as an input resource.
+3. The final artifact is the output from Kustomize.
+
+This BuildPlan transforms the raw YAML by labeling all of the resources with
+`"app.kubernetes.io/name": "httpbin"` using the [KustomizeConfig] `CommonLabels`
+field.
+
+To complete the integration with Prometheus, annotate the Service with
+`prometheus.io/probe: "true"`. Holos makes this easier with CUE, so there's no
+need to edit any YAML files manually.
+
+Add a new `patches.cue` file to the `httpbin` component with the following
+content.
+
+import HttpbinPatchHeader from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-patch-header.sh';
+import HttpbinPatchBody from '!!raw-loader!./_kustomize/script-02-kustomize/httpbin-patch-body.cue';
+
+<CodeBlock language="bash">{HttpbinPatchHeader}</CodeBlock>
+<CodeBlock language="bash" showLineNumbers>{HttpbinPatchBody}</CodeBlock>
+<CodeBlock language="bash">{EofTrailer}</CodeBlock>
+
+:::note
+We use a hidden `_patches` field to easily unify data into a struct, then
+convert the struct into a list for export.
+:::
+
+## Reviewing Changes
+
+Render the platform to see the result of the kustomization patch.
+
+import KustomizePatchRenderOutput from '!!raw-loader!./_kustomize/script-02-kustomize/kustomize-patch-render-output.txt';
+
+<Tabs groupId="5D1812DD-8E7B-4F97-B349-275214F38B6E">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{RenderCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="txt">{KustomizePatchRenderOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Holos is configuring Kustomize to patch the plain `httpbin.yaml` file with the
+annotation.
+
+import GitDiff from '!!raw-loader!./_kustomize/script-02-kustomize/git-diff.sh';
+import GitDiffOutput from '!!raw-loader!./_kustomize/script-02-kustomize/git.diff';
+
+<Tabs groupId="3D80279E-8EDE-4B3E-9269-50F5D1C1CA42">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{GitDiff}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="diff">{GitDiffOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Add and commit the final changes.
+
+import GitCommitFinal from '!!raw-loader!./_kustomize/script-02-kustomize/git-commit-final.sh';
+import GitCommitFinalOutput from '!!raw-loader!./_kustomize/script-02-kustomize/git-commit-final-output.txt';
+
+<Tabs groupId="54C335C8-B382-4277-AE87-0D6556921955">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{GitCommitFinal}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="txt">{GitCommitFinalOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+## Trying Locally
+
+Optionally, apply the manifests rendered by Holos to a [Local Cluster] for
+testing and validation.
+
+## Next Steps
+
+In this tutorial, we learned how Holos simplifies managing [httpbin], which is
+distributed as a Kustomize base. We used a Kustomize component similar to the
+Helm component covered previously. Holos provides a straightforward way to
+customize any component, demonstrated by patching an annotation onto the
+`httpbin` Service.
+
+Continue with the tutorial to learn how Holos facilitates certificate management
+and makes services accessible outside of a cluster.
+
+[httpbin]: https://github.com/mccutchen/go-httpbin/tree/v2.15.0
+[prometheus]: https://github.com/prometheus-community/helm-charts/tree/prometheus-25.27.0/charts/prometheus
+[blackbox]: https://github.com/prometheus-community/helm-charts/tree/prometheus-blackbox-exporter-9.0.1/charts/prometheus-blackbox-exporter
+[kustomize]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
+
+[Helm Values]: ./helm-values.mdx
+[File Generator]: ../api/core.md#File
+[Kustomize Transformer]: ../api/core.md#Kustomize
+[BuildPlan]: ../api/core.md#BuildPlan
+[KustomizeConfig]: ../api/author.md#KustomizeConfig
+[Local Cluster]: ../topics/local-cluster.mdx

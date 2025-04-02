@@ -7,7 +7,7 @@ sidebar_position: 200
 
 
 ```go
-import "github.com/holos-run/holos/api/author/v1alpha5"
+import "github.com/holos-run/holos/api/author/v1alpha6"
 ```
 
 Package author contains a standard set of schemas for component authors to generate common [core](<https://holos.run/docs/api/core/>) BuildPlans.

@@ -1,0 +1,374 @@
+# Set $HOME because:
+#   - Helm uses it for temporary files
+#   - Git requires it for setting author name/email globally
+env HOME=$WORK/.tmp
+chmod 0755 $WORK/update.sh
+
+# Configure git author for testscript execution
+exec git config --global user.name 'Holos Docs'
+exec git config --global user.email 'hello@holos.run'
+exec git config --global init.defaultBranch main
+
+# Remove the tutorial directory if it already exists
+exec rm -rf holos-helm-values-tutorial
+
+# Create and change to the tutorial directory, and then initialize the Holos platform
+exec bash -c 'bash -euo pipefail mkdir-and-init.sh'
+cd holos-helm-values-tutorial
+
+# Git init and create the component directories
+exec bash -c 'bash -euo pipefail $WORK/git-init.sh'
+exec bash -c 'bash -euo pipefail $WORK/mkdir-components.sh'
+
+# Combine and execute the multiline prometheus/blackbox component header/body/trailer files
+exec cat $WORK/prometheus-component-header.sh ../prometheus-component-body.cue ../eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+exec cat $WORK/blackbox-component-header.sh ../blackbox-component-body.cue ../eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Combine and execute the multiline platform registration header/body/trailer files.
+exec cat $WORK/register-components-header.sh ../register-components-body.cue ../eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Render the platform, capture stdout, and use update.sh to gate whether the
+# output file should be updated.
+#
+# NOTE: The [net] condition will test whether external network access is available
+[net] exec bash -c 'bash -euo pipefail $WORK/render.sh 2>&1'
+[net] stdin stdout
+exec $WORK/update.sh $WORK/register-components-output.txt
+
+# Commit and conditionally update the output file
+exec bash -c 'bash -euo pipefail $WORK/register-components-git-commit.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/register-components-git-commit-output.txt
+
+# Import values
+exec bash -c 'bash -euo pipefail $WORK/import-prometheus-values.sh'
+exec bash -c 'bash -euo pipefail $WORK/import-blackbox-values.sh'
+
+# Render, update the output file, commit, and update the commit output file.
+[net] exec bash -c 'bash -euo pipefail $WORK/render.sh 2>&1'
+[net] stdin stdout
+exec $WORK/update.sh $WORK/import-values-render-output.txt
+exec bash -c 'bash -euo pipefail $WORK/import-values-git-commit.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/import-values-git-output.txt
+
+# Create the common configuration path
+exec bash -c 'bash -euo pipefail $WORK/mkdir-common-config.sh'
+
+# Combine and execute the common configuration header/body/trailer to write the cue file.
+exec cat $WORK/blackbox-common-config-header.sh ../blackbox-common-config-body.cue ../eof-trailer.sh
+stdin stdout
+exec bash -xeuo pipefail
+
+# Git commit blackbox common config
+exec bash -c 'bash -euo pipefail $WORK/blackbox-common-config-git-commit.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/blackbox-common-config-git-output.txt
+
+# Patch the common config values file and write to output file.
+#
+# NOTE: Using a symlink here because the patch script references values.patch
+# within the same directory, but it actually lives one directory up in the
+# testscript $WORK dir.
+exec ln -s $WORK/values.patch values.patch
+exec bash -c 'bash -euo pipefail $WORK/common-config-patch.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/common-config-patch.txt
+
+# Remove patch and commit changes
+exec bash -c 'bash -euo pipefail $WORK/common-config-rm.sh'
+exec bash -c 'bash -euo pipefail $WORK/common-config-git.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/common-config-git-output.txt
+
+# Final render and update of output file.
+[net] exec bash -c 'bash -euo pipefail $WORK/render.sh 2>&1'
+[net] stdin stdout
+exec $WORK/update.sh $WORK/reviewing-changes-git-output.txt
+
+# Git diff and write to output file.
+exec bash -c 'bash -euo pipefail $WORK/git-diff.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/git.diff
+
+# Final commit and write to output file
+exec bash -c 'bash -euo pipefail $WORK/reviewing-changes-git-commit.sh'
+stdin stdout
+exec $WORK/update.sh $WORK/reviewing-changes-git-output.txt
+
+# Clean up the tutorial directory and tmp $HOME directory
+cd $WORK
+exec rm -rf holos-helm-values-tutorial
+exec rm -rf $HOME
+
+-- update.sh --
+#! /bin/bash
+set -euo pipefail
+[[ -s "$1" ]] && [[ -z "${HOLOS_UPDATE_SCRIPTS:-}" ]] && exit 0
+cat > "$1"
+-- mkdir-and-init.sh --
+mkdir holos-helm-values-tutorial
+cd holos-helm-values-tutorial
+holos init platform v1alpha5
+-- git-init.sh --
+git init . && git add . && git commit -m "initial commit"
+-- mkdir-components.sh --
+mkdir -p components/prometheus components/blackbox
+-- prometheus-component-header.sh --
+cat <<EOF > components/prometheus/prometheus.cue
+-- prometheus-component-body.cue --
+package holos
+
+// Produce a helm chart build plan.
+holos: Helm.BuildPlan
+
+Helm: #Helm & {
+	Chart: {
+		name:    "prometheus"
+		version: "25.27.0"
+		repository: {
+			name: "prometheus-community"
+			url:  "https://prometheus-community.github.io/helm-charts"
+		}
+	}
+}
+-- eof-trailer.sh --
+EOF
+-- blackbox-component-header.sh --
+cat <<EOF > components/blackbox/blackbox.cue
+-- blackbox-component-body.cue --
+package holos
+
+// Produce a helm chart build plan.
+holos: Helm.BuildPlan
+
+Helm: #Helm & {
+	Chart: {
+		name:    "prometheus-blackbox-exporter"
+		version: "9.0.1"
+		repository: {
+			name: "prometheus-community"
+			url:  "https://prometheus-community.github.io/helm-charts"
+		}
+	}
+}
+-- register-components-header.sh --
+cat <<EOF > platform/prometheus.cue
+-- register-components-body.cue --
+package holos
+
+Platform: Components: {
+	prometheus: {
+		name: "prometheus"
+		path: "components/prometheus"
+	}
+	blackbox: {
+		name: "blackbox"
+		path: "components/blackbox"
+	}
+}
+-- render.sh --
+holos render platform
+-- register-components-output.txt --
+cached prometheus-blackbox-exporter 9.0.1
+rendered blackbox in 3.825430417s
+cached prometheus 25.27.0
+rendered prometheus in 4.840089667s
+rendered platform in 4.840137792s
+-- register-components-git-commit.sh --
+git add . && git commit -m 'add blackbox and prometheus'
+-- register-components-git-commit-output.txt --
+[main b5df111] add blackbox and prometheus
+ 5 files changed, 1550 insertions(+)
+ create mode 100644 components/blackbox/blackbox.cue
+ create mode 100644 components/prometheus/prometheus.cue
+ create mode 100644 deploy/components/blackbox/blackbox.gen.yaml
+ create mode 100644 deploy/components/prometheus/prometheus.gen.yaml
+ create mode 100644 platform/prometheus.cue
+-- import-prometheus-values.sh --
+holos cue import \
+  --package holos \
+  --path 'Helm: Values:' \
+  --outfile components/prometheus/values.cue \
+  components/prometheus/vendor/25.27.0/prometheus/values.yaml
+-- import-blackbox-values.sh --
+holos cue import \
+  --package holos \
+  --path 'Helm: Values:' \
+  --outfile components/blackbox/values.cue \
+  components/blackbox/vendor/9.0.1/prometheus-blackbox-exporter/values.yaml
+-- import-values-render-output.txt --
+rendered blackbox in 365.936792ms
+rendered prometheus in 371.855875ms
+rendered platform in 372.109916ms
+-- import-values-git-commit.sh --
+git add . && git commit -m 'import values'
+-- import-values-git-output.txt --
+[main 52e90ea] import values
+ 2 files changed, 1815 insertions(+)
+ create mode 100644 components/blackbox/values.cue
+ create mode 100644 components/prometheus/values.cue
+-- mkdir-common-config.sh --
+mkdir -p config/prometheus
+-- blackbox-common-config-header.sh --
+cat <<EOF > config/prometheus/blackbox.cue
+-- blackbox-common-config-body.cue --
+package prometheus
+
+// Schema Definition
+#Blackbox: {
+	// host constrained to a lower case dns label
+	host: string & =~"^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$"
+	// port constrained to a valid range
+	port: int & >0 & <=65535
+}
+
+// Concrete values must validate against the schema.
+blackbox: #Blackbox & {
+	host: "blackbox"
+	port: 9115
+}
+-- blackbox-common-config-git-commit.sh --
+git add . && git commit -m 'add blackbox configuration'
+-- blackbox-common-config-git-output.txt --
+[main 1adcd08] add blackbox configuration
+ 1 file changed, 15 insertions(+)
+ create mode 100644 components/blackbox.cue
+-- common-config-patch.sh --
+patch -p1 < values.patch
+-- values.patch --
+--- a/components/blackbox/values.cue
++++ b/components/blackbox/values.cue
+@@ -1,6 +1,11 @@
+ package holos
+ 
++// Import common blackbox configuration
++import "holos.example/config/prometheus"
++
+ Helm: Values: {
++	fullnameOverride: prometheus.blackbox.host
++
+ 	global: {
+ 		//# Global image registry to use if it needs to be overriden for some specific use cases (e.g local registries, custom images, ...)
+ 		//#
+@@ -192,7 +197,7 @@ Helm: Values: {
+ 		annotations: {}
+ 		labels: {}
+ 		type: "ClusterIP"
+-		port: 9115
++		port: prometheus.blackbox.port
+ 		ipDualStack: {
+ 			enabled: false
+ 			ipFamilies: ["IPv6", "IPv4"]
+--- a/components/prometheus/values.cue
++++ b/components/prometheus/values.cue
+@@ -1,5 +1,8 @@
+ package holos
+
++// Import common blackbox configuration
++import "holos.example/config/prometheus"
++
+ Helm: Values: {
+        // yaml-language-server: $schema=values.schema.json
+        // Default values for prometheus.
+@@ -1083,7 +1086,7 @@ Helm: Values: {
+ 					target_label: "__param_target"
+ 				}, {
+ 					target_label: "__address__"
+-					replacement:  "blackbox"
++					replacement:  "\(prometheus.blackbox.host):\(prometheus.blackbox.port)"
+ 				}, {
+ 					source_labels: ["__param_target"]
+ 					target_label: "instance"
+-- common-config-patch.txt --
+patching file 'components/blackbox/values.cue'
+patching file 'components/prometheus/values.cue'
+-- common-config-rm.sh --
+rm values.patch
+-- common-config-git.sh --
+git add . && git commit -m 'integrate blackbox and prometheus together'
+-- common-config-git-output.txt --
+[main 4221803] integrate blackbox and prometheus together
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+-- reviewing-changes-render-output.txt --
+rendered blackbox in 374.810666ms
+rendered prometheus in 382.899334ms
+rendered platform in 383.270625ms
+-- git-diff.sh --
+git diff
+-- git.diff --
+diff --git a/deploy/components/blackbox/blackbox.gen.yaml b/deploy/components/blackbox/blackbox.gen.yaml
+index 3db20cd..5336f44 100644
+--- a/deploy/components/blackbox/blackbox.gen.yaml
++++ b/deploy/components/blackbox/blackbox.gen.yaml
+@@ -7,7 +7,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ ---
+ apiVersion: v1
+@@ -31,7 +31,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ ---
+ apiVersion: v1
+@@ -43,7 +43,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ spec:
+   ports:
+@@ -65,7 +65,7 @@ metadata:
+     app.kubernetes.io/name: prometheus-blackbox-exporter
+     app.kubernetes.io/version: v0.25.0
+     helm.sh/chart: prometheus-blackbox-exporter-9.0.1
+-  name: prometheus-blackbox-exporter
++  name: blackbox
+   namespace: default
+ spec:
+   replicas: 1
+@@ -119,8 +119,8 @@ spec:
+           name: config
+       hostNetwork: false
+       restartPolicy: Always
+-      serviceAccountName: prometheus-blackbox-exporter
++      serviceAccountName: blackbox
+       volumes:
+       - configMap:
+-          name: prometheus-blackbox-exporter
++          name: blackbox
+         name: config
+diff --git a/deploy/components/prometheus/prometheus.gen.yaml b/deploy/components/prometheus/prometheus.gen.yaml
+index 9e02bce..ab638f0 100644
+--- a/deploy/components/prometheus/prometheus.gen.yaml
++++ b/deploy/components/prometheus/prometheus.gen.yaml
+@@ -589,7 +589,7 @@ data:
+       - source_labels:
+         - __address__
+         target_label: __param_target
+-      - replacement: blackbox
++      - replacement: blackbox:9115
+         target_label: __address__
+       - source_labels:
+         - __param_target
+-- reviewing-changes-git-commit.sh --
+git add . && git commit -m 'render integrated blackbox and prometheus manifests'
+-- reviewing-changes-git-output.txt --
+[main 67efe0d] render integrated blackbox and prometheus manifests
+ 2 files changed, 7 insertions(+), 7 deletions(-)

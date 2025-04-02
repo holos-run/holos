@@ -17,14 +17,14 @@ import (
 )
 
 //go:embed all:platforms
-var platforms embed.FS
+var pfs embed.FS
 
 // platformsRoot is the root path to copy platform cue code from.
 const platformsRoot = "platforms"
 
 // Platforms returns a slice of embedded platforms or nil if there are none.
 func Platforms() []string {
-	entries, err := fs.ReadDir(platforms, platformsRoot)
+	entries, err := fs.ReadDir(pfs, platformsRoot)
 	if err != nil {
 		return nil
 	}
@@ -37,7 +37,7 @@ func Platforms() []string {
 	return dirs
 }
 
-func initPlatformMetadata(ctx context.Context, name string) error {
+func initPlatformMetadata(ctx context.Context, root, name string) error {
 	log := logger.FromContext(ctx)
 	rpcPlatform := &platform.Platform{Name: name}
 	// Write the platform data.
@@ -49,30 +49,30 @@ func initPlatformMetadata(ctx context.Context, name string) error {
 	if len(data) > 0 {
 		data = append(data, '\n')
 	}
-
-	if err := os.WriteFile(client.PlatformMetadataFile, data, 0644); err != nil {
+	platformMetadataFile := filepath.Join(root, client.PlatformMetadataFile)
+	if err := os.WriteFile(platformMetadataFile, data, 0o666); err != nil {
 		return errors.Wrap(fmt.Errorf("could not write platform metadata: %w", err))
 	}
-	log.DebugContext(ctx, "wrote "+client.PlatformMetadataFile, "path", filepath.Join(getCwd(ctx), client.PlatformMetadataFile))
+	log.DebugContext(ctx, "wrote "+client.PlatformMetadataFile, "path", platformMetadataFile)
 
 	return nil
 }
 
-// GeneratePlatform writes the cue code for a platform to the local working
-// directory.
-func GeneratePlatform(ctx context.Context, name string) error {
+// GeneratePlatform writes the cue code for a named platform to path.
+func GeneratePlatform(ctx context.Context, dst, name string) error {
 	log := logger.FromContext(ctx)
 	// Check for a valid platform
 	platformPath := filepath.Join(platformsRoot, name)
-	if !dirExists(platforms, platformPath) {
+	if !dirExists(pfs, platformPath) {
 		return errors.Wrap(fmt.Errorf("cannot generate: have: [%s] want: %+v", name, Platforms()))
 	}
 
-	if _, err := os.Stat(client.PlatformMetadataFile); err == nil {
-		log.DebugContext(ctx, fmt.Sprintf("skipped write %s: already exists", client.PlatformConfigFile))
+	platformMetadataFile := filepath.Join(dst, client.PlatformMetadataFile)
+	if _, err := os.Stat(platformMetadataFile); err == nil {
+		log.DebugContext(ctx, fmt.Sprintf("skipped write %s: already exists", platformMetadataFile))
 	} else {
 		if os.IsNotExist(err) {
-			if err := initPlatformMetadata(ctx, name); err != nil {
+			if err := initPlatformMetadata(ctx, dst, name); err != nil {
 				return errors.Wrap(err)
 			}
 		} else {
@@ -81,12 +81,12 @@ func GeneratePlatform(ctx context.Context, name string) error {
 	}
 
 	// Copy the cue.mod directory
-	if err := copyEmbedFS(ctx, platforms, filepath.Join(platformsRoot, "cue.mod"), "cue.mod", bytes.NewBuffer); err != nil {
+	if err := copyEmbedFS(ctx, pfs, filepath.Join(platformsRoot, "cue.mod"), filepath.Join(dst, "cue.mod"), bytes.NewBuffer); err != nil {
 		return errors.Wrap(err)
 	}
 
 	// Copy the named platform
-	if err := copyEmbedFS(ctx, platforms, platformPath, ".", bytes.NewBuffer); err != nil {
+	if err := copyEmbedFS(ctx, pfs, platformPath, dst, bytes.NewBuffer); err != nil {
 		return errors.Wrap(err)
 	}
 

@@ -6,6 +6,12 @@ import (
 	"cuelang.org/go/cue"
 )
 
+// Exporter is the interface used to export Platform, Component, and BuildPlan
+// resources.  Useful for the show subcommand.
+type Exporter interface {
+	Export(Encoder) error
+}
+
 // Platform is the interface all Platform versions must support.
 //
 // Concrete values must preserve the relative ordering of components when
@@ -23,6 +29,7 @@ type Component interface {
 	Path() string
 	// ExtractYAML represents the values of the --extract-yaml flag
 	ExtractYAML() ([]string, error)
+	// Tags represents standard tags such as the component name, labels, annotations.
 	Tags() ([]string, error)
 	WriteTo() string
 	Labels() Labels

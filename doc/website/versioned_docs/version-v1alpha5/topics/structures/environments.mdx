@@ -1,0 +1,521 @@
+---
+slug: environments
+title: Environments
+description: Managing Environments - dev, test, stage, prod.
+sidebar_position: 130
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import CommonComponent from '../../common/example-component.mdx';
+
+# Environments
+
+## Overview
+
+This topic covers how to model environments in Holos. We'll define schemas for
+`#Environment` and `#Environments` to represent one environment and a
+collection. The `Environments: #Environments` struct maps environment names to
+configurations.
+
+:::note
+This approach unifies the component definition with the overall platform
+configuration, creating a tight coupling between the two.
+:::
+
+This tight coupling is appropriate when you're configuring your own platform.
+For example:
+
+1. When you're integrating third party software into your own platform.
+2. When you're configuring first party in-house software into your own platform.
+
+This approach is not well suited to writing a component to share outside of your
+own organization, which we can think of as configuring someone else's platform.
+
+## The Code
+
+### Generating the structure
+
+Use `holos init platform` to generate a minimal platform structure:
+
+```shell
+mkdir holos-environments-tutorial && cd holos-environments-tutorial
+holos init platform v1alpha5
+```
+
+### Using an example Component
+
+Create a directory for the example `podinfo` component we'll use to render
+platform manifests.
+
+```bash
+mkdir -p components/podinfo
+```
+
+Create the CUE configuration for the example `podinfo` component.
+
+```bash
+cat <<EOF >components/podinfo/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+holos: Component.BuildPlan
+
+Component: #Helm & {
+	Chart: {
+		name:    "podinfo"
+		version: "6.6.2"
+		repository: {
+			name: "podinfo"
+			url:  "https://stefanprodan.github.io/podinfo"
+		}
+	}
+	Values: ui: {
+		message: string | *"Hello World" @tag(message, type=string)
+	}
+}
+```
+```bash
+EOF
+```
+
+We'll integrate the component with the platform after we define the
+configuration structures.
+
+## Defining Environments
+
+We'll define an `#Environment` schema `#Environments` collection.  We'll use
+these schemas to define an `Environments` struct of concrete configuration
+values.
+
+### Assumptions
+
+There are two tiers of environments, prod and nonprod.  Prod environments
+organized along broad jurisdictions, for example US and EU.  Nonprod
+environments are organized by purpose, dev, test, and stage.
+
+### Prototyping the data
+
+Before we define the schema, let's prototype the data structure we want to work
+with from the perspective of each component.
+
+Let's imagine we're configuring `podinfo` to comply with regulations.  When
+podinfo is deployed to production in the EU, we'll configure opt-in behavior.
+In the US we'll configure opt-out behavior.
+
+We'll pass the environment name as a component parameter.  The component
+definition can then look up the jurisdiction to determine the appropriate
+configuration values.
+
+```shell
+holos cue export --out=yaml --expression Environments
+```
+
+```yaml showLineNumbers
+prod-pdx:
+  name: prod-pdx
+  tier: prod
+  jurisdiction: us
+  state: oregon
+prod-cmh:
+  name: prod-cmh
+  tier: prod
+  jurisdiction: us
+  state: ohio
+prod-ams:
+  name: prod-ams
+  tier: prod
+  jurisdiction: eu
+  state: netherlands
+dev:
+  name: dev
+  tier: nonprod
+  jurisdiction: us
+  state: oregon
+test:
+  name: test
+  tier: nonprod
+  jurisdiction: us
+  state: oregon
+stage:
+  name: stage
+  tier: nonprod
+  jurisdiction: us
+  state: oregon
+```
+
+### Defining the schema
+
+Given the example structure, we can write a schema to define and validate the
+data.
+
+```shell
+cat <<EOF > environments.schema.cue
+```
+```cue showLineNumbers
+package holos
+
+#Environment: {
+	name:         string
+	tier:         "prod" | "nonprod"
+	jurisdiction: "us" | "eu" | "uk" | "global"
+	state:        "oregon" | "ohio" | "germany" | "netherlands" | "england" | "global"
+
+	// Prod environment names must be prefixed with prod for clarity.
+	if tier == "prod" {
+		name: "prod" | =~"^prod-"
+	}
+}
+
+#Environments: {
+	[NAME=string]: #Environment & {
+		name: NAME
+	}
+}
+```
+```shell
+EOF
+```
+
+### Adding configuration
+
+With a schema defined, we can fill in the concrete values.
+
+```shell
+cat <<EOF > environments.cue
+```
+```cue showLineNumbers
+package holos
+
+// Injected from Platform.spec.components.parameters.EnvironmentName
+EnvironmentName: string @tag(EnvironmentName)
+
+Environments: #Environments & {
+	"prod-pdx": {
+		tier:         "prod"
+		jurisdiction: "us"
+		state:        "oregon"
+	}
+	"prod-cmh": {
+		tier:         "prod"
+		jurisdiction: "us"
+		state:        "ohio"
+	}
+	"prod-ams": {
+		tier:         "prod"
+		jurisdiction: "eu"
+		state:        "netherlands"
+	}
+	// Nonprod environments are colocated together.
+	_nonprod: {
+		tier:         "nonprod"
+		jurisdiction: "us"
+		state:        "oregon"
+	}
+	dev:   _nonprod
+	test:  _nonprod
+	stage: _nonprod
+}
+```
+```shell
+EOF
+```
+
+### Inspecting the configuration
+
+Inspect the `Environments` data structure to verify the schema and concrete
+values are what we want.
+
+<Tabs groupId="FF820F5A-A85F-464D-B299-39CAAFFCE5C6">
+  <TabItem value="command" label="Command">
+```bash
+holos cue export --out=yaml --expression Environments
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```yaml showLineNumbers
+prod-pdx:
+  name: prod-pdx
+  tier: prod
+  jurisdiction: us
+  state: oregon
+prod-cmh:
+  name: prod-cmh
+  tier: prod
+  jurisdiction: us
+  state: ohio
+prod-ams:
+  name: prod-ams
+  tier: prod
+  jurisdiction: eu
+  state: netherlands
+dev:
+  name: dev
+  tier: nonprod
+  jurisdiction: us
+  state: oregon
+test:
+  name: test
+  tier: nonprod
+  jurisdiction: us
+  state: oregon
+stage:
+  name: stage
+  tier: nonprod
+  jurisdiction: us
+  state: oregon
+```
+  </TabItem>
+</Tabs>
+
+This looks like our prototype, we're confident we can iterate over each
+environment and get a handle on the configuration values we need.
+
+## Integrating components
+
+The `Environments` data structure unlocks the capability to look up concrete
+values specific to a named environment.  We'll use this capability to configure
+the `podinfo` component in compliance with the regulations of the jurisdiction.
+
+### Configuring the environment
+
+Inject the environment name when we integrate `podinfo` with the platform.
+
+```shell
+cat <<EOF > platform/podinfo.cue
+```
+```cue showLineNumbers
+package holos
+
+Platform: Components: {
+	podinfoPDX: ProdPodinfo & {_city: "pdx"}
+	podinfoCMH: ProdPodinfo & {_city: "cmh"}
+	podinfoAMS: ProdPodinfo & {_city: "ams"}
+	podinfoDEV: {
+		name: "podinfo-dev"
+		path: "components/podinfo"
+		labels: "app.holos.run/component": "podinfo"
+		parameters: EnvironmentName:       "dev"
+	}
+}
+
+let ProdPodinfo = {
+	_city: string
+	name:  "podinfo-\(_city)"
+	path:  "components/podinfo"
+	labels: "app.holos.run/component": "podinfo"
+	labels: "app.holos.run/tier":      "prod"
+	labels: "app.holos.run/city":      _city
+	parameters: EnvironmentName:       "prod-\(_city)"
+}
+```
+```
+EOF
+```
+
+### Using the environment
+
+Now we can configure `podinfo` based on the jurisdiction of the environment.
+
+```shell
+cat <<EOF > components/podinfo/cookie-consent.cue
+```
+```cue showLineNumbers
+package holos
+
+// Schema definition for our configuration.
+#Values: {
+	ui: enableCookieConsent: *true | false
+	ui: message:             string
+}
+
+// Map jurisdiction to helm values
+JurisdictionValues: {
+	// Enable cookie consent by default in any jurisdiction.
+	[_]: #Values
+	// Disable in the US.
+	us: ui: enableCookieConsent: false
+	eu: ui: enableCookieConsent: true
+}
+
+// Look up the configuration values associated with the environment name.
+Component: Values: JurisdictionValues[Environments[EnvironmentName].jurisdiction]
+```
+```shell
+EOF
+```
+
+### Inspecting the BuildPlans
+
+With the above configuration, we can inspect the buildplans for this component.
+The prod environment in Amsterdam has cookie consent enabled on line 26.
+
+<Tabs groupId="6EC991F3-F78C-43F1-8A6D-E68D8BDAF58B">
+  <TabItem value="command" label="Command">
+```bash
+holos show buildplans --selector app.holos.run/city=ams
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```yaml showLineNumbers
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: podinfo-ams
+  labels:
+    app.holos.run/city: ams
+    app.holos.run/component: podinfo
+    app.holos.run/name: podinfo-ams
+    app.holos.run/tier: prod
+spec:
+  artifacts:
+    - artifact: components/podinfo-ams/podinfo-ams.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: podinfo
+              version: 6.6.2
+              release: podinfo
+              repository:
+                name: podinfo
+                url: https://stefanprodan.github.io/podinfo
+            values:
+              ui:
+                # highlight-next-line
+                enableCookieConsent: true
+                message: Hello World
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: components/podinfo-ams/podinfo-ams.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+    - artifact: gitops/podinfo-ams.application.gen.yaml
+      generators:
+        - kind: Resources
+          output: gitops/podinfo-ams.application.gen.yaml
+          resources:
+            Application:
+              podinfo-ams:
+                apiVersion: argoproj.io/v1alpha1
+                kind: Application
+                metadata:
+                  name: podinfo-ams
+                  namespace: argocd
+                spec:
+                  destination:
+                    server: https://kubernetes.default.svc
+                  project: default
+                  source:
+                    path: deploy/components/podinfo-ams
+                    repoURL: https://github.com/brenix/holos-demo.git
+                    targetRevision: main
+```
+  </TabItem>
+</Tabs>
+
+In Portland cookie consent is disabled.
+
+<Tabs groupId="3438335B-1FFC-4838-B8DE-C54B8346CDB4">
+  <TabItem value="command" label="Command">
+```bash
+holos show buildplans --selector app.holos.run/city=pdx
+```
+  </TabItem>
+  <TabItem value="output" label="Output">
+```yaml showLineNumbers
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: podinfo-pdx
+  labels:
+    app.holos.run/city: pdx
+    app.holos.run/component: podinfo
+    app.holos.run/name: podinfo-pdx
+    app.holos.run/tier: prod
+spec:
+  artifacts:
+    - artifact: components/podinfo-pdx/podinfo-pdx.gen.yaml
+      generators:
+        - kind: Helm
+          output: helm.gen.yaml
+          helm:
+            chart:
+              name: podinfo
+              version: 6.6.2
+              release: podinfo
+              repository:
+                name: podinfo
+                url: https://stefanprodan.github.io/podinfo
+            values:
+              ui:
+                # highlight-next-line
+                enableCookieConsent: false
+                message: Hello World
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - helm.gen.yaml
+            - resources.gen.yaml
+          output: components/podinfo-pdx/podinfo-pdx.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs: {}
+              resources:
+                - helm.gen.yaml
+                - resources.gen.yaml
+    - artifact: gitops/podinfo-pdx.application.gen.yaml
+      generators:
+        - kind: Resources
+          output: gitops/podinfo-pdx.application.gen.yaml
+          resources:
+            Application:
+              podinfo-pdx:
+                apiVersion: argoproj.io/v1alpha1
+                kind: Application
+                metadata:
+                  name: podinfo-pdx
+                  namespace: argocd
+                spec:
+                  destination:
+                    server: https://kubernetes.default.svc
+                  project: default
+                  source:
+                    path: deploy/components/podinfo-pdx
+                    repoURL: https://github.com/brenix/holos-demo.git
+                    targetRevision: main
+```
+  </TabItem>
+</Tabs>
+
+## Concluding Remarks
+
+In this topic we covered how to use a CUE structure to define attributes of prod
+and nonprod environments.
+
+1. We passed the environment name as a parameter to each component using a CUE `@tag`.
+2. The component definition uses the environment name as a key to get a handle
+on attributes. For example, the jurisdiction a service operates within.
+3. The example podinfo component uses an additional structure to map
+jurisdictions to concrete configuration values.

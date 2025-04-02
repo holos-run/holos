@@ -48,6 +48,8 @@ func (i *StringSlice) Set(value string) error {
 // [cue/load.Config]: https://pkg.go.dev/cuelang.org/go@v0.10.1/cue/load#Config
 type TagMap map[string]*string
 
+const TagMapHelp = "set the value of a cue @tag field in the form key=value or simply key"
+
 func (t TagMap) Tags() []string {
 	parts := make([]string, 0, len(t))
 	for tag, val := range t {
@@ -332,6 +334,8 @@ func (s *orderedEncoder) Encode(idx int, v any) error {
 	return nil
 }
 
+// TODO(jjm): consider moving the BuildOpts struct to the component package.
+
 // BuildOpts represents options common across BuildPlan api versions.  Use
 // [NewBuildOpts] to create a new concrete value.
 type BuildOpts struct {
@@ -339,10 +343,16 @@ type BuildOpts struct {
 	Concurrency int
 	Stderr      io.Writer
 	WriteTo     string
-	Path        string
-	Tags        []string
+	// Path represents the component path relative to the platform module root.
+	Path string
+	// Tags represents user managed tags including a component name, labels, and
+	// annotations.
+	Tags []string
+	// BuildContext represents holos managed tags.
+	BuildContext BuildContext
 }
 
+// NewBuildOpts returns a [BuildOpts] configured to build the component at path.
 func NewBuildOpts(path string) BuildOpts {
 	return BuildOpts{
 		Store:       artifact.NewStore(),
@@ -352,4 +362,17 @@ func NewBuildOpts(path string) BuildOpts {
 		Path:        path,
 		Tags:        make([]string, 0, 10),
 	}
+}
+
+// BuildContext represents build context values provided by the holos render
+// component command.  These values are expected to be randomly generated and
+// late binding, meaning they cannot be known ahead of time in a static
+// configuration.  As such, CUE configuration may refer to the values here which
+// will be populated by holos when the final build plan is exported from CUE.
+type BuildContext struct {
+	// TempDir represents the temporary directory managed and owned by the holos
+	// render component command for the execution of one BuildPlan.  Multiple
+	// tasks in the build plan share this temporary directory and therefore should
+	// avoid reading and writing into the same sub-directories as one another.
+	TempDir string `json:"tempDir" yaml:"tempDir"`
 }

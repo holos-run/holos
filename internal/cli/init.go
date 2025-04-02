@@ -51,8 +51,13 @@ func newInitPlatformCommand() *cobra.Command {
 			}
 		}
 
+		wd, err := os.Getwd()
+		if err != nil {
+			return errors.Wrap(err)
+		}
+
 		for _, name := range args {
-			if err := generate.GeneratePlatform(ctx, name); err != nil {
+			if err := generate.GeneratePlatform(ctx, wd, name); err != nil {
 				return errors.Wrap(err)
 			}
 		}

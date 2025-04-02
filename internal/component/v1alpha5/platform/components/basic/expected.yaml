@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: httpbin
+    namespace: httpbin
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app.kubernetes.io/name: httpbin
+    template:
+        metadata:
+            labels:
+                app.kubernetes.io/name: httpbin
+        spec:
+            containers:
+                - image: quay.io/holos/mccutchen/go-httpbin
+                  livenessProbe:
+                    httpGet:
+                        path: /status/200
+                        port: http
+                  name: httpbin
+                  ports:
+                    - containerPort: 8080
+                      name: http
+                      protocol: TCP
+                  readinessProbe:
+                    httpGet:
+                        path: /status/200
+                        port: http

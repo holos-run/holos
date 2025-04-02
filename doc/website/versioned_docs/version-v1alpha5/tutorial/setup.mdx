@@ -1,0 +1,104 @@
+---
+slug: setup
+title: Setup
+description: Install Holos and build the initial structure.
+sidebar_position: 20
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import RenderPlatformDiagram from '@site/src/diagrams/render-platform-sequence.mdx';
+
+# Setup
+
+## Installing
+
+Holos is a single executable that can be installed via:
+
+<Tabs groupId="FE2C74C8-B3A3-4AEA-BBD3-F57FAA654B6F">
+  <TabItem value="brew" label="macOS">
+```bash
+brew install holos-run/tap/holos
+```
+  </TabItem>
+  <TabItem value="linux" label="Linux">
+Download holos from the [releases] page and place the executable into your shell
+path.
+  </TabItem>
+  <TabItem value="win" label="Windows">
+Download holos from the [releases] page and place the executable into your shell
+path.
+  </TabItem>
+  <TabItem value="go" label="Go">
+```bash
+go install github.com/holos-run/holos/cmd/holos@latest
+```
+  </TabItem>
+</Tabs>
+
+### Completion
+
+:::tip
+Completion is automatically enabled if [brew shell
+completion](https://docs.brew.sh/Shell-Completion) is also enabled.
+:::
+
+<Tabs groupId="65F79D28-2E57-4A90-8EBA-3D8758C80233">
+  <TabItem value="zsh" label="zsh">
+
+Add the following to `~/.zshrc` if not already present to initialize zsh completion.
+
+```bash
+autoload -Uz compinit
+compinit
+```
+
+Then load holos completion after zsh completion has been initialized.
+
+```bash
+source <(holos completion zsh)
+```
+  </TabItem>
+  <TabItem value="bash" label="bash">
+```bash
+source <(holos completion bash)
+```
+  </TabItem>
+  <TabItem value="fish" label="fish">
+```bash
+source <(holos completion fish)
+```
+  </TabItem>
+  <TabItem value="powershell" label="powershell">
+```bash
+holos completion powershell | Invoke-Expression
+```
+  </TabItem>
+</Tabs>
+
+### Dependencies
+
+Install these tools to use Holos's full capabilities:
+
+- [Helm] for chart management and rendering
+- [Kubectl] for [kustomize] operations
+
+:::note
+Holos is tested with Helm `v3.16.2`. If you see `Error: chart requires
+kubeVersion` errors, try upgrading Helm.
+:::
+
+## Next Steps
+
+With your platform structure initialized, proceed to [Hello Holos] to learn Helm
+chart management.
+
+[Helm]: https://github.com/helm/helm/releases
+[Kubectl]: https://kubernetes.io/docs/tasks/tools/
+[kustomize]: https://kustomize.io/
+[Local Cluster]: ../topics/local-cluster.mdx
+[Hello Holos]: ./hello-holos.mdx
+[releases]: https://github.com/holos-run/holos/releases
+[k3d]: https://k3d.io/
+[OrbStack]: https://docs.orbstack.dev/install
+[Docker]: https://docs.docker.com/get-started/get-docker/

@@ -1,0 +1,213 @@
+---
+slug: hello-holos
+title: Hello Holos
+description: Configure a simple Hello World service with Holos.
+sidebar_position: 30
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import RenderingOverview from '@site/src/diagrams/rendering-overview.mdx';
+import PlatformSequence from '@site/src/diagrams/render-platform-sequence.mdx';
+import ComponentSequence from '@site/src/diagrams/render-component-sequence.mdx';
+import CodeBlock from '@theme/CodeBlock';
+
+# Hello Holos
+
+## Overview
+
+Like a traditional "Hello World" program, we'll start by configuring the
+[podinfo Helm chart][podinfo] to output a greeting from a Kubernetes Service.
+This introduces the core concept of wrapping Helm charts as Holos Components.
+
+## Implementation
+
+### Holos Version
+
+Ensure you have a current version of `holos` installed.  This document was
+tested with the following version.
+
+import HolosVersionCommand from '!!raw-loader!./_hello-holos/script-01-holos-version/command.sh';
+import HolosVersionOutput from '!!raw-loader!./_hello-holos/script-01-holos-version/output.txt';
+
+<CodeBlock language="bash">{HolosVersionCommand}</CodeBlock>
+<CodeBlock language="txt">{HolosVersionOutput}</CodeBlock>
+
+### Initialize Platform Structure
+
+Create and initialize a minimal platform:
+
+import MkdirAndInit from '!!raw-loader!./_hello-holos/script-02-hello-holos/mkdir-and-init.sh';
+import TreeOutput from '!!raw-loader!./_hello-holos/script-02-hello-holos/tree.txt';
+
+<CodeBlock language="bash">{MkdirAndInit}</CodeBlock>
+
+For reference, the directory structure you will attain by the end of this tutorial
+is listed below (NOTE: we have omitted the `cue.mod` directory for brevity):
+
+<Tabs groupId="80D04C6A-BC83-44D0-95CC-CE01B439B159">
+<TabItem value="tree" label="Tree">
+<CodeBlock language="txt" showLineNumbers>{TreeOutput}</CodeBlock>
+</TabItem>
+<TabItem value="details" label="Details">
+<div style={{display: "flex"}}>
+<div>
+<CodeBlock language="txt" showLineNumbers>{TreeOutput}</CodeBlock>
+</div>
+<div>
+- **Line 1** The platform root is the `holos-tutorial` directory we created.
+- **Line 2** This tutorial places components in `components/`.  They may reside
+anywhere.
+- **Line 3** A component is a collection of `*.cue` files at a path.
+- **Line 4** We'll create this file and configure the podinfo helm chart in the
+next section.
+- **Line 5** The `vendor` directory contains a cached copy of the Helm chart that
+was fetched for the component.
+- **Line 6**  Rendered manifests are placed within the `deploy` directory following
+the structure of the `components/` directory.
+- **Line 9** The platform directory is the **main entrypoint** for the `holos
+render platform` command.
+- **Line 10** `platform.gen.cue` is initialized by `holos init platform` and
+contains the Platform spec.
+- **Line 11** `podinfo.cue` integrates podinfo with the platform by adding the
+component to the platform spec.  We'll add ths file after the next section.
+- **Line 13** `resources.cue` Defines the Kubernetes resources available to
+manage in CUE.
+- **Line 14** `schema.cue` Defines the configuration common to all component
+kinds.
+- **Line 15** `tags.cue` Defines where component parameter values are injected
+into the overall platform configuration.  We don't need to be concerned with
+this file until we cover component parameters.
+- **Lines 9-15** Initialized by `holos init platform`, user editable after
+initialization.
+</div>
+</div>
+</TabItem>
+</Tabs>
+
+### Create the Component
+
+Configure the `podinfo` component:
+
+import MkdirComponents from '!!raw-loader!./_hello-holos/script-02-hello-holos/mkdir-components.sh';
+import PodinfoHeader from '!!raw-loader!./_hello-holos/script-02-hello-holos/podinfo-component-header.sh';
+import PodinfoBody from '!!raw-loader!./_hello-holos/script-02-hello-holos/podinfo-component-body.cue';
+import EofTrailer from '!!raw-loader!./_hello-holos/script-02-hello-holos/eof-trailer.sh';
+
+<CodeBlock language="bash">{MkdirComponents}</CodeBlock>
+<CodeBlock language="bash">{PodinfoHeader}</CodeBlock>
+<CodeBlock language="cue" showLineNumbers>{PodinfoBody}</CodeBlock>
+<CodeBlock language="bash">{EofTrailer}</CodeBlock>
+
+:::important
+Like Go packages, CUE loads all `*.cue` files in the component directory to
+define the component.
+:::
+
+:::note
+CUE recursively loads `*.cue` files from the component directory up to the
+platform root. For example, `#Helm` referenced on line 6 is defined in
+root-level `schema.cue`.
+:::
+
+### Add to Platform
+
+Register the `podinfo` component in `platform/podinfo.cue`:
+
+import RegisterPodinfoHeader from '!!raw-loader!./_hello-holos/script-02-hello-holos/register-podinfo-header.sh';
+import RegisterPodinfoBody from '!!raw-loader!./_hello-holos/script-02-hello-holos/register-podinfo-body.cue';
+
+<CodeBlock language="bash">{RegisterPodinfoHeader}</CodeBlock>
+<CodeBlock language="cue" showLineNumbers>{RegisterPodinfoBody}</CodeBlock>
+<CodeBlock language="bash">{EofTrailer}</CodeBlock>
+
+:::tip
+Parameter names are unrestricted, except for the reserved `holos_` prefix.
+:::
+
+## Generate Manifests
+
+Render the `podinfo` configuration:
+
+import RenderCommand from '!!raw-loader!./_hello-holos/script-02-hello-holos/render.sh';
+import RegisterComponentsOutput from '!!raw-loader!./_hello-holos/script-02-hello-holos/register-components-output.txt';
+
+<Tabs groupId="E150C802-7162-4FBF-82A7-77D9ADAEE847">
+  <TabItem value="command" label="Command">
+    <CodeBlock language="bash">{RenderCommand}</CodeBlock>
+  </TabItem>
+  <TabItem value="output" label="Output">
+    <CodeBlock language="txt">{RegisterComponentsOutput}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Holos executes `helm template` with locally cached charts to generate:
+
+import PodinfoRenderedPath from '!!raw-loader!./_hello-holos/script-02-hello-holos/podinfo-rendered-path.sh';
+import RenderedService from '!!raw-loader!./_hello-holos/script-02-hello-holos/rendered-service.yaml';
+import RenderedDeployment from '!!raw-loader!./_hello-holos/script-02-hello-holos/rendered-deployment.yaml';
+
+<CodeBlock language="txt">{PodinfoRenderedPath}</CodeBlock>
+
+<Tabs groupId="0E9C231D-D0E8-410A-A4A0-601842A086A6">
+  <TabItem value="service" label="Service">
+    <CodeBlock language="yaml" showLineNumbers>{RenderedService}</CodeBlock>
+  </TabItem>
+  <TabItem value="deployment" label="Deployment">
+    <CodeBlock language="yaml" showLineNumbers>{RenderedDeployment}</CodeBlock>
+  </TabItem>
+</Tabs>
+
+Holos renders the component with the greeting injected from the platform spec.
+
+import GrepForMessage from '!!raw-loader!./_hello-holos/script-02-hello-holos/grep-for-message.sh';
+import GreppedOutput from '!!raw-loader!./_hello-holos/script-02-hello-holos/grepped-output.txt';
+
+<CodeBlock language="bash">{GrepForMessage}</CodeBlock>
+<CodeBlock language="yaml">{GreppedOutput}</CodeBlock>
+
+## Breaking it down
+
+We run `holos render platform` because the CUE files in the platform directory
+export a [Platform] resource to `holos`.
+
+:::important
+The `platform/` directory is the default entry point to the platform rendering
+process.  Override with `--platform <dir>`.
+:::
+
+Components are the building blocks of a Platform. The `platform/podinfo.cue`
+file integrates the `podinfo` component with the Platform.
+
+Holos requires two fields to integrate a component with the platform:
+
+1. A unique name for the component.
+2. The component path to the directory containing the CUE files that export a
+`BuildPlan` defining the component.
+
+Component parameters are optional and allow re-use of the same component.
+
+<Tabs groupId="67C1EE71-3EA8-4568-9F6D-0072BA09FF12">
+  <TabItem value="overview" label="Rendering Overview">
+    Take a look at the other tabs for more detailed sequence diagrams.
+    <RenderingOverview />
+  </TabItem>
+  <TabItem value="platform" label="Platform Sequence">
+    <PlatformSequence />
+  </TabItem>
+  <TabItem value="component" label="Component Sequence">
+    <ComponentSequence />
+  </TabItem>
+</Tabs>
+
+## Next Steps
+
+We've shown how to integrate one Helm chart into the Platform, but we haven't
+yet covered multiple Helm charts. Continue with the next tutorial to learn how
+Holos makes it easy to inject values into multiple components safely and
+efficiently.
+
+[podinfo]: https://github.com/stefanprodan/podinfo
+[CUE Module]: https://cuelang.org/docs/reference/modules/
+[CUE Tags]: https://cuelang.org/docs/howto/inject-value-into-evaluation-using-tag-attribute/
+[Platform]: ../api/author.md#Platform

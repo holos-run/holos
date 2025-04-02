@@ -15,11 +15,11 @@ import (
 // PlatformMetadataFile is the platform metadata json file name located in the
 // root of a platform directory.  This file is the authoritative source of truth
 // for the PlatformID used in rpc calls to the PlatformService.
-const PlatformMetadataFile = "platform.metadata.json"
+const PlatformMetadataFile string = "platform.metadata.json"
 
 // PlatformConfigFile represents the marshaled json representation of the
 // PlatformConfig DTO used to persist the inputs to the CUE platform code.
-const PlatformConfigFile = "platform.config.json"
+const PlatformConfigFile string = "platform.config.json"
 
 // LoadPlatformMetadata loads the platform.metadata.json file from a named path.
 // Used as the authoritative source of truth to obtain a platform id for
