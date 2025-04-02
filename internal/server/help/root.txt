@@ -1,5 +1,0 @@
-holos-server is the holos web service
-
-Enable completion with:
-
-  source <(holos-server completion ${SHELL##*/})

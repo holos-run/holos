@@ -84,11 +84,6 @@ debug: ## Build debug executable.
 	@echo "GOPATH=${GOPATH}"
 	go build -o bin/$(BIN_NAME)-debug $(REPO_PATH)/cmd/$(BIN_NAME)
 
-linux: ## Build holos executable for tilt.
-	@echo "building ${BIN_NAME}.linux ${VERSION}"
-	@echo "GOPATH=${GOPATH}"
-	GOOS=linux go build -trimpath -o bin/$(BIN_NAME).linux -ldflags $(LD_FLAGS) $(REPO_PATH)/cmd/$(BIN_NAME)
-
 .PHONY: install
 install: build ## Install holos to GOPATH/bin
 	install bin/$(BIN_NAME) $(shell go env GOPATH)/bin/$(BIN_NAME)
@@ -107,8 +102,6 @@ golangci-lint:
 
 .PHONY: lint
 lint: golangci-lint ## Run linters.
-	buf lint
-	cd internal/frontend/holos && ng lint
 	./hack/cspell
 
 .PHONY: coverage
@@ -120,40 +113,17 @@ snapshot:  ## Go release snapshot
 	goreleaser release --snapshot --clean
 
 .PHONY: tools
-tools: go-deps frontend-deps website-deps ## install tool dependencies
+tools: go-deps website-deps ## install tool dependencies
 
 .PHONY: go-deps
 go-deps: ## tool versions pinned in tools.go
 	go install cuelang.org/go/cmd/cue
-	go install github.com/bufbuild/buf/cmd/buf
-	go install github.com/fullstorydev/grpcurl/cmd/grpcurl
-	go install google.golang.org/protobuf/cmd/protoc-gen-go
-	go install connectrpc.com/connect/cmd/protoc-gen-connect-go
-	go install honnef.co/go/tools/cmd/staticcheck
-	go install golang.org/x/tools/cmd/godoc
 	go install github.com/princjef/gomarkdoc/cmd/gomarkdoc
-	go install github.com/google/ko
 	# curl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash
-
-.PHONY: frontend-deps
-frontend-deps: ## Install Angular deps for go generate
-	cd internal/frontend/holos && npm install
 
 .PHONY: website-deps
 website-deps: ## Install Docusaurus deps for go generate
 	cd doc/website && npm install
-
-.PHONY: image # refer to .ko.yaml as well
-image:  ## Container image build for workflows/publish.yaml
-	KO_DOCKER_REPO=$(DOCKER_REPO) GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) ko build --platform=all --bare ./cmd/holos --tags $(GIT_DETAIL)$(GIT_SUFFIX) --tags latest
-
-.PHONY: prod-deploy
-prod-deploy: install image  ## deploy to PROD
-	GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) bash ./hack/deploy
-
-.PHONY: dev-deploy
-dev-deploy: install image  ## deploy to dev
-	GIT_DETAIL=$(GIT_DETAIL) GIT_SUFFIX=$(GIT_SUFFIX) bash ./hack/deploy-dev
 
 .PHONY: website
 website: ## Build website

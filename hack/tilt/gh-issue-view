@@ -1,9 +1,0 @@
-#! /bin/bash
-#
-set -euo pipefail
-issue="$(git rev-parse --abbrev-ref HEAD | tr -d -c 0-9)"
-if [[ -z $issue ]]; then
-  echo "could not extract issue number from branch name" >&2
-  exit 1
-fi
-exec gh issue view --comments $issue

@@ -1,4 +1,0 @@
-#! /bin/bash
-set -euo pipefail
-export GH_FORCE_TTY='120%'
-exec gh issue list

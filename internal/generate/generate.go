@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/holos-run/holos/internal/errors"
-	"github.com/holos-run/holos/internal/server/middleware/logger"
+	"github.com/holos-run/holos/internal/logger"
 )
 
 func dirExists(srcFS embed.FS, path string) bool {

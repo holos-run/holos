@@ -6,14 +6,10 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 
-	"github.com/holos-run/holos/internal/client"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
-	platform "github.com/holos-run/holos/service/gen/holos/platform/v1alpha1"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 //go:embed all:platforms
@@ -37,27 +33,6 @@ func Platforms() []string {
 	return dirs
 }
 
-func initPlatformMetadata(ctx context.Context, root, name string) error {
-	log := logger.FromContext(ctx)
-	rpcPlatform := &platform.Platform{Name: name}
-	// Write the platform data.
-	encoder := protojson.MarshalOptions{Indent: "  "}
-	data, err := encoder.Marshal(rpcPlatform)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	if len(data) > 0 {
-		data = append(data, '\n')
-	}
-	platformMetadataFile := filepath.Join(root, client.PlatformMetadataFile)
-	if err := os.WriteFile(platformMetadataFile, data, 0o666); err != nil {
-		return errors.Wrap(fmt.Errorf("could not write platform metadata: %w", err))
-	}
-	log.DebugContext(ctx, "wrote "+client.PlatformMetadataFile, "path", platformMetadataFile)
-
-	return nil
-}
-
 // GeneratePlatform writes the cue code for a named platform to path.
 func GeneratePlatform(ctx context.Context, dst, name string) error {
 	log := logger.FromContext(ctx)
@@ -65,19 +40,6 @@ func GeneratePlatform(ctx context.Context, dst, name string) error {
 	platformPath := filepath.Join(platformsRoot, name)
 	if !dirExists(pfs, platformPath) {
 		return errors.Wrap(fmt.Errorf("cannot generate: have: [%s] want: %+v", name, Platforms()))
-	}
-
-	platformMetadataFile := filepath.Join(dst, client.PlatformMetadataFile)
-	if _, err := os.Stat(platformMetadataFile); err == nil {
-		log.DebugContext(ctx, fmt.Sprintf("skipped write %s: already exists", platformMetadataFile))
-	} else {
-		if os.IsNotExist(err) {
-			if err := initPlatformMetadata(ctx, dst, name); err != nil {
-				return errors.Wrap(err)
-			}
-		} else {
-			return errors.Wrap(err)
-		}
 	}
 
 	// Copy the cue.mod directory

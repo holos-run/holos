@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/holos-run/holos/internal/server/middleware/logger"
+	"github.com/holos-run/holos/internal/logger"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/registry"

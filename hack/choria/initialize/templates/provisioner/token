@@ -1,1 +1,0 @@
-{{ .Env.PROVISIONER_TOKEN -}}
