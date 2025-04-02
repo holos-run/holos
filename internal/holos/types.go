@@ -339,12 +339,16 @@ func (s *orderedEncoder) Encode(idx int, v any) error {
 // BuildOpts represents options common across BuildPlan api versions.  Use
 // [NewBuildOpts] to create a new concrete value.
 type BuildOpts struct {
-	Store        artifact.Store
-	Concurrency  int
-	Stderr       io.Writer
-	WriteTo      string
-	Path         string
-	Tags         []string
+	Store       artifact.Store
+	Concurrency int
+	Stderr      io.Writer
+	WriteTo     string
+	// Path represents the component path relative to the platform module root.
+	Path string
+	// Tags represents user managed tags including a component name, labels, and
+	// annotations.
+	Tags []string
+	// BuildContext represents holos managed tags.
 	BuildContext BuildContext
 }
 

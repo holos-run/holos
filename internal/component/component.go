@@ -71,23 +71,25 @@ func (c *Component) Render(ctx context.Context) error {
 	}
 
 	switch tm.APIVersion {
+	case "v1alpha6":
+		if err := c.render(ctx, tm); err != nil {
+			return errors.Format("could not render component: %w", err)
+		}
 	case "v1alpha5":
 		if err := c.renderAlpha5(ctx); err != nil {
 			return errors.Format("could not render v1alpha5 component: %w", err)
 		}
 	default:
-		if err := c.render(ctx, tm); err != nil {
-			return errors.Format("could not render component: %w", err)
-		}
+		return errors.Format("unsupported version: %v", tm.APIVersion)
 	}
 	return nil
 }
 
 // BuildPlan returns the BuildPlan for the component.
 func (c *Component) BuildPlan(tm holos.TypeMeta, opts holos.BuildOpts) (BuildPlan, error) {
-	// generic build plan wrapper for all versions.
+	// Generic build plan wrapper for all api versions.
 	var bp BuildPlan
-	// so we can append version specific tags.
+	// All versions allow tags explicitly injected using the --inject flag.
 	tags := c.TagMap.Tags()
 	// discriminate the version.
 	switch tm.APIVersion {
@@ -98,10 +100,15 @@ func (c *Component) BuildPlan(tm holos.TypeMeta, opts holos.BuildOpts) (BuildPla
 		if err != nil {
 			return bp, errors.Format("could not get build context tag: %w", err)
 		}
+		// Append the standard tags for the component name, labels, annotations.
+		tags = append(tags, opts.Tags...)
+		// Append build context tags such as the holos managed temp directory.
 		tags = append(tags, buildContextTags...)
 		// the version specific build plan itself embedded into the wrapper.
 		bp = BuildPlan{BuildPlan: &v1alpha6.BuildPlan{Opts: opts}}
 	case "v1alpha5":
+		// Append the standard tags for the component name, labels, annotations.
+		tags = append(tags, opts.Tags...)
 		bp = BuildPlan{BuildPlan: &v1alpha5.BuildPlan{Opts: opts}}
 	default:
 		return bp, errors.Format("unsupported version: %s", tm.APIVersion)

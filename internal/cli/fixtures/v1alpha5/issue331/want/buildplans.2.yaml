@@ -1,0 +1,25 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: empty2
+  labels:
+    app.holos.run/name: empty2-label
+  annotations:
+    app.holos.run/description: empty2-annotation empty test case
+spec:
+  artifacts:
+    - artifact: components/empty2/empty2.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: components/empty2/empty2.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              resources:
+                - resources.gen.yaml

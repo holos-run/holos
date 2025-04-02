@@ -92,6 +92,15 @@ func (s *showBuildPlans) Run(ctx context.Context, p *platform.Platform) error {
 			}
 			opts := holos.NewBuildOpts(pc.Path())
 			opts.BuildContext.TempDir = "${TMPDIR_PLACEHOLDER}"
+
+			// TODO(jjm): refactor into [holos.NewBuildOpts] as functional options.
+			// Component name, label, annotations passed via tags to cue.
+			tags, err := pc.Tags()
+			if err != nil {
+				return errors.Wrap(err)
+			}
+			opts.Tags = tags
+
 			bp, err := c.BuildPlan(tm, opts)
 			if err != nil {
 				return errors.Wrap(err)

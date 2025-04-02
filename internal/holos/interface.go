@@ -29,6 +29,7 @@ type Component interface {
 	Path() string
 	// ExtractYAML represents the values of the --extract-yaml flag
 	ExtractYAML() ([]string, error)
+	// Tags represents standard tags such as the component name, labels, annotations.
 	Tags() ([]string, error)
 	WriteTo() string
 	Labels() Labels

@@ -1,0 +1,30 @@
+kind: Platform
+apiVersion: v1alpha5
+metadata:
+  name: default
+spec:
+  components:
+    - name: empty1
+      path: fixtures/v1alpha5/issue331/components/empty
+      labels:
+        app.holos.run/name: empty1-label
+      annotations:
+        app.holos.run/description: empty1-annotation empty test case
+    - name: empty2
+      path: fixtures/v1alpha5/issue331/components/empty
+      labels:
+        app.holos.run/name: empty2-label
+      annotations:
+        app.holos.run/description: empty2-annotation empty test case
+    - name: empty3
+      path: fixtures/v1alpha5/issue331/components/empty
+      labels:
+        app.holos.run/name: empty3-label
+      annotations:
+        app.holos.run/description: empty3-annotation empty test case
+    - name: empty4
+      path: fixtures/v1alpha5/issue331/components/empty
+      labels:
+        app.holos.run/name: empty4-label
+      annotations:
+        app.holos.run/description: empty4-annotation empty test case
