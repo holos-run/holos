@@ -73,8 +73,8 @@ core.#BuildPlan & {
 	metadata: name: _Tags.component.name
 }
 -- want/1.platform_spec.yaml --
-apiVersion: v1alpha5
 kind: Platform
+apiVersion: v1alpha5
 metadata:
   name: default
 spec:

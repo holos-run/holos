@@ -29,22 +29,22 @@ package holos
 Component: #Kubernetes & {}
 holos: Component.BuildPlan
 -- want/empty.yaml --
-apiVersion: v1alpha5
 kind: Platform
+apiVersion: v1alpha5
 metadata:
   name: default
 spec:
   components: []
 -- want/foo.yaml --
-apiVersion: v1alpha5
 kind: Platform
+apiVersion: v1alpha5
 metadata:
   name: default
 spec:
   components:
-    - annotations:
-        app.holos.run/description: foo empty test case
+    - name: foo
+      path: components/empty
       labels:
         app.holos.run/name: foo
-      name: foo
-      path: components/empty
+      annotations:
+        app.holos.run/description: foo empty test case

@@ -51,36 +51,36 @@ package holos
 Component: #Kubernetes & {}
 holos: Component.BuildPlan
 -- want/platform.yaml --
-apiVersion: v1alpha5
 kind: Platform
+apiVersion: v1alpha5
 metadata:
   name: default
 spec:
   components:
-    - annotations:
-        app.holos.run/description: empty1-annotation empty test case
+    - name: empty1
+      path: components/empty
       labels:
         app.holos.run/name: empty1-label
-      name: empty1
+      annotations:
+        app.holos.run/description: empty1-annotation empty test case
+    - name: empty2
       path: components/empty
-    - annotations:
-        app.holos.run/description: empty2-annotation empty test case
       labels:
         app.holos.run/name: empty2-label
-      name: empty2
+      annotations:
+        app.holos.run/description: empty2-annotation empty test case
+    - name: empty3
       path: components/empty
-    - annotations:
-        app.holos.run/description: empty3-annotation empty test case
       labels:
         app.holos.run/name: empty3-label
-      name: empty3
+      annotations:
+        app.holos.run/description: empty3-annotation empty test case
+    - name: empty4
       path: components/empty
-    - annotations:
-        app.holos.run/description: empty4-annotation empty test case
       labels:
         app.holos.run/name: empty4-label
-      name: empty4
-      path: components/empty
+      annotations:
+        app.holos.run/description: empty4-annotation empty test case
 -- want/empty.yaml --
 -- want/all-buildplans.yaml --
 kind: BuildPlan
