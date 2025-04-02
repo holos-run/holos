@@ -1,1 +1,0 @@
-holos show platform
