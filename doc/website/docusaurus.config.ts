@@ -60,11 +60,17 @@ const config: Config = {
           showLastUpdateTime: true,
           sidebarPath: './sidebars.ts',
           // https://docusaurus.io/docs/versioning#configuring-versioning-behavior
-          lastVersion: 'current',
+          lastVersion: 'v1alpha5',
           versions: {
             current: {
               label: 'v1alpha6',
               path: 'v1alpha6',
+              banner: 'unreleased',
+            },
+            v1alpha5: {
+              label: 'v1alpha5',
+              path: 'v1alpha5',
+              banner: 'none',
             }
           }
         },
