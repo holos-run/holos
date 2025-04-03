@@ -73,15 +73,15 @@ func (c *Component) Tags() ([]string, error) {
 		tags = append(tags, k+"="+v)
 	}
 	// Inject holos component metadata tags.
-	tags = append(tags, "holos_component_name="+c.Component.Name)
-	tags = append(tags, "holos_component_path="+c.Component.Path)
+	tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentNameTag, c.Component.Name))
+	tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentPathTag, c.Component.Path))
 
 	if len(c.Component.Labels) > 0 {
 		labels, err := json.Marshal(c.Component.Labels)
 		if err != nil {
 			return nil, err
 		}
-		tags = append(tags, "holos_component_labels="+string(labels))
+		tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentLabelsTag, labels))
 	}
 
 	if len(c.Component.Annotations) > 0 {
@@ -89,7 +89,7 @@ func (c *Component) Tags() ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		tags = append(tags, "holos_component_annotations="+string(annotations))
+		tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentAnnotationsTag, annotations))
 	}
 
 	return tags, nil
@@ -623,10 +623,10 @@ func commandTransformer(ctx context.Context, t core.Transformer, p taskParams) e
 	// Sanity checks.
 	tempDir := p.opts.BuildContext.TempDir
 	if tempDir == "" {
-		return errors.Format("%s: programmer error, temp dir not provided", msg)
+		return errors.Format("%s: holos maintainer error: BuildContext.TempDir not provided by holos", msg)
 	}
 	if len(t.Command.Args) == 0 {
-		return errors.Format("%s: empty args vector", msg)
+		return errors.Format("%s: empty command args list", msg)
 	}
 
 	// Write the inputs
@@ -748,7 +748,7 @@ func (bc BuildContext) Tags() ([]string, error) {
 	if err != nil {
 		return tags, errors.Format("could not marshall build context to json: %w", err)
 	}
-	tags = append(tags, fmt.Sprintf("context=%s", string(data)))
+	tags = append(tags, fmt.Sprintf("%s=%s", core.BuildContextTag, string(data)))
 	return tags, nil
 }
 

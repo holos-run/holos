@@ -1,14 +1,11 @@
 package holos
 
-// Focus in on the slice transformer
-let ARTIFACT = "components/slice"
-
 holos: {
-  context: _
+  buildContext: _
   "spec": {
     "artifacts": [
       {
-        artifact: ARTIFACT,
+        artifact: "components/slice",
         "transformers": [
           {
             "kind": "Kustomize",
@@ -29,14 +26,14 @@ holos: {
           {
             "kind": "Command"
             "inputs": ["slice.gen.yaml"]
-            "output": ARTIFACT
+            "output": artifact
             "command": {
               "args": [
                 "kubectl-slice",
                 "-f",
-                "\(context.tempDir)/slice.gen.yaml",
+                "\(buildContext.tempDir)/slice.gen.yaml",
                 "-o",
-                "\(context.tempDir)/\(ARTIFACT)",
+                "\(buildContext.tempDir)/\(artifact)",
               ]
             }
           }

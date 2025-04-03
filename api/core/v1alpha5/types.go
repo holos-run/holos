@@ -4,6 +4,30 @@
 // manifests, each an [Artifact].
 package core
 
+// BuildContextTag represents the cue tag holos render component uses to inject
+// the json representation of a [BuildContext] for use in a BuildPlan.
+const BuildContextTag string = "holos_build_context"
+
+// ComponentNameTag represents the cue tag holos uses to inject a [Component]
+// name from the holos render platform command to the holos render component
+// command.
+const ComponentNameTag string = "holos_component_name"
+
+// ComponentPathTag represents the cue tag holos uses to inject a [Component]
+// path relative to the cue module root from the holos render platform command
+// to the holos render component command.
+const ComponentPathTag string = "holos_component_path"
+
+// ComponentLabelsTag represents the cue tag holos uses to inject the json
+// representation of [Component] metadata labels from the holos render platform
+// command to the holos render component command.
+const ComponentLabelsTag string = "holos_component_labels"
+
+// ComponentAnnotationsTag represents the tag holos uses to inject the json
+// representation of [Component] metadata annotations from the holos render
+// platform command to the holos render component command.
+const ComponentAnnotationsTag = "holos_component_annotations"
+
 //go:generate ../../../hack/gendoc
 
 // BuildPlan represents an implementation of the [rendered manifest pattern].

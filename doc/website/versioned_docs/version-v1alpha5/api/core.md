@@ -14,6 +14,7 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 
 ## Index
 
+- [Constants](<#constants>)
 - [type Artifact](<#Artifact>)
 - [type Auth](<#Auth>)
 - [type AuthSource](<#AuthSource>)
@@ -46,6 +47,38 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 - [type ValueFile](<#ValueFile>)
 - [type Values](<#Values>)
 
+
+## Constants
+
+<a name="ComponentAnnotationsTag"></a>ComponentAnnotationsTag represents the tag holos uses to inject the json representation of metadata annotations from the holos render platform command to the holos render component command.
+
+```go
+const ComponentAnnotationsTag = "holos_component_annotations"
+```
+
+<a name="ComponentLabelsTag"></a>ComponentLabelsTag represents the tag holos uses to inject the json representation of metadata labels from the holos render platform command to the holos render component command.
+
+```go
+const ComponentLabelsTag = "holos_component_labels"
+```
+
+<a name="ComponentNameTag"></a>ComponentNameTag represents the tag holos uses to inject a component name from the holos render platform command to the holos render component command.
+
+```go
+const ComponentNameTag = "holos_component_name"
+```
+
+<a name="ComponentPathTag"></a>ComponentPathTag represents the tag holos uses to inject a component path relative to the platform root from the holos render platform command to the holos render component command.
+
+```go
+const ComponentPathTag = "holos_component_path"
+```
+
+<a name="TypeMetaFile"></a>TypeMetaFile represents the file holos uses to discriminate the api version of a component BuildPlan.
+
+```go
+const TypeMetaFile = "typemeta.yaml"
+```
 
 <a name="Artifact"></a>
 ## type Artifact {#Artifact}

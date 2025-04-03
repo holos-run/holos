@@ -84,5 +84,5 @@ spec:
               - ${TMPDIR_PLACEHOLDER}/slice.gen.yaml
               - -o
               - ${TMPDIR_PLACEHOLDER}/components/slice
-context:
+buildContext:
   tempDir: "${TMPDIR_PLACEHOLDER}"

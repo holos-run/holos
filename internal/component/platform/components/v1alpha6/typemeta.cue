@@ -6,6 +6,6 @@ import "encoding/json"
 holos: _ @embed(file=typemeta.yaml)
 
 holos: {
-  _context: string | *"{}" @tag(context, type=string)
-  context: json.Unmarshal(_context)
+  _buildContext: string | *"{}" @tag(holos_build_context, type=string)
+  buildContext: json.Unmarshal(_buildContext)
 }

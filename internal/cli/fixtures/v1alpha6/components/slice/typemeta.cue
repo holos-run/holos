@@ -6,9 +6,11 @@ import (
   "github.com/holos-run/holos/api/core/v1alpha6:core"
 )
 
+_BuildContext: string | *"{}" @tag(holos_build_context, type=string)
+BuildContext: core.#BuildContext & json.Unmarshal(_BuildContext)
+
 holos: core.#BuildPlan & {
-  _context: string | *"{}" @tag(context, type=string)
-  context: json.Unmarshal(_context)
+  buildContext: BuildContext
 }
 
 holos: _ @embed(file=typemeta.yaml)

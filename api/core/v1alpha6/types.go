@@ -4,6 +4,30 @@
 // manifests, each an [Artifact].
 package core
 
+// BuildContextTag represents the cue tag holos render component uses to inject
+// the json representation of a [BuildContext] for use in a BuildPlan.
+const BuildContextTag string = "holos_build_context"
+
+// ComponentNameTag represents the cue tag holos uses to inject a [Component]
+// name from the holos render platform command to the holos render component
+// command.
+const ComponentNameTag string = "holos_component_name"
+
+// ComponentPathTag represents the cue tag holos uses to inject a [Component]
+// path relative to the cue module root from the holos render platform command
+// to the holos render component command.
+const ComponentPathTag string = "holos_component_path"
+
+// ComponentLabelsTag represents the cue tag holos uses to inject the json
+// representation of [Component] metadata labels from the holos render platform
+// command to the holos render component command.
+const ComponentLabelsTag string = "holos_component_labels"
+
+// ComponentAnnotationsTag represents the tag holos uses to inject the json
+// representation of [Component] metadata annotations from the holos render
+// platform command to the holos render component command.
+const ComponentAnnotationsTag = "holos_component_annotations"
+
 //go:generate ../../../hack/gendoc
 
 // BuildPlan represents an implementation of the [rendered manifest pattern].
@@ -15,11 +39,11 @@ package core
 // of resources.  A second artifact contains a GitOps resource to manage the
 // first, usually an ArgoCD Application resource.
 //
-// Holos uses CUE to construct a BuildPlan.  A future enhancement will support
-// user defined executables providing a BuildPlan to Holos in the style of an
-// [external credential provider].
+// Holos uses CUE to construct a BuildPlan.  Holos injects late binding values
+// such as the build temp dir using the [BuildContext].
 //
 // [rendered manifest pattern]: https://akuity.io/blog/the-rendered-manifests-pattern
+//
 // [external credential provider]: https://github.com/kubernetes/enhancements/blob/313ad8b59c80819659e1fbf0f165230f633f2b22/keps/sig-auth/541-external-credential-providers/README.md
 type BuildPlan struct {
 	// Kind represents the type of the resource.
@@ -30,18 +54,57 @@ type BuildPlan struct {
 	Metadata Metadata `json:"metadata" yaml:"metadata"`
 	// Spec specifies the desired state of the resource.
 	Spec BuildPlanSpec `json:"spec" yaml:"spec"`
-	// Context represents build context values owned by the holos render component
-	// command.  End users should not manage context field values.  End users may
-	// reference context fields from within CUE to refer to late binding concrete
-	// values defined just before holos executes the build plan.
-	Context BuildContext `json:"context" yaml:"context"`
+	// BuildContext represents values injected by holos just before evaluating a
+	// BuildPlan, for example the tempDir used for the build.
+	BuildContext BuildContext `json:"buildContext" yaml:"buildContext"`
 }
 
-// BuildContext represents build context values provided by the holos render
-// component command.  These values are expected to be randomly generated and
-// late binding, meaning they cannot be known ahead of time in a static
-// configuration.  As such, CUE configuration may refer to the values here which
-// will be populated by holos when the final build plan is exported from CUE.
+// BuildContext represents build context values owned by the holos render
+// component command.  End users should not manage context field values.  End
+// users may reference fields from within CUE to refer to late binding
+// concrete values defined just before holos executes a [BuildPlan].
+//
+// Holos injects build context values by marshalling this struct to json through
+// the holos_build_context cue tag.
+//
+// Example usage from cue to produce a [BuildPlan]:
+//
+//	package holos
+//
+//	import (
+//	  "encoding/json"
+//	  "github.com/holos-run/holos/api/core/v1alpha6:core"
+//	)
+//
+//	_BuildContextJSON: string | *"{}" @tag(holos_build_context, type=string)
+//	BuildContext: core.#BuildContext & json.Unmarshal(_BuildContextJSON)
+//
+//	holos: core.#BuildPlan & {
+//	  buildContext: BuildContext
+//	  "spec": {
+//	    "artifacts": [
+//	      {
+//	        artifact: "components/slice",
+//	        "transformers": [
+//	          {
+//	            "kind": "Command"
+//	            "inputs": ["resources.gen.yaml"]
+//	            "output": artifact
+//	            "command": {
+//	              "args": [
+//	                "kubectl-slice",
+//	                "-f",
+//	                "\(buildContext.tempDir)/resources.gen.yaml",
+//	                "-o",
+//	                "\(buildContext.tempDir)/\(artifact)",
+//	              ]
+//	            }
+//	          }
+//	        ]
+//	      }
+//	    ]
+//	  }
+//	}
 type BuildContext struct {
 	// TempDir represents the temporary directory managed and owned by the holos
 	// render component command for the execution of one BuildPlan.  Multiple
@@ -54,7 +117,7 @@ type BuildContext struct {
 type BuildPlanSpec struct {
 	// Artifacts represents the artifacts for holos to build.
 	Artifacts []Artifact `json:"artifacts" yaml:"artifacts"`
-	// Disabled causes the holos cli to disregard the build plan.
+	// Disabled causes the holos render platform command to skip the BuildPlan.
 	Disabled bool `json:"disabled,omitempty" yaml:"disabled,omitempty"`
 }
 

@@ -50,15 +50,15 @@ func (c *Component) Tags() ([]string, error) {
 		tags = append(tags, k+"="+v)
 	}
 	// Inject holos component metadata tags.
-	tags = append(tags, "holos_component_name="+c.Component.Name)
-	tags = append(tags, "holos_component_path="+c.Component.Path)
+	tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentNameTag, c.Component.Name))
+	tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentPathTag, c.Component.Path))
 
 	if len(c.Component.Labels) > 0 {
 		labels, err := json.Marshal(c.Component.Labels)
 		if err != nil {
 			return nil, err
 		}
-		tags = append(tags, "holos_component_labels="+string(labels))
+		tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentLabelsTag, labels))
 	}
 
 	if len(c.Component.Annotations) > 0 {
@@ -66,7 +66,7 @@ func (c *Component) Tags() ([]string, error) {
 		if err != nil {
 			return nil, err
 		}
-		tags = append(tags, "holos_component_annotations="+string(annotations))
+		tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentAnnotationsTag, annotations))
 	}
 
 	return tags, nil
