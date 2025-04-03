@@ -17,7 +17,6 @@ import (
 	"github.com/holos-run/holos/internal/logger/tint"
 	"github.com/holos-run/holos/version"
 	"github.com/mattn/go-isatty"
-	"github.com/spf13/cobra"
 )
 
 const ErrKey = "err"
@@ -66,18 +65,6 @@ func FromContext(ctx context.Context) (logger *slog.Logger) {
 func FromContextMaybe(ctx context.Context) (logger *slog.Logger) {
 	logger, _ = ctx.Value(loggerKey).(*slog.Logger)
 	return
-}
-
-// FromRootCommand returns a logger from the root cobra.Command context or nil.
-func FromRootCommand(cmd *cobra.Command) (logger *slog.Logger) {
-	// Refer to https://github.com/spf13/cobra/issues/1469#issuecomment-1248067736
-	if cmd == nil {
-		return nil
-	}
-	for cmd.Parent() != nil {
-		cmd = cmd.Parent()
-	}
-	return FromContextMaybe(cmd.Context())
 }
 
 // Config specifies user configurable flag values to create a NewLogger
