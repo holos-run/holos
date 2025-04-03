@@ -14,7 +14,7 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/generate"
 	"github.com/stretchr/testify/assert"
-	"sigs.k8s.io/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 //go:embed all:platform
