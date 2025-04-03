@@ -1,6 +1,6 @@
 // Package core contains schemas for a [Platform] and [BuildPlan].  Holos takes
 // a [Platform] as input, then iterates over each [Component] to produce a
-// [BuildPlan].  Holos processes the [BuildPlan] to produce fully rendered
+// [BuildPlan].  Holos evaluates the [BuildPlan] to produce fully rendered
 // manifests, each an [Artifact].
 package core
 

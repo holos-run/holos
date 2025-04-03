@@ -55,7 +55,7 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 
 ## Constants
 
-<a name="BuildContextTag"></a>BuildContextTag represents the tag holos render component uses to inject the json representation of a [BuildContext](<#BuildContext>) for use in a BuildPlan.
+<a name="BuildContextTag"></a>BuildContextTag represents the cue tag holos render component uses to inject the json representation of a [BuildContext](<#BuildContext>) for use in a BuildPlan.
 
 ```go
 const BuildContextTag string = "holos_build_context"
@@ -67,19 +67,19 @@ const BuildContextTag string = "holos_build_context"
 const ComponentAnnotationsTag = "holos_component_annotations"
 ```
 
-<a name="ComponentLabelsTag"></a>ComponentLabelsTag represents the tag holos uses to inject the json representation of [Component](<#Component>) metadata labels from the holos render platform command to the holos render component command.
+<a name="ComponentLabelsTag"></a>ComponentLabelsTag represents the cue tag holos uses to inject the json representation of [Component](<#Component>) metadata labels from the holos render platform command to the holos render component command.
 
 ```go
 const ComponentLabelsTag string = "holos_component_labels"
 ```
 
-<a name="ComponentNameTag"></a>ComponentNameTag represents the tag holos uses to inject a [Component](<#Component>) name from the holos render platform command to the holos render component command.
+<a name="ComponentNameTag"></a>ComponentNameTag represents the cue tag holos uses to inject a [Component](<#Component>) name from the holos render platform command to the holos render component command.
 
 ```go
 const ComponentNameTag string = "holos_component_name"
 ```
 
-<a name="ComponentPathTag"></a>ComponentPathTag represents the tag holos uses to inject a [Component](<#Component>) path relative to the cue module root from the holos render platform command to the holos render component command.
+<a name="ComponentPathTag"></a>ComponentPathTag represents the cue tag holos uses to inject a [Component](<#Component>) path relative to the cue module root from the holos render platform command to the holos render component command.
 
 ```go
 const ComponentPathTag string = "holos_component_path"
@@ -252,7 +252,7 @@ type Chart struct {
 <a name="Command"></a>
 ## type Command {#Command}
 
-Command represents a task implemented as a generic system command. A task is defined as a [Generator](<#Generator>), [Transformer](<#Transformer>), or [Validator](<#Validator>).
+Command represents a [BuildPlan](<#BuildPlan>) task implemented by executing an user defined system command. A task is defined as a [Generator](<#Generator>), [Transformer](<#Transformer>), or [Validator](<#Validator>).
 
 ```go
 type Command struct {
@@ -319,7 +319,7 @@ type EnvRef struct {
 <a name="EnvVar"></a>
 ## type EnvVar {#EnvVar}
 
-EnvVar represents the configuration of an environment variable within the context of a BuildPlan task.
+EnvVar represents the configuration of an environment variable in the context of a [Command](<#Command>) task within a [BuildPlan](<#BuildPlan>).
 
 ```go
 type EnvVar struct {

@@ -353,8 +353,9 @@ type Validator struct {
 	Command Command `json:"command,omitempty" yaml:"command,omitempty"`
 }
 
-// Command represents a task implemented as a generic system command.  A task is
-// defined as a [Generator], [Transformer], or [Validator].
+// Command represents a [BuildPlan] task implemented by executing an user
+// defined system command.  A task is defined as a [Generator], [Transformer],
+// or [Validator].
 type Command struct {
 	// DisplayName of the command.  The basename of args[0] is used if empty.
 	DisplayName string `json:"displayName,omitempty" yaml:"displayName,omitempty"`
@@ -368,8 +369,8 @@ type Command struct {
 	Stdout bool `json:"stdout,omitempty" yaml:"stdout,omitempty"`
 }
 
-// EnvVar represents the configuration of an environment variable within the
-// context of a BuildPlan task.
+// EnvVar represents the configuration of an environment variable in the context
+// of a [Command] task within a [BuildPlan].
 type EnvVar struct {
 	// Name of the environment variable. Must be a C_IDENTIFIER.
 	Name string `json:"name" yaml:"name"`

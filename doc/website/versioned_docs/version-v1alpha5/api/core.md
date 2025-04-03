@@ -10,7 +10,7 @@ sidebar_position: 100
 import "github.com/holos-run/holos/api/core/v1alpha5"
 ```
 
-Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#BuildPlan>). Holos takes a [Platform](<#Platform>) as input, then iterates over each [Component](<#Component>) to produce a [BuildPlan](<#BuildPlan>). Holos processes the [BuildPlan](<#BuildPlan>) to produce fully rendered manifests, each an [Artifact](<#Artifact>).
+Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#BuildPlan>). Holos takes a [Platform](<#Platform>) as input, then iterates over each [Component](<#Component>) to produce a [BuildPlan](<#BuildPlan>). Holos evaluates the [BuildPlan](<#BuildPlan>) to produce fully rendered manifests, each an [Artifact](<#Artifact>).
 
 ## Index
 
@@ -50,34 +50,34 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 
 ## Constants
 
-<a name="ComponentAnnotationsTag"></a>ComponentAnnotationsTag represents the tag holos uses to inject the json representation of metadata annotations from the holos render platform command to the holos render component command.
+<a name="BuildContextTag"></a>BuildContextTag represents the cue tag holos render component uses to inject the json representation of a \[BuildContext\] for use in a BuildPlan.
+
+```go
+const BuildContextTag string = "holos_build_context"
+```
+
+<a name="ComponentAnnotationsTag"></a>ComponentAnnotationsTag represents the tag holos uses to inject the json representation of [Component](<#Component>) metadata annotations from the holos render platform command to the holos render component command.
 
 ```go
 const ComponentAnnotationsTag = "holos_component_annotations"
 ```
 
-<a name="ComponentLabelsTag"></a>ComponentLabelsTag represents the tag holos uses to inject the json representation of metadata labels from the holos render platform command to the holos render component command.
+<a name="ComponentLabelsTag"></a>ComponentLabelsTag represents the cue tag holos uses to inject the json representation of [Component](<#Component>) metadata labels from the holos render platform command to the holos render component command.
 
 ```go
-const ComponentLabelsTag = "holos_component_labels"
+const ComponentLabelsTag string = "holos_component_labels"
 ```
 
-<a name="ComponentNameTag"></a>ComponentNameTag represents the tag holos uses to inject a component name from the holos render platform command to the holos render component command.
+<a name="ComponentNameTag"></a>ComponentNameTag represents the cue tag holos uses to inject a [Component](<#Component>) name from the holos render platform command to the holos render component command.
 
 ```go
-const ComponentNameTag = "holos_component_name"
+const ComponentNameTag string = "holos_component_name"
 ```
 
-<a name="ComponentPathTag"></a>ComponentPathTag represents the tag holos uses to inject a component path relative to the platform root from the holos render platform command to the holos render component command.
+<a name="ComponentPathTag"></a>ComponentPathTag represents the cue tag holos uses to inject a [Component](<#Component>) path relative to the cue module root from the holos render platform command to the holos render component command.
 
 ```go
-const ComponentPathTag = "holos_component_path"
-```
-
-<a name="TypeMetaFile"></a>TypeMetaFile represents the file holos uses to discriminate the api version of a component BuildPlan.
-
-```go
-const TypeMetaFile = "typemeta.yaml"
+const ComponentPathTag string = "holos_component_path"
 ```
 
 <a name="Artifact"></a>
