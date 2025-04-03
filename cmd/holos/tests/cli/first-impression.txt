@@ -1,2 +1,7 @@
 # https://github.com/holos-run/holos/issues/334
 exec holos
+stdout Usage
+exec holos --version
+stdout \d+\.\d+\.\d+
+exec holos version
+stdout \d+\.\d+\.\d+
