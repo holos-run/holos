@@ -13,12 +13,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
+func New(cfg *holos.Config) *cobra.Command {
 	cmd := command.New("render")
 	cmd.Args = cobra.NoArgs
 	cmd.Short = "render platforms and components to manifest files"
 	cmd.AddCommand(NewRenderPlatformCommand(cfg, platform.NewConfig()))
-	cmd.AddCommand(component.NewCommand(component.NewConfig(), feature))
+	cmd.AddCommand(component.NewCommand(component.NewConfig()))
 	return cmd
 }
 

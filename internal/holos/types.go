@@ -86,27 +86,6 @@ func (t TagMap) Type() string {
 	return "tags"
 }
 
-type feature string
-
-const BuildFeature = feature("BUILD")
-const ServerFeature = feature("SERVER")
-const ClientFeature = feature("CLIENT")
-const PreflightFeature = feature("PREFLIGHT")
-const GenerateComponentFeature = feature("GENERATE_COMPONENT")
-const SecretsFeature = feature("SECRETS")
-
-// Flagger is the interface to check if an experimental feature is enabled.
-type Flagger interface {
-	Flag(name feature) bool
-}
-
-type EnvFlagger struct{}
-
-// Flag returns true if feature name is enabled.
-func (e *EnvFlagger) Flag(name feature) bool {
-	return os.Getenv(fmt.Sprintf("HOLOS_FEATURE_%s", name)) != ""
-}
-
 type Labels map[string]string
 
 type Selectors []Selector

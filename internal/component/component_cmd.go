@@ -47,7 +47,7 @@ func NewConfig() Config {
 }
 
 // NewCommand returns the subcommand that renders individual components.
-func NewCommand(cfg Config, feature holos.Flagger) *cobra.Command {
+func NewCommand(cfg Config) *cobra.Command {
 	cmd := command.New("component DIRECTORY")
 	cmd.Args = cobra.ExactArgs(1)
 	cmd.Short = "render a platform component"

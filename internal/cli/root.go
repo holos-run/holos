@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"connectrpc.com/connect"
 	"github.com/spf13/cobra"
-	"google.golang.org/genproto/googleapis/rpc/errdetails"
 
 	"github.com/holos-run/holos/version"
 
@@ -29,7 +27,7 @@ import (
 var helpLong string
 
 // New returns a new root *cobra.Command for command line execution.
-func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
+func New(cfg *holos.Config) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:     "holos",
 		Short:   "holos manages a holistic integrated software development platform",
@@ -66,8 +64,8 @@ func New(cfg *holos.Config, feature holos.Flagger) *cobra.Command {
 	rootCmd.PersistentFlags().Lookup("help").Hidden = true
 
 	// subcommands
-	rootCmd.AddCommand(render.New(cfg, feature))
-	rootCmd.AddCommand(newInitCommand(feature))
+	rootCmd.AddCommand(render.New(cfg))
+	rootCmd.AddCommand(newInitCommand())
 
 	// Maybe not needed?
 	rootCmd.AddCommand(txtar.New(cfg))
@@ -102,8 +100,7 @@ func newCueCmd() (cmd *cobra.Command) {
 
 // HandleError is the top level error handler that unwraps and logs errors.
 func HandleError(ctx context.Context, err error, hc *holos.Config) (exitCode int) {
-	// Connect errors have codes, log them.
-	log := hc.NewTopLevelLogger().With("code", connect.CodeOf(err))
+	log := logger.FromContext(ctx)
 	var cueErr cue_errors.Error
 	var errAt *errors.ErrorAt
 
@@ -122,24 +119,5 @@ func HandleError(ctx context.Context, err error, hc *holos.Config) (exitCode int
 			log.ErrorContext(ctx, "could not write CUE error details: "+err.Error(), "err", err)
 		}
 	}
-	// connect errors have details and codes.
-	// Refer to https://connectrpc.com/docs/go/errors
-	if connectErr := new(connect.Error); errors.As(err, &connectErr) {
-		for _, detail := range connectErr.Details() {
-			msg, valueErr := detail.Value()
-			if valueErr != nil {
-				log.WarnContext(ctx, "could not decode error detail", "err", err, "type", detail.Type(), "note", "this usually means we don't have the schema for the protobuf message type")
-				continue
-			}
-			if info, ok := msg.(*errdetails.ErrorInfo); ok {
-				logDetail := log.With("reason", info.GetReason(), "domain", info.GetDomain())
-				for k, v := range info.GetMetadata() {
-					logDetail = logDetail.With(k, v)
-				}
-				logDetail.ErrorContext(ctx, info.String())
-			}
-		}
-	}
-
 	return 1
 }

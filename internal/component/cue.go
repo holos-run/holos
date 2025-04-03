@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 
@@ -14,7 +12,6 @@ import (
 	"cuelang.org/go/cue/cuecontext"
 	"cuelang.org/go/cue/interpreter/embed"
 	"cuelang.org/go/cue/load"
-	"cuelang.org/go/encoding/yaml"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/util"
@@ -22,50 +19,6 @@ import (
 
 // cue context and loading is not safe for concurrent use.
 var cueMutex sync.Mutex
-
-// ExtractYAML extracts yaml encoded data from file paths.  The data is unified
-// into one [cue.Value].  If a path element is a directory, all files in the
-// directory are loaded non-recursively.
-//
-// Attribution: https://github.com/cue-lang/cue/issues/3504
-// Deprecated: Use cue embed instead.
-func ExtractYAML(ctxt *cue.Context, filepaths []string) (cue.Value, error) {
-	value := ctxt.CompileString("")
-	files := make([]string, 0, 10*len(filepaths))
-
-	for _, path := range filepaths {
-		info, err := os.Stat(path)
-		if err != nil {
-			return value, errors.Wrap(err)
-		}
-
-		if !info.IsDir() {
-			files = append(files, path)
-			continue
-		}
-
-		entries, err := os.ReadDir(path)
-		if err != nil {
-			return value, errors.Wrap(err)
-		}
-		for _, entry := range entries {
-			if entry.IsDir() {
-				continue
-			}
-			files = append(files, filepath.Join(path, entry.Name()))
-		}
-	}
-
-	for _, file := range files {
-		f, err := yaml.Extract(file, nil)
-		if err != nil {
-			return value, errors.Wrap(err)
-		}
-		value = value.Unify(ctxt.BuildFile(f))
-	}
-
-	return value, nil
-}
 
 // BuildInstance builds the cue configuration instance at leaf relative to the
 // root cue module.
@@ -92,49 +45,6 @@ func BuildInstance(root, leaf string, tags []string) (*Instance, error) {
 		ctx:   ctxt,
 		cfg:   cfg,
 		value: values[0],
-	}
-
-	return inst, nil
-}
-
-// LoadInstance loads the cue configuration instance at path.  External data
-// file paths are loaded by calling [ExtractYAML] providing filepaths.  The
-// extracted data values are unified with the platform configuration [cue.Value]
-// in the returned [Instance].
-//
-// Deprecated: use BuildInstance instead.
-func LoadInstance(path string, filepaths []string, tags []string) (*Instance, error) {
-	cueMutex.Lock()
-	defer cueMutex.Unlock()
-	root, leaf, err := util.FindRootLeaf(path)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-
-	cfg := &load.Config{
-		Dir:        root,
-		ModuleRoot: root,
-		Tags:       tags,
-	}
-	ctxt := cuecontext.New(cuecontext.Interpreter(embed.New()))
-
-	bis := load.Instances([]string{path}, cfg)
-	values, err := ctxt.BuildInstances(bis)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-
-	value, err := ExtractYAML(ctxt, filepaths)
-	if err != nil {
-		return nil, errors.Wrap(err)
-	}
-	value = value.Unify(values[0])
-
-	inst := &Instance{
-		path:  leaf,
-		ctx:   ctxt,
-		cfg:   cfg,
-		value: value,
 	}
 
 	return inst, nil
