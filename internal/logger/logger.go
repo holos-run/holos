@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/holos-run/holos/internal/errors"
-	"github.com/holos-run/holos/internal/tint"
+	"github.com/holos-run/holos/internal/logger/tint"
 	"github.com/holos-run/holos/version"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
