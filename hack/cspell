@@ -3,5 +3,10 @@
 set -euo pipefail
 
 TOPLEVEL="$(cd $(dirname "$0") && git rev-parse --show-toplevel)"
+cd "${TOPLEVEL}"
 
-cd "${TOPLEVEL}" && npx cspell ./doc/md/**/*.{md,mdx,markdown} ./doc/md/*.{md,mdx,markdown}
+if ! [[ -f ./doc/website/node_modules/.bin/cspell ]]; then
+  (cd doc/website && npm install)
+fi
+
+./doc/website/node_modules/.bin/cspell ./doc/md/**/*.{md,mdx,markdown} ./doc/md/*.{md,mdx,markdown}
