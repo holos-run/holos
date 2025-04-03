@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/holos-run/holos/internal/console"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/tint"
 	"github.com/holos-run/holos/version"
@@ -151,7 +150,7 @@ func (c *Config) handler(w io.Writer) (h slog.Handler) {
 			NoColor:     noColor,
 		})
 	case "console":
-		h = console.NewHandler(w, &console.Options{Level: level})
+		h = tint.NewConsoleHandler(w, &tint.Options{Level: level})
 	default:
 		h = slog.NewJSONHandler(w, &slog.HandlerOptions{
 			Level:       level,

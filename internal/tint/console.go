@@ -1,4 +1,4 @@
-package console
+package tint
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"sync"
 )
 
-func NewHandler(out io.Writer, opts *Options) slog.Handler {
+func NewConsoleHandler(out io.Writer, opts *Options) slog.Handler {
 	h := &ConsoleHandler{out: out, mu: &sync.Mutex{}}
 	if opts != nil {
 		h.opts = *opts
@@ -17,10 +17,6 @@ func NewHandler(out io.Writer, opts *Options) slog.Handler {
 		h.opts.Level = slog.LevelInfo
 	}
 	return h
-}
-
-type Options struct {
-	Level slog.Leveler
 }
 
 type ConsoleHandler struct {
