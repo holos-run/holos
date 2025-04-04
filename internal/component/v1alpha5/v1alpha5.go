@@ -117,7 +117,12 @@ type taskParams struct {
 }
 
 func (t taskParams) id() string {
-	return fmt.Sprintf("%s:%s/%s", t.opts.Path, t.buildPlanName, t.taskName)
+	return fmt.Sprintf(
+		"%s:%s/%s",
+		filepath.Clean(t.opts.Leaf()),
+		t.buildPlanName,
+		t.taskName,
+	)
 }
 
 type generatorTask struct {
@@ -149,7 +154,7 @@ func (t generatorTask) run(ctx context.Context) error {
 }
 
 func (t generatorTask) file() error {
-	data, err := os.ReadFile(filepath.Join(string(t.opts.Path), string(t.generator.File.Source)))
+	data, err := os.ReadFile(filepath.Join(t.opts.AbsPath(), string(t.generator.File.Source)))
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -162,7 +167,7 @@ func (t generatorTask) file() error {
 func (t generatorTask) helm(ctx context.Context) error {
 	h := t.generator.Helm
 	// Cache the chart by version to pull new versions. (#273)
-	cacheDir := filepath.Join(string(t.opts.Path), "vendor", t.generator.Helm.Chart.Version)
+	cacheDir := filepath.Join(t.opts.AbsPath(), "vendor", t.generator.Helm.Chart.Version)
 	cachePath := filepath.Join(cacheDir, filepath.Base(h.Chart.Name))
 
 	log := logger.FromContext(ctx)
@@ -455,11 +460,11 @@ func buildArtifact(ctx context.Context, idx int, artifact core.Artifact, tasks c
 
 	// Write the final artifact
 	out := string(artifact.Artifact)
-	if err := opts.Store.Save(opts.WriteTo, out); err != nil {
+	if err := opts.Store.Save(opts.AbsWriteTo(), out); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
 	log := logger.FromContext(ctx)
-	log.DebugContext(ctx, fmt.Sprintf("wrote %s", filepath.Join(opts.WriteTo, out)))
+	log.DebugContext(ctx, fmt.Sprintf("wrote %s", filepath.Join(opts.AbsWriteTo(), out)))
 
 	return nil
 }
@@ -472,8 +477,7 @@ type BuildPlan struct {
 
 func (b *BuildPlan) Build(ctx context.Context) error {
 	name := b.BuildPlan.Metadata.Name
-	path := b.Opts.Path
-	log := logger.FromContext(ctx).With("name", name, "path", path)
+	log := logger.FromContext(ctx).With("name", name, "path", filepath.Clean(b.Opts.Leaf()))
 
 	msg := fmt.Sprintf("could not build %s", name)
 	if b.BuildPlan.Spec.Disabled {
@@ -595,7 +599,7 @@ func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {
 		"could not transform %s for %s path %s",
 		t.Output,
 		p.buildPlanName,
-		p.opts.Path,
+		filepath.Clean(p.opts.Leaf()),
 	)
 
 	// Write the kustomization

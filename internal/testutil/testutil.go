@@ -12,7 +12,7 @@ import (
 	"github.com/holos-run/holos/internal/component"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/generate"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 //go:embed all:fixtures

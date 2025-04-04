@@ -24,32 +24,8 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 )
 
-// Platform represents a platform builder.
-type Platform struct {
-	Platform core.Platform
-}
-
-// Load loads from a cue value.
-func (p *Platform) Load(v cue.Value) error {
-	return errors.Wrap(v.Decode(&p.Platform))
-}
-
-func (p *Platform) Export(encoder holos.Encoder) error {
-	if err := encoder.Encode(&p.Platform); err != nil {
-		return errors.Wrap(err)
-	}
-	return nil
-}
-
-func (p *Platform) Select(selectors ...holos.Selector) []holos.Component {
-	components := make([]holos.Component, 0, len(p.Platform.Spec.Components))
-	for _, component := range p.Platform.Spec.Components {
-		if holos.IsSelected(component.Labels, selectors...) {
-			components = append(components, &Component{component})
-		}
-	}
-	return components
-}
+// TODO(jjm) accept an interface to run commands to inject a mock runner from
+// the tests.
 
 type Component struct {
 	Component core.Component
@@ -122,7 +98,7 @@ func (c *Component) ExtractYAML() ([]string, error) {
 }
 
 var _ holos.BuildPlan = &BuildPlan{}
-var _ task = generatorTask{}
+var _ task = &generatorTask{}
 var _ task = transformersTask{}
 var _ task = validatorTask{}
 
@@ -138,7 +114,16 @@ type taskParams struct {
 }
 
 func (t taskParams) id() string {
-	return fmt.Sprintf("%s:%s/%s", t.opts.Path, t.buildPlanName, t.taskName)
+	path := filepath.Clean(t.opts.Leaf())
+	return fmt.Sprintf("%s:%s/%s", path, t.buildPlanName, t.taskName)
+}
+
+func (t taskParams) tempDir() (string, error) {
+	if tempDir := t.opts.TempDir(); tempDir == "" {
+		return "", errors.Format("missing build context temp directory")
+	} else {
+		return tempDir, nil
+	}
 }
 
 type generatorTask struct {
@@ -147,7 +132,7 @@ type generatorTask struct {
 	wg        *sync.WaitGroup
 }
 
-func (t generatorTask) run(ctx context.Context) error {
+func (t *generatorTask) run(ctx context.Context) error {
 	defer t.wg.Done()
 	msg := fmt.Sprintf("could not build %s", t.id())
 	switch t.generator.Kind {
@@ -163,14 +148,18 @@ func (t generatorTask) run(ctx context.Context) error {
 		if err := t.file(); err != nil {
 			return errors.Format("%s: could not generate file: %w", msg, err)
 		}
+	case "Command":
+		if err := t.command(ctx); err != nil {
+			return errors.Format("%s: could not generate from command: %w", msg, err)
+		}
 	default:
 		return errors.Format("%s: unsupported kind %s", msg, t.generator.Kind)
 	}
 	return nil
 }
 
-func (t generatorTask) file() error {
-	data, err := os.ReadFile(filepath.Join(string(t.opts.Path), string(t.generator.File.Source)))
+func (t *generatorTask) file() error {
+	data, err := os.ReadFile(filepath.Join(t.opts.AbsPath(), string(t.generator.File.Source)))
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -180,10 +169,10 @@ func (t generatorTask) file() error {
 	return nil
 }
 
-func (t generatorTask) helm(ctx context.Context) error {
+func (t *generatorTask) helm(ctx context.Context) error {
 	h := t.generator.Helm
 	// Cache the chart by version to pull new versions. (#273)
-	cacheDir := filepath.Join(string(t.opts.Path), "vendor", t.generator.Helm.Chart.Version)
+	cacheDir := filepath.Join(t.opts.AbsPath(), "vendor", t.generator.Helm.Chart.Version)
 	cachePath := filepath.Join(cacheDir, filepath.Base(h.Chart.Name))
 
 	log := logger.FromContext(ctx)
@@ -307,7 +296,7 @@ func (t generatorTask) helm(ctx context.Context) error {
 	return nil
 }
 
-func (t generatorTask) resources() error {
+func (t *generatorTask) resources() error {
 	var size int
 	for _, m := range t.generator.Resources {
 		size += len(m)
@@ -333,6 +322,39 @@ func (t generatorTask) resources() error {
 
 	if err := t.opts.Store.Set(string(t.generator.Output), buf.Bytes()); err != nil {
 		return errors.Format("%s: %w", msg, err)
+	}
+
+	return nil
+}
+
+func (t *generatorTask) command(ctx context.Context) error {
+	store := t.opts.Store
+	msg := fmt.Sprintf("could not generate from command %s", t.id())
+
+	args := t.generator.Command.Args
+	if len(args) < 1 {
+		return errors.Format("%s: command args length must be at least 1", msg)
+	}
+
+	r, err := util.RunCmdA(ctx, t.opts.Stderr, args[0], args[1:]...)
+	if err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+
+	if t.generator.Command.Stdout {
+		// Store the command stdout as the artifact.
+		if err := store.Set(string(t.generator.Output), r.Stdout.Bytes()); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+	} else {
+		// Store the file tree as the artifact.
+		tempDir, err := t.taskParams.tempDir()
+		if err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		if err := store.Load(tempDir, string(t.generator.Output)); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
 	}
 
 	return nil
@@ -422,7 +444,7 @@ func buildArtifact(ctx context.Context, idx int, artifact core.Artifact, tasks c
 	msg := fmt.Sprintf("could not build %s artifact %s", buildPlanName, artifact.Artifact)
 	// Process Generators concurrently
 	for gid, gen := range artifact.Generators {
-		task := generatorTask{
+		task := &generatorTask{
 			taskParams: taskParams{
 				taskName:      fmt.Sprintf("artifact/%d/generator/%d", idx, gid),
 				buildPlanName: buildPlanName,
@@ -480,11 +502,11 @@ func buildArtifact(ctx context.Context, idx int, artifact core.Artifact, tasks c
 
 	// Write the final artifact
 	out := string(artifact.Artifact)
-	if err := opts.Store.Save(opts.WriteTo, out); err != nil {
+	if err := opts.Store.Save(opts.AbsWriteTo(), out); err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
 	log := logger.FromContext(ctx)
-	log.DebugContext(ctx, fmt.Sprintf("wrote %s", filepath.Join(opts.WriteTo, out)))
+	log.DebugContext(ctx, fmt.Sprintf("wrote %s", filepath.Join(opts.AbsWriteTo(), out)))
 
 	return nil
 }
@@ -497,8 +519,10 @@ type BuildPlan struct {
 
 func (b *BuildPlan) Build(ctx context.Context) error {
 	name := b.BuildPlan.Metadata.Name
-	path := b.Opts.Path
-	log := logger.FromContext(ctx).With("name", name, "path", path)
+	log := logger.FromContext(ctx).With(
+		"name", name,
+		"path", filepath.Clean(b.Opts.Leaf()),
+	)
 
 	msg := fmt.Sprintf("could not build %s", name)
 	if b.BuildPlan.Spec.Disabled {
@@ -617,11 +641,11 @@ func commandTransformer(ctx context.Context, t core.Transformer, p taskParams) e
 		"could not transform %s for %s path %s",
 		t.Output,
 		p.buildPlanName,
-		p.opts.Path,
+		p.opts.Leaf(),
 	)
 
 	// Sanity checks.
-	tempDir := p.opts.BuildContext.TempDir
+	tempDir := p.opts.TempDir()
 	if tempDir == "" {
 		return errors.Format("%s: holos maintainer error: BuildContext.TempDir not provided by holos", msg)
 	}
@@ -666,7 +690,7 @@ func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {
 		"could not transform %s for %s path %s",
 		t.Output,
 		p.buildPlanName,
-		p.opts.Path,
+		filepath.Clean(p.opts.Leaf()),
 	)
 
 	// Write the kustomization
@@ -701,6 +725,7 @@ func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {
 	return nil
 }
 
+// TODO(jjm) move to transformerTask command
 func validate(ctx context.Context, validator core.Validator, p taskParams) error {
 	store := p.opts.Store
 	tempDir, err := os.MkdirTemp("", "holos.validate")
@@ -753,10 +778,10 @@ func (bc BuildContext) Tags() ([]string, error) {
 }
 
 // NewBuildContext returns a new BuildContext
-func NewBuildContext(bc holos.BuildContext) BuildContext {
+func NewBuildContext(tempDir string) BuildContext {
 	return BuildContext{
 		BuildContext: core.BuildContext{
-			TempDir: bc.TempDir,
+			TempDir: tempDir,
 		},
 	}
 }

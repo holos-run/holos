@@ -95,7 +95,7 @@ func (c *Component) BuildPlan(tm holos.TypeMeta, opts holos.BuildOpts) (BuildPla
 	switch tm.APIVersion {
 	case "v1alpha6":
 		// Prepare runtime build context for injection as a cue tag.
-		bc := v1alpha6.NewBuildContext(opts.BuildContext)
+		bc := v1alpha6.NewBuildContext(opts.TempDir())
 		buildContextTags, err := bc.Tags()
 		if err != nil {
 			return bp, errors.Format("could not get build context tag: %w", err)
@@ -150,11 +150,9 @@ func (c *Component) render(ctx context.Context, tm holos.TypeMeta) error {
 	defer util.Remove(ctx, tempDir)
 
 	// Runtime configuration of the build.
-	opts := holos.NewBuildOpts(c.Path)
+	opts := holos.NewBuildOpts(c.Root, c.Path, c.WriteTo, tempDir)
 	opts.Stderr = c.Stderr
 	opts.Concurrency = c.Concurrency
-	opts.WriteTo = filepath.Join(c.Root, c.WriteTo)
-	opts.BuildContext.TempDir = tempDir
 
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, fmt.Sprintf("rendering %s kind %s version %s", c.Path, tm.Kind, tm.APIVersion), "kind", tm.Kind, "apiVersion", tm.APIVersion, "path", c.Path)
@@ -187,10 +185,9 @@ func (c *Component) renderAlpha5(ctx context.Context) error {
 	defer util.Remove(ctx, tempDir)
 
 	// Runtime configuration of the build.
-	opts := holos.NewBuildOpts(c.Path)
+	opts := holos.NewBuildOpts(c.Root, c.Path, c.WriteTo, "")
 	opts.Stderr = c.Stderr
 	opts.Concurrency = c.Concurrency
-	opts.WriteTo = filepath.Join(c.Root, c.WriteTo)
 
 	tm := holos.TypeMeta{
 		Kind:       "BuildPlan",

@@ -31,8 +31,8 @@ func NewShowCmd(cfg *platform.Config) (cmd *cobra.Command) {
 	cmd.AddCommand(spCmd)
 
 	sbp := &showBuildPlans{
-		Format: "yaml",
-		Out:    cfg.Stdout,
+		format: "yaml",
+		cfg:    cfg,
 	}
 	sbCmd := platform.NewCommand(cfg, sbp.Run)
 	sbCmd.Use = "buildplans"
@@ -66,18 +66,18 @@ func (s *showPlatform) Run(ctx context.Context, p *platform.Platform) error {
 }
 
 type showBuildPlans struct {
-	Format string
-	Out    io.Writer
+	format string
+	cfg    *platform.Config
 }
 
 func (s *showBuildPlans) flagSet() *pflag.FlagSet {
 	fs := pflag.NewFlagSet("", pflag.ContinueOnError)
-	fs.StringVar(&s.Format, "format", "yaml", "yaml or json format")
+	fs.StringVar(&s.format, "format", "yaml", "yaml or json format")
 	return fs
 }
 
 func (s *showBuildPlans) Run(ctx context.Context, p *platform.Platform) error {
-	encoder, err := holos.NewSequentialEncoder(s.Format, s.Out)
+	encoder, err := holos.NewSequentialEncoder(s.format, s.cfg.Stdout)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -90,8 +90,7 @@ func (s *showBuildPlans) Run(ctx context.Context, p *platform.Platform) error {
 			if err != nil {
 				return errors.Wrap(err)
 			}
-			opts := holos.NewBuildOpts(pc.Path())
-			opts.BuildContext.TempDir = "${TMPDIR_PLACEHOLDER}"
+			opts := holos.NewBuildOpts(p.Root(), pc.Path(), s.cfg.WriteTo, "${TMPDIR_PLACEHOLDER}")
 
 			// TODO(jjm): refactor into [holos.NewBuildOpts] as functional options.
 			// Component name, label, annotations passed via tags to cue.

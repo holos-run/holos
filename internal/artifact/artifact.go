@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"github.com/holos-run/holos/internal/errors"
 )
 
 // NewStore should provide a concrete Store.
@@ -54,7 +52,7 @@ func (a *MapStore) Set(path string, data []byte) error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if _, ok := a.m[path]; ok {
-		return errors.Format("%s already set", path)
+		return fmt.Errorf("%s already set", path)
 	}
 	a.m[path] = data
 	slog.Debug(fmt.Sprintf("store: set path %s", path), "component", "store", "op", "set", "path", path, "bytes", len(data))
@@ -70,10 +68,15 @@ func (a *MapStore) Get(path string) (data []byte, ok bool) {
 	return
 }
 
-// Save writes a file or directory tree to the filesystem.
+// Save writes a file or directory tree to the filesystem.  dir must be an
+// absolute path.
 func (a *MapStore) Save(dir, path string) error {
+	if !filepath.IsAbs(dir) {
+		return fmt.Errorf("path not absolute: %s", dir)
+	}
+
 	if strings.HasSuffix(path, "/") {
-		return errors.Format("path must not end in a /")
+		return fmt.Errorf("path must not end in a /: %s", path)
 	}
 
 	fullPath := filepath.Join(dir, path)
@@ -82,10 +85,10 @@ func (a *MapStore) Save(dir, path string) error {
 	// Save a single file and return.
 	if data, ok := a.Get(path); ok {
 		if err := os.MkdirAll(filepath.Dir(fullPath), 0777); err != nil {
-			return errors.Format("%s: %w", msg, err)
+			return fmt.Errorf("%s: %w", msg, err)
 		}
 		if err := os.WriteFile(fullPath, data, 0666); err != nil {
-			return errors.Format("%s: %w", msg, err)
+			return fmt.Errorf("%s: %w", msg, err)
 		}
 		return nil
 	}
@@ -98,10 +101,10 @@ func (a *MapStore) Save(dir, path string) error {
 			data, _ := a.Get(key)
 			fullPath = filepath.Join(dir, key)
 			if err := os.MkdirAll(filepath.Dir(fullPath), 0777); err != nil {
-				return errors.Format("%s: %w", msg, err)
+				return fmt.Errorf("%s: %w", msg, err)
 			}
 			if err := os.WriteFile(fullPath, data, 0666); err != nil {
-				return errors.Format("%s: %w", msg, err)
+				return fmt.Errorf("%s: %w", msg, err)
 			}
 		}
 	}
@@ -111,28 +114,31 @@ func (a *MapStore) Save(dir, path string) error {
 
 // Load saves a file or directory tree to the store.
 func (a *MapStore) Load(dir, path string) error {
-	fileSystem := os.DirFS(dir)
-	err := fs.WalkDir(fileSystem, path, func(path string, d fs.DirEntry, err error) error {
+	if !filepath.IsAbs(dir) {
+		return fmt.Errorf("path not absolute: %s", dir)
+	}
+	fsys := os.DirFS(dir)
+	err := fs.WalkDir(fsys, path, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return errors.Wrap(err)
+			return err
 		}
 		// Skip over directories.
 		if d.IsDir() {
 			return nil
 		}
 		// Load files into the store.
-		data, err := fs.ReadFile(fileSystem, path)
+		data, err := fs.ReadFile(fsys, path)
 		if err != nil {
-			return errors.Wrap(err)
+			return err
 		}
 		if err := a.Set(path, data); err != nil {
-			return errors.Wrap(err)
+			return err
 		}
 
 		return nil
 	})
 	if err != nil {
-		return errors.Wrap(err)
+		return err
 	}
 
 	return nil

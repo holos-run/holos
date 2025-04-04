@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -327,20 +328,52 @@ type BuildOpts struct {
 	// Tags represents user managed tags including a component name, labels, and
 	// annotations.
 	Tags []string
-	// BuildContext represents holos managed tags.
-	BuildContext BuildContext
+
+	root    string
+	leaf    string
+	writeTo string
+	tempDir string
 }
 
-// NewBuildOpts returns a [BuildOpts] configured to build the component at path.
-func NewBuildOpts(path string) BuildOpts {
+// NewBuildOpts returns a [BuildOpts] configured to build the component at leaf
+// from the platform module at root writing rendered manifests into the deploy
+// directory.
+func NewBuildOpts(root, leaf, deploy, tempDir string) BuildOpts {
 	return BuildOpts{
 		Store:       artifact.NewStore(),
 		Concurrency: min(runtime.NumCPU(), 8),
 		Stderr:      os.Stderr,
-		WriteTo:     "deploy",
-		Path:        path,
 		Tags:        make([]string, 0, 10),
+
+		root:    root,
+		leaf:    leaf,
+		writeTo: deploy,
+		tempDir: tempDir,
 	}
+}
+
+// Leaf returns the cleaned component path relative to the platform root. For
+// example "components/podinfo"
+func (b *BuildOpts) Leaf() string {
+	return filepath.Clean(b.leaf)
+}
+
+// TODO(jjm) rename to AbsLeaf() and document.
+func (b *BuildOpts) AbsPath() string {
+	return filepath.Join(b.root, b.leaf)
+}
+
+// AbsDeploy returns the absolute path to the write to directory, usually the
+// deploy sub directory of the platform module root.
+func (b *BuildOpts) AbsWriteTo() string {
+	return filepath.Join(b.root, b.writeTo)
+}
+
+// TempDir returns the temporary directory managed by holos and injected into
+// cue using a [BuildContext] so artifacts can refer to the same path in the
+// configuration.
+func (b *BuildOpts) TempDir() string {
+	return b.tempDir
 }
 
 // BuildContext represents build context values provided by the holos render
