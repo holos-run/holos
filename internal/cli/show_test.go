@@ -3,7 +3,6 @@ package cli_test
 import (
 	"bytes"
 	"context"
-	"embed"
 	"errors"
 	"io"
 	"io/fs"
@@ -15,14 +14,12 @@ import (
 	"github.com/holos-run/holos/internal/cli"
 	"github.com/holos-run/holos/internal/generate"
 	"github.com/holos-run/holos/internal/platform"
+	"github.com/holos-run/holos/internal/testutil"
 	"github.com/holos-run/holos/internal/util"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
-
-//go:embed all:fixtures
-var fsys embed.FS
 
 type harness struct {
 	cmd    *cobra.Command
@@ -63,7 +60,7 @@ func TestShowAlpha6(t *testing.T) {
 		t.Fatalf("could not generate platform: %v", err)
 	}
 
-	if err := fs.WalkDir(fsys, "fixtures/v1alpha6", util.MakeCopyFunc(ctx, fsys, tempDir)); err != nil {
+	if err := fs.WalkDir(testutil.Fixtures, "fixtures/v1alpha6", util.MakeCopyFunc(ctx, testutil.Fixtures, tempDir)); err != nil {
 		t.Fatalf("could not copy fixtures: %v", err)
 	}
 
@@ -78,7 +75,7 @@ func TestShowAlpha6(t *testing.T) {
 		t.Run("SliceComponent", func(t *testing.T) {
 			platformDir := filepath.Join(tempDir, "fixtures", "v1alpha6", "platform1")
 			// Unmarshal the v1alpha6.BuildPlan we want.
-			wantBytes, err := fsys.ReadFile("fixtures/v1alpha6/platform1/expected_show_buildplans.yaml")
+			wantBytes, err := testutil.Fixtures.ReadFile("fixtures/v1alpha6/platform1/expected_show_buildplans.yaml")
 			require.NoError(t, err)
 			var want v1alpha6.BuildPlan
 			err = yaml.Unmarshal(wantBytes, &want)
@@ -129,7 +126,7 @@ func TestShowAlpha5(t *testing.T) {
 	}
 
 	// Copy fixtures
-	if err := fs.WalkDir(fsys, "fixtures/v1alpha5", util.MakeCopyFunc(ctx, fsys, tempDir)); err != nil {
+	if err := fs.WalkDir(testutil.Fixtures, "fixtures/v1alpha5", util.MakeCopyFunc(ctx, testutil.Fixtures, tempDir)); err != nil {
 		t.Fatalf("could not copy fixtures: %v", err)
 	}
 
@@ -143,7 +140,7 @@ func TestShowAlpha5(t *testing.T) {
 			require.NoError(t, err)
 
 			var want v1alpha5.Platform
-			wantBytes, err := fsys.ReadFile("fixtures/v1alpha5/issue331/want/platform.yaml")
+			wantBytes, err := testutil.Fixtures.ReadFile("fixtures/v1alpha5/issue331/want/platform.yaml")
 			require.NoError(t, err)
 			err = yaml.Unmarshal(wantBytes, &want)
 			require.NoError(t, err)
@@ -162,7 +159,7 @@ func TestShowAlpha5(t *testing.T) {
 			err := h.Run(ctx, "buildplans", platformDir)
 			require.NoError(t, err)
 
-			wantBytes, err := fsys.ReadFile("fixtures/v1alpha5/issue331/want/all-buildplans.yaml")
+			wantBytes, err := testutil.Fixtures.ReadFile("fixtures/v1alpha5/issue331/want/all-buildplans.yaml")
 			require.NoError(t, err)
 			want := buildPlansA5(t, bytes.NewReader(wantBytes))
 			have := buildPlansA5(t, bytes.NewReader(h.stdout.Bytes()))
@@ -177,7 +174,7 @@ func TestShowAlpha5(t *testing.T) {
 			err := h.Run(ctx, "buildplans", platformDir, "--selector", "app.holos.run/name=empty1-label")
 			require.NoError(t, err)
 
-			wantBytes, err := fsys.ReadFile("fixtures/v1alpha5/issue331/want/buildplans.1.yaml")
+			wantBytes, err := testutil.Fixtures.ReadFile("fixtures/v1alpha5/issue331/want/buildplans.1.yaml")
 			require.NoError(t, err)
 			want := buildPlansA5(t, bytes.NewReader(wantBytes))
 			have := buildPlansA5(t, bytes.NewReader(h.stdout.Bytes()))
@@ -192,7 +189,7 @@ func TestShowAlpha5(t *testing.T) {
 			err := h.Run(ctx, "buildplans", platformDir, "--selector", "app.holos.run/name==empty2-label")
 			require.NoError(t, err)
 
-			wantBytes, err := fsys.ReadFile("fixtures/v1alpha5/issue331/want/buildplans.2.yaml")
+			wantBytes, err := testutil.Fixtures.ReadFile("fixtures/v1alpha5/issue331/want/buildplans.2.yaml")
 			require.NoError(t, err)
 			want := buildPlansA5(t, bytes.NewReader(wantBytes))
 			have := buildPlansA5(t, bytes.NewReader(h.stdout.Bytes()))
@@ -207,7 +204,7 @@ func TestShowAlpha5(t *testing.T) {
 			err := h.Run(ctx, "buildplans", platformDir, "--selector", "app.holos.run/name!=empty3-label")
 			require.NoError(t, err)
 
-			wantBytes, err := fsys.ReadFile("fixtures/v1alpha5/issue331/want/buildplans.3.yaml")
+			wantBytes, err := testutil.Fixtures.ReadFile("fixtures/v1alpha5/issue331/want/buildplans.3.yaml")
 			require.NoError(t, err)
 			want := buildPlansA5(t, bytes.NewReader(wantBytes))
 			have := buildPlansA5(t, bytes.NewReader(h.stdout.Bytes()))
@@ -222,7 +219,7 @@ func TestShowAlpha5(t *testing.T) {
 			err := h.Run(ctx, "buildplans", platformDir, "--selector", "app.holos.run/name!=something-else")
 			require.NoError(t, err)
 
-			wantBytes, err := fsys.ReadFile("fixtures/v1alpha5/issue331/want/buildplans.4.yaml")
+			wantBytes, err := testutil.Fixtures.ReadFile("fixtures/v1alpha5/issue331/want/buildplans.4.yaml")
 			require.NoError(t, err)
 			want := buildPlansA5(t, bytes.NewReader(wantBytes))
 			have := buildPlansA5(t, bytes.NewReader(h.stdout.Bytes()))

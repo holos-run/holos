@@ -310,6 +310,7 @@
     "tablewriter",
     "templatable",
     "testscript",
+    "testutil",
     "thanos",
     "Tiltfile",
     "timestamppb",

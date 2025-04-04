@@ -1,10 +1,8 @@
 package v1alpha5_test
 
-// "github.com/stretchr/testify/require"
 import (
 	"context"
 	"embed"
-	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,12 +11,13 @@ import (
 	"github.com/holos-run/holos/internal/component"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/generate"
+	"github.com/holos-run/holos/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )
 
 //go:embed all:platform
-var f embed.FS
+var fsys embed.FS
 
 // must align with embed all:platform directory
 const platform string = "platform"
@@ -92,56 +91,12 @@ func newHarness(t testing.TB) *harness {
 	}
 
 	// Copy the components for the test cases
-	if err := fs.WalkDir(f, platform, makeCopyFunc(ctx, tempDir)); err != nil {
+	if err := fs.WalkDir(fsys, platform, testutil.MakeCopyFunc(ctx, fsys, tempDir)); err != nil {
 		t.Fatalf("could not prepare test directory: %v", err)
 	}
 
 	return &harness{
 		root: root,
 		ctx:  ctx,
-	}
-}
-
-func makeCopyFunc(ctx context.Context, tempDir string) fs.WalkDirFunc {
-	return func(path string, d fs.DirEntry, err error) error {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		default:
-			if err != nil {
-				return err
-			}
-			if path == "." {
-				return nil
-			}
-			fullPath := filepath.Join(tempDir, path)
-
-			switch {
-			case d.IsDir():
-				if err := os.MkdirAll(fullPath, 0o777); err != nil {
-					return err
-				}
-			default:
-				if err := os.MkdirAll(filepath.Dir(fullPath), 0o777); err != nil {
-					return err
-				}
-				srcFile, err := f.Open(path)
-				if err != nil {
-					return err
-				}
-				defer srcFile.Close()
-
-				dstFile, err := os.Create(fullPath)
-				if err != nil {
-					return err
-				}
-				defer dstFile.Close()
-
-				if _, err := io.Copy(dstFile, srcFile); err != nil {
-					return err
-				}
-			}
-		}
-		return nil
 	}
 }
