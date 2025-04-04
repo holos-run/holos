@@ -63,23 +63,35 @@ func NewComponentHarness(t testing.TB, tempDir, apiVersion string) *ComponentHar
 }
 
 func (h *ComponentHarness) Root() string {
-	return h.root
+	return filepath.Clean(h.root)
 }
 
 func (h *ComponentHarness) Ctx() context.Context {
 	return h.ctx
 }
 
+// Base returns the fixture base path relative to the root, for example "fixtures/v1alpha6"
+func (h *ComponentHarness) Base() string {
+	return filepath.Clean(h.base)
+}
+
+// AbsBase returns the absolute path to the api version base.
+func (h *ComponentHarness) AbsBase() string {
+	return filepath.Join(h.root, h.base)
+}
+
 // Component returns a new component with fully qualified path
 // filepath.Join(root, base, path).
 func (h *ComponentHarness) Component(path string) *component.Component {
 	return component.New(
-		h.root,
-		filepath.Join(h.base, path),
+		h.Root(),
+		filepath.Join(h.Base(), path),
 		component.NewConfig(),
 	)
 }
 
+// Load unmarshals the first document in yaml or json path relative to the
+// harness root.
 func (h *ComponentHarness) Load(path string) (any, error) {
 	data, err := os.ReadFile(filepath.Join(h.root, path))
 	if err != nil {

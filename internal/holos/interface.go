@@ -25,14 +25,13 @@ type Platform interface {
 // Component represents the information needed to produce a BuildPlan from a
 // platform component.
 type Component interface {
+	// Describe represents a description of the component for user feedback.
 	Describe() string
+	// Path represents the component path relative to the platform root.
 	Path() string
-	// ExtractYAML represents the values of the --extract-yaml flag
-	ExtractYAML() ([]string, error)
-	// Tags represents standard tags such as the component name, labels, annotations.
+	// Tags represents the Component name, labels, annotations injected into cue
+	// for BuildPlan export.
 	Tags() ([]string, error)
-	WriteTo() string
-	Labels() Labels
 }
 
 // BuildPlan is the interface to load, build, and export a BuildPlan from a cue

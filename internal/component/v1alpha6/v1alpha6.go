@@ -38,6 +38,10 @@ func (c *Component) Describe() string {
 	return c.Component.Name
 }
 
+func (c *Component) Path() string {
+	return filepath.Clean(c.Component.Path)
+}
+
 func (c *Component) Tags() ([]string, error) {
 	size := 2 +
 		len(c.Component.Parameters) +
@@ -50,7 +54,7 @@ func (c *Component) Tags() ([]string, error) {
 	}
 	// Inject holos component metadata tags.
 	tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentNameTag, c.Component.Name))
-	tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentPathTag, c.Component.Path))
+	tags = append(tags, fmt.Sprintf("%s=%s", core.ComponentPathTag, c.Path()))
 
 	if len(c.Component.Labels) > 0 {
 		labels, err := json.Marshal(c.Component.Labels)
@@ -69,32 +73,6 @@ func (c *Component) Tags() ([]string, error) {
 	}
 
 	return tags, nil
-}
-
-func (c *Component) WriteTo() string {
-	return c.Component.WriteTo
-}
-
-func (c *Component) Labels() holos.Labels {
-	return c.Component.Labels
-}
-
-func (c *Component) Path() string {
-	return util.DotSlash(c.Component.Path)
-}
-
-// ExtractYAML returns the path values for the --extract-yaml command line flag.
-func (c *Component) ExtractYAML() ([]string, error) {
-	if c == nil {
-		return nil, nil
-	}
-	instances := make([]string, 0, len(c.Component.Instances))
-	for _, instance := range c.Component.Instances {
-		if instance.Kind == "ExtractYAML" {
-			instances = append(instances, instance.ExtractYAML.Path)
-		}
-	}
-	return instances, nil
 }
 
 var _ holos.BuildPlan = &BuildPlan{}

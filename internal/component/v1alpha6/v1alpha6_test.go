@@ -2,6 +2,7 @@ package v1alpha6_test
 
 import (
 	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/holos-run/holos/internal/holos"
@@ -15,8 +16,7 @@ const apiVersion string = "v1alpha6"
 func TestComponents(t *testing.T) {
 	tempDir := testutil.SetupPlatform(t, apiVersion)
 	h := testutil.NewComponentHarness(t, tempDir, apiVersion)
-	root := h.Root()
-	assert.NotEmpty(t, root)
+	assert.NotEmpty(t, h.Root())
 
 	t.Run("WithNoArtifacts", func(t *testing.T) {
 		leaf := "components/minimal"
@@ -32,7 +32,7 @@ func TestComponents(t *testing.T) {
 		})
 
 		t.Run("BuildPlan", func(t *testing.T) {
-			bp, err := c.BuildPlan(tm, holos.NewBuildOpts(root, leaf, "deploy", t.TempDir()))
+			bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()))
 			require.NoError(t, err, msg)
 			err = bp.Build(h.Ctx())
 			require.NoError(t, err, msg)
@@ -42,7 +42,7 @@ func TestComponents(t *testing.T) {
 	t.Run("BuildPlan", func(t *testing.T) {
 		t.Run("Command", func(t *testing.T) {
 			t.Run("Generator", func(t *testing.T) {
-				leaf := "components/commands/generator/simple"
+				leaf := filepath.Join("components", "commands", "generator", "simple")
 				c := h.Component(leaf)
 				msg := fmt.Sprintf("Expected %s with command generator to render config manifests", leaf)
 				tm, err := c.TypeMeta()
@@ -50,11 +50,20 @@ func TestComponents(t *testing.T) {
 				assert.Equal(t, tm.APIVersion, apiVersion)
 
 				t.Run("Build", func(t *testing.T) {
-					bp, err := c.BuildPlan(tm, holos.NewBuildOpts(root, leaf, "deploy", t.TempDir()))
+					bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()))
 					require.NoError(t, err, msg)
 					err = bp.Build(h.Ctx())
 					require.NoError(t, err, msg)
-					// TODO: Check the rendered manifests.
+
+					// Validate the rendered manifest
+					have, err := h.Load(filepath.Join("deploy", "components", "simple", "simple.gen.yaml"))
+					require.NoError(t, err, msg)
+					want, err := h.Load(filepath.Join(h.Base(), leaf, "want_simple.gen.yaml"))
+					require.NoError(t, err, msg)
+
+					// Validate in both directions
+					assert.Equal(t, want, have, msg)
+					assert.Equal(t, have, want, msg)
 				})
 			})
 			t.Run("Transformer", func(t *testing.T) {})
