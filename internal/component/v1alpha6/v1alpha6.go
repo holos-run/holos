@@ -92,8 +92,7 @@ type taskParams struct {
 }
 
 func (t taskParams) id() string {
-	path := filepath.Clean(t.opts.Leaf())
-	return fmt.Sprintf("%s:%s/%s", path, t.buildPlanName, t.taskName)
+	return fmt.Sprintf("%s:%s/%s", t.opts.Leaf(), t.buildPlanName, t.taskName)
 }
 
 func (t taskParams) tempDir() (string, error) {
@@ -309,6 +308,11 @@ func (t *generatorTask) command(ctx context.Context) error {
 	store := t.opts.Store
 	msg := fmt.Sprintf("could not generate from command %s", t.id())
 
+	tempDir, err := t.tempDir()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
 	args := t.generator.Command.Args
 	if len(args) < 1 {
 		return errors.Format("%s: command args length must be at least 1", msg)
@@ -319,20 +323,19 @@ func (t *generatorTask) command(ctx context.Context) error {
 		return errors.Format("%s: %w", msg, err)
 	}
 
+	// Save the output.
+	outPath := filepath.Join(tempDir, string(t.generator.Output))
 	if t.generator.Command.Stdout {
-		// Store the command stdout as the artifact.
-		if err := store.Set(string(t.generator.Output), r.Stdout.Bytes()); err != nil {
+		if err := os.MkdirAll(filepath.Dir(outPath), 0o777); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
-	} else {
-		// Store the file tree as the artifact.
-		tempDir, err := t.taskParams.tempDir()
-		if err != nil {
+		if err := os.WriteFile(outPath, r.Stdout.Bytes(), 0o777); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
-		if err := store.Load(tempDir, string(t.generator.Output)); err != nil {
-			return errors.Format("%s: %w", msg, err)
-		}
+	}
+	err = store.Load(tempDir, string(t.generator.Output))
+	if err != nil {
+		return errors.Format("%s: %w", msg, err)
 	}
 
 	return nil
@@ -499,7 +502,7 @@ func (b *BuildPlan) Build(ctx context.Context) error {
 	name := b.BuildPlan.Metadata.Name
 	log := logger.FromContext(ctx).With(
 		"name", name,
-		"path", filepath.Clean(b.Opts.Leaf()),
+		"path", b.Opts.Leaf(),
 	)
 
 	msg := fmt.Sprintf("could not build %s", name)
@@ -556,7 +559,6 @@ func marshal(list []core.Resource) (buf bytes.Buffer, err error) {
 	defer encoder.Close()
 	for _, item := range list {
 		if err = encoder.Encode(item); err != nil {
-			err = errors.Wrap(err)
 			return
 		}
 	}
@@ -615,6 +617,7 @@ func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() 
 // TODO(jjm): refactor command execution to be useful for generators,
 // transformers, and validators.
 func commandTransformer(ctx context.Context, t core.Transformer, p taskParams) error {
+	store := p.opts.Store
 	msg := fmt.Sprintf(
 		"could not transform %s for %s path %s",
 		t.Output,
@@ -622,18 +625,18 @@ func commandTransformer(ctx context.Context, t core.Transformer, p taskParams) e
 		p.opts.Leaf(),
 	)
 
-	// Sanity checks.
-	tempDir := p.opts.TempDir()
-	if tempDir == "" {
-		return errors.Format("%s: holos maintainer error: BuildContext.TempDir not provided by holos", msg)
+	tempDir, err := p.tempDir()
+	if err != nil {
+		return errors.Wrap(err)
 	}
+
 	if len(t.Command.Args) == 0 {
 		return errors.Format("%s: empty command args list", msg)
 	}
 
 	// Write the inputs
 	for _, input := range t.Inputs {
-		if err := p.opts.Store.Save(tempDir, string(input)); err != nil {
+		if err := store.Save(tempDir, string(input)); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
 	}
@@ -644,16 +647,19 @@ func commandTransformer(ctx context.Context, t core.Transformer, p taskParams) e
 		return errors.Format("%s: %w", msg, err)
 	}
 
+	// Save the output.
+	outPath := filepath.Join(tempDir, string(t.Output))
 	if t.Command.Stdout {
-		// Store the command stdout as the artifact.
-		if err := p.opts.Store.Set(string(t.Output), r.Stdout.Bytes()); err != nil {
+		if err := os.MkdirAll(filepath.Dir(outPath), 0o777); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
-	} else {
-		// Store the file tree as the artifact.
-		if err := p.opts.Store.Load(tempDir, string(t.Output)); err != nil {
+		if err := os.WriteFile(outPath, r.Stdout.Bytes(), 0o777); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
+	}
+	err = store.Load(tempDir, string(t.Output))
+	if err != nil {
+		return errors.Format("%s: %w", msg, err)
 	}
 
 	return nil
@@ -668,7 +674,7 @@ func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {
 		"could not transform %s for %s path %s",
 		t.Output,
 		p.buildPlanName,
-		filepath.Clean(p.opts.Leaf()),
+		p.opts.Leaf(),
 	)
 
 	// Write the kustomization

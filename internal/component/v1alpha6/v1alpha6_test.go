@@ -42,28 +42,58 @@ func TestComponents(t *testing.T) {
 	t.Run("BuildPlan", func(t *testing.T) {
 		t.Run("Command", func(t *testing.T) {
 			t.Run("Generator", func(t *testing.T) {
-				leaf := filepath.Join("components", "commands", "generator", "simple")
-				c := h.Component(leaf)
-				msg := fmt.Sprintf("Expected %s with command generator to render config manifests", leaf)
-				tm, err := c.TypeMeta()
-				require.NoError(t, err, msg)
-				assert.Equal(t, tm.APIVersion, apiVersion)
+				t.Run("Simple", func(t *testing.T) {
+					name := "simple"
+					leaf := filepath.Join("components", "commands", "generator", name)
+					c := h.Component(leaf)
+					msg := fmt.Sprintf("Expected %s with command generator to render config manifests", leaf)
+					tm, err := c.TypeMeta()
+					require.NoError(t, err, msg)
+					assert.Equal(t, tm.APIVersion, apiVersion)
 
-				t.Run("Build", func(t *testing.T) {
-					bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()))
-					require.NoError(t, err, msg)
-					err = bp.Build(h.Ctx())
-					require.NoError(t, err, msg)
+					t.Run("Build", func(t *testing.T) {
+						bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()))
+						require.NoError(t, err, msg)
+						err = bp.Build(h.Ctx())
+						require.NoError(t, err, msg)
 
-					// Validate the rendered manifest
-					have, err := h.Load(filepath.Join("deploy", "components", "simple", "simple.gen.yaml"))
-					require.NoError(t, err, msg)
-					want, err := h.Load(filepath.Join(h.Base(), leaf, "want_simple.gen.yaml"))
-					require.NoError(t, err, msg)
+						// Validate the rendered manifest
+						have, err := h.Load(filepath.Join("deploy", "components", name, fmt.Sprintf("%s.gen.yaml", name)))
+						require.NoError(t, err, msg)
+						want, err := h.Load(filepath.Join(h.Base(), leaf, fmt.Sprintf("want_%s.gen.yaml", name)))
+						require.NoError(t, err, msg)
 
-					// Validate in both directions
-					assert.Equal(t, want, have, msg)
-					assert.Equal(t, have, want, msg)
+						// Validate in both directions
+						assert.Equal(t, want, have, msg)
+						assert.Equal(t, have, want, msg)
+					})
+				})
+
+				t.Run("Directory", func(t *testing.T) {
+					name := "directory"
+					leaf := filepath.Join("components", "commands", "generator", name)
+					c := h.Component(leaf)
+					msg := fmt.Sprintf("Expected %s with command generator to render config manifests", leaf)
+					tm, err := c.TypeMeta()
+					require.NoError(t, err, msg)
+					assert.Equal(t, tm.APIVersion, apiVersion)
+
+					t.Run("Build", func(t *testing.T) {
+						bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()))
+						require.NoError(t, err, msg)
+						err = bp.Build(h.Ctx())
+						require.NoError(t, err, msg)
+
+						// Validate the rendered manifest
+						have, err := h.Load(filepath.Join("deploy", "components", name, fmt.Sprintf("%s.gen.yaml", name)))
+						require.NoError(t, err, msg)
+						want, err := h.Load(filepath.Join(h.Base(), leaf, fmt.Sprintf("want_%s.gen.yaml", name)))
+						require.NoError(t, err, msg)
+
+						// Validate in both directions
+						assert.Equal(t, want, have, msg)
+						assert.Equal(t, have, want, msg)
+					})
 				})
 			})
 			t.Run("Transformer", func(t *testing.T) {})

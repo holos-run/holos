@@ -9,15 +9,17 @@ import (
 
 holos: core.#BuildPlan & {
 	metadata: {
-		name: "simple"
+		name: "directory"
 		labels: "holos.run/component.name":       name
 		annotations: "app.holos.run/description": "\(name) command generator"
 	}
 	spec: artifacts: [{
-		artifact: "components/\(metadata.name)/\(metadata.name).gen.yaml"
+		// The user should be able to specify a directory as the artifact, holos
+		// copies everything in it.
+		artifact: "components/\(metadata.name)"
 		generators: [{
 			kind:   "Command"
-			output: artifact
+			output: "\(artifact)/\(metadata.name).gen.yaml"
 			command: {
 				args: ["/bin/echo", json.Marshal(_ConfigMap)]
 				stdout: true
