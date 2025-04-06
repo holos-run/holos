@@ -352,25 +352,16 @@ func (t *transformersTask) run(ctx context.Context) error {
 	for idx, transformer := range t.transformers {
 		msg := fmt.Sprintf("could not build %s/%d", t.id(), idx)
 		switch transformer.Kind {
-		case "Command":
-			if err := t.command(ctx, transformer); err != nil {
-				return errors.Wrap(err)
-			}
 		case "Kustomize":
 			if err := t.kustomize(ctx, transformer); err != nil {
-				return errors.Wrap(err)
+				return errors.Format("%s: %w", msg, err)
 			}
 		case "Join":
-			s := make([][]byte, 0, len(transformer.Inputs))
-			for _, input := range transformer.Inputs {
-				if data, ok := t.opts.Store.Get(string(input)); ok {
-					s = append(s, data)
-				} else {
-					return errors.Format("%s: missing %s", msg, input)
-				}
+			if err := t.join(transformer); err != nil {
+				return errors.Format("%s: %w", msg, err)
 			}
-			data := bytes.Join(s, []byte(transformer.Join.Separator))
-			if err := t.opts.Store.Set(string(transformer.Output), data); err != nil {
+		case "Command":
+			if err := t.command(ctx, transformer); err != nil {
 				return errors.Format("%s: %w", msg, err)
 			}
 		default:
@@ -468,7 +459,7 @@ func (t *transformersTask) command(ctx context.Context, transformer core.Transfo
 		if err := os.MkdirAll(filepath.Dir(outPath), 0o777); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
-		if err := os.WriteFile(outPath, r.Stdout.Bytes(), 0o777); err != nil {
+		if err := os.WriteFile(outPath, r.Stdout.Bytes(), 0o666); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
 	}
@@ -477,6 +468,38 @@ func (t *transformersTask) command(ctx context.Context, transformer core.Transfo
 		return errors.Format("%s: %w", msg, err)
 	}
 
+	return nil
+}
+
+func (t *transformersTask) join(transformer core.Transformer) error {
+	store := t.opts.Store
+	s := make([][]byte, 0, len(transformer.Inputs))
+	for _, input := range transformer.Inputs {
+		if data, ok := t.opts.Store.Get(string(input)); ok {
+			s = append(s, data)
+		} else {
+			return fmt.Errorf("missing input %s", input)
+		}
+	}
+	tempDir, err := t.tempDir()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	// Join the inputs
+	data := bytes.Join(s, []byte(transformer.Join.Separator))
+	// Save the output to the filesystem.
+	outPath := filepath.Join(tempDir, string(transformer.Output))
+	if err := os.MkdirAll(filepath.Dir(outPath), 0o777); err != nil {
+		return errors.Wrap(err)
+	}
+	if err := os.WriteFile(outPath, data, 0o666); err != nil {
+		return errors.Wrap(err)
+	}
+	// Store the output in the artifact map.
+	err = store.Load(tempDir, string(transformer.Output))
+	if err != nil {
+		return errors.Wrap(err)
+	}
 	return nil
 }
 

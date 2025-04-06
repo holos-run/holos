@@ -40,8 +40,8 @@ func TestComponents(t *testing.T) {
 	})
 
 	t.Run("BuildPlan", func(t *testing.T) {
-		t.Run("Command", func(t *testing.T) {
-			t.Run("Generator", func(t *testing.T) {
+		t.Run("Generator", func(t *testing.T) {
+			t.Run("Command", func(t *testing.T) {
 				t.Run("Simple", func(t *testing.T) {
 					name := "simple"
 					leaf := filepath.Join("components", "commands", "generator", name)
@@ -96,7 +96,10 @@ func TestComponents(t *testing.T) {
 					})
 				})
 			})
-			t.Run("Transformer", func(t *testing.T) {
+		})
+
+		t.Run("Transformer", func(t *testing.T) {
+			t.Run("Command", func(t *testing.T) {
 				t.Run("Simple", func(t *testing.T) {
 					name := "simple"
 					leaf := filepath.Join("components", "commands", "transformer", name)
@@ -150,8 +153,39 @@ func TestComponents(t *testing.T) {
 						assert.Equal(t, have, want, msg)
 					})
 				})
+
+				t.Run("Join", func(t *testing.T) {
+					name := "join"
+					leaf := filepath.Join("components", "commands", "transformer", name)
+					c := h.Component(leaf)
+					msg := fmt.Sprintf("Expected %s with command transformer to render config manifests", leaf)
+					tm, err := c.TypeMeta()
+					require.NoError(t, err, msg)
+					assert.Equal(t, tm.APIVersion, apiVersion)
+
+					t.Run("Build", func(t *testing.T) {
+						bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()))
+						require.NoError(t, err, msg)
+						err = bp.Build(h.Ctx())
+						require.NoError(t, err, msg)
+
+						// Validate the rendered manifest
+						have, err := h.Load(filepath.Join("deploy", "components", name, fmt.Sprintf("%s.gen.yaml", name)))
+						require.NoError(t, err, msg)
+						want, err := h.Load(filepath.Join(h.Base(), leaf, fmt.Sprintf("want_%s.gen.yaml", name)))
+						require.NoError(t, err, msg)
+
+						// Validate in both directions
+						assert.Equal(t, want, have, msg)
+						assert.Equal(t, have, want, msg)
+					})
+				})
 			})
-			t.Run("Validator", func(t *testing.T) {})
+		})
+		t.Run("Validator", func(t *testing.T) {
+			t.Run("Command", func(t *testing.T) {
+
+			})
 		})
 	})
 }
