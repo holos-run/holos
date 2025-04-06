@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/holos-run/holos/internal/component"
 	"github.com/holos-run/holos/internal/errors"
@@ -146,4 +148,17 @@ func MakeCopyFunc(ctx context.Context, fsys fs.FS, tempDir string) fs.WalkDirFun
 		}
 		return nil
 	}
+}
+
+// Capitalize capitalizes the first letter of a UTF-8 string.
+func Capitalize(s string) string {
+	if s == "" {
+		return ""
+	}
+	r, size := utf8.DecodeRuneInString(s)
+	upperRune := unicode.ToUpper(r)
+	if r == upperRune {
+		return s
+	}
+	return string(upperRune) + s[size:]
 }
