@@ -61,8 +61,8 @@ tidy: ## Tidy go module.
 
 .PHONY: fmt
 fmt: ## Format code.
-	cd internal/generate/platforms && cue fmt ./...
 	go fmt ./...
+	cue fmt ./...
 
 .PHONY: vet
 vet: ## Vet Go code.
@@ -101,7 +101,7 @@ golangci-lint:
 	golangci-lint run
 
 .PHONY: lint
-lint: golangci-lint ## Run linters.
+lint: vet golangci-lint ## Run linters.
 	./hack/cspell
 
 .PHONY: coverage

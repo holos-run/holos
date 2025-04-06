@@ -1,5 +1,5 @@
 package holos
 
 holos: {
-  metadata: name: "minimal"
+	metadata: name: "minimal"
 }

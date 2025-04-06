@@ -77,7 +77,7 @@ func (c *Component) Tags() ([]string, error) {
 
 var _ holos.BuildPlan = &BuildPlan{}
 var _ task = &generatorTask{}
-var _ task = transformersTask{}
+var _ task = &transformersTask{}
 var _ task = validatorTask{}
 
 type task interface {
@@ -347,17 +347,17 @@ type transformersTask struct {
 	wg           *sync.WaitGroup
 }
 
-func (t transformersTask) run(ctx context.Context) error {
+func (t *transformersTask) run(ctx context.Context) error {
 	defer t.wg.Done()
 	for idx, transformer := range t.transformers {
 		msg := fmt.Sprintf("could not build %s/%d", t.id(), idx)
 		switch transformer.Kind {
 		case "Command":
-			if err := commandTransformer(ctx, transformer, t.taskParams); err != nil {
+			if err := t.command(ctx, transformer); err != nil {
 				return errors.Wrap(err)
 			}
 		case "Kustomize":
-			if err := kustomize(ctx, transformer, t.taskParams); err != nil {
+			if err := t.kustomize(ctx, transformer); err != nil {
 				return errors.Wrap(err)
 			}
 		case "Join":
@@ -377,6 +377,106 @@ func (t transformersTask) run(ctx context.Context) error {
 			return errors.Format("%s: unsupported kind %s", msg, transformer.Kind)
 		}
 	}
+	return nil
+}
+
+// kustomize executes the kustomize command in an isolated temporary directory
+// and captures standard output.
+func (t *transformersTask) kustomize(ctx context.Context, transformer core.Transformer) error {
+	store := t.opts.Store
+	msg := fmt.Sprintf(
+		"could not transform %s for %s path %s",
+		transformer.Output,
+		t.buildPlanName,
+		t.opts.Leaf(),
+	)
+
+	// Unlike other tasks, kustomize operates in a dedicated temporary directory.
+	tempDir, err := os.MkdirTemp("", "holos.kustomize")
+	if err != nil {
+		return errors.Wrap(err)
+	}
+	defer util.Remove(ctx, tempDir)
+
+	// Write the kustomization
+	data, err := yaml.Marshal(transformer.Kustomize.Kustomization)
+	if err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+	path := filepath.Join(tempDir, "kustomization.yaml")
+	if err := os.WriteFile(path, data, 0666); err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+
+	// Write the inputs
+	for _, input := range transformer.Inputs {
+		path := string(input)
+		if err := store.Save(tempDir, path); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+	}
+
+	// Execute kustomize
+	r, err := util.RunCmdW(ctx, t.opts.Stderr, "kubectl", "kustomize", tempDir)
+	if err != nil {
+		return errors.Format("%s: could not run kustomize: %w", msg, err)
+	}
+
+	// Store the artifact
+	if err := store.Set(string(transformer.Output), r.Stdout.Bytes()); err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+
+	return nil
+}
+
+func (t *transformersTask) command(ctx context.Context, transformer core.Transformer) error {
+	store := t.opts.Store
+	msg := fmt.Sprintf(
+		"could not transform %s for %s path %s",
+		transformer.Output,
+		t.buildPlanName,
+		t.opts.Leaf(),
+	)
+
+	tempDir, err := t.tempDir()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	args := transformer.Command.Args
+	if len(args) < 1 {
+		return errors.Format("%s: empty command args list", msg)
+	}
+
+	// Write the inputs
+	for _, input := range transformer.Inputs {
+		if err := store.Save(tempDir, string(input)); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+	}
+
+	// Execute the command
+	r, err := util.RunCmdA(ctx, t.opts.Stderr, args[0], args[1:]...)
+	if err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+
+	// Save the output.
+	outPath := filepath.Join(tempDir, string(transformer.Output))
+	if transformer.Command.Stdout {
+		if err := os.MkdirAll(filepath.Dir(outPath), 0o777); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		if err := os.WriteFile(outPath, r.Stdout.Bytes(), 0o777); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+	}
+	err = store.Load(tempDir, string(transformer.Output))
+	if err != nil {
+		return errors.Format("%s: %w", msg, err)
+	}
+
 	return nil
 }
 
@@ -444,7 +544,7 @@ func buildArtifact(ctx context.Context, idx int, artifact core.Artifact, tasks c
 	wg.Wait()
 
 	// Process Transformers sequentially
-	task := transformersTask{
+	task := &transformersTask{
 		taskParams: taskParams{
 			taskName:      fmt.Sprintf("artifact/%d/transformers", idx),
 			buildPlanName: buildPlanName,
@@ -612,101 +712,6 @@ func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() 
 
 	// Unexpected error
 	return errors.Wrap(err)
-}
-
-// TODO(jjm): refactor command execution to be useful for generators,
-// transformers, and validators.
-func commandTransformer(ctx context.Context, t core.Transformer, p taskParams) error {
-	store := p.opts.Store
-	msg := fmt.Sprintf(
-		"could not transform %s for %s path %s",
-		t.Output,
-		p.buildPlanName,
-		p.opts.Leaf(),
-	)
-
-	tempDir, err := p.tempDir()
-	if err != nil {
-		return errors.Wrap(err)
-	}
-
-	if len(t.Command.Args) == 0 {
-		return errors.Format("%s: empty command args list", msg)
-	}
-
-	// Write the inputs
-	for _, input := range t.Inputs {
-		if err := store.Save(tempDir, string(input)); err != nil {
-			return errors.Format("%s: %w", msg, err)
-		}
-	}
-
-	// Execute the command
-	r, err := util.RunCmdW(ctx, p.opts.Stderr, t.Command.Args[0], t.Command.Args...)
-	if err != nil {
-		return errors.Format("%s: %w", msg, err)
-	}
-
-	// Save the output.
-	outPath := filepath.Join(tempDir, string(t.Output))
-	if t.Command.Stdout {
-		if err := os.MkdirAll(filepath.Dir(outPath), 0o777); err != nil {
-			return errors.Format("%s: %w", msg, err)
-		}
-		if err := os.WriteFile(outPath, r.Stdout.Bytes(), 0o777); err != nil {
-			return errors.Format("%s: %w", msg, err)
-		}
-	}
-	err = store.Load(tempDir, string(t.Output))
-	if err != nil {
-		return errors.Format("%s: %w", msg, err)
-	}
-
-	return nil
-}
-func kustomize(ctx context.Context, t core.Transformer, p taskParams) error {
-	tempDir, err := os.MkdirTemp("", "holos.kustomize")
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	defer util.Remove(ctx, tempDir)
-	msg := fmt.Sprintf(
-		"could not transform %s for %s path %s",
-		t.Output,
-		p.buildPlanName,
-		p.opts.Leaf(),
-	)
-
-	// Write the kustomization
-	data, err := yaml.Marshal(t.Kustomize.Kustomization)
-	if err != nil {
-		return errors.Format("%s: %w", msg, err)
-	}
-	path := filepath.Join(tempDir, "kustomization.yaml")
-	if err := os.WriteFile(path, data, 0666); err != nil {
-		return errors.Format("%s: %w", msg, err)
-	}
-
-	// Write the inputs
-	for _, input := range t.Inputs {
-		path := string(input)
-		if err := p.opts.Store.Save(tempDir, path); err != nil {
-			return errors.Format("%s: %w", msg, err)
-		}
-	}
-
-	// Execute kustomize
-	r, err := util.RunCmdW(ctx, p.opts.Stderr, "kubectl", "kustomize", tempDir)
-	if err != nil {
-		return errors.Format("%s: could not run kustomize: %w", msg, err)
-	}
-
-	// Store the artifact
-	if err := p.opts.Store.Set(string(t.Output), r.Stdout.Bytes()); err != nil {
-		return errors.Format("%s: %w", msg, err)
-	}
-
-	return nil
 }
 
 // TODO(jjm) move to transformerTask command
