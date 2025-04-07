@@ -41,7 +41,7 @@ func TestComponents(t *testing.T) {
 
 	t.Run("BuildPlan", func(t *testing.T) {
 		t.Run("Generator", func(t *testing.T) {
-			for _, tc := range []string{"simple", "directory"} {
+			for _, tc := range []string{"simple", "directory", "helm"} {
 				testComponent(t, h, "generator", tc)
 			}
 		})
@@ -64,9 +64,10 @@ func TestComponents(t *testing.T) {
 // want_name.gen.yaml file in the component leaf directory.
 func testComponent(t *testing.T, h *testutil.ComponentHarness, kind, name string) {
 	t.Run(testutil.Capitalize(name), func(t *testing.T) {
-		leaf := filepath.Join("components", kind, name)
-		c := h.Component(leaf)
-		msg := fmt.Sprintf("Expected %s with %s to render config manifests", leaf, kind)
+		path := filepath.Join("components", kind, name)
+		leaf := filepath.Join(h.Base(), path)
+		c := h.Component(path)
+		msg := fmt.Sprintf("Expected %s with %s to render config manifests", path, kind)
 		tm, err := c.TypeMeta()
 		require.NoError(t, err, msg)
 		assert.Equal(t, tm.APIVersion, apiVersion)
@@ -80,7 +81,7 @@ func testComponent(t *testing.T, h *testutil.ComponentHarness, kind, name string
 			// Validate the rendered manifest
 			have, err := h.Load(filepath.Join("deploy", "components", name, fmt.Sprintf("%s.gen.yaml", name)))
 			require.NoError(t, err, msg)
-			want, err := h.Load(filepath.Join(h.Base(), leaf, fmt.Sprintf("want_%s.gen.yaml", name)))
+			want, err := h.Load(filepath.Join(leaf, fmt.Sprintf("want_%s.gen.yaml", name)))
 			require.NoError(t, err, msg)
 
 			// Validate in both directions
