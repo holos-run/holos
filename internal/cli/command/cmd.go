@@ -13,7 +13,7 @@ func New(name string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     name,
 		Short:   name,
-		Version: version.Version,
+		Version: version.GetVersion(),
 		Args:    cobra.NoArgs,
 		CompletionOptions: cobra.CompletionOptions{
 			HiddenDefaultCmd: true,

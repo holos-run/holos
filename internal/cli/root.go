@@ -76,6 +76,9 @@ func New(cfg *holos.Config) *cobra.Command {
 	// Show
 	rootCmd.AddCommand(NewShowCmd(platform.NewConfig()))
 
+	// Compile
+	rootCmd.AddCommand(NewCompileCmd())
+
 	return rootCmd
 }
 
