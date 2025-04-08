@@ -119,3 +119,14 @@ func MakeCopyFunc(ctx context.Context, efs embed.FS, dest string) fs.WalkDirFunc
 		return nil
 	}
 }
+
+// Executable returns os.Executable or "holos" if the executable basename does
+// not start with "holos"  The purpose is to call the holos executable in the
+// path from test and debug builds.
+func Executable() (string, error) {
+	exe, err := os.Executable()
+	if strings.HasPrefix(filepath.Base(exe), "holos") {
+		return exe, nil
+	}
+	return "holos", err
+}

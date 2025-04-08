@@ -154,7 +154,7 @@ func (t generatorTask) run(ctx context.Context) error {
 }
 
 func (t generatorTask) file() error {
-	data, err := os.ReadFile(filepath.Join(t.opts.AbsPath(), string(t.generator.File.Source)))
+	data, err := os.ReadFile(filepath.Join(t.opts.AbsLeaf(), string(t.generator.File.Source)))
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -167,7 +167,7 @@ func (t generatorTask) file() error {
 func (t generatorTask) helm(ctx context.Context) error {
 	h := t.generator.Helm
 	// Cache the chart by version to pull new versions. (#273)
-	cacheDir := filepath.Join(t.opts.AbsPath(), "vendor", t.generator.Helm.Chart.Version)
+	cacheDir := filepath.Join(t.opts.AbsLeaf(), "vendor", t.generator.Helm.Chart.Version)
 	cachePath := filepath.Join(cacheDir, filepath.Base(h.Chart.Name))
 
 	log := logger.FromContext(ctx)

@@ -16,7 +16,7 @@ holos: core.#BuildPlan & {
 		annotations: "app.holos.run/description": "\(name) transformer"
 	}
 	spec: artifacts: [{
-		artifact: "components/\(metadata.name)/\(metadata.name).gen.yaml"
+		artifact: "components/transformer/\(metadata.name)/\(metadata.name).gen.yaml"
 		generators: [
 			{
 				kind:   "Command"
@@ -32,7 +32,7 @@ holos: core.#BuildPlan & {
 				kind:   "Command"
 				output: "3.yaml"
 				command: args: ["echo", json.Marshal(_ConfigMap)]
-				command: stdout: true
+				command: isStdoutOutput: true
 			},
 		]
 		transformers: [

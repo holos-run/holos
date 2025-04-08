@@ -9,7 +9,7 @@ holos: core.#BuildPlan & {
 		annotations: "app.holos.run/description": "\(name) generator"
 	}
 	spec: artifacts: [{
-		artifact: "components/\(metadata.name)/\(metadata.name).gen.yaml"
+		artifact: "components/generator/\(metadata.name)/\(metadata.name).gen.yaml"
 		generators: [{
 			kind:   "Helm"
 			output: artifact

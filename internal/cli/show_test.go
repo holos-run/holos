@@ -80,6 +80,9 @@ func TestShowAlpha6(t *testing.T) {
 			var want v1alpha6.BuildPlan
 			err = yaml.Unmarshal(wantBytes, &want)
 			require.NoError(t, err)
+			want.BuildContext.RootDir = tempDir
+			want.BuildContext.HolosExecutable = "holos"
+			want.BuildContext.LeafDir = "fixtures/v1alpha6/components/slice"
 
 			t.Run("FormatYAML", func(t *testing.T) {
 				h := newHarness()

@@ -103,6 +103,20 @@ package core
 	// tasks in the build plan share this temporary directory and therefore should
 	// avoid reading and writing into the same sub-directories as one another.
 	tempDir: string & (string | *"${TEMP_DIR_PLACEHOLDER}") @go(TempDir)
+
+	// RootDir represents the fully qualified path to the platform root directory.
+	// Useful to construct arguments for commands in BuildPlan tasks.
+	rootDir: string & (string | *"${ROOT_DIR_PLACEHOLDER}") @go(RootDir)
+
+	// LeafDir represents the cleaned path to the holos component relative to the
+	// platform root.  Useful to construct arguments for commands in BuildPlan
+	// tasks.
+	leafDir: string & (string | *"${LEAF_DIR_PLACEHOLDER}") @go(LeafDir)
+
+	// HolosExecutable represents the fully qualified path to the holos
+	// executable.  Useful to execute tools embedded as subcommands such as holos
+	// cue vet.
+	holosExecutable: string & (string | *"holos") @go(HolosExecutable)
 }
 
 // BuildPlanSpec represents the specification of the [BuildPlan].
@@ -366,61 +380,24 @@ package core
 	// Inputs represents the files to validate.  Usually the final Artifact.
 	inputs: [...#FileOrDirectoryPath] @go(Inputs,[]FileOrDirectoryPath)
 
-	// Command represents a validation command.  Ignored unless kind is Command.
+	// Command validator.  Ignored unless kind is Command.
 	command?: #Command @go(Command)
 }
 
 // Command represents a [BuildPlan] task implemented by executing an user
 // defined system command.  A task is defined as a [Generator], [Transformer],
-// or [Validator].
+// or [Validator].  Commands are executed with the working directory set to the
+// platform root.
 #Command: {
 	// DisplayName of the command.  The basename of args[0] is used if empty.
 	displayName?: string @go(DisplayName)
 
-	// Args represents the argument vector passed to the system to execute the
+	// Args represents the argument vector passed to the os. to execute the
 	// command.
 	args?: [...string] @go(Args,[]string)
 
-	// Env represents environment variables to set in the command context.
-	env?: [...#EnvVar] @go(Env,[]EnvVar)
-
-	// Stdout captures the command standard output for use as the task output.
-	// Set to false for commands that write output to files.
-	stdout?: bool @go(Stdout)
-}
-
-// EnvVar represents the configuration of an environment variable in the context
-// of a [Command] task within a [BuildPlan].
-#EnvVar: {
-	// Name of the environment variable. Must be a C_IDENTIFIER.
-	name: string @go(Name)
-
-	// Kind represents a discriminator.
-	kind: string & ("Value" | "ValueFrom") @go(Kind)
-
-	// Value represents the concrete value of the named environment variable.
-	// Ignored unless kind is Value.
-	value?: string @go(Value)
-
-	// ValueFrom represents the source for the named environment variable's value.
-	// Ignored unless kind is ValueFrom.
-	valueFrom?: #EnvVarSource @go(ValueFrom)
-}
-
-// EnvVarSource represents a source for the value of an EnvVar.
-#EnvVarSource: {
-	// Kind represents a discriminator.
-	kind: string & "EnvRef" @go(Kind)
-
-	// EnvRef represents a reference to an environment variable.  Ignored unless
-	// kind is EnvRef.
-	envRef?: #EnvRef @go(EnvRef)
-}
-
-// EnvRef represents a reference to a value located in the environment.
-#EnvRef: {
-	// Name of the environment variable. Must be a C_IDENTIFIER.
-	name: string @go(Name)
+	// IsStdoutOutput captures the command stdout as the task output if true.
+	isStdoutOutput?: bool @go(IsStdoutOutput)
 }
 
 // InternalLabel is an arbitrary unique identifier internal to holos itself.

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -78,7 +79,7 @@ func (c *Component) Tags() ([]string, error) {
 var _ holos.BuildPlan = &BuildPlan{}
 var _ task = &generatorTask{}
 var _ task = &transformersTask{}
-var _ task = validatorTask{}
+var _ task = &validatorTask{}
 
 type task interface {
 	id() string
@@ -136,7 +137,7 @@ func (t *generatorTask) run(ctx context.Context) error {
 }
 
 func (t *generatorTask) file() error {
-	data, err := os.ReadFile(filepath.Join(t.opts.AbsPath(), string(t.generator.File.Source)))
+	data, err := os.ReadFile(filepath.Join(t.opts.AbsLeaf(), string(t.generator.File.Source)))
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -149,7 +150,7 @@ func (t *generatorTask) file() error {
 func (t *generatorTask) helm(ctx context.Context) error {
 	h := t.generator.Helm
 	// Cache the chart by version to pull new versions. (#273)
-	cacheDir := filepath.Join(t.opts.AbsPath(), "vendor", t.generator.Helm.Chart.Version)
+	cacheDir := filepath.Join(t.opts.AbsLeaf(), "vendor", t.generator.Helm.Chart.Version)
 	cachePath := filepath.Join(cacheDir, filepath.Base(h.Chart.Name))
 
 	log := logger.FromContext(ctx)
@@ -318,14 +319,19 @@ func (t *generatorTask) command(ctx context.Context) error {
 		return errors.Format("%s: command args length must be at least 1", msg)
 	}
 
-	r, err := util.RunCmdA(ctx, t.opts.Stderr, args[0], args[1:]...)
+	// Set the command working directory to the platform root.
+	var cdRoot = func(c *exec.Cmd) error {
+		c.Dir = t.opts.Root()
+		return nil
+	}
+	r, err := util.RunCmdFunc(ctx, t.opts.Stderr, args[0], args[1:], cdRoot)
 	if err != nil {
-		return errors.Format("%s: %w", msg, err)
+		return errors.Format("validation failed: %w", err)
 	}
 
 	// Save the output.
 	outPath := filepath.Join(tempDir, string(t.generator.Output))
-	if t.generator.Command.Stdout {
+	if t.generator.Command.IsStdoutOutput {
 		if err := os.MkdirAll(filepath.Dir(outPath), 0o777); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
@@ -447,15 +453,19 @@ func (t *transformersTask) command(ctx context.Context, transformer core.Transfo
 		}
 	}
 
-	// Execute the command
-	r, err := util.RunCmdA(ctx, t.opts.Stderr, args[0], args[1:]...)
+	// Set the command working directory to the platform root.
+	var cdRoot = func(c *exec.Cmd) error {
+		c.Dir = t.opts.Root()
+		return nil
+	}
+	r, err := util.RunCmdFunc(ctx, t.opts.Stderr, args[0], args[1:], cdRoot)
 	if err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
 
 	// Save the output.
 	outPath := filepath.Join(tempDir, string(transformer.Output))
-	if transformer.Command.Stdout {
+	if transformer.Command.IsStdoutOutput {
 		if err := os.MkdirAll(filepath.Dir(outPath), 0o777); err != nil {
 			return errors.Format("%s: %w", msg, err)
 		}
@@ -509,17 +519,50 @@ type validatorTask struct {
 	wg        *sync.WaitGroup
 }
 
-func (t validatorTask) run(ctx context.Context) error {
+func (t *validatorTask) run(ctx context.Context) error {
 	defer t.wg.Done()
 	msg := fmt.Sprintf("could not validate %s", t.id())
 	switch kind := t.validator.Kind; kind {
 	case "Command":
-		if err := validate(ctx, t.validator, t.taskParams); err != nil {
-			return errors.Wrap(err)
+		if err := t.command(ctx, t.validator); err != nil {
+			return errors.Format("%s: %w", msg, err)
 		}
 	default:
 		return errors.Format("%s: unsupported kind %s", msg, kind)
 	}
+	return nil
+}
+
+func (t *validatorTask) command(ctx context.Context, validator core.Validator) error {
+	store := t.opts.Store
+
+	tempDir, err := t.tempDir()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	args := validator.Command.Args
+	if len(args) < 1 {
+		return errors.New("empty command args list")
+	}
+
+	// Write the inputs
+	for _, input := range validator.Inputs {
+		if err := store.Save(tempDir, string(input)); err != nil {
+			return errors.Wrap(err)
+		}
+	}
+
+	// Set the command working directory to the platform root.
+	var cdRoot = func(c *exec.Cmd) error {
+		c.Dir = t.opts.Root()
+		return nil
+	}
+	_, err = util.RunCmdFunc(ctx, t.opts.Stderr, args[0], args[1:], cdRoot)
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
 	return nil
 }
 
@@ -586,7 +629,7 @@ func buildArtifact(ctx context.Context, idx int, artifact core.Artifact, tasks c
 
 	// Process Validators concurrently
 	for vid, val := range artifact.Validators {
-		task := validatorTask{
+		task := &validatorTask{
 			taskParams: taskParams{
 				taskName:      fmt.Sprintf("artifact/%d/validator/%d", idx, vid),
 				buildPlanName: buildPlanName,
@@ -737,42 +780,6 @@ func onceWithLock(log *slog.Logger, ctx context.Context, path string, fn func() 
 	return errors.Wrap(err)
 }
 
-// TODO(jjm) move to transformerTask command
-func validate(ctx context.Context, validator core.Validator, p taskParams) error {
-	store := p.opts.Store
-	tempDir, err := os.MkdirTemp("", "holos.validate")
-	if err != nil {
-		return errors.Wrap(err)
-	}
-	// defer util.Remove(ctx, tempDir)
-	msg := fmt.Sprintf("could not validate %s", p.id())
-
-	// Write the inputs
-	for _, input := range validator.Inputs {
-		path := string(input)
-		if err := store.Save(tempDir, path); err != nil {
-			return errors.Format("%s: %w", msg, err)
-		}
-	}
-
-	if len(validator.Command.Args) < 1 {
-		return errors.Format("%s: command args length must be at least 1", msg)
-	}
-	size := len(validator.Command.Args) + len(validator.Inputs)
-	args := make([]string, 0, size)
-	args = append(args, validator.Command.Args...)
-	for _, input := range validator.Inputs {
-		args = append(args, filepath.Join(tempDir, string(input)))
-	}
-
-	// Execute the validator
-	if _, err = util.RunCmdA(ctx, p.opts.Stderr, args[0], args[1:]...); err != nil {
-		return errors.Format("%s: %w", msg, err)
-	}
-
-	return nil
-}
-
 // BuildContext represents a core BuildContext with version specific helper
 // methods.
 type BuildContext struct {
@@ -790,10 +797,25 @@ func (bc BuildContext) Tags() ([]string, error) {
 }
 
 // NewBuildContext returns a new BuildContext
-func NewBuildContext(tempDir string) BuildContext {
-	return BuildContext{
+func NewBuildContext(opts holos.BuildOpts) (*BuildContext, error) {
+	root := opts.Root()
+	if !filepath.IsAbs(root) {
+		return nil, errors.Format("not an absolute path: %s", root)
+	}
+	exe, err := util.Executable()
+	if err != nil {
+		return nil, errors.Format("could not get holos path: %w", err)
+	}
+	// Allow placeholder for idempotent holos show buildplan output.
+	tempDir := opts.TempDir()
+	bc := &BuildContext{
 		BuildContext: core.BuildContext{
-			TempDir: tempDir,
+			TempDir:         tempDir,
+			RootDir:         root,
+			LeafDir:         opts.Leaf(),
+			HolosExecutable: exe,
 		},
 	}
+
+	return bc, nil
 }

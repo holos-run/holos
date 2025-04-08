@@ -345,25 +345,30 @@ func NewBuildOpts(root, leaf, deploy, tempDir string) BuildOpts {
 		Stderr:      os.Stderr,
 		Tags:        make([]string, 0, 10),
 
-		root:    root,
-		leaf:    leaf,
-		writeTo: deploy,
-		tempDir: tempDir,
+		root:    filepath.Clean(root),
+		leaf:    filepath.Clean(leaf),
+		writeTo: filepath.Clean(deploy),
+		tempDir: filepath.Clean(tempDir),
 	}
+}
+
+// Root returns the platform root directory containing the cue module.
+func (b *BuildOpts) Root() string {
+	return b.root
 }
 
 // Leaf returns the cleaned component path relative to the platform root. For
 // example "components/podinfo"
 func (b *BuildOpts) Leaf() string {
-	return filepath.Clean(b.leaf)
+	return b.leaf
 }
 
-// TODO(jjm) rename to AbsLeaf() and document.
-func (b *BuildOpts) AbsPath() string {
+// AbsLeaf returns the absolute cleaned component path.
+func (b *BuildOpts) AbsLeaf() string {
 	return filepath.Join(b.root, b.leaf)
 }
 
-// AbsDeploy returns the absolute path to the write to directory, usually the
+// AbsWriteTo returns the absolute path to the write to directory, usually the
 // deploy sub directory of the platform module root.
 func (b *BuildOpts) AbsWriteTo() string {
 	return filepath.Join(b.root, b.writeTo)

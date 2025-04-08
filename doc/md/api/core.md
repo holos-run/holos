@@ -24,9 +24,6 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 - [type Chart](<#Chart>)
 - [type Command](<#Command>)
 - [type Component](<#Component>)
-- [type EnvRef](<#EnvRef>)
-- [type EnvVar](<#EnvVar>)
-- [type EnvVarSource](<#EnvVarSource>)
 - [type File](<#File>)
 - [type FileContent](<#FileContent>)
 - [type FileContentMap](<#FileContentMap>)
@@ -187,6 +184,17 @@ type BuildContext struct {
     // tasks in the build plan share this temporary directory and therefore should
     // avoid reading and writing into the same sub-directories as one another.
     TempDir string `json:"tempDir" yaml:"tempDir" cue:"string | *\"${TEMP_DIR_PLACEHOLDER}\""`
+    // RootDir represents the fully qualified path to the platform root directory.
+    // Useful to construct arguments for commands in BuildPlan tasks.
+    RootDir string `json:"rootDir" yaml:"rootDir" cue:"string | *\"${ROOT_DIR_PLACEHOLDER}\""`
+    // LeafDir represents the cleaned path to the holos component relative to the
+    // platform root.  Useful to construct arguments for commands in BuildPlan
+    // tasks.
+    LeafDir string `json:"leafDir" yaml:"leafDir" cue:"string | *\"${LEAF_DIR_PLACEHOLDER}\""`
+    // HolosExecutable represents the fully qualified path to the holos
+    // executable.  Useful to execute tools embedded as subcommands such as holos
+    // cue vet.
+    HolosExecutable string `json:"holosExecutable" yaml:"holosExecutable" cue:"string | *\"holos\""`
 }
 ```
 
@@ -250,20 +258,17 @@ type Chart struct {
 <a name="Command"></a>
 ## type Command {#Command}
 
-Command represents a [BuildPlan](<#BuildPlan>) task implemented by executing an user defined system command. A task is defined as a [Generator](<#Generator>), [Transformer](<#Transformer>), or [Validator](<#Validator>).
+Command represents a [BuildPlan](<#BuildPlan>) task implemented by executing an user defined system command. A task is defined as a [Generator](<#Generator>), [Transformer](<#Transformer>), or [Validator](<#Validator>). Commands are executed with the working directory set to the platform root.
 
 ```go
 type Command struct {
     // DisplayName of the command.  The basename of args[0] is used if empty.
     DisplayName string `json:"displayName,omitempty" yaml:"displayName,omitempty"`
-    // Args represents the argument vector passed to the system to execute the
+    // Args represents the argument vector passed to the os. to execute the
     // command.
     Args []string `json:"args,omitempty" yaml:"args,omitempty"`
-    // Env represents environment variables to set in the command context.
-    Env []EnvVar `json:"env,omitempty" yaml:"env,omitempty"`
-    // Stdout captures the command standard output for use as the task output.
-    // Set to false for commands that write output to files.
-    Stdout bool `json:"stdout,omitempty" yaml:"stdout,omitempty"`
+    // IsStdoutOutput captures the command stdout as the task output if true.
+    IsStdoutOutput bool `json:"isStdoutOutput,omitempty" yaml:"isStdoutOutput,omitempty"`
 }
 ```
 
@@ -292,53 +297,6 @@ type Component struct {
     // Annotations represents arbitrary non-identifying metadata.  Use the
     // `app.holos.run/description` to customize the log message of each BuildPlan.
     Annotations map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
-}
-```
-
-<a name="EnvRef"></a>
-## type EnvRef {#EnvRef}
-
-EnvRef represents a reference to a value located in the environment.
-
-```go
-type EnvRef struct {
-    // Name of the environment variable. Must be a C_IDENTIFIER.
-    Name string `json:"name" yaml:"name"`
-}
-```
-
-<a name="EnvVar"></a>
-## type EnvVar {#EnvVar}
-
-EnvVar represents the configuration of an environment variable in the context of a [Command](<#Command>) task within a [BuildPlan](<#BuildPlan>).
-
-```go
-type EnvVar struct {
-    // Name of the environment variable. Must be a C_IDENTIFIER.
-    Name string `json:"name" yaml:"name"`
-    // Kind represents a discriminator.
-    Kind string `json:"kind" yaml:"kind" cue:"\"Value\" | \"ValueFrom\""`
-    // Value represents the concrete value of the named environment variable.
-    // Ignored unless kind is Value.
-    Value string `json:"value,omitempty" yaml:"value,omitempty"`
-    // ValueFrom represents the source for the named environment variable's value.
-    // Ignored unless kind is ValueFrom.
-    ValueFrom EnvVarSource `json:"valueFrom,omitempty" yaml:"valueFrom,omitempty"`
-}
-```
-
-<a name="EnvVarSource"></a>
-## type EnvVarSource {#EnvVarSource}
-
-EnvVarSource represents a source for the value of an EnvVar.
-
-```go
-type EnvVarSource struct {
-    // Kind represents a discriminator.
-    Kind string `json:"kind" yaml:"kind" cue:"\"EnvRef\""`
-    // EnvRef represents a reference to an environment variable.  Ignored unless
-    // kind is EnvRef.
-    EnvRef EnvRef `json:"envRef,omitempty" yaml:"envRef,omitempty"`
 }
 ```
 
@@ -629,7 +587,7 @@ type Validator struct {
     Kind string `json:"kind" yaml:"kind" cue:"\"Command\""`
     // Inputs represents the files to validate.  Usually the final Artifact.
     Inputs []FileOrDirectoryPath `json:"inputs" yaml:"inputs"`
-    // Command represents a validation command.  Ignored unless kind is Command.
+    // Command validator.  Ignored unless kind is Command.
     Command Command `json:"command,omitempty" yaml:"command,omitempty"`
 }
 ```

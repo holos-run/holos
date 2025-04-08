@@ -2,7 +2,6 @@ package render
 
 import (
 	"context"
-	"os"
 
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/component"
@@ -78,7 +77,7 @@ func (r *renderPlatform) Run(ctx context.Context, p *platform.Platform) error {
 				args = append(args, c.Path())
 
 				// Get current executable path.
-				holosPath, err := os.Executable()
+				holosPath, err := util.Executable()
 				if err != nil {
 					return errors.Wrap(err)
 				}

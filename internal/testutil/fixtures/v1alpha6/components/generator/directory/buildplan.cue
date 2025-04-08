@@ -16,13 +16,13 @@ holos: core.#BuildPlan & {
 	spec: artifacts: [{
 		// The user should be able to specify a directory as the artifact, holos
 		// copies everything in it.
-		artifact: "components/\(metadata.name)"
+		artifact: "components/generator/\(metadata.name)"
 		generators: [{
 			kind:   "Command"
 			output: "\(artifact)/\(metadata.name).gen.yaml"
 			command: {
 				args: ["/bin/echo", json.Marshal(_ConfigMap)]
-				stdout: true
+				isStdoutOutput: true
 			}
 		}]
 	}]

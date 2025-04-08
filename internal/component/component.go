@@ -95,7 +95,10 @@ func (c *Component) BuildPlan(tm holos.TypeMeta, opts holos.BuildOpts) (BuildPla
 	switch tm.APIVersion {
 	case "v1alpha6":
 		// Prepare runtime build context for injection as a cue tag.
-		bc := v1alpha6.NewBuildContext(opts.TempDir())
+		bc, err := v1alpha6.NewBuildContext(opts)
+		if err != nil {
+			return bp, errors.Format("invalid build context: %w", err)
+		}
 		buildContextTags, err := bc.Tags()
 		if err != nil {
 			return bp, errors.Format("could not get build context tag: %w", err)

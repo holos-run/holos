@@ -16,13 +16,13 @@ holos: core.#BuildPlan & {
 		annotations: "app.holos.run/description": "\(name) command transformer"
 	}
 	spec: artifacts: [{
-		artifact: "components/\(metadata.name)/\(metadata.name).gen.yaml"
+		artifact: "components/transformer/\(metadata.name)/\(metadata.name).gen.yaml"
 		generators: [
 			{
 				kind:   "Command"
 				output: "1.yaml"
 				command: args: ["echo", json.Marshal(_ConfigMap)]
-				command: stdout: true
+				command: isStdoutOutput: true
 			},
 			{
 				kind:   "Command"
@@ -40,7 +40,7 @@ holos: core.#BuildPlan & {
 			output: artifact
 			command: {
 				args: ["cat", for g in generators {"\(TMPDIR)/\(g.output)"}]
-				stdout: true
+				isStdoutOutput: true
 			}
 		}]
 	}]

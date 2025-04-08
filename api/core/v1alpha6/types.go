@@ -111,7 +111,22 @@ type BuildContext struct {
 	// tasks in the build plan share this temporary directory and therefore should
 	// avoid reading and writing into the same sub-directories as one another.
 	TempDir string `json:"tempDir" yaml:"tempDir" cue:"string | *\"${TEMP_DIR_PLACEHOLDER}\""`
+	// RootDir represents the fully qualified path to the platform root directory.
+	// Useful to construct arguments for commands in BuildPlan tasks.
+	RootDir string `json:"rootDir" yaml:"rootDir" cue:"string | *\"${ROOT_DIR_PLACEHOLDER}\""`
+	// LeafDir represents the cleaned path to the holos component relative to the
+	// platform root.  Useful to construct arguments for commands in BuildPlan
+	// tasks.
+	LeafDir string `json:"leafDir" yaml:"leafDir" cue:"string | *\"${LEAF_DIR_PLACEHOLDER}\""`
+	// HolosExecutable represents the fully qualified path to the holos
+	// executable.  Useful to execute tools embedded as subcommands such as holos
+	// cue vet.
+	HolosExecutable string `json:"holosExecutable" yaml:"holosExecutable" cue:"string | *\"holos\""`
 }
+
+// TODO(jjm): Decide if RootDir and LeafDir are useful.  We have
+// [Component.Path] and [Command] executes with the platform root as the current
+// working directory.
 
 // BuildPlanSpec represents the specification of the [BuildPlan].
 type BuildPlanSpec struct {
@@ -349,54 +364,22 @@ type Validator struct {
 	Kind string `json:"kind" yaml:"kind" cue:"\"Command\""`
 	// Inputs represents the files to validate.  Usually the final Artifact.
 	Inputs []FileOrDirectoryPath `json:"inputs" yaml:"inputs"`
-	// Command represents a validation command.  Ignored unless kind is Command.
+	// Command validator.  Ignored unless kind is Command.
 	Command Command `json:"command,omitempty" yaml:"command,omitempty"`
 }
 
 // Command represents a [BuildPlan] task implemented by executing an user
 // defined system command.  A task is defined as a [Generator], [Transformer],
-// or [Validator].
+// or [Validator].  Commands are executed with the working directory set to the
+// platform root.
 type Command struct {
 	// DisplayName of the command.  The basename of args[0] is used if empty.
 	DisplayName string `json:"displayName,omitempty" yaml:"displayName,omitempty"`
-	// Args represents the argument vector passed to the system to execute the
+	// Args represents the argument vector passed to the os. to execute the
 	// command.
 	Args []string `json:"args,omitempty" yaml:"args,omitempty"`
-	// Env represents environment variables to set in the command context.
-	Env []EnvVar `json:"env,omitempty" yaml:"env,omitempty"`
-	// Stdout captures the command standard output for use as the task output.
-	// Set to false for commands that write output to files.
-	Stdout bool `json:"stdout,omitempty" yaml:"stdout,omitempty"`
-}
-
-// EnvVar represents the configuration of an environment variable in the context
-// of a [Command] task within a [BuildPlan].
-type EnvVar struct {
-	// Name of the environment variable. Must be a C_IDENTIFIER.
-	Name string `json:"name" yaml:"name"`
-	// Kind represents a discriminator.
-	Kind string `json:"kind" yaml:"kind" cue:"\"Value\" | \"ValueFrom\""`
-	// Value represents the concrete value of the named environment variable.
-	// Ignored unless kind is Value.
-	Value string `json:"value,omitempty" yaml:"value,omitempty"`
-	// ValueFrom represents the source for the named environment variable's value.
-	// Ignored unless kind is ValueFrom.
-	ValueFrom EnvVarSource `json:"valueFrom,omitempty" yaml:"valueFrom,omitempty"`
-}
-
-// EnvVarSource represents a source for the value of an EnvVar.
-type EnvVarSource struct {
-	// Kind represents a discriminator.
-	Kind string `json:"kind" yaml:"kind" cue:"\"EnvRef\""`
-	// EnvRef represents a reference to an environment variable.  Ignored unless
-	// kind is EnvRef.
-	EnvRef EnvRef `json:"envRef,omitempty" yaml:"envRef,omitempty"`
-}
-
-// EnvRef represents a reference to a value located in the environment.
-type EnvRef struct {
-	// Name of the environment variable. Must be a C_IDENTIFIER.
-	Name string `json:"name" yaml:"name"`
+	// IsStdoutOutput captures the command stdout as the task output if true.
+	IsStdoutOutput bool `json:"isStdoutOutput,omitempty" yaml:"isStdoutOutput,omitempty"`
 }
 
 // InternalLabel is an arbitrary unique identifier internal to holos itself.

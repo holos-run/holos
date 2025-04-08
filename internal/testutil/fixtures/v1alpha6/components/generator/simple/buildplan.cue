@@ -14,13 +14,13 @@ holos: core.#BuildPlan & {
 		annotations: "app.holos.run/description": "\(name) command generator"
 	}
 	spec: artifacts: [{
-		artifact: "components/\(metadata.name)/\(metadata.name).gen.yaml"
+		artifact: "components/generator/\(metadata.name)/\(metadata.name).gen.yaml"
 		generators: [{
 			kind:   "Command"
 			output: artifact
 			command: {
 				args: ["/bin/echo", json.Marshal(_ConfigMap)]
-				stdout: true
+				isStdoutOutput: true
 			}
 		}]
 	}]
