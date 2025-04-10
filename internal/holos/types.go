@@ -188,8 +188,10 @@ type TypeMeta struct {
 	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
 }
 
-func NewSequentialEncoder(format string, w io.Writer) (OrderedEncoder, error) {
-	enc, err := NewEncoder(format, w)
+// NewSequentialEncoder returns a yaml or json encoder that writes to w.  The
+// encoding argument may be "json" or "yaml".
+func NewSequentialEncoder(encoding string, w io.Writer) (OrderedEncoder, error) {
+	enc, err := NewEncoder(encoding, w)
 	if err != nil {
 		return nil, err
 	}
@@ -200,7 +202,8 @@ func NewSequentialEncoder(format string, w io.Writer) (OrderedEncoder, error) {
 	return seqEnc, nil
 }
 
-// NewEncoder returns a yaml or json encoder that writes to w.
+// NewEncoder returns a yaml or json encoder that writes to w.  The format
+// argument specifies "yaml" or "json" format output.
 func NewEncoder(format string, w io.Writer) (Encoder, error) {
 	switch format {
 	case "yaml":
@@ -338,7 +341,7 @@ type BuildOpts struct {
 // NewBuildOpts returns a [BuildOpts] configured to build the component at leaf
 // from the platform module at root writing rendered manifests into the deploy
 // directory.
-func NewBuildOpts(root, leaf, deploy, tempDir string) BuildOpts {
+func NewBuildOpts(root, leaf, writeTo, tempDir string) BuildOpts {
 	return BuildOpts{
 		Store:       artifact.NewStore(),
 		Concurrency: min(runtime.NumCPU(), 8),
@@ -347,7 +350,7 @@ func NewBuildOpts(root, leaf, deploy, tempDir string) BuildOpts {
 
 		root:    filepath.Clean(root),
 		leaf:    filepath.Clean(leaf),
-		writeTo: filepath.Clean(deploy),
+		writeTo: filepath.Clean(writeTo),
 		tempDir: filepath.Clean(tempDir),
 	}
 }
