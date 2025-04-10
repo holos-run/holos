@@ -29,7 +29,9 @@ import (
 // the tests.
 
 type Component struct {
-	Component core.Component
+	holos.TypeMeta
+	Component core.Component `json:"component,omitempty" yaml:"component,omitempty"`
+	WriteTo   string         `json:"writeTo,omitempty" yaml:"writeTo,omitempty"`
 }
 
 func (c *Component) Describe() string {
