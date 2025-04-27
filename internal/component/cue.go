@@ -68,7 +68,6 @@ func (i *Instance) HolosValue() (v cue.Value, err error) {
 			// Return the deprecated value at the root
 			return i.value, nil
 		}
-		err = errors.Wrap(err)
 	}
 	return
 }

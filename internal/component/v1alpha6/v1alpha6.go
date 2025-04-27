@@ -31,7 +31,6 @@ import (
 type Component struct {
 	holos.TypeMeta
 	Component core.Component `json:"component,omitempty" yaml:"component,omitempty"`
-	WriteTo   string         `json:"writeTo,omitempty" yaml:"writeTo,omitempty"`
 }
 
 func (c *Component) Describe() string {
@@ -804,20 +803,17 @@ func NewBuildContext(opts holos.BuildOpts) (*BuildContext, error) {
 	if !filepath.IsAbs(root) {
 		return nil, errors.Format("not an absolute path: %s", root)
 	}
-	exe, err := util.Executable()
+	holosExecutable, err := util.Executable()
 	if err != nil {
-		return nil, errors.Format("could not get holos path: %w", err)
+		return nil, errors.Format("could not get holos executable path: %w", err)
 	}
-	// Allow placeholder for idempotent holos show buildplan output.
-	tempDir := opts.TempDir()
 	bc := &BuildContext{
 		BuildContext: core.BuildContext{
-			TempDir:         tempDir,
+			TempDir:         opts.TempDir(),
 			RootDir:         root,
 			LeafDir:         opts.Leaf(),
-			HolosExecutable: exe,
+			HolosExecutable: holosExecutable,
 		},
 	}
-
 	return bc, nil
 }

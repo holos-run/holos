@@ -27,9 +27,9 @@ import core "github.com/holos-run/holos/api/core/v1alpha6"
 // platform command.  Use the Components field to register components with the
 // platform.
 type Platform struct {
-	Name       string
-	Components map[NameLabel]core.Component
-	Resource   core.Platform
+	Name       string                       `json:"name" yaml:"name" cue:"string | *\"default\""`
+	Components map[NameLabel]core.Component `json:"components" yaml:"components"`
+	Resource   core.Platform                `json:"resource" yaml:"resource"`
 }
 
 // ComponentConfig represents the configuration common to all kinds of

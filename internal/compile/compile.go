@@ -15,10 +15,27 @@ import (
 	"time"
 
 	componentPkg "github.com/holos-run/holos/internal/component"
-	"github.com/holos-run/holos/internal/component/v1alpha6"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 )
+
+// BuildPlanRequest represents the complete context necessary to produce a
+// BuildPlan.  BuildPlanRequest is the primary input to the holos compile
+// command, read from standard input.  Provided by the holos render platform
+// command.
+type BuildPlanRequest struct {
+	holos.TypeMeta
+	Root    string `json:"root,omitempty" yaml:"root,omitempty"`
+	Leaf    string `json:"leaf,omitempty" yaml:"leaf,omitempty"`
+	WriteTo string `json:"writeTo,omitempty" yaml:"writeTo,omitempty"`
+	TempDir string `json:"tempDir,omitempty" yaml:"tempDir,omitempty"`
+	Tags    []string
+}
+
+type BuildPlanResponse struct {
+	holos.TypeMeta
+	BuildPlan json.RawMessage `json:"buildPlan,omitempty" yaml:"buildPlan,omitempty"`
+}
 
 // New returns a new BuildPlan Compiler.
 func New() *Compiler {
@@ -38,20 +55,12 @@ type Compiler struct {
 	Encoding string
 }
 
-// TODO: Define a BuildPlanRequest message which takes a component.  The
-// v1alpha6 core.Component fields aren't a good fit for this internal message.
-// We need to carry the platform root, WriteTo, and temp directory.  We have the
-// path from the component.
+// Run reads a BuildPlanRequest from R and compiles a BuildPlan into a
+// BuildPlanResponse on W.  R and W are usually connected to stdin and stdout.
 func (c *Compiler) Run(ctx context.Context) error {
 	epoch := time.Now()
 	dec := json.NewDecoder(c.R)
 	enc, err := holos.NewSequentialEncoder(c.Encoding, c.W)
-	if err != nil {
-		return errors.Wrap(err)
-	}
-
-	// platform cue module root directory
-	root, err := os.Getwd()
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -83,39 +92,35 @@ func (c *Compiler) Run(ctx context.Context) error {
 		}
 		log.DebugContext(ctx, fmt.Sprintf("received: %+v", meta), "meta", meta)
 
-		writeTo := "deploy"
+		var req BuildPlanRequest
+
 		// platform component from the components field of the platform resource.
-		var pc holos.Component
 		switch meta.APIVersion {
 		case "v1alpha6":
-			var com v1alpha6.Component
-			err = json.Unmarshal(raw, &com)
-			if err != nil {
-				return errors.Format("could not unmarshal component: %w", err)
+			switch meta.Kind {
+			case holos.BuildPlanRequest:
+				err = json.Unmarshal(raw, &req)
+				if err != nil {
+					return errors.Format("could not unmarshal %+v: %w", meta, err)
+				}
+			default:
+				return errors.Format("unsupported kind: %+v (ignored)", meta)
 			}
-			if com.WriteTo != "" {
-				writeTo = com.WriteTo
-			}
-			pc = &com
 		default:
-			log.ErrorContext(ctx, fmt.Sprintf("unsupported api version: %+v (ignored)", meta), "meta", meta)
-			continue
+			return errors.Format("unsupported api version: %+v (ignored)", meta)
 		}
 
 		// Produce the build plan.
-		component := componentPkg.New(root, pc.Path(), componentPkg.NewConfig())
+		component := componentPkg.New(req.Root, req.Leaf, componentPkg.NewConfig())
 		tm, err := component.TypeMeta()
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		opts := holos.NewBuildOpts(root, pc.Path(), writeTo, "${TMPDIR_PLACEHOLDER}")
+		// TODO(jjm): Decide how to handle the temp directory.
+		opts := holos.NewBuildOpts(req.Root, req.Leaf, req.WriteTo, "${TMPDIR_PLACEHOLDER}")
 
 		// Component name, label, annotations passed via tags to cue.
-		tags, err := pc.Tags()
-		if err != nil {
-			return errors.Wrap(err)
-		}
-		opts.Tags = tags
+		opts.Tags = req.Tags
 
 		bp, err := component.BuildPlan(tm, opts)
 		if err != nil {
