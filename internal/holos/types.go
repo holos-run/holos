@@ -184,8 +184,8 @@ func (s *Selector) Set(value string) error {
 // TypeMeta represents the kind and version of a resource holos needs to
 // process.  Useful to discriminate generated resources.
 type TypeMeta struct {
-	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
 	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
+	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
 }
 
 // NewSequentialEncoder returns a yaml or json encoder that writes to w.  The

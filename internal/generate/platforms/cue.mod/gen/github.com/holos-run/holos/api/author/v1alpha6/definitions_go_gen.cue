@@ -29,9 +29,9 @@ import "github.com/holos-run/holos/api/core/v1alpha6:core"
 // platform command.  Use the Components field to register components with the
 // platform.
 #Platform: {
-	Name: string
-	Components: {[string]: core.#Component} @go(,map[NameLabel]core.Component)
-	Resource: core.#Platform
+	name: string & (string | *"default") @go(Name)
+	components: {[string]: core.#Component} @go(Components,map[NameLabel]core.Component)
+	resource: core.#Platform @go(Resource)
 }
 
 // ComponentConfig represents the configuration common to all kinds of
