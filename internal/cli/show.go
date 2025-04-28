@@ -3,10 +3,15 @@ package cli
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
+	"fmt"
 	"io"
+	"log/slog"
 
+	v1alpha5 "github.com/holos-run/holos/api/core/v1alpha5"
+	v1alpha6 "github.com/holos-run/holos/api/core/v1alpha6"
 	"github.com/holos-run/holos/internal/cli/command"
-	"github.com/holos-run/holos/internal/component"
+	"github.com/holos-run/holos/internal/compile"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/platform"
@@ -77,36 +82,62 @@ func (s *showBuildPlans) flagSet() *pflag.FlagSet {
 }
 
 func (s *showBuildPlans) Run(ctx context.Context, p *platform.Platform) error {
-	encoder, err := holos.NewSequentialEncoder(s.format, s.cfg.Stdout)
+	components := p.Select(s.cfg.ComponentSelectors...)
+	reqs := make([]compile.BuildPlanRequest, len(components))
+
+	for idx, c := range components {
+		tags, err := c.Tags()
+		if err != nil {
+			return errors.Wrap(err)
+		}
+		reqs[idx] = compile.BuildPlanRequest{
+			APIVersion: "v1alpha6",
+			Kind:       "BuildPlanRequest",
+			Root:       p.Root(),
+			Leaf:       c.Path(),
+			WriteTo:    s.cfg.WriteTo,
+			TempDir:    "${TMPDIR_PLACEHOLDER}",
+			Tags:       tags,
+		}
+	}
+
+	resp, err := compile.Compile(ctx, s.cfg.Concurrency, reqs)
 	if err != nil {
 		return errors.Wrap(err)
 	}
-	defer encoder.Close()
 
-	opts := platform.BuildOpts{
-		PerComponentFunc: func(ctx context.Context, idx int, pc holos.Component) error {
-			c := component.New(p.Root(), pc.Path(), component.NewConfig())
-			tm, err := c.TypeMeta()
-			if err != nil {
-				return errors.Wrap(err)
-			}
-			opts := holos.NewBuildOpts(p.Root(), pc.Path(), s.cfg.WriteTo, "${TMPDIR_PLACEHOLDER}")
-
-			// Component name, label, annotations passed via tags to cue.
-			tags, err := pc.Tags()
-			if err != nil {
-				return errors.Wrap(err)
-			}
-			opts.Tags = tags
-
-			bp, err := c.BuildPlan(tm, opts)
-			if err != nil {
-				return errors.Wrap(err)
-			}
-			// Export the build plan using the sequential encoder.
-			return errors.Wrap(bp.Export(idx, encoder))
-		},
+	encoder, err := holos.NewEncoder(s.format, s.cfg.Stdout)
+	if err != nil {
+		return errors.Wrap(err)
 	}
 
-	return errors.Wrap(p.Build(ctx, opts))
+	for _, buildPlanResponse := range resp {
+		var tm holos.TypeMeta
+		if err := json.Unmarshal(buildPlanResponse.RawMessage, &tm); err != nil {
+			return errors.Format("could not discriminate type meta: %w", err)
+		}
+		if tm.Kind != "BuildPlan" {
+			return errors.Format("invalid kind %s: must be BuildPlan", tm.Kind)
+		}
+
+		var buildPlan any
+		switch tm.APIVersion {
+		case "v1alpha5":
+			buildPlan = &v1alpha5.BuildPlan{}
+		case "v1alpha6":
+			buildPlan = &v1alpha6.BuildPlan{}
+		default:
+			slog.WarnContext(ctx, fmt.Sprintf("unknown BuildPlan APIVersion %s: assuming v1alpha6 schema", tm.APIVersion))
+			buildPlan = &v1alpha6.BuildPlan{}
+		}
+
+		if err := json.Unmarshal(buildPlanResponse.RawMessage, buildPlan); err != nil {
+			return errors.Wrap(err)
+		}
+		if err := encoder.Encode(buildPlan); err != nil {
+			return errors.Wrap(err)
+		}
+	}
+
+	return nil
 }

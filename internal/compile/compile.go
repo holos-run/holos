@@ -6,17 +6,21 @@
 package compile
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
+	"os/exec"
 	"time"
 
 	componentPkg "github.com/holos-run/holos/internal/component"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
+	"github.com/holos-run/holos/internal/logger"
+	"golang.org/x/sync/errgroup"
 )
 
 // BuildPlanRequest represents the complete context necessary to produce a
@@ -24,17 +28,19 @@ import (
 // command, read from standard input.  Provided by the holos render platform
 // command.
 type BuildPlanRequest struct {
-	holos.TypeMeta
-	Root    string `json:"root,omitempty" yaml:"root,omitempty"`
-	Leaf    string `json:"leaf,omitempty" yaml:"leaf,omitempty"`
-	WriteTo string `json:"writeTo,omitempty" yaml:"writeTo,omitempty"`
-	TempDir string `json:"tempDir,omitempty" yaml:"tempDir,omitempty"`
-	Tags    []string
+	APIVersion string `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
+	Kind       string `json:"kind,omitempty" yaml:"kind,omitempty"`
+	Root       string `json:"root,omitempty" yaml:"root,omitempty"`
+	Leaf       string `json:"leaf,omitempty" yaml:"leaf,omitempty"`
+	WriteTo    string `json:"writeTo,omitempty" yaml:"writeTo,omitempty"`
+	TempDir    string `json:"tempDir,omitempty" yaml:"tempDir,omitempty"`
+	Tags       []string
 }
 
 type BuildPlanResponse struct {
-	holos.TypeMeta
-	BuildPlan json.RawMessage `json:"buildPlan,omitempty" yaml:"buildPlan,omitempty"`
+	APIVersion string          `json:"apiVersion,omitempty" yaml:"apiVersion,omitempty"`
+	Kind       string          `json:"kind,omitempty" yaml:"kind,omitempty"`
+	RawMessage json.RawMessage `json:"rawMessage,omitempty" yaml:"rawMessage,omitempty"`
 }
 
 // New returns a new BuildPlan Compiler.
@@ -59,8 +65,8 @@ type Compiler struct {
 // BuildPlanResponse on W.  R and W are usually connected to stdin and stdout.
 func (c *Compiler) Run(ctx context.Context) error {
 	epoch := time.Now()
-	dec := json.NewDecoder(c.R)
-	enc, err := holos.NewSequentialEncoder(c.Encoding, c.W)
+	decoder := json.NewDecoder(c.R)
+	encoder, err := holos.NewSequentialEncoder(c.Encoding, c.W)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -75,7 +81,7 @@ func (c *Compiler) Run(ctx context.Context) error {
 		}
 
 		var raw json.RawMessage
-		err := dec.Decode(&raw)
+		err := decoder.Decode(&raw)
 		if err == io.EOF {
 			duration := time.Since(epoch)
 			msg := fmt.Sprintf("received eof: exiting: total runtime %.3fs", duration.Seconds())
@@ -127,11 +133,118 @@ func (c *Compiler) Run(ctx context.Context) error {
 			return errors.Wrap(err)
 		}
 
-		if err := bp.Export(idx, enc); err != nil {
+		if err := bp.Export(idx, encoder); err != nil {
 			return errors.Format("could not marshal output: %w", err)
 		}
 
 		duration := time.Since(start)
 		log.DebugContext(ctx, fmt.Sprintf("compile time: %.3fs", duration.Seconds()))
+	}
+}
+
+type task struct {
+	idx  int
+	req  BuildPlanRequest
+	resp BuildPlanResponse
+}
+
+func Compile(ctx context.Context, concurrency int, reqs []BuildPlanRequest) (resp []BuildPlanResponse, err error) {
+	concurrency = min(len(reqs), max(1, concurrency))
+	resp = make([]BuildPlanResponse, len(reqs))
+
+	g, ctx := errgroup.WithContext(ctx)
+	tasks := make(chan task)
+
+	// Producer
+	g.Go(func() error {
+		for idx, req := range reqs {
+			tsk := task{
+				idx:  idx,
+				req:  req,
+				resp: BuildPlanResponse{},
+			}
+			select {
+			case <-ctx.Done():
+				return errors.Wrap(ctx.Err())
+			case tasks <- tsk:
+				slog.DebugContext(ctx, fmt.Sprintf("producer producing task seq=%d component=%s tags=%+v", tsk.idx, tsk.req.Leaf, tsk.req.Tags))
+			}
+		}
+		slog.DebugContext(ctx, "producer finished: closing tasks channel")
+		close(tasks)
+		return nil
+	})
+
+	// Consumers
+	for id := range concurrency {
+		g.Go(func() error {
+			return compiler(ctx, id, tasks, resp)
+		})
+	}
+
+	err = errors.Wrap(g.Wait())
+	return
+}
+
+func compiler(ctx context.Context, id int, tasks chan task, resp []BuildPlanResponse) error {
+	log := logger.FromContext(ctx).With("id", id)
+
+	// Start the sub-process
+	exe, err := os.Executable()
+	if err != nil {
+		return errors.Wrap(err)
+	}
+
+	cmd := exec.CommandContext(ctx, exe, "compile")
+
+	stdinPipe, err := cmd.StdinPipe()
+	if err != nil {
+		return errors.Format("could not attach to stdin for worker %d: %w", id, err)
+	}
+	stdoutPipe, err := cmd.StdoutPipe()
+	if err != nil {
+		_ = stdinPipe.Close()
+		return errors.Format("could not attach to stdout for worker %d: %w", id, err)
+	}
+	var stderrBuf bytes.Buffer
+	cmd.Stderr = &stderrBuf
+
+	if err := cmd.Start(); err != nil {
+		_ = stdinPipe.Close()
+		return errors.Format("could not start worker %d: %w", id, err)
+	}
+	pid := cmd.Process.Pid
+	msg := fmt.Sprintf("compiler id=%d pid=%d", id, pid)
+	log.DebugContext(ctx, fmt.Sprintf("%s: started", msg))
+
+	defer func() {
+		stdinPipe.Close()
+		if err := cmd.Wait(); err != nil {
+			log.ErrorContext(ctx, fmt.Sprintf("%s: exited uncleanly: %s", msg, err), "err", err, "stderr", stderrBuf.String())
+		}
+	}()
+
+	encoder := json.NewEncoder(stdinPipe)
+	decoder := json.NewDecoder(stdoutPipe)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return errors.Wrap(ctx.Err())
+		case tsk, ok := <-tasks:
+			if !ok {
+				log.DebugContext(ctx, fmt.Sprintf("%s: tasks channel closed: returning normally", msg))
+				return nil
+			}
+			log.DebugContext(ctx, fmt.Sprintf("%s: encoding request seq=%d", msg, tsk.idx))
+			if err := encoder.Encode(tsk.req); err != nil {
+				return errors.Format("could not encode request for %s: %w", msg, err)
+			}
+			log.DebugContext(ctx, fmt.Sprintf("%s: decoding response seq=%d", msg, tsk.idx))
+			if err := decoder.Decode(&resp[tsk.idx].RawMessage); err != nil {
+				return errors.Format("could not decode response from %s: %w\n%s", msg, err, stderrBuf.String())
+			}
+			log.DebugContext(ctx, fmt.Sprintf("%s: ok finished task seq=%d", msg, tsk.idx))
+		}
 	}
 }
