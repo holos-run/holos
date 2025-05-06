@@ -6,11 +6,11 @@ import (
 )
 
 #Platform: {
-	Name:       string | *"no-platform-name"
-	Components: _
-	Resource: core.#Platform & {
-		metadata: name: Name
-		spec: components: [for x in Components {x}]
+	name: _
+	components: _
+	resource: {
+		metadata: "name": name
+		spec: "components": [for x in components {x}]
 	}
 }
 

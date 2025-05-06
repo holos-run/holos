@@ -46,10 +46,10 @@ const ComponentAnnotationsTag = "holos_component_annotations"
 //
 // [external credential provider]: https://github.com/kubernetes/enhancements/blob/313ad8b59c80819659e1fbf0f165230f633f2b22/keps/sig-auth/541-external-credential-providers/README.md
 type BuildPlan struct {
-	// Kind represents the type of the resource.
-	Kind string `json:"kind" yaml:"kind" cue:"\"BuildPlan\""`
 	// APIVersion represents the versioned schema of the resource.
 	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"\"v1alpha6\""`
+	// Kind represents the type of the resource.
+	Kind string `json:"kind" yaml:"kind" cue:"\"BuildPlan\""`
 	// Metadata represents data about the resource such as the Name.
 	Metadata Metadata `json:"metadata" yaml:"metadata"`
 	// Spec specifies the desired state of the resource.
@@ -412,10 +412,10 @@ type Metadata struct {
 //
 //	cue export --out yaml ./platform
 type Platform struct {
-	// Kind is a string value representing the resource.
-	Kind string `json:"kind" yaml:"kind" cue:"\"Platform\""`
 	// APIVersion represents the versioned schema of this resource.
 	APIVersion string `json:"apiVersion" yaml:"apiVersion" cue:"string | *\"v1alpha6\""`
+	// Kind is a string value representing the resource.
+	Kind string `json:"kind" yaml:"kind" cue:"\"Platform\""`
 	// Metadata represents data about the resource such as the Name.
 	Metadata Metadata `json:"metadata" yaml:"metadata"`
 

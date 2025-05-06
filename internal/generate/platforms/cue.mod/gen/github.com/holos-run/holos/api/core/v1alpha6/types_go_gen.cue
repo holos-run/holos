@@ -34,11 +34,11 @@ package core
 //
 // [external credential provider]: https://github.com/kubernetes/enhancements/blob/313ad8b59c80819659e1fbf0f165230f633f2b22/keps/sig-auth/541-external-credential-providers/README.md
 #BuildPlan: {
-	// Kind represents the type of the resource.
-	kind: string & "BuildPlan" @go(Kind)
-
 	// APIVersion represents the versioned schema of the resource.
 	apiVersion: string & "v1alpha6" @go(APIVersion)
+
+	// Kind represents the type of the resource.
+	kind: string & "BuildPlan" @go(Kind)
 
 	// Metadata represents data about the resource such as the Name.
 	metadata: #Metadata @go(Metadata)
@@ -432,11 +432,11 @@ package core
 //
 //	cue export --out yaml ./platform
 #Platform: {
-	// Kind is a string value representing the resource.
-	kind: string & "Platform" @go(Kind)
-
 	// APIVersion represents the versioned schema of this resource.
 	apiVersion: string & (string | *"v1alpha6") @go(APIVersion)
+
+	// Kind is a string value representing the resource.
+	kind: string & "Platform" @go(Kind)
 
 	// Metadata represents data about the resource such as the Name.
 	metadata: #Metadata @go(Metadata)

@@ -180,9 +180,9 @@ Platform assembles a core Platform in the Resource field for the holos render pl
 
 ```go
 type Platform struct {
-    Name       string
-    Components map[NameLabel]core.Component
-    Resource   core.Platform
+    Name       string                       `json:"name" yaml:"name" cue:"string | *\"default\""`
+    Components map[NameLabel]core.Component `json:"components" yaml:"components"`
+    Resource   core.Platform                `json:"resource" yaml:"resource"`
 }
 ```
 
