@@ -112,46 +112,6 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 	return fullError
 }
 
-// deepEqual performs deep order-independent comparison
-func (c *Comparer) deepEqual(v1, v2 interface{}) bool {
-	switch val1 := v1.(type) {
-	case map[string]interface{}:
-		val2, ok := v2.(map[string]interface{})
-		if !ok || len(val1) != len(val2) {
-			return false
-		}
-
-		for key, value1 := range val1 {
-			value2, exists := val2[key]
-			if !exists || !c.deepEqual(value1, value2) {
-				return false
-			}
-		}
-		return true
-
-	case []interface{}:
-		val2, ok := v2.([]interface{})
-		if !ok || len(val1) != len(val2) {
-			return false
-		}
-
-		// Sort both slices for comparison
-		sorted1 := c.sortSlice(val1)
-		sorted2 := c.sortSlice(val2)
-
-		for i := range sorted1 {
-			if !c.deepEqual(sorted1[i], sorted2[i]) {
-				return false
-			}
-		}
-		return true
-
-	default:
-		// Use cmp for primitive types
-		return cmp.Equal(v1, v2, cmpopts.EquateEmpty())
-	}
-}
-
 // sortSlice sorts a slice based on comparable string representation
 func (c *Comparer) sortSlice(slice []interface{}) []interface{} {
 	sorted := make([]interface{}, len(slice))
@@ -268,43 +228,6 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 	}
 
 	return nil
-}
-
-// getCompositeKey creates a sortable key from a document
-func getCompositeKey(doc map[string]interface{}) string {
-	// Create a composite key based on common fields
-	version, _ := doc["version"].(string)
-	kind, _ := doc["kind"].(string)
-	apiVersion, _ := doc["apiVersion"].(string)
-
-	// If metadata exists, include name and labels
-	name := ""
-	labelsKey := ""
-	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
-		name, _ = metadata["name"].(string)
-
-		// Include labels in the key for uniqueness, excluding certain transient labels
-		if labels, ok := metadata["labels"].(map[string]interface{}); ok {
-			// Sort label keys for consistent ordering
-			labelKeys := make([]string, 0, len(labels))
-			for k := range labels {
-				// Skip transient labels that shouldn't affect identity
-				if k == "seq" {
-					continue
-				}
-				labelKeys = append(labelKeys, k)
-			}
-			sort.Strings(labelKeys)
-
-			// Build labels string
-			for _, k := range labelKeys {
-				v, _ := labels[k].(string)
-				labelsKey += k + "=" + v + ","
-			}
-		}
-	}
-
-	return version + kind + apiVersion + name + labelsKey
 }
 
 // extractDifferences parses the diff to extract field-level differences
