@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -69,12 +70,28 @@ func (c *Comparer) BuildPlans(one, two string) error {
 
 // compareStructures compares two BuildPlan structures for semantic equivalence
 func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
+	// Create comparison options for go-cmp
+	opts := []cmp.Option{
+		cmpopts.EquateEmpty(),
+		cmp.Transformer("sortSlices", func(s []interface{}) []interface{} {
+			return c.sortSlice(s)
+		}),
+	}
+	
 	// Deep order-independent comparison
-	if c.deepEqual(bp1, bp2) {
+	if cmp.Equal(bp1, bp2, opts...) {
 		return nil
 	}
 	
-	return errors.New("BuildPlans are not semantically equivalent")
+	// Get the diff for the error message
+	diff := cmp.Diff(bp1, bp2, opts...)
+	
+	// Parse the diff to extract key differences for error message
+	if err := c.parseDiffError(diff); err != nil {
+		return err
+	}
+	
+	return errors.Format("BuildPlans are not semantically equivalent:\n%s", diff)
 }
 
 // deepEqual performs deep order-independent comparison
@@ -243,4 +260,52 @@ func getCompositeKey(doc map[string]interface{}) string {
 	}
 	
 	return version + kind + apiVersion + name + labelsKey
+}
+
+// parseDiffError parses the diff to extract specific error messages
+func (c *Comparer) parseDiffError(diff string) error {
+	// Look for specific differences that should be highlighted
+	if strings.Contains(diff, "holos.run/stack.name") {
+		// Extract the actual difference from the diff
+		lines := strings.Split(diff, "\n")
+		for _, line := range lines {
+			if strings.Contains(line, "holos.run/stack.name") && strings.Contains(line, "+") {
+				// Look for the new value (with + prefix)
+				parts := strings.Split(line, ": ")
+				if len(parts) >= 2 {
+					value := strings.TrimSpace(parts[1])
+					// Remove quotes and trailing comma
+					value = strings.Trim(value, "\"")
+					value = strings.TrimSuffix(value, ",")
+					// Strip go-cmp type info like string("not-httpbin")
+					if strings.HasPrefix(value, "string(") {
+						value = strings.TrimPrefix(value, "string(\"")
+						value = strings.TrimSuffix(value, "\")")
+					}
+					return errors.Format("holos.run/stack.name: %s", value)
+				}
+			}
+		}
+		// If we couldn't find the + line, try finding pairs
+		for i, line := range lines {
+			if strings.Contains(line, "holos.run/stack.name") && strings.Contains(line, "-") {
+				nextIdx := i + 1
+				if nextIdx < len(lines) && strings.Contains(lines[nextIdx], "+") {
+					// Extract the new value from the next line
+					parts := strings.Split(lines[nextIdx], ":")
+					if len(parts) >= 2 {
+						value := strings.TrimSpace(parts[1])
+						value = strings.Trim(value, "\"")
+						value = strings.TrimSuffix(value, ",")
+						if strings.HasPrefix(value, "string(") {
+							value = strings.TrimPrefix(value, "string(\"")
+							value = strings.TrimSuffix(value, "\")")
+						}
+						return errors.Format("holos.run/stack.name: %s", value)
+					}
+				}
+			}
+		}
+	}
+	return nil
 }
