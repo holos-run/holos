@@ -1,8 +1,7 @@
 package cli
 
 import (
-	"fmt"
-
+	"github.com/holos-run/holos/internal/compare"
 	"github.com/spf13/cobra"
 )
 
@@ -26,8 +25,8 @@ func NewCompareBuildPlansCmd() *cobra.Command {
 		Long:  "Compare two BuildPlan files to verify they are semantically equivalent",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Not implemented yet
-			return fmt.Errorf("compare buildplans command not implemented")
+			c := compare.New()
+			return c.BuildPlans(args[0], args[1])
 		},
 	}
 	return cmd

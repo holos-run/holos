@@ -1,13 +1,11 @@
-package cli
+package compare
 
 import (
-	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
 
-	"github.com/holos-run/holos/internal/holos"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,8 +16,8 @@ type testCase struct {
 	ExpectedError string `json:"expectedError,omitempty"`
 }
 
-func TestCompareBuildPlans(t *testing.T) {
-	fixturesDir := filepath.Join("tests", "fixtures", "compare")
+func TestBuildPlans(t *testing.T) {
+	fixturesDir := "testdata"
 	entries, err := os.ReadDir(fixturesDir)
 	if err != nil {
 		t.Fatalf("could not read fixtures directory: %v", err)
@@ -45,22 +43,15 @@ func TestCompareBuildPlans(t *testing.T) {
 				t.Fatalf("could not parse want.json: %v", err)
 			}
 
-			// Prepare the command
-			var stdout, stderr bytes.Buffer
-			cfg := holos.New(holos.Stdout(&stdout), holos.Stderr(&stderr))
-			rootCmd := New(cfg)
-
 			// Build the full file paths
 			file1Path := filepath.Join(testDir, tc.File1)
 			file2Path := filepath.Join(testDir, tc.File2)
 
-			// Set up the command arguments
-			rootCmd.SetArgs([]string{"compare", "buildplans", file1Path, file2Path})
+			// Create a new comparer and run the comparison
+			c := New()
+			err = c.BuildPlans(file1Path, file2Path)
 
-			// Run the command
-			err = rootCmd.Execute()
-
-			// Check the exit code
+			// Check the result based on expected exit code
 			if tc.ExitCode == 0 {
 				assert.NoError(t, err, "command should succeed")
 			} else {

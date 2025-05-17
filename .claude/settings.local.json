@@ -6,7 +6,9 @@
       "Bash(go test:*)",
       "Bash(make:*)",
       "Bash(./bin/holos:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }
