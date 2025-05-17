@@ -10,12 +10,13 @@ import (
 )
 
 type testCase struct {
-	ExitCode      int    `json:"exitCode"`
-	Name          string `json:"name,omitempty"`
-	Msg           string `json:"msg,omitempty"`
-	File1         string `json:"file1"`
-	File2         string `json:"file2"`
-	ExpectedError string `json:"expectedError,omitempty"`
+	ExitCode       int      `json:"exitCode"`
+	Name           string   `json:"name,omitempty"`
+	Msg            string   `json:"msg,omitempty"`
+	File1          string   `json:"file1"`
+	File2          string   `json:"file2"`
+	ExpectedError  string   `json:"expectedError,omitempty"` // Deprecated: use ExpectedErrors
+	ExpectedErrors []string `json:"expectedErrors,omitempty"`
 }
 
 func TestBuildPlans(t *testing.T) {
@@ -66,8 +67,13 @@ func TestBuildPlans(t *testing.T) {
 					assert.NoError(t, err, tc.Msg)
 				} else {
 					assert.Error(t, err, tc.Msg)
+					// Support both old expectedError and new expectedErrors
 					if tc.ExpectedError != "" {
 						assert.ErrorContains(t, err, tc.ExpectedError, tc.Msg)
+					}
+					// Check each expected error substring
+					for _, expectedErr := range tc.ExpectedErrors {
+						assert.ErrorContains(t, err, expectedErr, tc.Msg)
 					}
 				}
 			})

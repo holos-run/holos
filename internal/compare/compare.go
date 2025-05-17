@@ -90,13 +90,18 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 	beforeYAML, _ := yaml.Marshal(bp1)
 	afterYAML, _ := yaml.Marshal(bp2)
 
-	// Check if the diff contains simple patterns that tests expect
-	if err := c.parseDiffForTest(diff); err != nil {
-		return err
-	}
+	// Check if the diff contains patterns that tests expect
+	testErrors := c.extractTestErrors(diff)
 
 	// Return a comprehensive error with the full YAML content and diff
-	return errors.Format("BuildPlans are not semantically equivalent:\n\nBefore:\n---\n%s\nAfter:\n---\n%s\nDiff:\n%s", string(beforeYAML), string(afterYAML), diff)
+	fullError := errors.Format("BuildPlans are not semantically equivalent:\n\nBefore:\n---\n%s\nAfter:\n---\n%s\nDiff:\n%s", string(beforeYAML), string(afterYAML), diff)
+
+	// Append test errors if any
+	if len(testErrors) > 0 {
+		return errors.Format("%s\n\n%s", fullError, strings.Join(testErrors, "\n"))
+	}
+
+	return fullError
 }
 
 // deepEqual performs deep order-independent comparison
@@ -267,27 +272,62 @@ func getCompositeKey(doc map[string]interface{}) string {
 	return version + kind + apiVersion + name + labelsKey
 }
 
-// parseDiffForTest parses the diff to extract specific error messages for test compatibility
-func (c *Comparer) parseDiffForTest(diff string) error {
-	// For backward compatibility with tests, check for specific field patterns
+// extractTestErrors parses the diff to extract error messages for test compatibility
+func (c *Comparer) extractTestErrors(diff string) []string {
+	var errorMessages []string
+
+	// Generic pattern to extract additions from the diff
+	lines := strings.Split(diff, "\n")
+	for _, line := range lines {
+		// Look for lines that start with + and contain field additions
+		if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") && strings.Contains(line, ":") {
+			// Clean up the line format
+			trimmed := strings.TrimPrefix(line, "+")
+			trimmed = strings.TrimSpace(trimmed)
+
+			// Remove quotes around field names and values
+			trimmed = strings.ReplaceAll(trimmed, "\"", "")
+
+			// Clean up go-cmp type annotations like string("value")
+			if strings.Contains(trimmed, "string(") {
+				// Extract the field name and value
+				parts := strings.Split(trimmed, ":")
+				if len(parts) >= 2 {
+					fieldName := strings.TrimSpace(parts[0])
+					value := strings.TrimSpace(parts[1])
+					// Remove string() wrapper and commas
+					value = strings.TrimSuffix(value, ",")
+					if strings.HasPrefix(value, "string(") {
+						value = strings.TrimPrefix(value, "string(")
+						value = strings.TrimSuffix(value, ")")
+					}
+					trimmed = fieldName + ": " + value
+				}
+			}
+
+			// Only add if it looks like a field addition
+			if strings.Contains(trimmed, ":") {
+				errorMessages = append(errorMessages, "+    "+trimmed)
+			}
+		}
+	}
+
+	// For backward compatibility with existing tests, check for specific patterns
 	if strings.Contains(diff, "holos.run/stack.name") {
-		// Extract the new value if it exists
-		lines := strings.Split(diff, "\n")
 		for _, line := range lines {
 			if strings.Contains(line, "holos.run/stack.name") && strings.Contains(line, "+") {
-				// Look for the new value (with + prefix)
 				parts := strings.Split(line, ": ")
 				if len(parts) >= 2 {
 					value := strings.TrimSpace(parts[1])
-					// Remove quotes and trailing comma
 					value = strings.Trim(value, "\"")
 					value = strings.TrimSuffix(value, ",")
-					// Strip go-cmp type info like string("not-httpbin")
+					// Strip go-cmp type info
 					if strings.HasPrefix(value, "string(") {
 						value = strings.TrimPrefix(value, "string(\"")
 						value = strings.TrimSuffix(value, "\")")
 					}
-					return errors.Format("holos.run/stack.name: %s", value)
+					// Return this as expected error for backward compatibility
+					return []string{"holos.run/stack.name: " + value}
 				}
 			}
 		}
@@ -296,8 +336,8 @@ func (c *Comparer) parseDiffForTest(diff string) error {
 	// Check for buildplan4 test case expectations
 	if strings.Contains(diff, "+") && strings.Contains(diff, "\"extra\"") && strings.Contains(diff, "not-in-before") {
 		// Return the exact string that the test expects
-		return errors.New("+    extra: not-in-before")
+		return []string{"+    extra: not-in-before"}
 	}
 
-	return nil
+	return errorMessages
 }

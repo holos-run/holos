@@ -4,5 +4,5 @@
   "msg": "should match objects when they are out of order",
   "file1": "before.yaml",
   "file2": "after.yaml",
-  "expectedError": ""
+  "expectedErrors": []
 }
