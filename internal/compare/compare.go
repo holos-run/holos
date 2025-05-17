@@ -70,6 +70,14 @@ func (c *Comparer) BuildPlans(one, two string) error {
 
 // compareStructures compares two BuildPlan structures for semantic equivalence
 func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
+	// Create copies to avoid modifying the originals
+	bp1Copy := c.deepCopy(bp1)
+	bp2Copy := c.deepCopy(bp2)
+
+	// Remove transient labels before comparison
+	c.removeTransientLabels(bp1Copy)
+	c.removeTransientLabels(bp2Copy)
+
 	// Create comparison options for go-cmp
 	opts := []cmp.Option{
 		cmpopts.EquateEmpty(),
@@ -79,16 +87,16 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 	}
 
 	// Deep order-independent comparison
-	if cmp.Equal(bp1, bp2, opts...) {
+	if cmp.Equal(bp1Copy, bp2Copy, opts...) {
 		return nil
 	}
 
 	// Get the diff for the error message
-	diff := cmp.Diff(bp1, bp2, opts...)
+	diff := cmp.Diff(bp1Copy, bp2Copy, opts...)
 
 	// Marshal both structures as YAML for display
-	beforeYAML, _ := yaml.Marshal(bp1)
-	afterYAML, _ := yaml.Marshal(bp2)
+	beforeYAML, _ := yaml.Marshal(bp1Copy)
+	afterYAML, _ := yaml.Marshal(bp2Copy)
 
 	// Extract specific differences from the diff
 	differences := c.extractDifferences(diff)
@@ -213,26 +221,18 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 		return errors.New("different number of documents")
 	}
 
-	// Convert to a sortable format for order-independent comparison
-	less := func(a, b map[string]interface{}) bool {
-		// Sort by a composite key based on available fields
-		aKey := getCompositeKey(a)
-		bKey := getCompositeKey(b)
-		return aKey < bKey
-	}
+	// Sort both document lists for order-independent comparison
+	sort.Slice(docs1, func(i, j int) bool {
+		return getCompositeKey(docs1[i]) < getCompositeKey(docs1[j])
+	})
+	sort.Slice(docs2, func(i, j int) bool {
+		return getCompositeKey(docs2[i]) < getCompositeKey(docs2[j])
+	})
 
-	// Use cmp with sort option for unordered comparison
-	opts := []cmp.Option{
-		cmpopts.SortSlices(less),
-		cmpopts.EquateEmpty(),
-	}
-
-	if !cmp.Equal(docs1, docs2, opts...) {
-		// If simple comparison fails, try deep comparison
-		for i := range docs1 {
-			if err := c.compareStructures(docs1[i], docs2[i]); err != nil {
-				return errors.Format("document %d: %w", i, err)
-			}
+	// Compare sorted documents
+	for i := range docs1 {
+		if err := c.compareStructures(docs1[i], docs2[i]); err != nil {
+			return errors.Format("document %d: %w", i, err)
 		}
 	}
 
@@ -252,11 +252,15 @@ func getCompositeKey(doc map[string]interface{}) string {
 	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
 		name, _ = metadata["name"].(string)
 
-		// Include labels in the key for uniqueness
+		// Include labels in the key for uniqueness, excluding certain transient labels
 		if labels, ok := metadata["labels"].(map[string]interface{}); ok {
 			// Sort label keys for consistent ordering
 			labelKeys := make([]string, 0, len(labels))
 			for k := range labels {
+				// Skip transient labels that shouldn't affect identity
+				if k == "seq" {
+					continue
+				}
 				labelKeys = append(labelKeys, k)
 			}
 			sort.Strings(labelKeys)
@@ -313,4 +317,37 @@ func (c *Comparer) extractDifferences(diff string) []string {
 	}
 
 	return differences
+}
+
+// deepCopy creates a deep copy of a map structure
+func (c *Comparer) deepCopy(m map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	for k, v := range m {
+		switch val := v.(type) {
+		case map[string]interface{}:
+			result[k] = c.deepCopy(val)
+		case []interface{}:
+			copied := make([]interface{}, len(val))
+			for i, item := range val {
+				if mapItem, ok := item.(map[string]interface{}); ok {
+					copied[i] = c.deepCopy(mapItem)
+				} else {
+					copied[i] = item
+				}
+			}
+			result[k] = copied
+		default:
+			result[k] = v
+		}
+	}
+	return result
+}
+
+// removeTransientLabels removes labels that shouldn't affect semantic equivalence
+func (c *Comparer) removeTransientLabels(m map[string]interface{}) {
+	if metadata, ok := m["metadata"].(map[string]interface{}); ok {
+		if labels, ok := metadata["labels"].(map[string]interface{}); ok {
+			delete(labels, "seq")
+		}
+	}
 }
