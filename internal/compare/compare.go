@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/holos-run/holos/internal/errors"
 	"gopkg.in/yaml.v3"
 )
@@ -66,44 +68,13 @@ func (c *Comparer) BuildPlans(one, two string) error {
 
 // compareStructures compares two BuildPlan structures for semantic equivalence
 func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
-	// For now, implement basic equality check for the minimal test case
-	if equalMaps(bp1, bp2) {
+	if cmp.Equal(bp1, bp2, cmpopts.EquateEmpty()) {
 		return nil
 	}
 	
 	return errors.New("BuildPlans are not semantically equivalent")
 }
 
-// equalMaps performs a basic deep equality check between two maps
-func equalMaps(a, b map[string]interface{}) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	
-	for key, valA := range a {
-		valB, ok := b[key]
-		if !ok {
-			return false
-		}
-		
-		// Convert both values to comparable format
-		yamlA, err := yaml.Marshal(valA)
-		if err != nil {
-			return false
-		}
-		
-		yamlB, err := yaml.Marshal(valB)
-		if err != nil {
-			return false
-		}
-		
-		if !bytes.Equal(yamlA, yamlB) {
-			return false
-		}
-	}
-	
-	return true
-}
 
 // parseYAMLStream parses a byte array containing one or more YAML documents
 func parseYAMLStream(content []byte) ([]map[string]interface{}, error) {
@@ -133,11 +104,39 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 		return errors.New("different number of documents")
 	}
 	
-	for i := range docs1 {
-		if err := c.compareStructures(docs1[i], docs2[i]); err != nil {
-			return errors.Format("document %d: %w", i, err)
-		}
+	// Convert to a sortable format for order-independent comparison
+	less := func(a, b map[string]interface{}) bool {
+		// Sort by a composite key based on available fields
+		aKey := getCompositeKey(a)
+		bKey := getCompositeKey(b)
+		return aKey < bKey
+	}
+	
+	// Use cmp with sort option for unordered comparison
+	opts := []cmp.Option{
+		cmpopts.SortSlices(less),
+		cmpopts.EquateEmpty(),
+	}
+	
+	if !cmp.Equal(docs1, docs2, opts...) {
+		return errors.New("BuildPlans are not semantically equivalent")
 	}
 	
 	return nil
+}
+
+// getCompositeKey creates a sortable key from a document
+func getCompositeKey(doc map[string]interface{}) string {
+	// Create a composite key based on common fields
+	version, _ := doc["version"].(string)
+	kind, _ := doc["kind"].(string)
+	apiVersion, _ := doc["apiVersion"].(string)
+	
+	// If metadata.name exists, include it
+	name := ""
+	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
+		name, _ = metadata["name"].(string)
+	}
+	
+	return version + kind + apiVersion + name
 }
