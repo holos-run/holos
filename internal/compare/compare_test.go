@@ -44,13 +44,13 @@ func TestBuildPlans(t *testing.T) {
 			if err := json.Unmarshal(testcaseData, &tc); err != nil {
 				t.Fatalf("could not parse testcase.json: %v", err)
 			}
-			
+
 			// Use the test name if provided, otherwise use directory name
 			testName := dirName
 			if tc.Name != "" {
 				testName = tc.Name
 			}
-			
+
 			// Run the test with the appropriate name
 			t.Run(testName, func(t *testing.T) {
 				// Build the full file paths
