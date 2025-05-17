@@ -2,6 +2,7 @@ package compare
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"sort"
@@ -74,9 +75,13 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 	bp1Copy := c.deepCopy(bp1)
 	bp2Copy := c.deepCopy(bp2)
 
-	// Remove transient labels before comparison
-	c.removeTransientLabels(bp1Copy)
-	c.removeTransientLabels(bp2Copy)
+	// Store labels separately for comparison
+	labels1 := c.extractLabels(bp1Copy)
+	labels2 := c.extractLabels(bp2Copy)
+
+	// Remove labels from copies for structural comparison
+	c.removeLabels(bp1Copy)
+	c.removeLabels(bp2Copy)
 
 	// Create comparison options for go-cmp
 	opts := []cmp.Option{
@@ -88,6 +93,12 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 
 	// Deep order-independent comparison
 	if cmp.Equal(bp1Copy, bp2Copy, opts...) {
+		// Structures are equal except possibly for labels
+		if !c.labelsEqual(labels1, labels2) {
+			// Report label differences
+			labelDiffs := c.getLabelDifferences(labels1, labels2)
+			return errors.New(strings.Join(labelDiffs, "\n"))
+		}
 		return nil
 	}
 
@@ -218,8 +229,8 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 			}
 
 			if usedIdx < len(docs2) {
-				// Compare with structural matching but report seq differences
-				if err := c.compareStructuresReportingSeq(doc1, docs2[usedIdx]); err != nil {
+				// Compare with structural matching but report label differences
+				if err := c.compareStructuresReportingLabels(doc1, docs2[usedIdx]); err != nil {
 					return errors.Format("document %d: %w", i, err)
 				}
 				used[usedIdx] = true
@@ -297,13 +308,68 @@ func (c *Comparer) deepCopy(m map[string]interface{}) map[string]interface{} {
 	return result
 }
 
-// removeTransientLabels removes labels that shouldn't affect semantic equivalence
-func (c *Comparer) removeTransientLabels(m map[string]interface{}) {
-	if metadata, ok := m["metadata"].(map[string]interface{}); ok {
+// extractLabels extracts all labels from a document
+func (c *Comparer) extractLabels(doc map[string]interface{}) map[string]interface{} {
+	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
 		if labels, ok := metadata["labels"].(map[string]interface{}); ok {
-			delete(labels, "seq")
+			// Return a copy of the labels
+			result := make(map[string]interface{})
+			for k, v := range labels {
+				result[k] = v
+			}
+			return result
 		}
 	}
+	return make(map[string]interface{})
+}
+
+// removeLabels removes all labels from a document
+func (c *Comparer) removeLabels(doc map[string]interface{}) {
+	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
+		delete(metadata, "labels")
+	}
+}
+
+// labelsEqual checks if two label maps are equal
+func (c *Comparer) labelsEqual(labels1, labels2 map[string]interface{}) bool {
+	if len(labels1) != len(labels2) {
+		return false
+	}
+
+	for k, v1 := range labels1 {
+		v2, ok := labels2[k]
+		if !ok || v1 != v2 {
+			return false
+		}
+	}
+
+	return true
+}
+
+// getLabelDifferences returns the differences between two label maps
+func (c *Comparer) getLabelDifferences(labels1, labels2 map[string]interface{}) []string {
+	var differences []string
+
+	// Check for removed or changed labels
+	for k, v1 := range labels1 {
+		if v2, ok := labels2[k]; !ok {
+			differences = append(differences, fmt.Sprintf("-    %s: %v", k, v1))
+		} else if v1 != v2 {
+			differences = append(differences, fmt.Sprintf("-    %s: %v", k, v1))
+			differences = append(differences, fmt.Sprintf("+    %s: %v", k, v2))
+		}
+	}
+
+	// Check for added labels
+	for k, v2 := range labels2 {
+		if _, ok := labels1[k]; !ok {
+			differences = append(differences, fmt.Sprintf("+    %s: %v", k, v2))
+		}
+	}
+
+	// Sort differences for consistent output
+	sort.Strings(differences)
+	return differences
 }
 
 // documentsExactlyEqual checks if two documents are exactly equal including all labels
@@ -319,33 +385,8 @@ func (c *Comparer) documentsExactlyEqual(doc1, doc2 map[string]interface{}) bool
 	return cmp.Equal(doc1, doc2, opts...)
 }
 
-// compareStructuresReportingSeq compares structures and reports seq differences
-func (c *Comparer) compareStructuresReportingSeq(bp1, bp2 map[string]interface{}) error {
-	// First check if they're structurally equal (ignoring seq)
-	err := c.compareStructures(bp1, bp2)
-	if err != nil {
-		return err
-	}
-
-	// They're structurally equal, now check for seq differences
-	seq1 := c.getSeqValue(bp1)
-	seq2 := c.getSeqValue(bp2)
-
-	if seq1 != seq2 {
-		return errors.Format("-    seq: %v\n+    seq: %v", seq1, seq2)
-	}
-
-	return nil
-}
-
-// getSeqValue extracts the seq label value from a document
-func (c *Comparer) getSeqValue(doc map[string]interface{}) interface{} {
-	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
-		if labels, ok := metadata["labels"].(map[string]interface{}); ok {
-			if seq, ok := labels["seq"]; ok {
-				return seq
-			}
-		}
-	}
-	return nil
+// compareStructuresReportingLabels compares structures and reports label differences
+func (c *Comparer) compareStructuresReportingLabels(bp1, bp2 map[string]interface{}) error {
+	// Compare the structures
+	return c.compareStructures(bp1, bp2)
 }
