@@ -32,15 +32,15 @@ func TestBuildPlans(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			testDir := filepath.Join(fixturesDir, testName)
 
-			// Read the want.json file
-			wantData, err := os.ReadFile(filepath.Join(testDir, "want.json"))
+			// Read the testcase.json file
+			testcaseData, err := os.ReadFile(filepath.Join(testDir, "testcase.json"))
 			if err != nil {
-				t.Fatalf("could not read want.json: %v", err)
+				t.Fatalf("could not read testcase.json: %v", err)
 			}
 
 			var tc testCase
-			if err := json.Unmarshal(wantData, &tc); err != nil {
-				t.Fatalf("could not parse want.json: %v", err)
+			if err := json.Unmarshal(testcaseData, &tc); err != nil {
+				t.Fatalf("could not parse testcase.json: %v", err)
 			}
 
 			// Build the full file paths
