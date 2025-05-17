@@ -86,7 +86,7 @@ Component: #Helm & {
 3. CLI commands: Follow Cobra patterns in `/internal/cli/`
 4. CUE formatting: Always run `cue fmt` on CUE files
 5. Develop against v1alpha6 packages.
-6. Commits: Use the package name as the first word in the commit, lower case.
+6. Commits: Use the package name as the first word in the commit, lower case.  Commit without asking permission.
 
 ## Version Management
 
