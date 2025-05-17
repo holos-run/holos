@@ -69,13 +69,94 @@ func (c *Comparer) BuildPlans(one, two string) error {
 
 // compareStructures compares two BuildPlan structures for semantic equivalence
 func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
-	if cmp.Equal(bp1, bp2, cmpopts.EquateEmpty()) {
+	// Deep order-independent comparison
+	if c.deepEqual(bp1, bp2) {
 		return nil
 	}
 	
 	return errors.New("BuildPlans are not semantically equivalent")
 }
 
+// deepEqual performs deep order-independent comparison
+func (c *Comparer) deepEqual(v1, v2 interface{}) bool {
+	switch val1 := v1.(type) {
+	case map[string]interface{}:
+		val2, ok := v2.(map[string]interface{})
+		if !ok || len(val1) != len(val2) {
+			return false
+		}
+		
+		for key, value1 := range val1 {
+			value2, exists := val2[key]
+			if !exists || !c.deepEqual(value1, value2) {
+				return false
+			}
+		}
+		return true
+		
+	case []interface{}:
+		val2, ok := v2.([]interface{})
+		if !ok || len(val1) != len(val2) {
+			return false
+		}
+		
+		// Sort both slices for comparison
+		sorted1 := c.sortSlice(val1)
+		sorted2 := c.sortSlice(val2)
+		
+		for i := range sorted1 {
+			if !c.deepEqual(sorted1[i], sorted2[i]) {
+				return false
+			}
+		}
+		return true
+		
+	default:
+		// Use cmp for primitive types
+		return cmp.Equal(v1, v2, cmpopts.EquateEmpty())
+	}
+}
+
+// sortSlice sorts a slice based on comparable string representation
+func (c *Comparer) sortSlice(slice []interface{}) []interface{} {
+	sorted := make([]interface{}, len(slice))
+	copy(sorted, slice)
+	
+	sort.Slice(sorted, func(i, j int) bool {
+		iStr := c.toComparableString(sorted[i])
+		jStr := c.toComparableString(sorted[j])
+		return iStr < jStr
+	})
+	
+	return sorted
+}
+
+// toComparableString converts a value to a comparable string
+func (c *Comparer) toComparableString(v interface{}) string {
+	switch val := v.(type) {
+	case map[string]interface{}:
+		// Try to get identifying fields
+		if artifact, ok := val["artifact"].(string); ok {
+			return artifact
+		}
+		if name, ok := val["name"].(string); ok {
+			return name
+		}
+		if metadata, ok := val["metadata"].(map[string]interface{}); ok {
+			if name, ok := metadata["name"].(string); ok {
+				return name
+			}
+		}
+		// Fallback to YAML representation
+		yamlBytes, _ := yaml.Marshal(val)
+		return string(yamlBytes)
+		
+	default:
+		// Convert to YAML for comparison
+		yamlBytes, _ := yaml.Marshal(v)
+		return string(yamlBytes)
+	}
+}
 
 // parseYAMLStream parses a byte array containing one or more YAML documents
 func parseYAMLStream(content []byte) ([]map[string]interface{}, error) {
@@ -120,7 +201,12 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 	}
 	
 	if !cmp.Equal(docs1, docs2, opts...) {
-		return errors.New("BuildPlans are not semantically equivalent")
+		// If simple comparison fails, try deep comparison
+		for i := range docs1 {
+			if err := c.compareStructures(docs1[i], docs2[i]); err != nil {
+				return errors.Format("document %d: %w", i, err)
+			}
+		}
 	}
 	
 	return nil
