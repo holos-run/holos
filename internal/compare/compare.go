@@ -49,19 +49,19 @@ func (c *Comparer) BuildPlans(one, two string) error {
 		return errors.NotImplemented()
 	}
 
-	// Parse YAML
-	var bp1, bp2 map[string]interface{}
-	
-	if err := yaml.Unmarshal(content1, &bp1); err != nil {
+	// Parse YAML streams (multiple documents)
+	docs1, err := parseYAMLStream(content1)
+	if err != nil {
 		return errors.Format("parsing first file: %w", err)
 	}
-	
-	if err := yaml.Unmarshal(content2, &bp2); err != nil {
+
+	docs2, err := parseYAMLStream(content2)
+	if err != nil {
 		return errors.Format("parsing second file: %w", err)
 	}
 
-	// Compare the parsed structures
-	return c.compareStructures(bp1, bp2)
+	// Compare the document lists
+	return c.compareDocumentLists(docs1, docs2)
 }
 
 // compareStructures compares two BuildPlan structures for semantic equivalence
@@ -103,4 +103,41 @@ func equalMaps(a, b map[string]interface{}) bool {
 	}
 	
 	return true
+}
+
+// parseYAMLStream parses a byte array containing one or more YAML documents
+func parseYAMLStream(content []byte) ([]map[string]interface{}, error) {
+	var documents []map[string]interface{}
+	decoder := yaml.NewDecoder(bytes.NewReader(content))
+	
+	for {
+		var doc map[string]interface{}
+		err := decoder.Decode(&doc)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		if doc != nil {
+			documents = append(documents, doc)
+		}
+	}
+	
+	return documents, nil
+}
+
+// compareDocumentLists compares two lists of YAML documents
+func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) error {
+	if len(docs1) != len(docs2) {
+		return errors.New("different number of documents")
+	}
+	
+	for i := range docs1 {
+		if err := c.compareStructures(docs1[i], docs2[i]); err != nil {
+			return errors.Format("document %d: %w", i, err)
+		}
+	}
+	
+	return nil
 }
