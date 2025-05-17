@@ -1,5 +1,6 @@
 {
   "exitCode": 1,
+  "msg": "empty files should return not implemented error",
   "file1": "1.yaml",
   "file2": "2.yaml",
   "expectedError": "not implemented"

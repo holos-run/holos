@@ -11,6 +11,7 @@ import (
 
 type testCase struct {
 	ExitCode      int    `json:"exitCode"`
+	Msg           string `json:"msg,omitempty"`
 	File1         string `json:"file1"`
 	File2         string `json:"file2"`
 	ExpectedError string `json:"expectedError,omitempty"`
@@ -53,11 +54,11 @@ func TestBuildPlans(t *testing.T) {
 
 			// Check the result based on expected exit code
 			if tc.ExitCode == 0 {
-				assert.NoError(t, err, "command should succeed")
+				assert.NoError(t, err, tc.Msg)
 			} else {
-				assert.Error(t, err, "command should fail")
+				assert.Error(t, err, tc.Msg)
 				if tc.ExpectedError != "" {
-					assert.ErrorContains(t, err, tc.ExpectedError)
+					assert.ErrorContains(t, err, tc.ExpectedError, tc.Msg)
 				}
 			}
 		})
