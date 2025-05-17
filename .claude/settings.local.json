@@ -8,7 +8,8 @@
       "Bash(./bin/holos:*)",
       "Bash(git add:*)",
       "Bash(mv:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }
