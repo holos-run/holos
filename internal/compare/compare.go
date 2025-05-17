@@ -86,11 +86,13 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 	// Get the diff for the error message
 	diff := cmp.Diff(bp1, bp2, opts...)
 	
-	// Parse the diff to extract key differences for error message
+	// If diff contains specific fields we care about, return those with the full diff
 	if err := c.parseDiffError(diff); err != nil {
-		return err
+		// Include both the specific error and the full diff
+		return errors.Format("%v\n\nFull diff:\n%s", err, diff)
 	}
 	
+	// Otherwise just return the full diff
 	return errors.Format("BuildPlans are not semantically equivalent:\n%s", diff)
 }
 
@@ -264,9 +266,9 @@ func getCompositeKey(doc map[string]interface{}) string {
 
 // parseDiffError parses the diff to extract specific error messages
 func (c *Comparer) parseDiffError(diff string) error {
-	// Look for specific differences that should be highlighted
+	// For backward compatibility with tests, check for specific field patterns
 	if strings.Contains(diff, "holos.run/stack.name") {
-		// Extract the actual difference from the diff
+		// Extract the new value if it exists
 		lines := strings.Split(diff, "\n")
 		for _, line := range lines {
 			if strings.Contains(line, "holos.run/stack.name") && strings.Contains(line, "+") {
@@ -283,26 +285,6 @@ func (c *Comparer) parseDiffError(diff string) error {
 						value = strings.TrimSuffix(value, "\")")
 					}
 					return errors.Format("holos.run/stack.name: %s", value)
-				}
-			}
-		}
-		// If we couldn't find the + line, try finding pairs
-		for i, line := range lines {
-			if strings.Contains(line, "holos.run/stack.name") && strings.Contains(line, "-") {
-				nextIdx := i + 1
-				if nextIdx < len(lines) && strings.Contains(lines[nextIdx], "+") {
-					// Extract the new value from the next line
-					parts := strings.Split(lines[nextIdx], ":")
-					if len(parts) >= 2 {
-						value := strings.TrimSpace(parts[1])
-						value = strings.Trim(value, "\"")
-						value = strings.TrimSuffix(value, ",")
-						if strings.HasPrefix(value, "string(") {
-							value = strings.TrimPrefix(value, "string(\"")
-							value = strings.TrimSuffix(value, "\")")
-						}
-						return errors.Format("holos.run/stack.name: %s", value)
-					}
 				}
 			}
 		}
