@@ -221,18 +221,49 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 		return errors.New("different number of documents")
 	}
 
-	// Sort both document lists for order-independent comparison
-	sort.Slice(docs1, func(i, j int) bool {
-		return getCompositeKey(docs1[i]) < getCompositeKey(docs1[j])
-	})
-	sort.Slice(docs2, func(i, j int) bool {
-		return getCompositeKey(docs2[i]) < getCompositeKey(docs2[j])
-	})
+	// Create a bipartite matching between documents
+	used := make([]bool, len(docs2))
 
-	// Compare sorted documents
-	for i := range docs1 {
-		if err := c.compareStructures(docs1[i], docs2[i]); err != nil {
-			return errors.Format("document %d: %w", i, err)
+	// First pass: try to find exact matches (including all labels)
+	for _, doc1 := range docs1 {
+		for j, doc2 := range docs2 {
+			if used[j] {
+				continue
+			}
+
+			// Check if documents are exactly equal
+			if c.documentsExactlyEqual(doc1, doc2) {
+				used[j] = true
+				break
+			}
+		}
+	}
+
+	// Second pass: handle unmatched documents
+	usedIdx := 0
+	for i, doc1 := range docs1 {
+		// Find if this document was matched in first pass
+		matchFound := false
+		for j, doc2 := range docs2 {
+			if used[j] && c.documentsExactlyEqual(doc1, doc2) {
+				matchFound = true
+				break
+			}
+		}
+
+		if !matchFound {
+			// Find the next unused document to compare against
+			for usedIdx < len(docs2) && used[usedIdx] {
+				usedIdx++
+			}
+
+			if usedIdx < len(docs2) {
+				// Compare with structural matching but report seq differences
+				if err := c.compareStructuresReportingSeq(doc1, docs2[usedIdx]); err != nil {
+					return errors.Format("document %d: %w", i, err)
+				}
+				used[usedIdx] = true
+			}
 		}
 	}
 
@@ -350,4 +381,48 @@ func (c *Comparer) removeTransientLabels(m map[string]interface{}) {
 			delete(labels, "seq")
 		}
 	}
+}
+
+// documentsExactlyEqual checks if two documents are exactly equal including all labels
+func (c *Comparer) documentsExactlyEqual(doc1, doc2 map[string]interface{}) bool {
+	// Create comparison options for go-cmp
+	opts := []cmp.Option{
+		cmpopts.EquateEmpty(),
+		cmp.Transformer("sortSlices", func(s []interface{}) []interface{} {
+			return c.sortSlice(s)
+		}),
+	}
+
+	return cmp.Equal(doc1, doc2, opts...)
+}
+
+// compareStructuresReportingSeq compares structures and reports seq differences
+func (c *Comparer) compareStructuresReportingSeq(bp1, bp2 map[string]interface{}) error {
+	// First check if they're structurally equal (ignoring seq)
+	err := c.compareStructures(bp1, bp2)
+	if err != nil {
+		return err
+	}
+
+	// They're structurally equal, now check for seq differences
+	seq1 := c.getSeqValue(bp1)
+	seq2 := c.getSeqValue(bp2)
+
+	if seq1 != seq2 {
+		return errors.Format("-    seq: %v\n+    seq: %v", seq1, seq2)
+	}
+
+	return nil
+}
+
+// getSeqValue extracts the seq label value from a document
+func (c *Comparer) getSeqValue(doc map[string]interface{}) interface{} {
+	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
+		if labels, ok := metadata["labels"].(map[string]interface{}); ok {
+			if seq, ok := labels["seq"]; ok {
+				return seq
+			}
+		}
+	}
+	return nil
 }
