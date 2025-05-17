@@ -1,0 +1,404 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: kargo-stages
+  labels:
+    holos.run/component.name: kargo-stages
+    holos.run/project.name: httpbin
+    holos.run/stack.name: httpbin
+  annotations:
+    app.holos.run/description: kargo-stages for project httpbin
+spec:
+  artifacts:
+    - artifact: projects/httpbin/components/kargo-stages/kargo-stages.gen.yaml
+      generators:
+        - kind: Resources
+          output: resources.gen.yaml
+          resources:
+            Stage:
+              dev:
+                apiVersion: kargo.akuity.io/v1alpha1
+                kind: Stage
+                metadata:
+                  name: dev
+                  namespace: httpbin
+                spec:
+                  promotionTemplate:
+                    spec:
+                      steps:
+                        - config:
+                            checkout:
+                              - branch: main
+                                path: ./src
+                              - branch: project/httpbin/component/dev-httpbin
+                                create: true
+                                path: ./out
+                            repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: git-clone
+                        - config:
+                            path: ./out
+                          uses: git-clear
+                        - as: update-image
+                          config:
+                            images:
+                              - image: quay.io/holos/mccutchen/go-httpbin
+                            path: ./src/deploy/projects/httpbin/components/dev-httpbin
+                          uses: kustomize-set-image
+                        - config:
+                            outPath: ./out/dev-httpbin.gen.yaml
+                            path: ./src/deploy/projects/httpbin/components/dev-httpbin
+                          uses: kustomize-build
+                        - as: commit
+                          config:
+                            messageFromSteps:
+                              - update-image
+                            path: ./out
+                          uses: git-commit
+                        - config:
+                            path: ./out
+                            targetBranch: project/httpbin/component/dev-httpbin
+                          uses: git-push
+                        - config:
+                            apps:
+                              - name: httpbin-dev-httpbin
+                                sources:
+                                  - desiredCommitFromStep: commit
+                                    repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: argocd-update
+                  requestedFreight:
+                    - origin:
+                        kind: Warehouse
+                        name: httpbin
+                      sources:
+                        direct: true
+              prod-us-central:
+                apiVersion: kargo.akuity.io/v1alpha1
+                kind: Stage
+                metadata:
+                  name: prod-us-central
+                  namespace: httpbin
+                spec:
+                  promotionTemplate:
+                    spec:
+                      steps:
+                        - config:
+                            checkout:
+                              - branch: main
+                                path: ./src
+                              - branch: project/httpbin/component/prod-us-central-httpbin
+                                create: true
+                                path: ./out
+                            repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: git-clone
+                        - config:
+                            path: ./out
+                          uses: git-clear
+                        - as: update-image
+                          config:
+                            images:
+                              - image: quay.io/holos/mccutchen/go-httpbin
+                            path: ./src/deploy/projects/httpbin/components/prod-us-central-httpbin
+                          uses: kustomize-set-image
+                        - config:
+                            outPath: ./out/prod-us-central-httpbin.gen.yaml
+                            path: ./src/deploy/projects/httpbin/components/prod-us-central-httpbin
+                          uses: kustomize-build
+                        - as: commit
+                          config:
+                            messageFromSteps:
+                              - update-image
+                            path: ./out
+                          uses: git-commit
+                        - config:
+                            path: ./out
+                            targetBranch: project/httpbin/component/prod-us-central-httpbin
+                          uses: git-push
+                        - config:
+                            apps:
+                              - name: httpbin-prod-us-central-httpbin
+                                sources:
+                                  - desiredCommitFromStep: commit
+                                    repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: argocd-update
+                  requestedFreight:
+                    - origin:
+                        kind: Warehouse
+                        name: httpbin
+                      sources:
+                        stages:
+                          - uat
+              prod-us-east:
+                apiVersion: kargo.akuity.io/v1alpha1
+                kind: Stage
+                metadata:
+                  name: prod-us-east
+                  namespace: httpbin
+                spec:
+                  promotionTemplate:
+                    spec:
+                      steps:
+                        - config:
+                            checkout:
+                              - branch: main
+                                path: ./src
+                              - branch: project/httpbin/component/prod-us-east-httpbin
+                                create: true
+                                path: ./out
+                            repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: git-clone
+                        - config:
+                            path: ./out
+                          uses: git-clear
+                        - as: update-image
+                          config:
+                            images:
+                              - image: quay.io/holos/mccutchen/go-httpbin
+                            path: ./src/deploy/projects/httpbin/components/prod-us-east-httpbin
+                          uses: kustomize-set-image
+                        - config:
+                            outPath: ./out/prod-us-east-httpbin.gen.yaml
+                            path: ./src/deploy/projects/httpbin/components/prod-us-east-httpbin
+                          uses: kustomize-build
+                        - as: commit
+                          config:
+                            messageFromSteps:
+                              - update-image
+                            path: ./out
+                          uses: git-commit
+                        - config:
+                            path: ./out
+                            targetBranch: project/httpbin/component/prod-us-east-httpbin
+                          uses: git-push
+                        - config:
+                            apps:
+                              - name: httpbin-prod-us-east-httpbin
+                                sources:
+                                  - desiredCommitFromStep: commit
+                                    repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: argocd-update
+                  requestedFreight:
+                    - origin:
+                        kind: Warehouse
+                        name: httpbin
+                      sources:
+                        stages:
+                          - uat
+              prod-us-west:
+                apiVersion: kargo.akuity.io/v1alpha1
+                kind: Stage
+                metadata:
+                  name: prod-us-west
+                  namespace: httpbin
+                spec:
+                  promotionTemplate:
+                    spec:
+                      steps:
+                        - config:
+                            checkout:
+                              - branch: main
+                                path: ./src
+                              - branch: project/httpbin/component/prod-us-west-httpbin
+                                create: true
+                                path: ./out
+                            repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: git-clone
+                        - config:
+                            path: ./out
+                          uses: git-clear
+                        - as: update-image
+                          config:
+                            images:
+                              - image: quay.io/holos/mccutchen/go-httpbin
+                            path: ./src/deploy/projects/httpbin/components/prod-us-west-httpbin
+                          uses: kustomize-set-image
+                        - config:
+                            outPath: ./out/prod-us-west-httpbin.gen.yaml
+                            path: ./src/deploy/projects/httpbin/components/prod-us-west-httpbin
+                          uses: kustomize-build
+                        - as: commit
+                          config:
+                            messageFromSteps:
+                              - update-image
+                            path: ./out
+                          uses: git-commit
+                        - config:
+                            path: ./out
+                            targetBranch: project/httpbin/component/prod-us-west-httpbin
+                          uses: git-push
+                        - config:
+                            apps:
+                              - name: httpbin-prod-us-west-httpbin
+                                sources:
+                                  - desiredCommitFromStep: commit
+                                    repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: argocd-update
+                  requestedFreight:
+                    - origin:
+                        kind: Warehouse
+                        name: httpbin
+                      sources:
+                        stages:
+                          - uat
+              test:
+                apiVersion: kargo.akuity.io/v1alpha1
+                kind: Stage
+                metadata:
+                  name: test
+                  namespace: httpbin
+                spec:
+                  promotionTemplate:
+                    spec:
+                      steps:
+                        - config:
+                            checkout:
+                              - branch: main
+                                path: ./src
+                              - branch: project/httpbin/component/test-httpbin
+                                create: true
+                                path: ./out
+                            repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: git-clone
+                        - config:
+                            path: ./out
+                          uses: git-clear
+                        - as: update-image
+                          config:
+                            images:
+                              - image: quay.io/holos/mccutchen/go-httpbin
+                            path: ./src/deploy/projects/httpbin/components/test-httpbin
+                          uses: kustomize-set-image
+                        - config:
+                            outPath: ./out/test-httpbin.gen.yaml
+                            path: ./src/deploy/projects/httpbin/components/test-httpbin
+                          uses: kustomize-build
+                        - as: commit
+                          config:
+                            messageFromSteps:
+                              - update-image
+                            path: ./out
+                          uses: git-commit
+                        - config:
+                            path: ./out
+                            targetBranch: project/httpbin/component/test-httpbin
+                          uses: git-push
+                        - config:
+                            apps:
+                              - name: httpbin-test-httpbin
+                                sources:
+                                  - desiredCommitFromStep: commit
+                                    repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: argocd-update
+                  requestedFreight:
+                    - origin:
+                        kind: Warehouse
+                        name: httpbin
+                      sources:
+                        stages:
+                          - dev
+              uat:
+                apiVersion: kargo.akuity.io/v1alpha1
+                kind: Stage
+                metadata:
+                  name: uat
+                  namespace: httpbin
+                spec:
+                  promotionTemplate:
+                    spec:
+                      steps:
+                        - config:
+                            checkout:
+                              - branch: main
+                                path: ./src
+                              - branch: project/httpbin/component/uat-httpbin
+                                create: true
+                                path: ./out
+                            repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: git-clone
+                        - config:
+                            path: ./out
+                          uses: git-clear
+                        - as: update-image
+                          config:
+                            images:
+                              - image: quay.io/holos/mccutchen/go-httpbin
+                            path: ./src/deploy/projects/httpbin/components/uat-httpbin
+                          uses: kustomize-set-image
+                        - config:
+                            outPath: ./out/uat-httpbin.gen.yaml
+                            path: ./src/deploy/projects/httpbin/components/uat-httpbin
+                          uses: kustomize-build
+                        - as: commit
+                          config:
+                            messageFromSteps:
+                              - update-image
+                            path: ./out
+                          uses: git-commit
+                        - config:
+                            path: ./out
+                            targetBranch: project/httpbin/component/uat-httpbin
+                          uses: git-push
+                        - config:
+                            apps:
+                              - name: httpbin-uat-httpbin
+                                sources:
+                                  - desiredCommitFromStep: commit
+                                    repoURL: https://github.com/holos-run/kargo-demo.git
+                          uses: argocd-update
+                  requestedFreight:
+                    - origin:
+                        kind: Warehouse
+                        name: httpbin
+                      sources:
+                        stages:
+                          - test
+            Warehouse:
+              httpbin:
+                apiVersion: kargo.akuity.io/v1alpha1
+                kind: Warehouse
+                metadata:
+                  name: httpbin
+                  namespace: httpbin
+                spec:
+                  interval: 5m0s
+                  subscriptions:
+                    - image:
+                        discoveryLimit: 5
+                        repoURL: quay.io/holos/mccutchen/go-httpbin
+                        semverConstraint: ^2.0.0
+                        strictSemvers: true
+      transformers:
+        - kind: Kustomize
+          inputs:
+            - resources.gen.yaml
+          output: projects/httpbin/components/kargo-stages/kargo-stages.gen.yaml
+          kustomize:
+            kustomization:
+              apiVersion: kustomize.config.k8s.io/v1beta1
+              kind: Kustomization
+              labels:
+                - includeSelectors: false
+                  pairs:
+                    argocd.argoproj.io/instance: httpbin-kargo-stages
+              resources:
+                - resources.gen.yaml
+    - artifact: projects/httpbin/gitops/kargo-stages.application.gen.yaml
+      generators:
+        - kind: Resources
+          output: projects/httpbin/gitops/kargo-stages.application.gen.yaml
+          resources:
+            Application:
+              httpbin-kargo-stages:
+                apiVersion: argoproj.io/v1alpha1
+                kind: Application
+                metadata:
+                  labels: {}
+                  name: httpbin-kargo-stages
+                  namespace: argocd
+                spec:
+                  destination:
+                    server: https://kubernetes.default.svc
+                  project: httpbin
+                  source:
+                    path: deploy/projects/httpbin/components/kargo-stages
+                    repoURL: https://github.com/holos-run/kargo-demo.git
+                    targetRevision: main
