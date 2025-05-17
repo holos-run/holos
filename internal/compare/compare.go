@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"sort"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -132,11 +133,28 @@ func getCompositeKey(doc map[string]interface{}) string {
 	kind, _ := doc["kind"].(string)
 	apiVersion, _ := doc["apiVersion"].(string)
 	
-	// If metadata.name exists, include it
+	// If metadata exists, include name and labels
 	name := ""
+	labelsKey := ""
 	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
 		name, _ = metadata["name"].(string)
+		
+		// Include labels in the key for uniqueness
+		if labels, ok := metadata["labels"].(map[string]interface{}); ok {
+			// Sort label keys for consistent ordering
+			labelKeys := make([]string, 0, len(labels))
+			for k := range labels {
+				labelKeys = append(labelKeys, k)
+			}
+			sort.Strings(labelKeys)
+			
+			// Build labels string
+			for _, k := range labelKeys {
+				v, _ := labels[k].(string)
+				labelsKey += k + "=" + v + ","
+			}
+		}
 	}
 	
-	return version + kind + apiVersion + name
+	return version + kind + apiVersion + name + labelsKey
 }
