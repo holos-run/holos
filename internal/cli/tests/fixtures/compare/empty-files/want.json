@@ -1,0 +1,6 @@
+{
+  "exitCode": 1,
+  "file1": "1.yaml",
+  "file2": "2.yaml",
+  "expectedError": "compare buildplans command not implemented"
+}

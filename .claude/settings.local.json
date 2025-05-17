@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(go test:*)",
+      "Bash(make:*)",
+      "Bash(./bin/holos:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }
