@@ -2,7 +2,6 @@ package compare
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"sort"
@@ -71,18 +70,6 @@ func (c *Comparer) BuildPlans(one, two string) error {
 
 // compareStructures compares two BuildPlan structures for semantic equivalence
 func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
-	// Create copies to avoid modifying the originals
-	bp1Copy := c.deepCopy(bp1)
-	bp2Copy := c.deepCopy(bp2)
-
-	// Store labels separately for comparison
-	labels1 := c.extractLabels(bp1Copy)
-	labels2 := c.extractLabels(bp2Copy)
-
-	// Remove labels from copies for structural comparison
-	c.removeLabels(bp1Copy)
-	c.removeLabels(bp2Copy)
-
 	// Create comparison options for go-cmp
 	opts := []cmp.Option{
 		cmpopts.EquateEmpty(),
@@ -92,35 +79,23 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 	}
 
 	// Deep order-independent comparison
-	if cmp.Equal(bp1Copy, bp2Copy, opts...) {
-		// Structures are equal except possibly for labels
-		if !c.labelsEqual(labels1, labels2) {
-			// Report label differences
-			labelDiffs := c.getLabelDifferences(labels1, labels2)
-			return errors.New(strings.Join(labelDiffs, "\n"))
-		}
+	if cmp.Equal(bp1, bp2, opts...) {
 		return nil
 	}
 
 	// Get the diff for the error message
-	diff := cmp.Diff(bp1Copy, bp2Copy, opts...)
+	diff := cmp.Diff(bp1, bp2, opts...)
 
-	// Marshal both structures as YAML for display
-	beforeYAML, _ := yaml.Marshal(bp1Copy)
-	afterYAML, _ := yaml.Marshal(bp2Copy)
+	// Extract specific field differences from the diff
+	differences := c.extractFieldDifferences(diff)
 
-	// Extract specific differences from the diff
-	differences := c.extractDifferences(diff)
-
-	// Return a comprehensive error with the full YAML content and diff
-	fullError := errors.Format("BuildPlans are not semantically equivalent:\n\nBefore:\n---\n%s\nAfter:\n---\n%s\nDiff:\n%s", string(beforeYAML), string(afterYAML), diff)
-
-	// Append specific differences if any
+	// Return error with the extracted differences
 	if len(differences) > 0 {
-		return errors.Format("%s\n\n%s", fullError, strings.Join(differences, "\n"))
+		return errors.New(differences)
 	}
 
-	return fullError
+	// Fallback to the full diff if no field differences found
+	return errors.New(diff)
 }
 
 // sortSlice sorts a slice based on comparable string representation
@@ -195,7 +170,7 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 	// Create a bipartite matching between documents
 	used := make([]bool, len(docs2))
 
-	// First pass: try to find exact matches (including all labels)
+	// First pass: try to find exact matches
 	for _, doc1 := range docs1 {
 		for j, doc2 := range docs2 {
 			if used[j] {
@@ -229,8 +204,8 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 			}
 
 			if usedIdx < len(docs2) {
-				// Compare with structural matching but report label differences
-				if err := c.compareStructuresReportingLabels(doc1, docs2[usedIdx]); err != nil {
+				// Compare structures
+				if err := c.compareStructures(doc1, docs2[usedIdx]); err != nil {
 					return errors.Format("document %d: %w", i, err)
 				}
 				used[usedIdx] = true
@@ -241,138 +216,75 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 	return nil
 }
 
-// extractDifferences parses the diff to extract field-level differences
-func (c *Comparer) extractDifferences(diff string) []string {
+// extractFieldDifferences extracts field-level differences from a go-cmp diff
+func (c *Comparer) extractFieldDifferences(diff string) string {
 	var differences []string
-
-	// Extract field additions from the diff
 	lines := strings.Split(diff, "\n")
+
 	for _, line := range lines {
-		// Look for lines that start with + and contain field additions
-		if strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++") && strings.Contains(line, ":") {
-			// Clean up the line format
-			trimmed := strings.TrimPrefix(line, "+")
-			trimmed = strings.TrimSpace(trimmed)
+		// Extract lines that show field differences
+		if (strings.HasPrefix(line, "-") || strings.HasPrefix(line, "+")) && strings.Contains(line, ":") {
+			// Skip lines with formatting markers
+			if strings.HasPrefix(line, "---") || strings.HasPrefix(line, "+++") {
+				continue
+			}
 
-			// Remove quotes around field names and values
-			trimmed = strings.ReplaceAll(trimmed, "\"", "")
+			// Handle the specific format from go-cmp
+			trimmed := strings.TrimSpace(line)
+			isRemoval := strings.HasPrefix(trimmed, "-")
+			isAddition := strings.HasPrefix(trimmed, "+")
 
-			// Clean up go-cmp type annotations like string("value")
-			if strings.Contains(trimmed, "string(") {
-				// Extract the field name and value
-				parts := strings.Split(trimmed, ":")
-				if len(parts) >= 2 {
-					fieldName := strings.TrimSpace(parts[0])
-					value := strings.TrimSpace(parts[1])
-					// Remove string() wrapper and commas
-					value = strings.TrimSuffix(value, ",")
-					if strings.HasPrefix(value, "string(") {
-						value = strings.TrimPrefix(value, "string(")
-						value = strings.TrimSuffix(value, ")")
+			// Remove the +/- prefix and extra spaces
+			content := strings.TrimPrefix(trimmed, "-")
+			content = strings.TrimPrefix(content, "+")
+			content = strings.TrimSpace(content)
+
+			// Look for key-value patterns
+			if strings.Contains(content, ":") {
+				// Handle quoted field names
+				if strings.Contains(content, "\"") {
+					// Extract field name between quotes
+					start := strings.Index(content, "\"")
+					end := strings.Index(content[start+1:], "\"")
+					if start >= 0 && end >= 0 {
+						fieldName := content[start+1 : start+1+end]
+
+						// Extract value after colon
+						colonIdx := strings.Index(content, ":")
+						if colonIdx > 0 && colonIdx < len(content)-1 {
+							value := strings.TrimSpace(content[colonIdx+1:])
+							value = strings.TrimSuffix(value, ",")
+
+							// Handle different value formats
+							if strings.HasPrefix(value, "string(") {
+								value = strings.TrimPrefix(value, "string(")
+								value = strings.TrimSuffix(value, ")")
+								value = strings.Trim(value, "\"")
+							} else if strings.HasPrefix(value, "int(") {
+								value = strings.TrimPrefix(value, "int(")
+								value = strings.TrimSuffix(value, ")")
+							} else if strings.HasPrefix(value, "\"") {
+								value = strings.Trim(value, "\"")
+							}
+
+							// Format the difference
+							if isRemoval {
+								differences = append(differences, "-    "+fieldName+": "+value)
+							} else if isAddition {
+								differences = append(differences, "+    "+fieldName+": "+value)
+							}
+						}
 					}
-					trimmed = fieldName + ": " + value
 				}
 			}
-
-			// Only add if it looks like a field addition
-			if strings.Contains(trimmed, ":") {
-				differences = append(differences, "+    "+trimmed)
-			}
 		}
 	}
 
-	return differences
+	// Return the differences as a single string
+	return strings.Join(differences, "\n")
 }
 
-// deepCopy creates a deep copy of a map structure
-func (c *Comparer) deepCopy(m map[string]interface{}) map[string]interface{} {
-	result := make(map[string]interface{})
-	for k, v := range m {
-		switch val := v.(type) {
-		case map[string]interface{}:
-			result[k] = c.deepCopy(val)
-		case []interface{}:
-			copied := make([]interface{}, len(val))
-			for i, item := range val {
-				if mapItem, ok := item.(map[string]interface{}); ok {
-					copied[i] = c.deepCopy(mapItem)
-				} else {
-					copied[i] = item
-				}
-			}
-			result[k] = copied
-		default:
-			result[k] = v
-		}
-	}
-	return result
-}
-
-// extractLabels extracts all labels from a document
-func (c *Comparer) extractLabels(doc map[string]interface{}) map[string]interface{} {
-	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
-		if labels, ok := metadata["labels"].(map[string]interface{}); ok {
-			// Return a copy of the labels
-			result := make(map[string]interface{})
-			for k, v := range labels {
-				result[k] = v
-			}
-			return result
-		}
-	}
-	return make(map[string]interface{})
-}
-
-// removeLabels removes all labels from a document
-func (c *Comparer) removeLabels(doc map[string]interface{}) {
-	if metadata, ok := doc["metadata"].(map[string]interface{}); ok {
-		delete(metadata, "labels")
-	}
-}
-
-// labelsEqual checks if two label maps are equal
-func (c *Comparer) labelsEqual(labels1, labels2 map[string]interface{}) bool {
-	if len(labels1) != len(labels2) {
-		return false
-	}
-
-	for k, v1 := range labels1 {
-		v2, ok := labels2[k]
-		if !ok || v1 != v2 {
-			return false
-		}
-	}
-
-	return true
-}
-
-// getLabelDifferences returns the differences between two label maps
-func (c *Comparer) getLabelDifferences(labels1, labels2 map[string]interface{}) []string {
-	var differences []string
-
-	// Check for removed or changed labels
-	for k, v1 := range labels1 {
-		if v2, ok := labels2[k]; !ok {
-			differences = append(differences, fmt.Sprintf("-    %s: %v", k, v1))
-		} else if v1 != v2 {
-			differences = append(differences, fmt.Sprintf("-    %s: %v", k, v1))
-			differences = append(differences, fmt.Sprintf("+    %s: %v", k, v2))
-		}
-	}
-
-	// Check for added labels
-	for k, v2 := range labels2 {
-		if _, ok := labels1[k]; !ok {
-			differences = append(differences, fmt.Sprintf("+    %s: %v", k, v2))
-		}
-	}
-
-	// Sort differences for consistent output
-	sort.Strings(differences)
-	return differences
-}
-
-// documentsExactlyEqual checks if two documents are exactly equal including all labels
+// documentsExactlyEqual checks if two documents are exactly equal
 func (c *Comparer) documentsExactlyEqual(doc1, doc2 map[string]interface{}) bool {
 	// Create comparison options for go-cmp
 	opts := []cmp.Option{
@@ -383,10 +295,4 @@ func (c *Comparer) documentsExactlyEqual(doc1, doc2 map[string]interface{}) bool
 	}
 
 	return cmp.Equal(doc1, doc2, opts...)
-}
-
-// compareStructuresReportingLabels compares structures and reports label differences
-func (c *Comparer) compareStructuresReportingLabels(bp1, bp2 map[string]interface{}) error {
-	// Compare the structures
-	return c.compareStructures(bp1, bp2)
 }
