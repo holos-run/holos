@@ -90,15 +90,15 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 	beforeYAML, _ := yaml.Marshal(bp1)
 	afterYAML, _ := yaml.Marshal(bp2)
 
-	// Check if the diff contains patterns that tests expect
-	testErrors := c.extractTestErrors(diff)
+	// Extract specific differences from the diff
+	differences := c.extractDifferences(diff)
 
 	// Return a comprehensive error with the full YAML content and diff
 	fullError := errors.Format("BuildPlans are not semantically equivalent:\n\nBefore:\n---\n%s\nAfter:\n---\n%s\nDiff:\n%s", string(beforeYAML), string(afterYAML), diff)
 
-	// Append test errors if any
-	if len(testErrors) > 0 {
-		return errors.Format("%s\n\n%s", fullError, strings.Join(testErrors, "\n"))
+	// Append specific differences if any
+	if len(differences) > 0 {
+		return errors.Format("%s\n\n%s", fullError, strings.Join(differences, "\n"))
 	}
 
 	return fullError
@@ -272,11 +272,11 @@ func getCompositeKey(doc map[string]interface{}) string {
 	return version + kind + apiVersion + name + labelsKey
 }
 
-// extractTestErrors parses the diff to extract error messages for test compatibility
-func (c *Comparer) extractTestErrors(diff string) []string {
-	var errorMessages []string
+// extractDifferences parses the diff to extract field-level differences
+func (c *Comparer) extractDifferences(diff string) []string {
+	var differences []string
 
-	// Generic pattern to extract additions from the diff
+	// Extract field additions from the diff
 	lines := strings.Split(diff, "\n")
 	for _, line := range lines {
 		// Look for lines that start with + and contain field additions
@@ -307,37 +307,10 @@ func (c *Comparer) extractTestErrors(diff string) []string {
 
 			// Only add if it looks like a field addition
 			if strings.Contains(trimmed, ":") {
-				errorMessages = append(errorMessages, "+    "+trimmed)
+				differences = append(differences, "+    "+trimmed)
 			}
 		}
 	}
 
-	// For backward compatibility with existing tests, check for specific patterns
-	if strings.Contains(diff, "holos.run/stack.name") {
-		for _, line := range lines {
-			if strings.Contains(line, "holos.run/stack.name") && strings.Contains(line, "+") {
-				parts := strings.Split(line, ": ")
-				if len(parts) >= 2 {
-					value := strings.TrimSpace(parts[1])
-					value = strings.Trim(value, "\"")
-					value = strings.TrimSuffix(value, ",")
-					// Strip go-cmp type info
-					if strings.HasPrefix(value, "string(") {
-						value = strings.TrimPrefix(value, "string(\"")
-						value = strings.TrimSuffix(value, "\")")
-					}
-					// Return this as expected error for backward compatibility
-					return []string{"holos.run/stack.name: " + value}
-				}
-			}
-		}
-	}
-
-	// Check for buildplan4 test case expectations
-	if strings.Contains(diff, "+") && strings.Contains(diff, "\"extra\"") && strings.Contains(diff, "not-in-before") {
-		// Return the exact string that the test expects
-		return []string{"+    extra: not-in-before"}
-	}
-
-	return errorMessages
+	return differences
 }
