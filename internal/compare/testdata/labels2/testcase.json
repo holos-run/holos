@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "name": "MultipleIdenticalObjectsOutOfOrder",
+  "msg": "should match when identical objects are out of order in the two streams",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": []
+}
