@@ -1,0 +1,7 @@
+{
+  "exitCode": 0,
+  "name": "CompilerShouldMatch",
+  "msg": "output of the v1alpha6 compiler should match the v1alpha5 output",
+  "file1": "before.yaml",
+  "file2": "after.yaml"
+}
