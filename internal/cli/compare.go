@@ -26,7 +26,7 @@ func NewCompareBuildPlansCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			c := compare.New()
-			return c.BuildPlans(args[0], args[1])
+			return c.BuildPlans(args[0], args[1], false)
 		},
 	}
 	return cmd
