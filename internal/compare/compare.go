@@ -151,7 +151,7 @@ func (c *Comparer) filterToCommonFields(v1, v2 interface{}) interface{} {
 			}
 		}
 		return filtered
-	
+
 	case []interface{}:
 		slice2, ok := v2.([]interface{})
 		if !ok {
@@ -164,7 +164,7 @@ func (c *Comparer) filterToCommonFields(v1, v2 interface{}) interface{} {
 			}
 		}
 		return filtered
-	
+
 	default:
 		return v1
 	}
@@ -175,7 +175,7 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}, isBackward
 	// Normalize the structures to handle null, empty, and missing fields
 	norm1 := c.normalizeStructure(bp1).(map[string]interface{})
 	norm2 := c.normalizeStructure(bp2).(map[string]interface{})
-	
+
 	// If backwards compatible, remove fields from norm1 that don't exist in norm2
 	if isBackwardsCompatible {
 		filtered := c.filterToCommonFields(norm1, norm2)

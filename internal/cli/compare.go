@@ -20,7 +20,7 @@ func NewCompareCmd() *cobra.Command {
 // New for the compare buildplans subcommand.
 func NewCompareBuildPlansCmd() *cobra.Command {
 	var backwardsCompatible bool
-	
+
 	cmd := &cobra.Command{
 		Use:   "buildplans [file1] [file2]",
 		Short: "Compare two BuildPlan files",
@@ -31,8 +31,8 @@ func NewCompareBuildPlansCmd() *cobra.Command {
 			return c.BuildPlans(args[0], args[1], backwardsCompatible)
 		},
 	}
-	
+
 	cmd.Flags().BoolVar(&backwardsCompatible, "backwards-compatible", false, "Enable backwards compatibility mode where file2 may have fields missing from file1")
-	
+
 	return cmd
 }

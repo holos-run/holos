@@ -10,14 +10,14 @@ import (
 )
 
 type testCase struct {
-	ExitCode            int      `json:"exitCode"`
-	Name                string   `json:"name,omitempty"`
-	Msg                 string   `json:"msg,omitempty"`
-	File1               string   `json:"file1"`
-	File2               string   `json:"file2"`
-	ExpectedError       string   `json:"expectedError,omitempty"` // Deprecated: use ExpectedErrors
-	ExpectedErrors      []string `json:"expectedErrors,omitempty"`
-	IsBackwardsCompatible *bool  `json:"isBackwardsCompatible,omitempty"`
+	ExitCode              int      `json:"exitCode"`
+	Name                  string   `json:"name,omitempty"`
+	Msg                   string   `json:"msg,omitempty"`
+	File1                 string   `json:"file1"`
+	File2                 string   `json:"file2"`
+	ExpectedError         string   `json:"expectedError,omitempty"` // Deprecated: use ExpectedErrors
+	ExpectedErrors        []string `json:"expectedErrors,omitempty"`
+	IsBackwardsCompatible *bool    `json:"isBackwardsCompatible,omitempty"`
 }
 
 func TestBuildPlans(t *testing.T) {
