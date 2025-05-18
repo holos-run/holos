@@ -5,13 +5,20 @@ metadata:
   name: component
   labels:
     holos.run/component.name: component
-    # Missing holos.run/stack.name
-  # Missing annotations
+    holos.run/stack.name: demo
+  annotations:
+    holos.run/purpose: example
+    holos.run/environment: prod
 spec:
   artifacts:
     - artifact: component.yaml
       generators:
         - kind: Kubernetes
           output: manifests.yaml
-          # Missing resources
-      # Missing transformers
+          resources:
+            - name: deployment
+              namespace: default
+      transformers:
+        - kind: SetLabels
+          labels:
+            app: demo

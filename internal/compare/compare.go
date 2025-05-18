@@ -31,15 +31,15 @@ func New() *Comparer {
 //  1. one and two have an equal number of BuildPlan objects.
 //  2. each object in one is equivalent to exactly one unique object in two.
 //
-// Two BuildPlans, a and b, are equivalent when:
-//  1. All field values in a are equivalent to the same field in b
+// Two BuildPlans, before and after, are equivalent when:
+//  1. All field values in before are equivalent to the same field in after
 //  2. Both 1 and 2 apply to nested objects, recursively.
-//  3. Field f is equivalent when a.f exactly equals b.f, except for:
+//  3. Field f is equivalent when before.f exactly equals after.f, except for:
 //     3.1. Objects in the spec.artifacts list may appear in any arbitrary order.
 //     3.2. The ordering of keys does not matter.
-//  4. b may have fields missing from a if isBackwardsCompatible is true
-//     (recursively).  Otherwise, all fields in b must also be in a (recursively).
-//  5. Fields in a must always be present in b.
+//  4. after may have fields missing from before if isBackwardsCompatible is true
+//     (recursively).  Otherwise, all fields in after must also be in before (recursively).
+//  5. Fields in before must always be present in after.
 //  6. List type fields with a null value are equivalent to:
 //     6.1. null values
 //     6.2. empty values ([])
@@ -136,7 +136,8 @@ func (c *Comparer) isNullOrEmpty(v interface{}) bool {
 }
 
 // filterToCommonFields filters v1 to only include fields that exist in v2
-// This is used for backwards compatibility where v2 can have missing fields
+// This is used for backwards compatibility to allow the "after" file to have extra fields
+// that don't exist in the "before" file
 func (c *Comparer) filterToCommonFields(v1, v2 interface{}) interface{} {
 	switch m1 := v1.(type) {
 	case map[string]interface{}:
@@ -176,11 +177,12 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}, isBackward
 	norm1 := c.normalizeStructure(bp1).(map[string]interface{})
 	norm2 := c.normalizeStructure(bp2).(map[string]interface{})
 
-	// If backwards compatible, remove fields from norm1 that don't exist in norm2
+	// If backwards compatible, remove fields from norm2 that don't exist in norm1
+	// This allows "after" to have extra fields that "before" doesn't have
 	if isBackwardsCompatible {
-		filtered := c.filterToCommonFields(norm1, norm2)
+		filtered := c.filterToCommonFields(norm2, norm1)
 		if m, ok := filtered.(map[string]interface{}); ok {
-			norm1 = m
+			norm2 = m
 		}
 	}
 
