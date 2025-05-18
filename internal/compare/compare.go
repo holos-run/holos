@@ -87,14 +87,12 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 	diff := cmp.Diff(bp1, bp2, opts...)
 
 	// Extract specific field differences from the diff
-	differences := c.extractFieldDifferences(diff)
+	fieldDiffs := c.extractFieldDifferences(diff)
 
-	// Return error with the extracted differences
-	if len(differences) > 0 {
-		return errors.New(differences)
+	// Return the extracted differences or the full diff
+	if fieldDiffs != "" {
+		return errors.New(fieldDiffs)
 	}
-
-	// Fallback to the full diff if no field differences found
 	return errors.New(diff)
 }
 
@@ -216,74 +214,6 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 	return nil
 }
 
-// extractFieldDifferences extracts field-level differences from a go-cmp diff
-func (c *Comparer) extractFieldDifferences(diff string) string {
-	var differences []string
-	lines := strings.Split(diff, "\n")
-
-	for _, line := range lines {
-		// Extract lines that show field differences
-		if (strings.HasPrefix(line, "-") || strings.HasPrefix(line, "+")) && strings.Contains(line, ":") {
-			// Skip lines with formatting markers
-			if strings.HasPrefix(line, "---") || strings.HasPrefix(line, "+++") {
-				continue
-			}
-
-			// Handle the specific format from go-cmp
-			trimmed := strings.TrimSpace(line)
-			isRemoval := strings.HasPrefix(trimmed, "-")
-			isAddition := strings.HasPrefix(trimmed, "+")
-
-			// Remove the +/- prefix and extra spaces
-			content := strings.TrimPrefix(trimmed, "-")
-			content = strings.TrimPrefix(content, "+")
-			content = strings.TrimSpace(content)
-
-			// Look for key-value patterns
-			if strings.Contains(content, ":") {
-				// Handle quoted field names
-				if strings.Contains(content, "\"") {
-					// Extract field name between quotes
-					start := strings.Index(content, "\"")
-					end := strings.Index(content[start+1:], "\"")
-					if start >= 0 && end >= 0 {
-						fieldName := content[start+1 : start+1+end]
-
-						// Extract value after colon
-						colonIdx := strings.Index(content, ":")
-						if colonIdx > 0 && colonIdx < len(content)-1 {
-							value := strings.TrimSpace(content[colonIdx+1:])
-							value = strings.TrimSuffix(value, ",")
-
-							// Handle different value formats
-							if strings.HasPrefix(value, "string(") {
-								value = strings.TrimPrefix(value, "string(")
-								value = strings.TrimSuffix(value, ")")
-								value = strings.Trim(value, "\"")
-							} else if strings.HasPrefix(value, "int(") {
-								value = strings.TrimPrefix(value, "int(")
-								value = strings.TrimSuffix(value, ")")
-							} else if strings.HasPrefix(value, "\"") {
-								value = strings.Trim(value, "\"")
-							}
-
-							// Format the difference
-							if isRemoval {
-								differences = append(differences, "-    "+fieldName+": "+value)
-							} else if isAddition {
-								differences = append(differences, "+    "+fieldName+": "+value)
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// Return the differences as a single string
-	return strings.Join(differences, "\n")
-}
-
 // documentsExactlyEqual checks if two documents are exactly equal
 func (c *Comparer) documentsExactlyEqual(doc1, doc2 map[string]interface{}) bool {
 	// Create comparison options for go-cmp
@@ -295,4 +225,53 @@ func (c *Comparer) documentsExactlyEqual(doc1, doc2 map[string]interface{}) bool
 	}
 
 	return cmp.Equal(doc1, doc2, opts...)
+}
+
+// extractFieldDifferences extracts specific field differences from a go-cmp diff
+func (c *Comparer) extractFieldDifferences(diff string) string {
+	var differences []string
+	lines := strings.Split(diff, "\n")
+
+	for _, line := range lines {
+		// Look for lines that indicate field differences
+		trimmed := strings.TrimSpace(line)
+
+		// Handle lines with - or + prefixes
+		if strings.HasPrefix(trimmed, "-") || strings.HasPrefix(trimmed, "+") {
+			// Skip formatting markers
+			if strings.HasPrefix(trimmed, "---") || strings.HasPrefix(trimmed, "+++") {
+				continue
+			}
+
+			// Check if this is a field difference (contains a colon)
+			if strings.Contains(trimmed, ":") {
+				// Extract the field name and value
+				parts := strings.SplitN(trimmed[1:], ":", 2)
+				if len(parts) == 2 {
+					fieldName := strings.TrimSpace(parts[0])
+					value := strings.TrimSpace(parts[1])
+
+					// Clean up the field name (remove quotes if present)
+					fieldName = strings.Trim(fieldName, "\"")
+					value = strings.TrimSuffix(value, ",")
+
+					// Clean up value formatting
+					if strings.HasPrefix(value, "string(") {
+						value = strings.TrimPrefix(value, "string(")
+						value = strings.TrimSuffix(value, ")")
+					} else if strings.HasPrefix(value, "int(") {
+						value = strings.TrimPrefix(value, "int(")
+						value = strings.TrimSuffix(value, ")")
+					}
+					value = strings.Trim(value, "\"")
+
+					// Rebuild the difference line
+					prefix := trimmed[:1]
+					differences = append(differences, prefix+"    "+fieldName+": "+value)
+				}
+			}
+		}
+	}
+
+	return strings.Join(differences, "\n")
 }
