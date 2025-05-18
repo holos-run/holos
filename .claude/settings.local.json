@@ -20,7 +20,8 @@
       "Bash(fi)",
       "Bash(done)",
       "Bash(for file in internal/compare/testdata/buildplan2/testcase.json internal/compare/testdata/streams/testcase.json internal/compare/testdata/streams2/testcase.json internal/compare/testdata/streams3/testcase.json)",
-      "Bash(go run:*)"
+      "Bash(go run:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }
