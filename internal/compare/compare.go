@@ -22,7 +22,28 @@ func New() *Comparer {
 	return &Comparer{}
 }
 
-// BuildPlans compares two BuildPlan files for semantic equivalence
+// BuildPlans compares two BuildPlan Files for semantic equivalence.
+//
+// The holos show buildplans command writes a BuildPlan File to standard output.
+// A BuildPlan File is a yaml encoded stream of BuildPlan objects.
+//
+// BuildPlan File one is equivalent to two when:
+// 1. one and two have an equal number of BuildPlan objects.
+// 2. each BuildPlan in one is equivalent to exactly one unique BuildPlan in two.
+//
+// Two BuildPlans, a and b, are equivalent when:
+// 1. All field values in a are equivalent to the same field in b.
+// 2. All field values in b are equivalent to the same field in a.
+// 3. Both 1 and 2 apply to nested objects, recursively.
+// 4. A field value is equivalent between a and b when the field is exactly
+// equal, with the following exceptions.
+// 4.1. Objects in the spec.artifacts list may appear in any arbitrary order.
+// 4.2. The ordering of keys does not matter.
+//
+// Tolerations which may be tightened up in v1alpha6 or later versions:
+// 1. Two or more identical BuildPlan objects may exist in the same file.  They
+// must be treated as unique objects when comparing BuildPlan Files
+// 2. Two BuildPlan objects may have the same value for the metadata.name field.
 func (c *Comparer) BuildPlans(one, two string) error {
 	// Read both files
 	file1, err := os.Open(one)
