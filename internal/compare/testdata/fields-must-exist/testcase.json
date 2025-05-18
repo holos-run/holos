@@ -1,0 +1,8 @@
+{
+  "exitCode": 1,
+  "name": "BuildPlan_5",
+  "msg": "BuildPlan spec 5: Fields in a must always be present in b - should fail when field exists in a but not in b",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": ["-    holos.run/stack.name: demo"]
+}

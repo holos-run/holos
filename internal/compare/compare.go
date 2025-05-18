@@ -95,8 +95,52 @@ func (c *Comparer) BuildPlans(one, two string, isBackwardsCompatible bool) error
 	return c.compareDocumentLists(docs1, docs2)
 }
 
+// normalizeStructure processes a structure to handle null, empty, and missing fields
+// according to the BuildPlan spec requirement 6
+func (c *Comparer) normalizeStructure(v interface{}) interface{} {
+	switch val := v.(type) {
+	case map[string]interface{}:
+		normalized := make(map[string]interface{})
+		for k, v := range val {
+			normalizedValue := c.normalizeStructure(v)
+			// Only add fields that are not nil or empty slices
+			if !c.isNullOrEmpty(normalizedValue) {
+				normalized[k] = normalizedValue
+			}
+		}
+		return normalized
+	case []interface{}:
+		// Handle empty slices as nil
+		if len(val) == 0 {
+			return nil
+		}
+		normalized := make([]interface{}, len(val))
+		for i, v := range val {
+			normalized[i] = c.normalizeStructure(v)
+		}
+		return normalized
+	default:
+		return v
+	}
+}
+
+// isNullOrEmpty checks if a value is nil or an empty slice
+func (c *Comparer) isNullOrEmpty(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+	if slice, ok := v.([]interface{}); ok {
+		return len(slice) == 0
+	}
+	return false
+}
+
 // compareStructures compares two BuildPlan structures for semantic equivalence
 func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
+	// Normalize the structures to handle null, empty, and missing fields
+	norm1 := c.normalizeStructure(bp1).(map[string]interface{})
+	norm2 := c.normalizeStructure(bp2).(map[string]interface{})
+
 	// Create comparison options for go-cmp
 	opts := []cmp.Option{
 		cmpopts.EquateEmpty(),
@@ -106,12 +150,12 @@ func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
 	}
 
 	// Deep order-independent comparison
-	if cmp.Equal(bp1, bp2, opts...) {
+	if cmp.Equal(norm1, norm2, opts...) {
 		return nil
 	}
 
 	// Get the diff for the error message
-	diff := cmp.Diff(bp1, bp2, opts...)
+	diff := cmp.Diff(norm1, norm2, opts...)
 
 	// Extract specific field differences from the diff
 	fieldDiffs := c.extractFieldDifferences(diff)

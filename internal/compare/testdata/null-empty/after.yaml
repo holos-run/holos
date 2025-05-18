@@ -1,0 +1,13 @@
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component
+spec:
+  artifacts:
+    - artifact: component.yaml
+      generators:
+        - kind: Kubernetes
+          output: manifests.yaml
+          resources: []
+      transformers: []

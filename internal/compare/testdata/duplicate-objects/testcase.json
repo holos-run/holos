@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "name": "BuildPlanValid_1",
+  "msg": "BuildPlan File validity 1: Two or more identical objects exist in the same file. They must be treated as unique objects - should match when both files have identical objects",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": []
+}

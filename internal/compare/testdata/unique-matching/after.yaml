@@ -1,0 +1,39 @@
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component-b
+  labels:
+    holos.run/component.name: component-b
+spec:
+  artifacts:
+    - artifact: component-b.yaml
+      generators:
+        - kind: Kubernetes
+          output: manifests.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component-c
+  labels:
+    holos.run/component.name: component-c
+spec:
+  artifacts:
+    - artifact: component-c.yaml
+      generators:
+        - kind: Kubernetes
+          output: manifests.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component-a
+  labels:
+    holos.run/component.name: component-a
+spec:
+  artifacts:
+    - artifact: component-a.yaml
+      generators:
+        - kind: Kubernetes
+          output: manifests.yaml

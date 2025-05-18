@@ -1,7 +1,7 @@
 {
   "exitCode": 1,
-  "name": "DifferentNumberOfBuildPlans",
-  "msg": "File spec requirement 1: files must have equal number of BuildPlan objects - should fail when count differs",
+  "name": "BuildPlanFile_1",
+  "msg": "BuildPlan File spec 1: one and two have an equal number of BuildPlan objects - should fail when count differs",
   "file1": "before.yaml",
   "file2": "after.yaml",
   "expectedErrors": ["different number of documents"]

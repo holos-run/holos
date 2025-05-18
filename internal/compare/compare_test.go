@@ -60,7 +60,7 @@ func TestBuildPlans(t *testing.T) {
 
 				// Create a new comparer and run the comparison
 				c := New()
-				err := c.BuildPlans(file1Path, file2Path)
+				err := c.BuildPlans(file1Path, file2Path, false)
 
 				// Check the result based on expected exit code
 				if tc.ExitCode == 0 {

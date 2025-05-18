@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "name": "BuildPlanFile_2",
+  "msg": "BuildPlan File spec 2: each object in one is equivalent to exactly one unique object in two - should match when each BuildPlan has a unique equivalent",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": []
+}
