@@ -1,0 +1,24 @@
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component
+  labels:
+    holos.run/component.name: component
+    holos.run/stack.name: demo
+  annotations:
+    holos.run/purpose: example
+    holos.run/environment: prod
+spec:
+  artifacts:
+    - artifact: component.yaml
+      generators:
+        - kind: Kubernetes
+          output: manifests.yaml
+          resources:
+            - name: deployment
+              namespace: default
+      transformers:
+        - kind: SetLabels
+          labels:
+            app: demo

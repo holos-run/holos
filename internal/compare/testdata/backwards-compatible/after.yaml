@@ -1,0 +1,17 @@
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component
+  labels:
+    holos.run/component.name: component
+    # Missing holos.run/stack.name
+  # Missing annotations
+spec:
+  artifacts:
+    - artifact: component.yaml
+      generators:
+        - kind: Kubernetes
+          output: manifests.yaml
+          # Missing resources
+      # Missing transformers

@@ -92,7 +92,7 @@ func (c *Comparer) BuildPlans(one, two string, isBackwardsCompatible bool) error
 	}
 
 	// Compare the document lists
-	return c.compareDocumentLists(docs1, docs2)
+	return c.compareDocumentLists(docs1, docs2, isBackwardsCompatible)
 }
 
 // normalizeStructure processes a structure to handle null, empty, and missing fields
@@ -135,11 +135,54 @@ func (c *Comparer) isNullOrEmpty(v interface{}) bool {
 	return false
 }
 
+// filterToCommonFields filters v1 to only include fields that exist in v2
+// This is used for backwards compatibility where v2 can have missing fields
+func (c *Comparer) filterToCommonFields(v1, v2 interface{}) interface{} {
+	switch m1 := v1.(type) {
+	case map[string]interface{}:
+		m2, ok := v2.(map[string]interface{})
+		if !ok {
+			return v1
+		}
+		filtered := make(map[string]interface{})
+		for k, val1 := range m1 {
+			if val2, exists := m2[k]; exists {
+				filtered[k] = c.filterToCommonFields(val1, val2)
+			}
+		}
+		return filtered
+	
+	case []interface{}:
+		slice2, ok := v2.([]interface{})
+		if !ok {
+			return v1
+		}
+		var filtered []interface{}
+		for i, elem1 := range m1 {
+			if i < len(slice2) {
+				filtered = append(filtered, c.filterToCommonFields(elem1, slice2[i]))
+			}
+		}
+		return filtered
+	
+	default:
+		return v1
+	}
+}
+
 // compareStructures compares two BuildPlan structures for semantic equivalence
-func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}) error {
+func (c *Comparer) compareStructures(bp1, bp2 map[string]interface{}, isBackwardsCompatible bool) error {
 	// Normalize the structures to handle null, empty, and missing fields
 	norm1 := c.normalizeStructure(bp1).(map[string]interface{})
 	norm2 := c.normalizeStructure(bp2).(map[string]interface{})
+	
+	// If backwards compatible, remove fields from norm1 that don't exist in norm2
+	if isBackwardsCompatible {
+		filtered := c.filterToCommonFields(norm1, norm2)
+		if m, ok := filtered.(map[string]interface{}); ok {
+			norm1 = m
+		}
+	}
 
 	// Create comparison options for go-cmp
 	opts := []cmp.Option{
@@ -231,7 +274,7 @@ func parseYAMLStream(content []byte) ([]map[string]interface{}, error) {
 }
 
 // compareDocumentLists compares two lists of YAML documents
-func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) error {
+func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}, isBackwardsCompatible bool) error {
 	if len(docs1) != len(docs2) {
 		return errors.New("different number of documents")
 	}
@@ -274,7 +317,7 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}) e
 
 			if usedIdx < len(docs2) {
 				// Compare structures
-				if err := c.compareStructures(doc1, docs2[usedIdx]); err != nil {
+				if err := c.compareStructures(doc1, docs2[usedIdx], isBackwardsCompatible); err != nil {
 					return errors.Format("document %d: %w", i, err)
 				}
 				used[usedIdx] = true
