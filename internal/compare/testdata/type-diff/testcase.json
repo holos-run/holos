@@ -1,0 +1,8 @@
+{
+  "exitCode": 1,
+  "name": "DifferentFieldTypes",
+  "msg": "BuildPlan spec requirement 4: field values must be exactly equal - should fail when types differ",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": ["string(\"3\")", "int(3)"]
+}

@@ -1,0 +1,9 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component
+  labels:
+    test: value
+spec:
+  artifacts:
+    - artifact: test.yaml

@@ -1,0 +1,15 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component1
+spec:
+  artifacts:
+    - artifact: test.yaml
+---
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component2
+spec:
+  artifacts:
+    - artifact: test2.yaml

@@ -1,7 +1,7 @@
 {
   "exitCode": 0,
-  "name": "OrderedStreams",
-  "msg": "multiple BuildPlans in same order should match",
+  "name": "SameOrderBuildPlans",
+  "msg": "File spec requirements 1&2: each BuildPlan must match exactly once - should match when in same order",
   "file1": "before.yaml",
   "file2": "after.yaml",
   "expectedErrors": []

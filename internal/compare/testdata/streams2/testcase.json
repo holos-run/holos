@@ -1,7 +1,7 @@
 {
   "exitCode": 0,
-  "name": "OutOfOrderObjectStream",
-  "msg": "should match objects when they are out of order",
+  "name": "OutOfOrderBuildPlans",
+  "msg": "File spec requirement 2: each BuildPlan must be equivalent to exactly one unique BuildPlan - should match when out of order",
   "file1": "before.yaml",
   "file2": "after.yaml",
   "expectedErrors": []
