@@ -32,14 +32,22 @@ func New() *Comparer {
 //  2. each object in one is equivalent to exactly one unique object in two.
 //
 // Two BuildPlans, before and after, are equivalent when:
+//
 //  1. All field values in before are equivalent to the same field in after
 //  2. Both 1 and 2 apply to nested objects, recursively.
 //  3. Field f is equivalent when before.f exactly equals after.f, except for:
 //     3.1. Objects in the spec.artifacts list may appear in any arbitrary order.
 //     3.2. The ordering of keys does not matter.
-//  4. after may have fields missing from before if isBackwardsCompatible is true
-//     (recursively).  Otherwise, all fields in after must also be in before (recursively).
-//  5. Fields in before must always be present in after.
+//  4. Backwards compatibility behavior (controlled by isBackwardsCompatible):
+//     - When false: after and before must have exactly the same fields
+//     - When true: after may have additional fields that don't exist in before
+//     (e.g., new features added in a newer version)
+//     Example:
+//     before has {name: "x", version: "1.0"}
+//     after has  {name: "x", version: "1.0", newFeature: "enabled"}
+//     This comparison passes when isBackwardsCompatible=true
+//  5. Fields in before must always be present in after (regardless of backwards
+//     compatibility mode).
 //  6. List type fields with a null value are equivalent to:
 //     6.1. null values
 //     6.2. empty values ([])
