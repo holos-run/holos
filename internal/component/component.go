@@ -188,7 +188,7 @@ func (c *Component) renderAlpha5(ctx context.Context) error {
 	defer util.Remove(ctx, tempDir)
 
 	// Runtime configuration of the build.
-	opts := holos.NewBuildOpts(c.Root, c.Path, c.WriteTo, "")
+	opts := holos.NewBuildOpts(c.Root, c.Path, c.WriteTo, tempDir)
 	opts.Stderr = c.Stderr
 	opts.Concurrency = c.Concurrency
 

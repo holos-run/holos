@@ -38,6 +38,10 @@ func NewConfig() Config {
 		Concurrency: runtime.NumCPU(),
 		TagMap:      make(holos.TagMap),
 		Stderr:      os.Stderr,
+		WriteTo:     os.Getenv(holos.WriteToEnvVar),
+	}
+	if cfg.WriteTo == "" {
+		cfg.WriteTo = holos.WriteToDefault
 	}
 	return cfg
 }

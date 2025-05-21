@@ -117,7 +117,10 @@ func (c *Compiler) Run(ctx context.Context) error {
 		}
 
 		// Produce the build plan.
-		component := componentPkg.New(req.Root, req.Leaf, componentPkg.NewConfig())
+		cfg := componentPkg.NewConfig()
+		// Ensure config uses the WriteTo value from the request
+		cfg.WriteTo = req.WriteTo
+		component := componentPkg.New(req.Root, req.Leaf, cfg)
 		tm, err := component.TypeMeta()
 		if err != nil {
 			return errors.Wrap(err)
