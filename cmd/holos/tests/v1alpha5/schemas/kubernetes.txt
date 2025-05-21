@@ -12,7 +12,8 @@ stderr -count=1 '^rendered platform'
 
 # When author.#Kubernetes is empty
 exec holos cue export --expression holos --out=yaml ./components/empty
-cmp stdout want.txt
+cp stdout empty.yaml
+exec holos compare yaml empty.yaml want.txt
 
 -- components/empty/empty.cue --
 package holos

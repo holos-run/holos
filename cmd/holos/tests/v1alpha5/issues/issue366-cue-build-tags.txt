@@ -4,10 +4,12 @@ env HOME=$WORK
 
 exec holos init platform v1alpha5 --force
 exec holos show platform
-cmp stdout want/empty.yaml
+cp stdout empty.yaml
+exec holos compare yaml empty.yaml want/empty.yaml
 
 exec holos show platform -t foo
-cmp stdout want/foo.yaml
+cp stdout foo.yaml
+exec holos compare yaml foo.yaml want/foo.yaml
 
 -- platform/empty.cue --
 @if(foo)

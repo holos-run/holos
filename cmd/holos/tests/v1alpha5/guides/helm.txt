@@ -12,7 +12,8 @@ stderr -count=1 '^rendered platform'
 
 # Holos uses CUE to build a platform specification.
 exec holos show platform
-cmp stdout want/1.platform_spec.yaml
+cp stdout platform.yaml
+exec holos compare yaml platform.yaml want/1.platform_spec.yaml
 
 # Define the host and port in projects/blackbox.schema.cue
 mv projects/blackbox.schema.cue.disabled projects/blackbox.schema.cue
@@ -25,7 +26,7 @@ mv platform/prometheus.cue.disabled platform/prometheus.cue
 exec holos render platform
 stderr -count=1 '^rendered prometheus'
 stderr -count=1 '^rendered platform'
-cmp deploy/components/prometheus/prometheus.gen.yaml want/1.prometheus.gen.yaml
+exec holos compare yaml deploy/components/prometheus/prometheus.gen.yaml want/1.prometheus.gen.yaml
 
 # Add the CUE configuration to manage the blackbox Helm Chart component.
 mv projects/platform/components/blackbox/blackbox.cue.disabled projects/platform/components/blackbox/blackbox.cue
@@ -37,7 +38,7 @@ exec holos render platform ./platform
 stderr -count=1 '^rendered prometheus'
 stderr -count=1 '^rendered blackbox'
 stderr -count=1 '^rendered platform'
-cmp deploy/components/blackbox/blackbox.gen.yaml want/1.blackbox.gen.yaml
+exec holos compare yaml deploy/components/blackbox/blackbox.gen.yaml want/1.blackbox.gen.yaml
 
 # Import helm values
 exec cue import --package holos --path 'Helm: Values:' --outfile projects/platform/components/prometheus/values.cue projects/platform/components/prometheus/vendor/25.27.0/prometheus/values.yaml
@@ -55,7 +56,7 @@ mv platform/httpbin.cue.disabled platform/httpbin.cue
 # Render the platform with httpbin
 exec holos render platform ./platform
 stderr -count=1 '^rendered httpbin'
-cmp deploy/components/httpbin/httpbin.gen.yaml want/1.httpbin.gen.yaml
+exec holos compare yaml deploy/components/httpbin/httpbin.gen.yaml want/1.httpbin.gen.yaml
 
 # Verify the labels are correct
 grep 'replacement: blackbox:9115' deploy/components/prometheus/prometheus.gen.yaml
