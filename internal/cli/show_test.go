@@ -81,7 +81,8 @@ func TestShowAlpha6(t *testing.T) {
 			err = yaml.Unmarshal(wantBytes, &want)
 			require.NoError(t, err)
 			want.BuildContext.RootDir = tempDir
-			want.BuildContext.HolosExecutable = "holos"
+			want.BuildContext.HolosExecutable, err = util.Executable()
+			require.NoError(t, err)
 			want.BuildContext.LeafDir = "fixtures/v1alpha6/components/slice"
 
 			t.Run("FormatYAML", func(t *testing.T) {
