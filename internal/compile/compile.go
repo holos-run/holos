@@ -20,6 +20,7 @@ import (
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
+	"github.com/holos-run/holos/internal/util"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -193,7 +194,7 @@ func compiler(ctx context.Context, id int, tasks chan task, resp []BuildPlanResp
 	log := logger.FromContext(ctx).With("id", id)
 
 	// Start the sub-process
-	exe, err := os.Executable()
+	exe, err := util.Executable()
 	if err != nil {
 		return errors.Wrap(err)
 	}
