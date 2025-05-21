@@ -120,7 +120,7 @@ func (c *Compiler) Run(ctx context.Context) error {
 		cfg := componentPkg.NewConfig()
 		// Ensure config uses the WriteTo value from the request
 		cfg.WriteTo = req.WriteTo
-		component := componentPkg.New(req.Root, req.Leaf, cfg)
+		component := componentPkg.New(req.Root, req.Leaf)
 		tm, err := component.TypeMeta()
 		if err != nil {
 			return errors.Wrap(err)
@@ -131,7 +131,7 @@ func (c *Compiler) Run(ctx context.Context) error {
 		// Component name, label, annotations passed via tags to cue.
 		opts.Tags = req.Tags
 
-		bp, err := component.BuildPlan(tm, opts)
+		bp, err := component.BuildPlan(tm, opts, cfg.TagMap)
 		if err != nil {
 			return errors.Wrap(err)
 		}
