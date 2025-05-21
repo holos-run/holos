@@ -17,3 +17,6 @@ node_modules/
 # nix
 /.direnv/
 result
+
+# claude
+/.claude/settings.local.json
