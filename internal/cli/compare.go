@@ -1,9 +1,8 @@
 package cli
 
 import (
-	"fmt"
-
 	"github.com/holos-run/holos/internal/compare"
+	"github.com/holos-run/holos/internal/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +14,7 @@ func NewCompareCmd() *cobra.Command {
 		Long:  "Compare Holos resources to verify semantic equivalence",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 {
-				return fmt.Errorf("unknown command %q for %q", args[0], cmd.CommandPath())
+				return errors.Format("unknown command %q for %q", args[0], cmd.CommandPath())
 			}
 			return nil
 		},

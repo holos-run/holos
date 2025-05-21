@@ -7,13 +7,13 @@ stdout 'name: has-foo-v1beta1'
 stdout 'kubeVersion: v'
 exec holos render platform ./platform
 # When no capabilities are specified
-cmp deploy/components/capabilities/capabilities.gen.yaml want/when-no-capabilities-specified.yaml
+exec holos compare yaml deploy/components/capabilities/capabilities.gen.yaml want/when-no-capabilities-specified.yaml
 # With APIVersions specified
-cmp deploy/components/specified/specified.gen.yaml want/with-capabilities-specified.yaml
+exec holos compare yaml deploy/components/specified/specified.gen.yaml want/with-capabilities-specified.yaml
 # With KubeVersion specified
-cmp deploy/components/kubeversion1/kubeversion1.gen.yaml want/with-kubeversion-specified.yaml
+exec holos compare yaml deploy/components/kubeversion1/kubeversion1.gen.yaml want/with-kubeversion-specified.yaml
 # With both APIVersions and KubeVersion specified
-cmp deploy/components/kubeversion2/kubeversion2.gen.yaml want/with-both-specified.yaml
+exec holos compare yaml deploy/components/kubeversion2/kubeversion2.gen.yaml want/with-both-specified.yaml
 -- want/with-both-specified.yaml --
 apiVersion: v1
 kind: Service
@@ -45,7 +45,7 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    kubeVersion: v1.32.0
+    kubeVersion: v1.99.0
   name: has-foo-v1beta1
 spec:
   ports:
@@ -58,7 +58,7 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    kubeVersion: v1.32.0
+    kubeVersion: v1.99.0
   name: has-foo-v1
 spec:
   ports:
