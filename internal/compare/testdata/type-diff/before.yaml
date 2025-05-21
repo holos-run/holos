@@ -1,0 +1,6 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component
+spec:
+  value: "3"

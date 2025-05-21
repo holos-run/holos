@@ -1,0 +1,13 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  labels:
+    env: prod
+    version: "1.0"
+    app: myapp
+  name: component
+spec:
+  config:
+    timeout: 30
+    host: localhost
+    port: 8080

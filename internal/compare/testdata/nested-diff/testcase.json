@@ -1,0 +1,8 @@
+{
+  "exitCode": 1,
+  "name": "BuildPlan_3_Nested",
+  "msg": "BuildPlan spec 3: Field f is equivalent when a.f exactly equals b.f, including nested objects recursively - should fail when nested values differ",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": ["int(3)", "int(5)"]
+}

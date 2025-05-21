@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "name": "BuildPlanValid_2",
+  "msg": "BuildPlan File validity 2: Two objects may have the same value for the metadata.name field - should match when objects have same names but different content",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": []
+}

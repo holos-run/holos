@@ -1,0 +1,19 @@
+kind: BuildPlan
+apiVersion: v1alpha5
+metadata:
+  name: component
+spec:
+  artifacts:
+    - artifact: test.yaml
+      generators:
+        - kind: Resources
+          output: test.yaml
+          resources:
+            Deployment:
+              myapp:
+                apiVersion: apps/v1
+                kind: Deployment
+                metadata:
+                  name: myapp
+                spec:
+                  replicas: 3

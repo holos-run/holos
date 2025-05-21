@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "name": "IdenticalObjectsToleration",
+  "msg": "Toleration 1: multiple identical BuildPlans may exist and must be treated as unique - should match when identical objects exist",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": []
+}

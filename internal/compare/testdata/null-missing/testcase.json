@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "name": "BuildPlan_6.3",
+  "msg": "BuildPlan spec 6.3: List type fields with a null value are equivalent to a missing field - should match when one is null and other is missing",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": []
+}

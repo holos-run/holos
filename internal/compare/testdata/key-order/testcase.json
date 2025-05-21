@@ -1,0 +1,8 @@
+{
+  "exitCode": 0,
+  "name": "BuildPlan_3.2",
+  "msg": "BuildPlan spec 3.2: The ordering of keys does not matter - should match when only key order differs",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": []
+}

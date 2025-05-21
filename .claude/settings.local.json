@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(mkdir:*)",
+      "Bash(go test:*)",
+      "Bash(make:*)",
+      "Bash(./bin/holos:*)",
+      "Bash(git add:*)",
+      "Bash(mv:*)",
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(for file in internal/compare/testdata/*/testcase.json)",
+      "Bash(do)",
+      "Bash(if grep -q '\"\"expectedError\"\"' \"$file\")",
+      "Bash(then)",
+      "Bash(sed:*)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(for file in internal/compare/testdata/buildplan2/testcase.json internal/compare/testdata/streams/testcase.json internal/compare/testdata/streams2/testcase.json internal/compare/testdata/streams3/testcase.json)",
+      "Bash(go run:*)",
+      "Bash(cp:*)"
+    ],
+    "deny": []
+  }
+}

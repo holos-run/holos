@@ -1,0 +1,15 @@
+{
+  "exitCode": 1,
+  "name": "BuildPlan_4_NotBackwards",
+  "msg": "BuildPlan spec 4: after and before must have exactly the same fields when isBackwardsCompatible is false - should fail when after has additional fields",
+  "file1": "before.yaml",
+  "file2": "after.yaml",
+  "expectedErrors": [
+    "+    annotations: map[string]any{\"holos.run/environment\": string(\"prod\"), \"holos.run/purpose\": string(\"example\")}",
+    "+    holos.run/stack.name: demo",
+    "+    resources: []any{map[string]any{\"name\": string(\"deployment\"), \"namespace\": string(\"default\")}}",
+    "+    transformers: []any{",
+    "+    map[string]any{\"kind: SetLabels\"), \"labels\": map[string]any{\"app\": string(\"demo\")}}"
+  ],
+  "isBackwardsCompatible": false
+}

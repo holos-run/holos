@@ -1,0 +1,15 @@
+version: v1alpha5
+kind: BuildPlan
+metadata:
+  name: duplicated
+  labels:
+    label1: value1
+    label2: value2
+---
+version: v1alpha5
+kind: BuildPlan
+metadata:
+  name: duplicated
+  labels:
+    label3: value3
+    label4: value4
