@@ -328,7 +328,7 @@ func (c *Comparer) compareDocumentLists(docs1, docs2 []map[string]interface{}, i
 			if usedIdx < len(docs2) {
 				// Compare structures
 				if err := c.compareStructures(doc1, docs2[usedIdx], isBackwardsCompatible); err != nil {
-					return errors.Format("document %d: %w", i, err)
+					return errors.Format("document %d not equivalent: \n%w", i, err)
 				}
 				used[usedIdx] = true
 			}

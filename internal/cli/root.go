@@ -110,9 +110,9 @@ func HandleError(ctx context.Context, err error, hc *holos.Config) (exitCode int
 	if errors.As(err, &errAt) {
 		loc := errAt.Source.Loc()
 		err2 := errAt.Unwrap()
-		log.ErrorContext(ctx, fmt.Sprintf("could not run: %s at %s", err2, loc), "err", err2, "loc", loc)
+		log.ErrorContext(ctx, fmt.Sprintf("error at %s: %s", loc, err2), "err", err2, "loc", loc)
 	} else {
-		log.ErrorContext(ctx, fmt.Sprintf("could not run: %s", err), "err", err)
+		log.ErrorContext(ctx, err.Error(), "err", err)
 	}
 
 	// cue errors are bundled up as a list and refer to multiple files / lines.
