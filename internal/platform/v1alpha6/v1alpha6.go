@@ -15,7 +15,19 @@ type Platform struct {
 
 // Load loads from a cue value.
 func (p *Platform) Load(v cue.Value) error {
-	return errors.Wrap(v.Decode(&p.Platform))
+	// First validate the value to get better error messages
+	if err := v.Validate(cue.Concrete(true)); err != nil {
+		return err
+	}
+	
+	if err := v.Decode(&p.Platform); err != nil {
+		// If it's a CUE error, return it unwrapped to preserve CUE's error formatting
+		if v.Err() != nil {
+			return v.Err()
+		}
+		return errors.Wrap(err)
+	}
+	return nil
 }
 
 func (p *Platform) Export(encoder holos.Encoder) error {

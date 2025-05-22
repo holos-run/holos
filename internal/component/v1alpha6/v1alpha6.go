@@ -718,7 +718,19 @@ func (b *BuildPlan) Export(idx int, encoder holos.OrderedEncoder) error {
 }
 
 func (b *BuildPlan) Load(v cue.Value) error {
-	return errors.Wrap(v.Decode(&b.BuildPlan))
+	// First validate the value to get better error messages
+	if err := v.Validate(cue.Concrete(true)); err != nil {
+		return err
+	}
+	
+	if err := v.Decode(&b.BuildPlan); err != nil {
+		// If it's a CUE error, return it unwrapped to preserve CUE's error formatting
+		if v.Err() != nil {
+			return v.Err()
+		}
+		return errors.Wrap(err)
+	}
+	return nil
 }
 
 func marshal(list []core.Resource) (buf bytes.Buffer, err error) {
