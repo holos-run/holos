@@ -666,14 +666,14 @@ type BuildPlan struct {
 }
 
 func (b *BuildPlan) Build(ctx context.Context) error {
-	name := b.BuildPlan.Metadata.Name
+	name := b.Metadata.Name
 	log := logger.FromContext(ctx).With(
 		"name", name,
 		"path", b.Opts.Leaf(),
 	)
 
 	msg := fmt.Sprintf("could not build %s", name)
-	if b.BuildPlan.Spec.Disabled {
+	if b.Spec.Disabled {
 		log.WarnContext(ctx, fmt.Sprintf("%s: disabled", msg))
 		return nil
 	}
@@ -697,7 +697,7 @@ func (b *BuildPlan) Build(ctx context.Context) error {
 		}()
 		// Separate error group for producers.
 		p, ctx := errgroup.WithContext(ctx)
-		for idx, a := range b.BuildPlan.Spec.Artifacts {
+		for idx, a := range b.Spec.Artifacts {
 			p.Go(func() error {
 				return buildArtifact(ctx, idx, a, tasks, b.Metadata.Name, b.Opts)
 			})
