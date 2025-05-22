@@ -16,6 +16,7 @@ Platform → Components → BuildPlan → Generators → Transformers → Valida
 ```bash
 # Development
 make build         # Build the binary
+make install       # Install binary (REQUIRED before testing holos commands)
 make test          # Run all tests
 make fmt           # Format Go code
 make lint          # Run linters
@@ -25,7 +26,7 @@ make coverage      # Generate coverage report
 make update-docs   # Update generated docs
 make website       # Build the documentation website
 
-# Usage
+# Usage (run 'make install' first to test code changes)
 holos render platform    # Render entire platform
 holos render component   # Render single component
 holos show buildplans    # Show build plans
