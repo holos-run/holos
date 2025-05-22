@@ -81,12 +81,13 @@ Component: #Helm & {
 
 ## Development Patterns
 
-1. Error handling: Use `internal/errors/` types, wrap with context
+1. Error handling: Prefer `errors.Format()` from `/internal/errors/` over `fmt.Errorf()`
 2. Logging: Use structured `slog`, get logger with `logger.FromContext(ctx)`
 3. CLI commands: Follow Cobra patterns in `/internal/cli/`
 4. CUE formatting: Always run `cue fmt` on CUE files
-5. Develop against v1alpha6 packages.
-6. Commits: Use the package name as the first word in the commit, lower case.  Commit without asking permission.
+5. Go formatting: Always run `go fmt` on go files
+6. Develop against v1alpha6 packages.
+7. Commits: Use the package name as the first word in the commit, lower case.  Commit without asking permission.  Always run `make lint` and `make test` before committing.
 
 ## Version Management
 
@@ -97,14 +98,17 @@ Component: #Helm & {
 ## Key Concepts
 
 - **Platform**: Top-level configuration containing all components
-- **Component**: Unit of configuration (Helm/Kustomize/Kubernetes)
-- **BuildPlan**: Instructions for building a component
-- **Generator**: Creates manifests (Helm, Kustomize, etc.)
-- **Transformer**: Modifies generated manifests
-- **Validator**: Validates final manifests
+- **Component**: Unit of configuration (DAG of Tasks producing deployment configs for one component)
+- **TaskSet**: DAG of Tasks (Similar to how make tasks behave)
+- **BuildPlan**: Instructions for building a component.  Deprecated in v1alpha6, use TaskSet instead.
+- **Generator**: Creates manifests (Helm, Kustomize, etc.) author schema only in v1alpha6
+- **Transformer**: Modifies generated manifests, author schema only in v1alpha6
+- **Validator**: Validates final manifests, author schema only in v1alpha6
 
 ## Resources
 
 - Tutorials: `/doc/md/tutorial/`
 - Platform templates: `/internal/generate/platforms/`
 - Test fixtures: `/internal/testutil/fixtures/`
+- Core schemas: `/api/core/` (Abstraction over low level data pipeline tasks)
+- Author schemas: `/api/author/` (User facing abstractions over core Schemas)
