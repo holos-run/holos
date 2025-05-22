@@ -12,6 +12,7 @@ import (
 
 	"github.com/holos-run/holos/internal/component"
 	"github.com/holos-run/holos/internal/generate"
+	"github.com/holos-run/holos/internal/holos"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,9 +22,32 @@ var f embed.FS
 // must align with embed all:platform directory
 const platform string = "platform"
 
+func TestComponentAlpha5(t *testing.T) {
+	h := newHarness(t, "components/v1alpha5")
+	t.Run("WriteToDefault", func(t *testing.T) {
+		err := h.c.Render(h.ctx, holos.WriteToDefault, os.Stderr, 1, nil)
+		assert.NoError(t, err)
+
+		// Verify the file was written to the expected path
+		expectedPath := filepath.Join(h.c.Root, holos.WriteToDefault, "v1alpha5/example/example.gen.yaml")
+		_, err = os.Stat(expectedPath)
+		assert.NoError(t, err, "Expected manifest file to exist at %s", expectedPath)
+	})
+
+	t.Run("WriteToCustom", func(t *testing.T) {
+		err := h.c.Render(h.ctx, "release", os.Stderr, 1, nil)
+		assert.NoError(t, err)
+
+		// Verify the file was written to the expected path
+		expectedPath := filepath.Join(h.c.Root, "release", "v1alpha5/example/example.gen.yaml")
+		_, err = os.Stat(expectedPath)
+		assert.NoError(t, err, "Expected manifest file to exist at %s", expectedPath)
+	})
+}
+
 func TestComponentAlpha6(t *testing.T) {
 	h := newHarness(t, "components/v1alpha6")
-	err := h.c.Render(h.ctx)
+	err := h.c.Render(h.ctx, holos.WriteToDefault, os.Stderr, 1, nil)
 	assert.NoError(t, err)
 }
 
@@ -58,7 +82,7 @@ func newHarness(t testing.TB, leaf string) *harness {
 	}
 
 	return &harness{
-		c:   component.New(root, leaf, component.NewConfig()),
+		c:   component.New(root, leaf),
 		ctx: ctx,
 	}
 }

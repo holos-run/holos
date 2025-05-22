@@ -61,6 +61,8 @@ func (r *renderPlatform) Run(ctx context.Context, p *platform.Platform) error {
 				args := make([]string, 0, 100)
 				args = append(args, prefixArgs...)
 				args = append(args, "render", "component")
+				// Add the write-to flag
+				args = append(args, "--write-to", r.pcfg.WriteTo)
 				// holos render platform --inject tags
 				for _, tag := range r.pcfg.TagMap.Tags() {
 					args = append(args, "--inject", tag)

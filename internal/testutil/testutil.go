@@ -88,7 +88,6 @@ func (h *ComponentHarness) Component(path string) *component.Component {
 	return component.New(
 		h.Root(),
 		filepath.Join(h.Base(), path),
-		component.NewConfig(),
 	)
 }
 

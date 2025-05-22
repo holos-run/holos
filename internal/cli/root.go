@@ -79,6 +79,9 @@ func New(cfg *holos.Config) *cobra.Command {
 	// Compare
 	rootCmd.AddCommand(NewCompareCmd())
 
+	// Compile
+	rootCmd.AddCommand(NewCompileCmd())
+
 	return rootCmd
 }
 

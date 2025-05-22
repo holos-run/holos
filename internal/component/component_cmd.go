@@ -37,8 +37,8 @@ func NewConfig() Config {
 	cfg := Config{
 		Concurrency: runtime.NumCPU(),
 		TagMap:      make(holos.TagMap),
-		WriteTo:     os.Getenv(holos.WriteToEnvVar),
 		Stderr:      os.Stderr,
+		WriteTo:     os.Getenv(holos.WriteToEnvVar),
 	}
 	if cfg.WriteTo == "" {
 		cfg.WriteTo = holos.WriteToDefault
@@ -59,8 +59,8 @@ func NewCommand(cfg Config) *cobra.Command {
 		if err != nil {
 			return errors.Wrap(err)
 		}
-		component := New(root, args[0], cfg)
-		return component.Render(ctx)
+		component := New(root, args[0])
+		return component.Render(ctx, cfg.WriteTo, cmd.ErrOrStderr(), cfg.Concurrency, cfg.TagMap)
 	}
 	return cmd
 }

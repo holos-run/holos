@@ -11,6 +11,7 @@ import (
 	"github.com/holos-run/holos/internal/component"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/generate"
+	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
@@ -27,14 +28,14 @@ func TestComponents(t *testing.T) {
 
 	t.Run("TypeMeta", func(t *testing.T) {
 		msg := "Expected a minimal component with only typemeta.yaml to work, but do nothing"
-		err := h.component("components/typemeta").Render(h.ctx)
+		err := h.component("components/typemeta").Render(h.ctx, holos.WriteToDefault, os.Stderr, 1, holos.TagMap{})
 		assert.NoError(t, err, msg)
 	})
 
 	t.Run("BasicDeployment", func(t *testing.T) {
 		msg := "Expected a basic cue resources generator to render a Deployment manifest"
 		c := h.component("components/basic")
-		err := c.Render(h.ctx)
+		err := c.Render(h.ctx, holos.WriteToDefault, os.Stderr, 1, holos.TagMap{})
 		assert.NoError(t, err, msg)
 
 		// Verify the rendered artifacts.
@@ -55,7 +56,7 @@ type harness struct {
 }
 
 func (h *harness) component(path string) *component.Component {
-	return component.New(h.root, path, component.NewConfig())
+	return component.New(h.root, path)
 }
 
 func (h *harness) load(path string) (any, error) {

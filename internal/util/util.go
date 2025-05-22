@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -120,13 +121,16 @@ func MakeCopyFunc(ctx context.Context, efs embed.FS, dest string) fs.WalkDirFunc
 	}
 }
 
-// Executable returns os.Executable or "holos" if the executable basename does
-// not start with "holos"  The purpose is to call the holos executable in the
-// path from test and debug builds.
+// Executable returns the fully qualified path to the "holos" executable by
+// searching through the PATH. If the current executable starts with "holos",
+// it returns that path, otherwise it searches for "holos" in PATH.
 func Executable() (string, error) {
 	exe, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
 	if strings.HasPrefix(filepath.Base(exe), "holos") {
 		return exe, nil
 	}
-	return "holos", err
+	return exec.LookPath("holos")
 }

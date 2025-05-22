@@ -3,7 +3,8 @@
 exec holos init platform v1alpha5 --force
 # want a buildplan shown
 exec holos show buildplans
-cmp stdout buildplan.yaml
+cp stdout buildplan-output.yaml
+exec holos compare yaml buildplan-output.yaml buildplan.yaml
 # want this error to go away
 ! stderr 'cannot convert non-concrete value string'
 -- platform/example.cue --

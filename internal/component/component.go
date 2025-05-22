@@ -3,6 +3,7 @@ package component
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -21,17 +22,15 @@ type BuildPlan struct {
 }
 
 // New returns a new Component used to obtain a BuildPlan.
-func New(root string, path string, cfg Config) *Component {
+func New(root string, path string) *Component {
 	return &Component{
-		Config: cfg,
-		Root:   root,
-		Path:   path,
+		Root: root,
+		Path: path,
 	}
 }
 
 // Component implements the holos render component command.
 type Component struct {
-	Config
 	// Root represents the cue module root directory.
 	Root string
 	// Path represents the component path relative to Root.
@@ -64,7 +63,7 @@ func (c *Component) TypeMeta() (tm holos.TypeMeta, err error) {
 }
 
 // Render renders the component BuildPlan.
-func (c *Component) Render(ctx context.Context) error {
+func (c *Component) Render(ctx context.Context, writeTo string, stderr io.Writer, concurrency int, tagMap holos.TagMap) error {
 	tm, err := c.TypeMeta()
 	if err != nil {
 		return errors.Format("could not discriminate component type: %w", err)
@@ -72,11 +71,11 @@ func (c *Component) Render(ctx context.Context) error {
 
 	switch tm.APIVersion {
 	case "v1alpha6":
-		if err := c.render(ctx, tm); err != nil {
+		if err := c.render(ctx, tm, writeTo, stderr, concurrency, tagMap); err != nil {
 			return errors.Format("could not render component: %w", err)
 		}
 	case "v1alpha5":
-		if err := c.renderAlpha5(ctx); err != nil {
+		if err := c.renderAlpha5(ctx, writeTo, stderr, concurrency, tagMap); err != nil {
 			return errors.Format("could not render v1alpha5 component: %w", err)
 		}
 	default:
@@ -86,11 +85,11 @@ func (c *Component) Render(ctx context.Context) error {
 }
 
 // BuildPlan returns the BuildPlan for the component.
-func (c *Component) BuildPlan(tm holos.TypeMeta, opts holos.BuildOpts) (BuildPlan, error) {
+func (c *Component) BuildPlan(tm holos.TypeMeta, opts holos.BuildOpts, tagMap holos.TagMap) (BuildPlan, error) {
 	// Generic build plan wrapper for all api versions.
 	var bp BuildPlan
 	// All versions allow tags explicitly injected using the --inject flag.
-	tags := c.TagMap.Tags()
+	tags := tagMap.Tags()
 	// discriminate the version.
 	switch tm.APIVersion {
 	case "v1alpha6":
@@ -141,7 +140,7 @@ func (c *Component) BuildPlan(tm holos.TypeMeta, opts holos.BuildOpts) (BuildPla
 // directory must be present and is used to discriminate the apiVersion prior to
 // building the CUE instance.  Useful to determine which build tags need to be
 // injected depending on the apiVersion of the component.
-func (c *Component) render(ctx context.Context, tm holos.TypeMeta) error {
+func (c *Component) render(ctx context.Context, tm holos.TypeMeta, writeTo string, stderr io.Writer, concurrency int, tagMap holos.TagMap) error {
 	if tm.Kind != "BuildPlan" {
 		return errors.Format("unsupported kind: %s, want BuildPlan", tm.Kind)
 	}
@@ -153,15 +152,15 @@ func (c *Component) render(ctx context.Context, tm holos.TypeMeta) error {
 	defer util.Remove(ctx, tempDir)
 
 	// Runtime configuration of the build.
-	opts := holos.NewBuildOpts(c.Root, c.Path, c.WriteTo, tempDir)
-	opts.Stderr = c.Stderr
-	opts.Concurrency = c.Concurrency
+	opts := holos.NewBuildOpts(c.Root, c.Path, writeTo, tempDir)
+	opts.Stderr = stderr
+	opts.Concurrency = concurrency
 
 	log := logger.FromContext(ctx)
 	log.DebugContext(ctx, fmt.Sprintf("rendering %s kind %s version %s", c.Path, tm.Kind, tm.APIVersion), "kind", tm.Kind, "apiVersion", tm.APIVersion, "path", c.Path)
 
 	// Get the BuildPlan from cue.
-	bp, err := c.BuildPlan(tm, opts)
+	bp, err := c.BuildPlan(tm, opts, tagMap)
 	if err != nil {
 		return errors.Wrap(err)
 	}
@@ -178,7 +177,7 @@ func (c *Component) render(ctx context.Context, tm holos.TypeMeta) error {
 // apiVersion, which is too late to pass tags properly.
 //
 // Deprecated: use render() instead
-func (c *Component) renderAlpha5(ctx context.Context) error {
+func (c *Component) renderAlpha5(ctx context.Context, writeTo string, stderr io.Writer, concurrency int, tagMap holos.TagMap) error {
 	// Manage a temp directory for the build artifacts.  The concrete value is
 	// needed prior to exporting the BuildPlan from the CUE instance.
 	tempDir, err := os.MkdirTemp("", "holos.render")
@@ -188,9 +187,9 @@ func (c *Component) renderAlpha5(ctx context.Context) error {
 	defer util.Remove(ctx, tempDir)
 
 	// Runtime configuration of the build.
-	opts := holos.NewBuildOpts(c.Root, c.Path, c.WriteTo, "")
-	opts.Stderr = c.Stderr
-	opts.Concurrency = c.Concurrency
+	opts := holos.NewBuildOpts(c.Root, c.Path, writeTo, tempDir)
+	opts.Stderr = stderr
+	opts.Concurrency = concurrency
 
 	tm := holos.TypeMeta{
 		Kind:       "BuildPlan",
@@ -198,7 +197,7 @@ func (c *Component) renderAlpha5(ctx context.Context) error {
 	}
 
 	// Get the BuildPlan from cue.
-	bp, err := c.BuildPlan(tm, opts)
+	bp, err := c.BuildPlan(tm, opts, tagMap)
 	if err != nil {
 		return errors.Wrap(err)
 	}

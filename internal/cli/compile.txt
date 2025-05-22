@@ -1,0 +1,17 @@
+Reads a stream of JSON-encoded Component objects from standard input.  For each
+Component, builds a CUE instance then exports a BuildPlan.  Each resulting
+BuildPlan is written as a JSON-encoded object to standard output.
+
+This command encapsulates cue export for concurrent use. It may be used directly
+by piping the output of holos show platform through jq to select the components
+list, then to stdin of this command.  This command is most often invoked 'holos
+render platform' to run concurrent cue exports safely.
+
+For example:
+
+  holos show platform --format=json \
+    | jq '.spec.components[] | {kind: "Component", apiVersion: "v1alpha6", component: .}' \
+    | holos compile --log-level=debug
+
+Note each platform components element is embedded into the component field of an
+enveloping object for the purpose of conveying type metadata.

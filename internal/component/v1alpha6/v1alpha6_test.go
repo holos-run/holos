@@ -32,7 +32,7 @@ func TestComponents(t *testing.T) {
 		})
 
 		t.Run("BuildPlan", func(t *testing.T) {
-			bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()))
+			bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()), holos.TagMap{})
 			require.NoError(t, err, msg)
 			err = bp.Build(h.Ctx())
 			require.NoError(t, err, msg)
@@ -69,7 +69,7 @@ func TestComponents(t *testing.T) {
 					assert.Equal(t, tm.APIVersion, apiVersion)
 
 					t.Run("Build", func(t *testing.T) {
-						bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()))
+						bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()), holos.TagMap{})
 						require.NoError(t, err, msg)
 						err = bp.Build(h.Ctx())
 						assert.ErrorContains(t, err, "could not validate", msg)
@@ -94,7 +94,7 @@ func testComponent(t *testing.T, h *testutil.ComponentHarness, kind, name string
 		assert.Equal(t, tm.APIVersion, apiVersion)
 
 		t.Run("Build", func(t *testing.T) {
-			bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()))
+			bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()), holos.TagMap{})
 			require.NoError(t, err, msg)
 			err = bp.Build(h.Ctx())
 			require.NoError(t, err, msg)
