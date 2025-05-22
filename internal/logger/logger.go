@@ -106,15 +106,15 @@ func (c *Config) ReplaceAttr(groups []string, a slog.Attr) slog.Attr {
 	if slices.Contains(c.dropAttrs, a.Key) {
 		return slog.Attr{}
 	}
-	// Check if err
-	if a.Key == ErrKey {
+	switch a.Key {
+	case ErrKey:
 		if err, ok := a.Value.Any().(error); ok {
 			return tint.Err(err)
 		}
 		if err, ok := a.Value.Any().(string); ok {
 			return tint.Err(errors.New(err))
 		}
-	} else if a.Key == slog.SourceKey {
+	case slog.SourceKey:
 		source := a.Value.Any().(*slog.Source)
 		source.File = filepath.Base(source.File)
 	}

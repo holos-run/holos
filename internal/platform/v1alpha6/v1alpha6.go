@@ -19,7 +19,7 @@ func (p *Platform) Load(v cue.Value) error {
 	if err := v.Validate(cue.Concrete(true)); err != nil {
 		return err
 	}
-	
+
 	if err := v.Decode(&p.Platform); err != nil {
 		// If it's a CUE error, return it unwrapped to preserve CUE's error formatting
 		if v.Err() != nil {
