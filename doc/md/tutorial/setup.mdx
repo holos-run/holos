@@ -84,9 +84,13 @@ Install these tools to use Holos's full capabilities:
 - [Kubectl] for [kustomize] operations
 
 :::note
-Holos is tested with Helm `v3.16.2`. If you see `Error: chart requires
+Holos is tested with Helm `v3.17.3`. If you see `Error: chart requires
 kubeVersion` errors, try upgrading Helm.
 :::
+
+## Known Issues
+
+Helm `v3.18.0` has a [known issue](https://github.com/NixOS/nixpkgs/pull/322994) that causes it to produce incorrect output. This may affect Holos users. For more details, see [Holos issue #433](https://github.com/holos-run/holos/issues/433).
 
 ## Next Steps
 
