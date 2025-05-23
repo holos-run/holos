@@ -10,7 +10,7 @@ import (
 	components: _
 	resource: {
 		metadata: "name": name
-		spec: "components": [for x in components {x}]
+		spec: "components": components
 	}
 }
 
