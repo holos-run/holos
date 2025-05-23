@@ -400,6 +400,10 @@ package core
 	isStdoutOutput?: bool @go(IsStdoutOutput)
 }
 
+// NameLabel indicates a field name matching the name of the value.  Usually the
+// name or metadata.name field of the struct value.
+#NameLabel: string
+
 // InternalLabel is an arbitrary unique identifier internal to holos itself.
 // The holos cli is expected to never write a InternalLabel value to rendered
 // output files, therefore use a InternalLabel when the identifier must be
@@ -448,7 +452,7 @@ package core
 // PlatformSpec represents the platform specification.
 #PlatformSpec: {
 	// Components represents a collection of holos components to manage.
-	components: [...#Component] @go(Components,[]Component)
+	components: {[string]: #Component} & {[NAME=string]: name: NAME} @go(Components,map[NameLabel]Component)
 }
 
 // Component represents the complete context necessary to produce a [BuildPlan]

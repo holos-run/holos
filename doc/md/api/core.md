@@ -37,6 +37,7 @@ Package core contains schemas for a [Platform](<#Platform>) and [BuildPlan](<#Bu
 - [type Kustomization](<#Kustomization>)
 - [type Kustomize](<#Kustomize>)
 - [type Metadata](<#Metadata>)
+- [type NameLabel](<#NameLabel>)
 - [type Platform](<#Platform>)
 - [type PlatformSpec](<#PlatformSpec>)
 - [type Repository](<#Repository>)
@@ -478,6 +479,15 @@ type Metadata struct {
 }
 ```
 
+<a name="NameLabel"></a>
+## type NameLabel {#NameLabel}
+
+NameLabel indicates a field name matching the name of the value. Usually the name or metadata.name field of the struct value.
+
+```go
+type NameLabel string
+```
+
 <a name="Platform"></a>
 ## type Platform {#Platform}
 
@@ -511,7 +521,7 @@ PlatformSpec represents the platform specification.
 ```go
 type PlatformSpec struct {
     // Components represents a collection of holos components to manage.
-    Components []Component `json:"components" yaml:"components"`
+    Components map[NameLabel]Component `json:"components" yaml:"components" cue:"{[NAME=string]: name: NAME}"`
 }
 ```
 
