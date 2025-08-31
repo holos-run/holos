@@ -136,6 +136,7 @@ unity: ## https://cuelabs.dev/unity/
 .PHONY: update-docs
 update-docs: ## Update doc examples
 	HOLOS_UPDATE_SCRIPTS=1 go test -v ./doc/md/...
+	HOLOS_UPDATE_SCRIPTS=1 go test -v ./doc/website/versioned_docs/...
 
 .PHONY: help
 help:  ## Display this help menu.

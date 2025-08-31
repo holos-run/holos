@@ -1,4 +1,4 @@
-[main 823e136] add httpbin
+[main 409f74c] add httpbin
  4 files changed, 113 insertions(+)
  create mode 100644 components/httpbin/httpbin.cue
  create mode 100644 components/httpbin/httpbin.yaml

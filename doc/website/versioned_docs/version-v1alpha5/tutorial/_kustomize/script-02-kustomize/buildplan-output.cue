@@ -27,9 +27,9 @@ spec:
                 - includeSelectors: false
                   pairs:
                     app.kubernetes.io/name: httpbin
-              patches: []
               images:
                 - name: mccutchen/go-httpbin
+              patches: []
               resources:
                 - resources.gen.yaml
                 - httpbin.yaml

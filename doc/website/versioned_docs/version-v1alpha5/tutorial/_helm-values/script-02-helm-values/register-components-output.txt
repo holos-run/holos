@@ -1,5 +1,3 @@
-cached prometheus-blackbox-exporter 9.0.1
-rendered blackbox in 3.825430417s
-cached prometheus 25.27.0
-rendered prometheus in 4.840089667s
-rendered platform in 4.840137792s
+rendered prometheus in 914.69225ms
+rendered blackbox in 928.397375ms
+rendered platform in 928.461334ms
