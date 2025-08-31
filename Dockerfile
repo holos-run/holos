@@ -1,6 +1,6 @@
-FROM registry.k8s.io/kubectl:v1.31.0 AS kubectl
+FROM registry.k8s.io/kubectl:v1.33.4 AS kubectl
 # https://github.com/GoogleContainerTools/distroless
-FROM golang:1.23 AS build
+FROM golang:1.24 AS build
 
 WORKDIR /go/src/app
 COPY . .
@@ -18,14 +18,21 @@ RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/s
 
 COPY --from=kubectl /bin/kubectl /usr/local/bin/
 
-# distroless
-FROM gcr.io/distroless/static-debian12 AS final
+# Use debian slim instead of distroless to get package management.
+FROM public.ecr.aws/docker/library/debian:13-slim AS final
 COPY --from=build \
      /go/bin/holos \
      /go/bin/kustomize \
      /usr/local/bin/kubectl \
      /usr/local/bin/helm \
      /bin/
+
+# Extra packages
+# git - https://github.com/holos-run/holos/issues/440
+RUN apt update && \
+    apt install -y --no-install-recommends git && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Usage: docker run -v $(pwd):/app --workdir /app --rm -it quay.io/holos-run/holos holos render platform
 CMD ["/bin/holos"]
