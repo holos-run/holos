@@ -1,2 +1,2 @@
-rendered podinfo in 188.373167ms
-rendered platform in 188.466708ms
+rendered podinfo in 159.277916ms
+rendered platform in 159.380625ms
