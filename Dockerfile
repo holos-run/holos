@@ -30,7 +30,7 @@ COPY --from=build \
 # Extra packages
 # git - https://github.com/holos-run/holos/issues/440
 RUN apt update && \
-    apt install -y --no-install-recommends git && \
+    apt install -y --no-install-recommends git ca-certificates && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
