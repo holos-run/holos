@@ -382,6 +382,10 @@ type Command struct {
 	IsStdoutOutput bool `json:"isStdoutOutput,omitempty" yaml:"isStdoutOutput,omitempty"`
 }
 
+// NameLabel indicates a field name matching the name of the value.  Usually the
+// name or metadata.name field of the struct value.
+type NameLabel string
+
 // InternalLabel is an arbitrary unique identifier internal to holos itself.
 // The holos cli is expected to never write a InternalLabel value to rendered
 // output files, therefore use a InternalLabel when the identifier must be
@@ -426,7 +430,7 @@ type Platform struct {
 // PlatformSpec represents the platform specification.
 type PlatformSpec struct {
 	// Components represents a collection of holos components to manage.
-	Components []Component `json:"components" yaml:"components"`
+	Components map[NameLabel]Component `json:"components" yaml:"components" cue:"{[NAME=string]: name: NAME}"`
 }
 
 // Component represents the complete context necessary to produce a [BuildPlan]

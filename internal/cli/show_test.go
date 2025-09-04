@@ -66,7 +66,7 @@ func TestShowAlpha6(t *testing.T) {
 
 	t.Run("BuildPlans", func(t *testing.T) {
 		t.Run("EmptyPlatform", func(t *testing.T) {
-			platformDir := filepath.Join(tempDir, "platform")
+			platformDir := filepath.Join(tempDir, "fixtures", "v1alpha6", "empty-platform")
 			h := newHarness()
 			err := h.Run(ctx, "buildplans", platformDir)
 			require.NoError(t, err)
