@@ -1,2 +1,2 @@
-[main 137f66a] render integrated blackbox and prometheus manifests
+[main c043d3d] render integrated blackbox and prometheus manifests
  2 files changed, 7 insertions(+), 7 deletions(-)

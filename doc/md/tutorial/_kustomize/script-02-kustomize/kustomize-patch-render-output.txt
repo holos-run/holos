@@ -1,2 +1,2 @@
-rendered httpbin in 99.597583ms
-rendered platform in 99.678042ms
+rendered httpbin in 80.450916ms
+rendered platform in 80.532083ms
