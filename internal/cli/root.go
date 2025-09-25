@@ -17,6 +17,7 @@ import (
 
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/cli/render"
+	"github.com/holos-run/holos/internal/cli/slice"
 	"github.com/holos-run/holos/internal/cli/txtar"
 
 	cueCmd "cuelang.org/go/cmd/cue/cmd"
@@ -81,6 +82,9 @@ func New(cfg *holos.Config) *cobra.Command {
 
 	// Compile
 	rootCmd.AddCommand(NewCompileCmd())
+
+	// Slice - https://github.com/patrickdappollonio/kubectl-slice
+	rootCmd.AddCommand(slice.NewKubectlSliceCmd())
 
 	return rootCmd
 }
