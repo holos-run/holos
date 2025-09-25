@@ -4,4 +4,4 @@ cmp stdout $WORK/output.txt
 -- command.sh --
 holos --version
 -- output.txt --
-0.104.3
+0.105.0
