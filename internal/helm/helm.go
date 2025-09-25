@@ -3,11 +3,13 @@ package helm
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/logger"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/registry"
 )
 
 // PullChart downloads and caches a Helm chart locally. It handles both OCI and
@@ -31,6 +33,20 @@ func PullChart(ctx context.Context, settings *cli.EnvSettings, chartRef, chartVe
 		return errors.Format("failed to created registry client: %w", err)
 	}
 	actionConfig.RegistryClient = registryClient
+
+	chartRefURL, err := url.Parse(chartRef)
+	if err != nil {
+		return errors.Format("Failed to parse the Chart: %w", err)
+	}
+
+	// If the chart been pulled is an OCI chart, the repo authentication has to be done ahead of the pull.
+	if chartRefURL.Scheme == "oci" && username != "" && password != "" {
+		loginOption := registry.LoginOptBasicAuth(username, password)
+		err = registryClient.Login(chartRefURL.Host, loginOption)
+		if err != nil {
+			return errors.Format("failed to login to registry: %w", err)
+		}
+	}
 
 	pullClient := action.NewPullWithOpts(action.WithConfig(actionConfig))
 	pullClient.Untar = true

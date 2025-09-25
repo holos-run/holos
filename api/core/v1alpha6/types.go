@@ -274,8 +274,8 @@ type Chart struct {
 // repository.  Holos gets the username and password from the environment
 // variables represented by the Auth field.
 type Repository struct {
-	Name string `json:"name" yaml:"name"`
-	URL  string `json:"url" yaml:"url"`
+	Name string `json:"name,omitempty" yaml:"name,omitempty"`
+	URL  string `json:"url,omitempty" yaml:"url,omitempty"`
 	Auth Auth   `json:"auth,omitempty" yaml:"auth,omitempty"`
 }
 
