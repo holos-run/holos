@@ -1,3 +1,3 @@
-[main da34784] annotate httpbin for prometheus probes
+[main 6d5bbc3] annotate httpbin for prometheus probes
  2 files changed, 18 insertions(+)
  create mode 100644 components/httpbin/patches.cue
