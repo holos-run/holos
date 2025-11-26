@@ -7,8 +7,8 @@ holos: {
 		"name": "default"
 	}
 	"spec": {
-		"components": [
-			{
+		"components": {
+			"slice": {
 				"annotations": {
 					"app.holos.run/description": "slice command transformer"
 				}
@@ -20,7 +20,7 @@ holos: {
 					"outputBaseDir": "outputBaseDir"
 				}
 				"path": "fixtures/v1alpha6/components/slice"
-			},
-		]
+			}
+		}
 	}
 }

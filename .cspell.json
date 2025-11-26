@@ -308,6 +308,7 @@
     "sysfs",
     "systemconnect",
     "tablewriter",
+    "taskset",
     "templatable",
     "testscript",
     "testutil",
