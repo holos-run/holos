@@ -8,5 +8,6 @@ package tools
 import (
 	_ "cuelang.org/go/cmd/cue"
 	_ "github.com/princjef/gomarkdoc/cmd/gomarkdoc"
+	_ "github.com/rogpeppe/go-internal/cmd/testscript"
 	_ "sigs.k8s.io/kustomize/kustomize/v5"
 )
