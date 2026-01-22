@@ -119,6 +119,7 @@ tools: go-deps website-deps ## install tool dependencies
 go-deps: ## tool versions pinned in tools.go
 	go install cuelang.org/go/cmd/cue
 	go install github.com/princjef/gomarkdoc/cmd/gomarkdoc
+	go install github.com/rogpeppe/go-internal/cmd/testscript
 	# curl https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | bash
 
 .PHONY: website-deps
