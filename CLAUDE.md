@@ -113,3 +113,4 @@ Component: #Helm & {
 - Test fixtures: `/internal/testutil/fixtures/`
 - Core schemas: `/api/core/` (Abstraction over low level data pipeline tasks)
 - Author schemas: `/api/author/` (User facing abstractions over core Schemas)
+- Task planning documents are located in the `/tasks/` directory

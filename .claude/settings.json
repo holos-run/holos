@@ -1,12 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd:*)",
+      "Bash(make:*)",
       "Bash(holos:*)",
       "Bash(cue:*)",
+      "Bash(grep:*)",
+      "Bash(cd:*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(echo:*)",
+      "Bash(head:*)",
       "Bash(git commit:*)",
-      "Bash(git add:*)",
-      "Bash(make:*)"
+      "Bash(git add:*)"
     ],
     "deny": []
   }
