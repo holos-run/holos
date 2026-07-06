@@ -1,6 +1,11 @@
 // Package author contains a standard set of schemas for component authors to
 // generate common [core] TaskSets.
 //
+// This package defines types only.  The concrete CUE that assembles a
+// [core] TaskSet from the wrapper fields is hand-written CUE provided by the
+// platform scaffolding from the holos init platform command, exactly as
+// v1alpha6 assembles a BuildPlan from the author package wrapper fields.
+//
 // Holos values stability, flexibility, and composition.  This package
 // intentionally defines only the minimal necessary set of structures.
 // Component authors are encouraged to define their own structures building on
@@ -74,7 +79,8 @@ type ComponentConfig struct {
 	// Tasks represents additional tasks unified into the TaskSet.  Replaces the
 	// v1alpha6 Artifacts and Validators mix-in fields.  Useful for adding GitOps
 	// resources or validation commands.  Each Task is unified without
-	// modification into the TaskSet spec.tasks field.
+	// modification into the TaskSet spec.tasks field by the hand-written
+	// assembly CUE provided by the platform scaffolding.
 	Tasks map[NameLabel]core.Task
 }
 

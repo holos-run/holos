@@ -15,8 +15,9 @@ import (
 // generated definitions in
 // cue.mod/gen/github.com/holos-run/holos/api/author/v1beta1 by loading an
 // overlay package from this directory, which provides the cue.mod module
-// context.
-func vetAuthorComponent(t *testing.T, component string) error {
+// context.  The built value is returned so callers may assert on exported
+// fields when validation succeeds.
+func vetAuthorComponent(t *testing.T, component string) (cue.Value, error) {
 	t.Helper()
 	dir, err := os.Getwd()
 	if err != nil {
@@ -39,13 +40,13 @@ component: %s
 		t.Fatalf("want 1 instance, got %d", len(instances))
 	}
 	if instances[0].Err != nil {
-		return instances[0].Err
+		return cue.Value{}, instances[0].Err
 	}
 	value := cuecontext.New().BuildInstance(instances[0])
 	if err := value.Err(); err != nil {
-		return err
+		return value, err
 	}
-	return value.Validate(cue.Concrete(true))
+	return value, value.Validate(cue.Concrete(true))
 }
 
 // TestV1Beta1AuthorDefinitions verifies the generated author v1beta1 CUE
@@ -86,6 +87,8 @@ func TestV1Beta1AuthorDefinitions(t *testing.T) {
 		}
 	}`
 
+	// tasksMixin emulates one line of the hand-written assembly CUE provided
+	// by the platform scaffolding: Tasks unify into TaskSet spec.tasks.
 	tasksMixin := `author.#Kubernetes & {
 		Name: "example"
 		Path: "components/example"
@@ -100,7 +103,7 @@ func TestV1Beta1AuthorDefinitions(t *testing.T) {
 		}
 		TaskSet: {
 			metadata: name: "example"
-			spec: tasks: {}
+			spec: tasks: Tasks
 		}
 	}`
 
@@ -125,7 +128,7 @@ func TestV1Beta1AuthorDefinitions(t *testing.T) {
 		}
 		resource: {
 			metadata: name: "default"
-			spec: components: [for c in components {c}]
+			spec: components: [for c in component.components {c}]
 		}
 	}`
 
@@ -133,6 +136,9 @@ func TestV1Beta1AuthorDefinitions(t *testing.T) {
 		name      string
 		component string
 		wantErr   bool
+		// assertPath and assertWant check one exported string field when set.
+		assertPath string
+		assertWant string
 	}{
 		{
 			name:      "kubernetes component",
@@ -150,9 +156,11 @@ func TestV1Beta1AuthorDefinitions(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name:      "kubernetes component with tasks mixin",
-			component: tasksMixin,
-			wantErr:   false,
+			name:       "kubernetes component with tasks mixin",
+			component:  tasksMixin,
+			wantErr:    false,
+			assertPath: `component.TaskSet.spec.tasks.gitops.kind`,
+			assertWant: "Resources",
 		},
 		{
 			name:      "tasks mixin rejects mismatched kind config",
@@ -160,20 +168,31 @@ func TestV1Beta1AuthorDefinitions(t *testing.T) {
 			wantErr:   true,
 		},
 		{
-			name:      "platform with one component",
-			component: platform,
-			wantErr:   false,
+			name:       "platform with one component",
+			component:  platform,
+			wantErr:    false,
+			assertPath: `component.resource.spec.components[0].name`,
+			assertWant: "example",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := vetAuthorComponent(t, tc.component)
+			value, err := vetAuthorComponent(t, tc.component)
 			if tc.wantErr && err == nil {
 				t.Fatalf("want error, got nil")
 			}
 			if !tc.wantErr && err != nil {
 				t.Fatalf("want no error, got: %v", err)
+			}
+			if tc.assertPath != "" {
+				got, err := value.LookupPath(cue.ParsePath(tc.assertPath)).String()
+				if err != nil {
+					t.Fatalf("lookup %s: %v", tc.assertPath, err)
+				}
+				if got != tc.assertWant {
+					t.Fatalf("want %s at %s, got %s", tc.assertWant, tc.assertPath, got)
+				}
 			}
 		})
 	}
