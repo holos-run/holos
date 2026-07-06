@@ -91,7 +91,12 @@ no escaping rules: a key segment containing `/` is a load error.**
   `deploy/components/vault/vault.gen.yaml`.  The key is *logical*: a
   `--write-to` override relocates bytes on disk but does not change keys, so
   policies that match file paths are stable across invocations and CI
-  environments.
+  environments.  Artifact paths are `FileOrDirectoryPath`: a sink whose
+  artifact is a directory contributes one FilePath key per manifest file
+  under it — the sink's logical path joined with the file's path relative
+  to the directory root (`deploy/components/vault/manifests/rbac.yaml`) —
+  so every key names a file, never a directory
+  ([V4](#v4-loader-mechanics)).
 - **GVK** — `apiVersion` is already `group/version` for named groups and
   bare `version` for the core group, so the key is a direct concatenation
   with no discovery or parsing: `apps/v1/Deployment`, `v1/Secret`,
@@ -110,12 +115,19 @@ no escaping rules: a key segment containing `/` is a load error.**
 Escaping rules: none exist, by construction.  Kubernetes constrains every
 segment — group is a DNS subdomain, version and kind are alphanumeric
 identifiers, and namespace and name are path-segment names that reject `/`
-— so `/` cannot legally appear inside any key component.  Rather than
-define an escape syntax for documents that violate those constraints, the
-loader MUST reject a document whose `apiVersion`, `kind`,
-`metadata.namespace`, or `metadata.name` contains a character that would
-make its key ambiguous, with an error naming the file path and document
-index.  Rationale: an escaping scheme would make keys unpredictable to the
+— so the only legal slash inside a key component is the one separating
+group from version in a non-core `apiVersion`.  The loader validates each
+field against exactly that grammar, per field rather than per character:
+`apiVersion` MUST contain at most one `/` (a non-empty group before it when
+present); `kind`, `metadata.namespace`, and `metadata.name` MUST contain
+none.  A violation is an error naming the file path and document index.
+The resulting GVK key therefore contains exactly one slash (core group) or
+two (named group) and parses unambiguously from the right: the last
+segment is the kind, the segment before it is the version, and any
+remainder is the group — `apps/v1/Deployment` and `v1/Secret` both parse;
+a document with `apiVersion: a/b/c` is rejected at load.  Rather than
+define an escape syntax for documents that violate the grammar, the loader
+rejects them: an escaping scheme would make keys unpredictable to the
 policy author (is it `vault%2Fbad` or `vault\/bad`?) to support only
 resources a cluster would refuse anyway.
 
@@ -132,6 +144,14 @@ are joined without deduplication.  Duplicates *across* files cannot reach
 the loader: final artifact paths are platform-global and write-once, so two
 sinks declaring the same path already fail at graph-build time
 ([rendering.md step 2](rendering.md#step-2-collect-tasksets-and-merge-into-one-dag)).
+This chapter extends that rule to prefix-freedom: no sink's final path may
+equal *or nest under* another sink's directory path — a file sink at
+`deploy/vault/rbac.yaml` conflicts with a directory sink at `deploy/vault`
+— validated at graph build with an error naming both canonical IDs.
+Prefix-freedom guarantees every FilePath key has exactly one producing
+sink and protects the atomic directory promotion of
+[rendering.md R8](rendering.md#r8-failure-semantics), which could not
+swap a directory another sink writes into.
 The same resource appearing in two *different* files is not a duplicate —
 the file-path level exists precisely so both load — though a policy may
 forbid it by unifying a constraint over the structure.
@@ -171,6 +191,40 @@ design-inputs item 2 — so mixins may add policies by unification):
 // Platform spec (v1beta1).
 spec: policies: "no-secrets": path: "./policy/no-secrets"
 ```
+
+The field is normative for the v1beta1 `PlatformSpec`; Phase 4 (HOL-1497)
+transcribes it into `api/core/v1beta1/types.go` alongside the fields the
+spec carries over from `api/core/v1alpha6/types.go`:
+
+```go
+// PlatformSpec gains one field in v1beta1.
+type PlatformSpec struct {
+	// ... existing fields carry over from v1alpha6.
+
+	// Policies represents verification policy packages keyed by policy
+	// name, unified over the rendered resources before artifacts are
+	// written (resources.md V3).
+	Policies map[string]Policy `json:"policies,omitempty" yaml:"policies,omitempty"`
+}
+
+// Policy represents one verification policy CUE package.
+type Policy struct {
+	// Path represents the policy package directory relative to the
+	// platform root, e.g. "./policy/no-secrets".
+	Path string `json:"path" yaml:"path"`
+}
+```
+
+Policy names MUST match the same RFC 1123 label constraint task names
+follow ([schema.md D3](schema.md#d3-task-naming-and-namespacing)), so a
+failing policy's name composes into error messages and log labels
+unambiguously.  A policy path MUST be relative, forward-slash separated,
+and resolve inside the platform's CUE module: absolute paths and paths
+whose normalized form escapes the platform root (`..`) are rejected when
+the platform loads — the same containment rule component paths follow.
+Each package is built with `BuildInstance(root, path)` exactly as a
+component is, so a policy package may import any module the platform's
+`cue.mod` resolves ([V6](#v6-unification-by-downstream-modules)).
 
 The package declares a `resources` field.  After the loader builds the
 populated structure, holos unifies each policy package's `resources` value
@@ -223,7 +277,15 @@ loader.**
   the artifact store, not from files on disk: at the barrier node the deploy
   tree has deliberately not been written ([V3](#v3-verification-policy)),
   and the store bytes are exactly what the sinks will write.
-- **Splitting** — each artifact is split into documents with a
+- **Directory artifacts** — a sink whose artifact is a directory
+  (`FileOrDirectoryPath`) is walked in the store: each file whose name ends
+  in `.yaml` or `.yml` loads under its own FilePath key, the sink's logical
+  path joined with the file's directory-relative path
+  ([V1](#v1-key-formats)); files with any other extension are ancillary
+  outputs, skipped and logged at debug level, never resources.  The
+  prefix-freedom rule ([V2](#v2-duplicate-detection)) guarantees the walk
+  of one sink cannot produce a key another sink also produces.
+- **Splitting** — each manifest file is split into documents with a
   `gopkg.in/yaml.v3` `Decoder` loop, the multi-document behavior the
   repository already depends on.  Empty and null documents are skipped.  A
   document that is not a map, or that lacks `apiVersion`, `kind`, or
