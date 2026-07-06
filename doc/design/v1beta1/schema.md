@@ -437,9 +437,15 @@ package holos
 
 TaskSets: "components/vault": spec: tasks: {
 	validate: {
-		kind:    "Command"
-		inputs:  ["vault.gen.yaml"]
-		command: args: ["holos", "cue", "vet", "-f", "vault.gen.yaml"]
+		kind:   "Command"
+		inputs: ["vault.gen.yaml"]
+		command: {
+			// The declared input is materialized in the task temp dir, not
+			// the platform root, so wire it to stdin rather than naming a
+			// bare path in args.
+			stdin: "vault.gen.yaml"
+			args: ["holos", "cue", "vet", "-"]
+		}
 	}
 	deploy: dependsOn: validate: {}
 }
