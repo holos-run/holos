@@ -269,7 +269,7 @@ Its consequences:
 
 ```console
 $ holos render platform
-error: platform.profiles.management.roles."cilium-vxlan".config.tunelMode: field not allowed:
+error: platform.profiles."management-cluster".roles."cilium-vxlan".config.tunelMode: field not allowed:
     ./site/role-cilium-vxlan.cue:9:3
 exit status 1
 ```
@@ -571,7 +571,7 @@ package site
 
 // The management-cluster profile selects the roles and injects site data
 // at the profile layer: cluster name and pod CIDR.
-platform: profiles: management: roles: {
+platform: profiles: "management-cluster": roles: {
 	"cilium-vxlan": _roles["cilium-vxlan"] & {
 		config: {
 			cluster: "name":       _site.cluster
@@ -621,7 +621,7 @@ resource: spec: components: {
 		name: "cilium"
 		path: "components/cilium"
 		labels: {
-			"holos.run/profile.name": "management"
+			"holos.run/profile.name": "management-cluster"
 			"holos.run/role.name":    "cilium-vxlan"
 		}
 	}
@@ -629,7 +629,7 @@ resource: spec: components: {
 		name: "istio-cni"
 		path: "components/istio-cni"
 		labels: {
-			"holos.run/profile.name": "management"
+			"holos.run/profile.name": "management-cluster"
 			"holos.run/role.name":    "service-mesh"
 		}
 	}
@@ -655,7 +655,7 @@ dependencies resolve within the profile that instantiates the roles;
 naming a role the profile does not carry fails evaluation.**
 
 The third `taskSets` comprehension in [U1](#u1-the-author-layer-and-the-flattening)
-is the compiler.  For the management profile it evaluates to (istiod
+is the compiler.  For the management-cluster profile it evaluates to (istiod
 shown; `istio-cni` and `ztunnel` are identical):
 
 ```cue
@@ -862,7 +862,7 @@ between layers is bottom by design.  The site sets
 
 ```console
 $ holos render platform
-error: platform.profiles.management.roles."cilium-vxlan".components.cilium.component.config.policyEnforcementMode: conflicting values "default" and "always":
+error: platform.profiles."management-cluster".roles."cilium-vxlan".components.cilium.component.config.policyEnforcementMode: conflicting values "default" and "always":
     ./site/role-cilium-vxlan.cue:14:27
     ./example.com/security/cilium-policy/mixin.cue:11:33
 exit status 1
