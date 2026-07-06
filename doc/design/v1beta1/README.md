@@ -19,6 +19,7 @@ must be split into additional sibling files and added to the document map.
 | [README.md](README.md) | Document map, design inputs, layer model | complete | HOL-1501 |
 | [schema.md](schema.md) | TaskSet, Task, and first-class Command core schema | complete | HOL-1502 |
 | [rendering.md](rendering.md) | Compiler pool and the platform-wide DAG | complete | HOL-1503 |
+| [rendering-migration.md](rendering-migration.md) | v1alpha5/v1alpha6 components in the platform DAG | complete | HOL-1503 |
 | [resources.md](resources.md) | Rendered-resource round-trip | stub | HOL-1504 |
 | [modules.md](modules.md) | CUE module packaging and distribution | stub | HOL-1505 |
 | [use-case.md](use-case.md) | Canonical management-cluster use case | stub | HOL-1506 |

@@ -129,7 +129,8 @@ type Task struct {
 	Inputs []FileOrDirectoryPath `json:"inputs,omitempty" yaml:"inputs,omitempty"`
 	// Output is the artifact-store path produced by the task.  Output values
 	// are write-once: it is an error for two tasks to declare the same
-	// Output within one platform render.
+	// Output within one TaskSet.  The platform merge namespaces store paths
+	// by component, extending the rule platform-wide (rendering.md step 2).
 	Output FileOrDirectoryPath `json:"output,omitempty" yaml:"output,omitempty"`
 
 	// Exactly one of the following, matching Kind:
