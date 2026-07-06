@@ -121,11 +121,22 @@ func (b *TaskSet) Build(ctx context.Context) error {
 
 	// Load inputs sourced from the component directory into the artifact
 	// store so tasks consume them uniformly (schema.md D1: an input matching
-	// no output must exist in the component directory).
+	// no output must exist in the component directory).  Skip paths covered
+	// by an already loaded directory: the store is write-once, so loading
+	// base and base/patch.yaml independently would fail on the second load.
+	// g.files is sorted, so a directory sorts before the paths under it.
+	loaded := make([]string, 0, len(g.files))
+outer:
 	for _, path := range g.files {
+		for _, dir := range loaded {
+			if strings.HasPrefix(path, dir+"/") {
+				continue outer
+			}
+		}
 		if err := b.Opts.Store.Load(b.Opts.AbsLeaf(), path); err != nil {
 			return errors.Format("%s: could not load %s from component directory: %w", msg, path, err)
 		}
+		loaded = append(loaded, path)
 	}
 
 	if err := b.execute(ctx, g); err != nil {
@@ -200,6 +211,21 @@ func (b *TaskSet) graph() (*graph, error) {
 				return nil, errors.Format("duplicate artifact path %s: declared by tasks %s and %s", path, prev, name)
 			}
 			artifactPaths[path] = name
+		}
+	}
+
+	// Final artifact paths must be prefix-free: a directory sink and a file
+	// sink under it write the same final file nondeterministically.
+	sinkPaths := make([]string, 0, len(artifactPaths))
+	for path := range artifactPaths {
+		sinkPaths = append(sinkPaths, path)
+	}
+	sort.Strings(sinkPaths)
+	for _, path := range sinkPaths {
+		for _, other := range sinkPaths {
+			if strings.HasPrefix(other, path+"/") {
+				return nil, errors.Format("artifact path %s declared by task %s overlaps artifact path %s declared by task %s", other, artifactPaths[other], path, artifactPaths[path])
+			}
 		}
 	}
 
@@ -893,16 +919,21 @@ func (t *taskRunner) artifact(ctx context.Context) error {
 	}
 
 	log := logger.FromContext(ctx)
+	fullPath := filepath.Join(t.opts.AbsWriteTo(), path)
+
+	// Replace the destination so a re-render never leaves stale files from a
+	// previous render under a directory artifact.
+	if err := os.RemoveAll(fullPath); err != nil {
+		return errors.Wrap(err)
+	}
 
 	if path == input {
 		if err := store.Save(t.opts.AbsWriteTo(), path); err != nil {
 			return errors.Wrap(err)
 		}
-		log.DebugContext(ctx, fmt.Sprintf("wrote %s", filepath.Join(t.opts.AbsWriteTo(), path)))
+		log.DebugContext(ctx, fmt.Sprintf("wrote %s", fullPath))
 		return nil
 	}
-
-	fullPath := filepath.Join(t.opts.AbsWriteTo(), path)
 
 	// A single file input renames to the artifact path.
 	if data, ok := store.Get(input); ok {

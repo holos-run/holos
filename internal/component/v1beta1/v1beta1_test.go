@@ -360,6 +360,98 @@ func TestBuildSharedCommandInputs(t *testing.T) {
 	}
 }
 
+func TestBuildOverlappingArtifactPathError(t *testing.T) {
+	b := newTestTaskSet(t, map[string]core.Task{
+		"gen-a": resourcesTask("a", "a.gen.yaml"),
+		"gen-b": resourcesTask("b", "b.gen.yaml"),
+		"deploy-dir": {
+			Kind:     "Artifact",
+			Inputs:   []core.FileOrDirectoryPath{"a.gen.yaml"},
+			Artifact: core.Artifact{Path: "components/vault"},
+		},
+		"deploy-file": {
+			Kind:     "Artifact",
+			Inputs:   []core.FileOrDirectoryPath{"b.gen.yaml"},
+			Artifact: core.Artifact{Path: "components/vault/rbac.yaml"},
+		},
+	})
+	err := b.Build(t.Context())
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "overlaps artifact path")
+	assert.ErrorContains(t, err, "deploy-dir")
+	assert.ErrorContains(t, err, "deploy-file")
+}
+
+func TestBuildOverlappingComponentInputs(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("test depends on the true command")
+	}
+	// One task consumes the base directory while another consumes a file
+	// under it.  The preload must not fail on the write-once store.
+	b := newTestTaskSet(t, map[string]core.Task{
+		"validate": {
+			Kind:    "Command",
+			Inputs:  []core.FileOrDirectoryPath{"base"},
+			Command: core.Command{Args: []string{"true"}},
+		},
+		"combine-file": {
+			Kind:   "Join",
+			Inputs: []core.FileOrDirectoryPath{"base/patch.yaml"},
+			Output: "file.gen.yaml",
+		},
+	})
+	dir := filepath.Join(b.Opts.AbsLeaf(), "base")
+	require.NoError(t, os.MkdirAll(dir, 0o777))
+	want := "greeting: hello\n"
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "patch.yaml"), []byte(want), 0o666))
+
+	require.NoError(t, b.Build(t.Context()))
+
+	data, ok := b.Opts.Store.Get("file.gen.yaml")
+	require.True(t, ok)
+	assert.Equal(t, want, string(data))
+}
+
+func TestBuildArtifactReplacesStaleFiles(t *testing.T) {
+	newDirTaskSet := func(t *testing.T, artifactPath string) *TaskSet {
+		b := newTestTaskSet(t, map[string]core.Task{
+			"deploy": {
+				Kind:     "Artifact",
+				Inputs:   []core.FileOrDirectoryPath{"manifests"},
+				Artifact: core.Artifact{Path: core.FileOrDirectoryPath(artifactPath)},
+			},
+		})
+		dir := filepath.Join(b.Opts.AbsLeaf(), "manifests")
+		require.NoError(t, os.MkdirAll(dir, 0o777))
+		require.NoError(t, os.WriteFile(filepath.Join(dir, "real.yaml"), []byte("real: true\n"), 0o666))
+		return b
+	}
+
+	for _, tc := range []struct {
+		name string
+		path string
+		dest string
+	}{
+		{name: "DefaultPath", path: "", dest: "manifests"},
+		{name: "RenamedPath", path: "out", dest: "out"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			b := newDirTaskSet(t, tc.path)
+			// Simulate a stale file from a previous render.
+			staleDir := filepath.Join(b.Opts.AbsWriteTo(), tc.dest)
+			require.NoError(t, os.MkdirAll(staleDir, 0o777))
+			require.NoError(t, os.WriteFile(filepath.Join(staleDir, "stale.yaml"), []byte("stale: true\n"), 0o666))
+
+			require.NoError(t, b.Build(t.Context()))
+
+			_, err := os.Stat(filepath.Join(staleDir, "real.yaml"))
+			assert.NoError(t, err, "expected current file to be written")
+			_, err = os.Stat(filepath.Join(staleDir, "stale.yaml"))
+			assert.True(t, os.IsNotExist(err), "expected stale file to be removed")
+		})
+	}
+}
+
 func TestBuildDisabledNoOp(t *testing.T) {
 	b := newTestTaskSet(t, map[string]core.Task{
 		"gen": resourcesTask("a", "a.gen.yaml"),
