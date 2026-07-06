@@ -73,6 +73,8 @@ package core
 
 	if kind == "Command" {
 		command!: #Command & {
+			// A command without an argument vector cannot execute.
+			args!: [string, ...string]
 			isStdoutOutput: bool | *false
 		}
 		resources?: _|_
