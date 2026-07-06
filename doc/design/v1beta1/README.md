@@ -8,15 +8,16 @@ independently published CUE modules.
 
 This README owns three things: the document map, the design-inputs digest,
 and the layer model chapter.  Every other chapter lives in a sibling file.
-Any chapter that grows past roughly 400 lines must be split into additional
-sibling files and added to the document map.
+Any chapter that grows past roughly 400 lines of prose — measured excluding
+fenced code listings, which normative schema chapters necessarily carry —
+must be split into additional sibling files and added to the document map.
 
 ## Document map
 
 | Document | Chapter | Status | Owning task |
 | -- | -- | -- | -- |
 | [README.md](README.md) | Document map, design inputs, layer model | complete | HOL-1501 |
-| [schema.md](schema.md) | TaskSet, Task, and first-class Command core schema | stub | HOL-1502 |
+| [schema.md](schema.md) | TaskSet, Task, and first-class Command core schema | complete | HOL-1502 |
 | [rendering.md](rendering.md) | Compiler pool and the platform-wide DAG | stub | HOL-1503 |
 | [resources.md](resources.md) | Rendered-resource round-trip | stub | HOL-1504 |
 | [modules.md](modules.md) | CUE module packaging and distribution | stub | HOL-1505 |
