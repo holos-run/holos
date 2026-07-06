@@ -7,10 +7,10 @@ sidebar_position: 200
 
 
 ```go
-import "github.com/holos-run/holos/api/author/v1alpha6"
+import "github.com/holos-run/holos/api/author/v1beta1"
 ```
 
-Package author contains a standard set of schemas for component authors to generate common [core](<https://holos.run/docs/api/core/>) BuildPlans.
+Package author contains a standard set of schemas for component authors to generate common [core](<https://holos.run/docs/api/core/>) TaskSets.
 
 Holos values stability, flexibility, and composition. This package intentionally defines only the minimal necessary set of structures. Component authors are encouraged to define their own structures building on our example [topics](<https://holos.run/docs/topics/>).
 
@@ -40,15 +40,15 @@ ComponentConfig represents the configuration common to all kinds of components f
 
 ```go
 type ComponentConfig struct {
-    // Name represents the BuildPlan metadata.name field.  Used to construct the
+    // Name represents the TaskSet metadata.name field.  Used to construct the
     // fully rendered manifest file path.
     Name string
-    // Labels represent the BuildPlan metadata.labels field.
+    // Labels represent the TaskSet metadata.labels field.
     Labels map[string]string
-    // Annotations represent the BuildPlan metadata.annotations field.
+    // Annotations represent the TaskSet metadata.annotations field.
     Annotations map[string]string
 
-    // Path represents the path to the component producing the BuildPlan.
+    // Path represents the path to the component producing the TaskSet.
     Path string
     // Parameters are useful to reuse a component with various parameters.
     // Injected as CUE @tag variables.  Parameters with a "holos_" prefix are
@@ -64,19 +64,18 @@ type ComponentConfig struct {
     Resources core.Resources
     // KustomizeConfig represents the kustomize configuration.
     KustomizeConfig KustomizeConfig
-    // Validators represent checks that must pass for output to be written.
-    Validators map[NameLabel]core.Validator
-    // Artifacts represents additional artifacts to mix in.  Useful for adding
-    // GitOps resources.  Each Artifact is unified without modification into the
-    // BuildPlan.
-    Artifacts map[NameLabel]core.Artifact
+    // Tasks represents additional tasks unified into the TaskSet.  Replaces the
+    // v1alpha6 Artifacts and Validators mix-in fields.  Useful for adding GitOps
+    // resources or validation commands.  Each Task is unified without
+    // modification into the TaskSet spec.tasks field.
+    Tasks map[NameLabel]core.Task
 }
 ```
 
 <a name="Helm"></a>
 ## type Helm {#Helm}
 
-Helm assembles a BuildPlan rendering a helm chart. Useful to mix in additional resources from CUE and transform the helm output with kustomize.
+Helm assembles a TaskSet rendering a helm chart. Useful to mix in additional resources from CUE and transform the helm output with kustomize.
 
 ```go
 type Helm struct {
@@ -98,39 +97,39 @@ type Helm struct {
     // KubeVersion represents the helm template --kube-version flag
     KubeVersion string `json:",omitempty"`
 
-    // BuildPlan represents the derived BuildPlan produced for the holos render
+    // TaskSet represents the derived TaskSet produced for the holos render
     // component command.
-    BuildPlan core.BuildPlan
+    TaskSet core.TaskSet
 }
 ```
 
 <a name="Kubernetes"></a>
 ## type Kubernetes {#Kubernetes}
 
-Kubernetes assembles a BuildPlan containing inline resources exported from CUE.
+Kubernetes assembles a TaskSet containing inline resources exported from CUE.
 
 ```go
 type Kubernetes struct {
     ComponentConfig `json:",inline"`
 
-    // BuildPlan represents the derived BuildPlan produced for the holos render
+    // TaskSet represents the derived TaskSet produced for the holos render
     // component command.
-    BuildPlan core.BuildPlan
+    TaskSet core.TaskSet
 }
 ```
 
 <a name="Kustomize"></a>
 ## type Kustomize {#Kustomize}
 
-Kustomize assembles a BuildPlan rendering manifests from a [kustomize](<https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/>) kustomization.
+Kustomize assembles a TaskSet rendering manifests from a [kustomize](<https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/>) kustomization.
 
 ```go
 type Kustomize struct {
     ComponentConfig `json:",inline"`
 
-    // BuildPlan represents the derived BuildPlan produced for the holos render
+    // TaskSet represents the derived TaskSet produced for the holos render
     // component command.
-    BuildPlan core.BuildPlan
+    TaskSet core.TaskSet
 }
 ```
 
@@ -180,9 +179,13 @@ Platform assembles a core Platform in the Resource field for the holos render pl
 
 ```go
 type Platform struct {
-    Name       string                       `json:"name" yaml:"name" cue:"string | *\"default\""`
+    // Name represents the platform name.
+    Name string `json:"name" yaml:"name" cue:"string | *\"default\""`
+    // Components represents the components to register with the platform.
     Components map[NameLabel]core.Component `json:"components" yaml:"components"`
-    Resource   core.Platform                `json:"resource" yaml:"resource"`
+    // Resource represents the core Platform resource for the holos render
+    // platform command.
+    Resource core.Platform `json:"resource" yaml:"resource"`
 }
 ```
 
