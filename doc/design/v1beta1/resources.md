@@ -290,6 +290,20 @@ loader.**
   repository already depends on.  Empty and null documents are skipped.  A
   document that is not a map, or that lacks `apiVersion`, `kind`, or
   `metadata.name`, is an error naming the file path and document index.
+- **List flattening** — a document with `apiVersion: v1` and `kind: List`
+  is a wrapper `kubectl apply -f` accepts, not a resource: the loader
+  flattens it, treating each element of `items` exactly like a top-level
+  document — same required fields, same key derivation, same duplicate
+  detection ([V2](#v2-duplicate-detection)) — attributed as `document N
+  item M` in errors.  The wrapper itself never appears in the structure,
+  so a List cannot smuggle a resource past a policy.  Flattening is one
+  level: a `v1/List` nested inside another is an error.  Typed collections
+  (`kind: DeploymentList` and friends) are not flattened; they fail the
+  `metadata.name` requirement, and the error message for a kind ending in
+  `List` that carries `items` says to emit the items as separate documents
+  or a `v1/List`.  Rendered manifests SHOULD NOT emit wrappers at all —
+  multi-document YAML is the pattern's native shape — but a chart that
+  does must not break the round-trip, and must not bypass it either.
 - **CUE loading** — policy packages are built with `BuildInstance`
   (`internal/cue/cue.go`), the same loader every other holos evaluation
   uses.  `BuildInstance` serializes on `cueMutex` (`cue.go` lines 26–27)
