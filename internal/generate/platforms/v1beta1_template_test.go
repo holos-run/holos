@@ -114,4 +114,76 @@ Component: #Kubernetes & {
 	if got, want := ts.Spec.Tasks["kustomize"].Output, core.FileOrDirectoryPath("example.gen.yaml"); got != want {
 		t.Errorf("want kustomize output %s, got %s", want, got)
 	}
+
+	// KustomizeConfig.Files produces File tasks named by sanitizing the source
+	// path into an RFC 1123 label.
+	t.Run("FileTaskName", func(t *testing.T) {
+		filesCue := componentCue + `
+Component: KustomizeConfig: Files: "deployment.yaml": _
+`
+		ts := buildTaskSet(t, root, leaf, filesCue)
+		task, ok := ts.Spec.Tasks["file-deployment-yaml"]
+		if !ok {
+			t.Fatalf("want task file-deployment-yaml in spec.tasks, got %v", ts.Spec.Tasks)
+		}
+		if got, want := task.File.Source, core.FilePath("deployment.yaml"); got != want {
+			t.Errorf("want file source %s, got %s", want, got)
+		}
+	})
+
+	// A file source the sanitizer cannot convert to an RFC 1123 label fails
+	// evaluation instead of producing an invalid task name.
+	t.Run("InvalidFileTaskName", func(t *testing.T) {
+		badCue := componentCue + `
+Component: KustomizeConfig: Files: "patch+prod.yaml": _
+`
+		if err := os.WriteFile(filepath.Join(root, leaf, "example.cue"), []byte(badCue), 0o666); err != nil {
+			t.Fatal(err)
+		}
+		tags := []string{
+			"holos_component_name=example",
+			"holos_component_path=" + leaf,
+		}
+		inst, err := holoscue.BuildInstance(root, leaf, tags)
+		if err != nil {
+			return // load error also satisfies the guard
+		}
+		v, err := inst.HolosValue()
+		if err != nil {
+			return
+		}
+		if err := v.Validate(cue.Concrete(true)); err == nil {
+			t.Fatal("want evaluation error for invalid file task name, got nil")
+		}
+	})
+}
+
+// buildTaskSet writes componentCue as the example component definition,
+// builds the CUE instance, validates the holos value is concrete, and decodes
+// it into a core.TaskSet.
+func buildTaskSet(t *testing.T, root, leaf, componentCue string) core.TaskSet {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(root, leaf, "example.cue"), []byte(componentCue), 0o666); err != nil {
+		t.Fatal(err)
+	}
+	tags := []string{
+		"holos_component_name=example",
+		"holos_component_path=" + leaf,
+	}
+	inst, err := holoscue.BuildInstance(root, leaf, tags)
+	if err != nil {
+		t.Fatalf("could not build instance: %v", err)
+	}
+	v, err := inst.HolosValue()
+	if err != nil {
+		t.Fatalf("could not get holos value: %v", err)
+	}
+	if err := v.Validate(cue.Concrete(true)); err != nil {
+		t.Fatalf("holos value is not a valid concrete TaskSet: %v", err)
+	}
+	var ts core.TaskSet
+	if err := v.Decode(&ts); err != nil {
+		t.Fatalf("could not decode TaskSet: %v", err)
+	}
+	return ts
 }

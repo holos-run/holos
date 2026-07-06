@@ -39,12 +39,17 @@ import (
 
 // _TaskName converts a component directory file path into a valid task name.
 // Task names must be RFC 1123 labels per
-// doc/design/v1beta1/schema.md#d3-task-naming-and-namespacing.  Use the
-// ComponentConfig Tasks field directly for sources this conversion cannot
-// make valid.
+// doc/design/v1beta1/schema.md#d3-task-naming-and-namespacing.  The out field
+// is defined only when the converted name matches the RFC 1123 pattern, so a
+// source path this conversion cannot make valid fails evaluation immediately
+// (undefined field: out) instead of producing an invalid task name.  Use the
+// ComponentConfig Tasks field directly for such sources.
 _TaskName: {
-	IN:  string
-	out: strings.ToLower(strings.Replace(strings.Replace(strings.Replace(IN, "/", "-", -1), ".", "-", -1), "_", "-", -1))
+	IN:   string
+	_out: strings.ToLower(strings.Replace(strings.Replace(strings.Replace(IN, "/", "-", -1), ".", "-", -1), "_", "-", -1))
+	if _out =~ "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$" {
+		out: _out
+	}
 }
 
 // Kustomize and Kubernetes are identical.
