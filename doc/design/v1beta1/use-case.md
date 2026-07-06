@@ -967,10 +967,14 @@ deploy: {
 A default is CUE's one sanctioned override point: the role's concrete
 `["vault.final.yaml"]` displaces the default without a conflict, while two
 *mixins* that both set the seam to different concrete values still
-conflict — composition stays safe.  This is a normative packaging
-convention for component modules: **declare sink `inputs` (and any other
-intended interposition point) as a default**; the package lint gate of
-[modules.md M1](modules.md#m1-publishing) checks it.  The derived edges
+conflict — composition stays safe.  This decision adds a normative
+packaging requirement for component modules: **a module MUST declare its
+sink `inputs` (and any other intended interposition point) as a default.**
+The requirement extends the package lint gate of
+[modules.md M1](modules.md#m1-publishing): the gate MUST additionally
+verify every `Artifact` task's `inputs` is a default disjunction, and
+Phase 3 (HOL-1496) implements the check alongside the file-tracking rule
+M1 already specifies.  The derived edges
 ([D1](schema.md#d1-edge-derivation)) rewire themselves from the
 declarations: `helm → remove-unseal-secret → join → deploy` and
 `unseal-external-secret → join`, with no edge left from `helm` directly to
@@ -1035,12 +1039,13 @@ performs the knockout, and the policy proves it happened.
 
 ## What Phase 5 builds
 
-This chapter is implemented as a fixture: the platform repository tree
-above, the seven modules, and golden renders for the composed platform,
-exercised end to end — flattening, labels, role config injection, the
-compiled inter-role edges in the platform DAG, the three-module
-composition, and the knockout with its verification policy.  The fixture
-is also the first reference consumer for the
+This chapter is documentation only; nothing below exists in the repository
+yet.  Phase 5 (HOL-1498) implements it as a fixture: the platform
+repository tree above, the seven modules, and golden renders for the
+composed platform, exercised end to end — flattening, labels, role config
+injection, the compiled inter-role edges in the platform DAG, the
+three-module composition, and the knockout with its verification policy.
+The fixture will also be the first reference consumer for the
 [modules.md M7](modules.md#m7-reverse-dependency-checking) promotion gate:
 `holos module check example.com/holos/cilium@<candidate>` re-renders this
 profile's examples and reports whether a cilium update breaks the
