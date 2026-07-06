@@ -484,6 +484,8 @@ Exactly one of the kind\-specific config fields must be set, matching Kind:
 6. [Command](<#Command>) \- Execute a user defined command.
 7. [Artifact](<#Artifact>) \- Write the final artifact \(sink\).
 
+The Go type does not enforce the constraint; holos enforces it with per\-kind guards in the published CUE schema and revalidates it at execution time, along with the per\-kind Inputs and Output cardinality rules.
+
 ```go
 type Task struct {
     // Kind discriminates the task behavior.
