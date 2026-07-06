@@ -1,0 +1,5 @@
+---
+title: Core Schemas
+description: TaskSet defines the holos rendering pipeline as a DAG of tasks.
+sidebar_position: 100
+---
