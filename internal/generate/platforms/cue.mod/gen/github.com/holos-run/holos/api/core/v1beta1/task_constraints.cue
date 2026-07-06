@@ -82,10 +82,23 @@ package core
 		join?:      _|_
 		artifact?:  _|_
 
+		// Commands may declare zero or more inputs.  Regular with an empty
+		// default, rather than optional, so the stdin guards below may
+		// reference the field.
+		inputs: [...#FileOrDirectoryPath] | *[]
+
 		// A command captures stdout as the task output when isStdoutOutput is
 		// true, so an output is required.
 		if command.isStdoutOutput {
 			output!: #FileOrDirectoryPath
+		}
+
+		// Stdin must name one of the task's declared inputs.
+		if len(inputs) > 0 {
+			command: stdin?: or(inputs)
+		}
+		if len(inputs) == 0 {
+			command: stdin?: _|_
 		}
 	}
 
