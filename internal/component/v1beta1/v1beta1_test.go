@@ -224,6 +224,142 @@ func TestBuildDuplicateOutputError(t *testing.T) {
 	assert.ErrorContains(t, err, "bravo")
 }
 
+func TestBuildDuplicateArtifactPathError(t *testing.T) {
+	b := newTestTaskSet(t, map[string]core.Task{
+		"gen-a": resourcesTask("a", "a.gen.yaml"),
+		"gen-b": resourcesTask("b", "b.gen.yaml"),
+		"deploy-a": {
+			Kind:     "Artifact",
+			Inputs:   []core.FileOrDirectoryPath{"a.gen.yaml"},
+			Artifact: core.Artifact{Path: "same.gen.yaml"},
+		},
+		"deploy-b": {
+			Kind:     "Artifact",
+			Inputs:   []core.FileOrDirectoryPath{"b.gen.yaml"},
+			Artifact: core.Artifact{Path: "same.gen.yaml"},
+		},
+	})
+	err := b.Build(t.Context())
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "duplicate artifact path same.gen.yaml")
+	assert.ErrorContains(t, err, "deploy-a")
+	assert.ErrorContains(t, err, "deploy-b")
+}
+
+func TestBuildPathTraversalError(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		tasks   map[string]core.Task
+		errText string
+	}{
+		{
+			name: "ArtifactPathEscapes",
+			tasks: map[string]core.Task{
+				"gen": resourcesTask("a", "a.gen.yaml"),
+				"deploy": {
+					Kind:     "Artifact",
+					Inputs:   []core.FileOrDirectoryPath{"a.gen.yaml"},
+					Artifact: core.Artifact{Path: "../escape.yaml"},
+				},
+			},
+			errText: "must not traverse outside the write-to directory",
+		},
+		{
+			name: "OutputEscapes",
+			tasks: map[string]core.Task{
+				"gen": resourcesTask("a", "../a.gen.yaml"),
+			},
+			errText: "must not traverse outside the build directory",
+		},
+		{
+			name: "OutputAbsolute",
+			tasks: map[string]core.Task{
+				"gen": resourcesTask("a", "/tmp/a.gen.yaml"),
+			},
+			errText: "must not traverse outside the build directory",
+		},
+		{
+			name: "InputEscapes",
+			tasks: map[string]core.Task{
+				"combine": {
+					Kind:   "Join",
+					Inputs: []core.FileOrDirectoryPath{"../secret.yaml"},
+					Output: "combined.gen.yaml",
+				},
+			},
+			errText: "must not traverse outside the build directory",
+		},
+		{
+			name: "FileSourceEscapes",
+			tasks: map[string]core.Task{
+				"gen": {
+					Kind:   "File",
+					File:   core.File{Source: "../../etc/passwd"},
+					Output: "a.gen.yaml",
+				},
+			},
+			errText: "must not traverse outside the component directory",
+		},
+		{
+			name: "KustomizeFileEscapes",
+			tasks: map[string]core.Task{
+				"gen": resourcesTask("a", "a.gen.yaml"),
+				"transform": {
+					Kind:   "Kustomize",
+					Inputs: []core.FileOrDirectoryPath{"a.gen.yaml"},
+					Output: "out.gen.yaml",
+					Kustomize: core.Kustomize{
+						Files: core.FileContentMap{"../patch.yaml": "data"},
+					},
+				},
+			},
+			errText: "must not traverse outside the kustomize directory",
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			b := newTestTaskSet(t, tc.tasks)
+			err := b.Build(t.Context())
+			require.Error(t, err)
+			assert.ErrorContains(t, err, tc.errText)
+		})
+	}
+}
+
+func TestBuildSharedCommandInputs(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("test depends on the cat command")
+	}
+	// Multiple concurrent command tasks consuming the same input must not
+	// race materializing it into the shared build temp directory.
+	tasks := map[string]core.Task{
+		"gen": resourcesTask("a", "a.gen.yaml"),
+	}
+	for _, name := range []string{"alfa", "bravo", "charlie", "delta"} {
+		tasks[name] = core.Task{
+			Kind:   "Command",
+			Inputs: []core.FileOrDirectoryPath{"a.gen.yaml"},
+			Output: core.FileOrDirectoryPath(name + ".gen.yaml"),
+			Command: core.Command{
+				Args:           []string{"cat"},
+				Stdin:          "a.gen.yaml",
+				IsStdoutOutput: true,
+			},
+		}
+	}
+	b := newTestTaskSet(t, tasks)
+	b.Opts.Concurrency = 4
+
+	require.NoError(t, b.Build(t.Context()))
+
+	want, ok := b.Opts.Store.Get("a.gen.yaml")
+	require.True(t, ok)
+	for _, name := range []string{"alfa", "bravo", "charlie", "delta"} {
+		have, ok := b.Opts.Store.Get(name + ".gen.yaml")
+		require.True(t, ok)
+		assert.Equal(t, string(want), string(have))
+	}
+}
+
 func TestBuildDisabledNoOp(t *testing.T) {
 	b := newTestTaskSet(t, map[string]core.Task{
 		"gen": resourcesTask("a", "a.gen.yaml"),

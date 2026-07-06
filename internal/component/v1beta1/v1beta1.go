@@ -18,6 +18,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"cuelang.org/go/cue"
@@ -46,6 +47,27 @@ type TaskSet struct {
 	// directly.  Tests may instrument or replace run to observe scheduling
 	// behavior without executing task bodies.
 	runHook func(ctx context.Context, name string, run func(context.Context) error) error
+
+	// saveMu guards saved so concurrent tasks materialize each store path into
+	// the shared build temp directory at most once.
+	saveMu sync.Mutex
+	saved  map[string]error
+}
+
+// sharedSave materializes a store path into the shared build temp directory at
+// most once.  Store paths are write-once and immutable, so the first
+// materialization is authoritative; concurrent tasks consuming the same path
+// must not race by truncating and rewriting a file another task is reading.
+func (b *TaskSet) sharedSave(dir, path string) error {
+	b.saveMu.Lock()
+	defer b.saveMu.Unlock()
+	key := dir + "\x00" + path
+	if err, ok := b.saved[key]; ok {
+		return err
+	}
+	err := b.Opts.Store.Save(dir, path)
+	b.saved[key] = err
+	return err
 }
 
 // Load loads the TaskSet from a cue value.
@@ -92,6 +114,10 @@ func (b *TaskSet) Build(ctx context.Context) error {
 	if err != nil {
 		return errors.Format("%s: %w", msg, err)
 	}
+
+	b.saveMu.Lock()
+	b.saved = make(map[string]error)
+	b.saveMu.Unlock()
 
 	// Load inputs sourced from the component directory into the artifact
 	// store so tasks consume them uniformly (schema.md D1: an input matching
@@ -150,7 +176,10 @@ func (b *TaskSet) graph() (*graph, error) {
 
 	// Validate tasks and index producers.  Outputs are write-once: a second
 	// task declaring an already-declared output is an error naming both tasks.
+	// Final artifact paths are write-once for the same reason: two sinks
+	// declaring the same path is an error naming both tasks.
 	producers := make(map[string]string, len(tasks))
+	artifactPaths := make(map[string]string)
 	for _, name := range g.names {
 		task := tasks[name]
 		if err := validateTask(name, task); err != nil {
@@ -161,6 +190,16 @@ func (b *TaskSet) graph() (*graph, error) {
 				return nil, errors.Format("duplicate output %s: declared by tasks %s and %s", output, prev, name)
 			}
 			producers[output] = name
+		}
+		if task.Kind == "Artifact" {
+			path := string(task.Artifact.Path)
+			if path == "" {
+				path = string(task.Inputs[0])
+			}
+			if prev, ok := artifactPaths[path]; ok {
+				return nil, errors.Format("duplicate artifact path %s: declared by tasks %s and %s", path, prev, name)
+			}
+			artifactPaths[path] = name
 		}
 	}
 
@@ -256,11 +295,22 @@ func matchProducers(path string, producers map[string]string, outputs []string) 
 }
 
 // validateTask revalidates the per-kind constraints of schema.md at execution
-// time: task name pattern (D3) and the inputs/output requiredness and
-// cardinality table (Task kinds).
+// time: task name pattern (D3), the inputs/output requiredness and cardinality
+// table (Task kinds), and path containment.  Every declared path must stay
+// local to its root directory: store paths resolve under the build temp dir,
+// file sources under the component directory, and artifact paths under the
+// write-to directory.
 func validateTask(name string, task core.Task) error {
 	if !taskNamePattern.MatchString(name) {
 		return errors.Format("invalid task name %q: must match %s", name, taskNamePattern)
+	}
+	if output := string(task.Output); output != "" && !filepath.IsLocal(output) {
+		return errors.Format("task %s: output %s: path must be relative and must not traverse outside the build directory", name, output)
+	}
+	for _, input := range task.Inputs {
+		if !filepath.IsLocal(string(input)) {
+			return errors.Format("task %s: input %s: path must be relative and must not traverse outside the build directory", name, input)
+		}
 	}
 	switch task.Kind {
 	case "Resources", "Helm", "File":
@@ -270,12 +320,20 @@ func validateTask(name string, task core.Task) error {
 		if task.Output == "" {
 			return errors.Format("task %s: kind %s requires an output", name, task.Kind)
 		}
+		if task.Kind == "File" && !filepath.IsLocal(string(task.File.Source)) {
+			return errors.Format("task %s: file source %s: path must be relative and must not traverse outside the component directory", name, task.File.Source)
+		}
 	case "Kustomize", "Join":
 		if len(task.Inputs) < 1 {
 			return errors.Format("task %s: kind %s requires at least one input", name, task.Kind)
 		}
 		if task.Output == "" {
 			return errors.Format("task %s: kind %s requires an output", name, task.Kind)
+		}
+		for path := range task.Kustomize.Files {
+			if !filepath.IsLocal(string(path)) {
+				return errors.Format("task %s: kustomize file %s: path must be relative and must not traverse outside the kustomize directory", name, path)
+			}
 		}
 	case "Command":
 		if len(task.Command.Args) < 1 {
@@ -295,6 +353,9 @@ func validateTask(name string, task core.Task) error {
 		}
 		if task.Output != "" {
 			return errors.Format("task %s: kind Artifact must not declare an output", name)
+		}
+		if path := string(task.Artifact.Path); path != "" && !filepath.IsLocal(path) {
+			return errors.Format("task %s: artifact path %s: path must be relative and must not traverse outside the write-to directory", name, path)
 		}
 	default:
 		return errors.Format("task %s: unsupported kind %s", name, task.Kind)
@@ -426,6 +487,7 @@ func (b *TaskSet) runTask(ctx context.Context, name string) error {
 		taskSetName: b.Metadata.Name,
 		task:        b.Spec.Tasks[name],
 		opts:        b.Opts,
+		sharedSave:  b.sharedSave,
 	}
 	if b.runHook != nil {
 		return b.runHook(ctx, name, t.run)
@@ -439,6 +501,9 @@ type taskRunner struct {
 	taskSetName string
 	task        core.Task
 	opts        holos.BuildOpts
+	// sharedSave materializes a store path into the shared build temp
+	// directory at most once across concurrent tasks.
+	sharedSave func(dir, path string) error
 }
 
 // id uniquely identifies the task for log and error messages.
@@ -767,9 +832,11 @@ func (t *taskRunner) command(ctx context.Context) error {
 		return errors.Format("command args length must be at least 1")
 	}
 
-	// Write the inputs
+	// Write the inputs.  Materialization goes through sharedSave because
+	// concurrent command tasks share the build temp directory and may consume
+	// the same input path.
 	for _, input := range t.task.Inputs {
-		if err := store.Save(tempDir, string(input)); err != nil {
+		if err := t.sharedSave(tempDir, string(input)); err != nil {
 			return errors.Wrap(err)
 		}
 	}
