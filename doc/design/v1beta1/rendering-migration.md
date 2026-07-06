@@ -21,3 +21,14 @@ under the same executor and the same
 rules, so migrating a component changes its graph granularity and nothing
 else.  The JSON protocol and the per-component `vendor/{version}` cache
 retire together with v1alpha6 support, not before.
+
+Opacity applies to execution, not validation.  The parent compiles every
+legacy component's BuildPlan before executing the graph, and a BuildPlan
+declares its final artifact paths (`spec.artifacts[].artifact` in
+`api/core/v1alpha6/types.go`; likewise v1alpha5).  The parent enters those
+declared paths into the platform-global final-artifact-path collision
+check of
+[rendering.md step 2](rendering.md#step-2-collect-tasksets-and-merge-into-one-dag)
+alongside v1beta1 `Artifact` sink paths, so a duplicate final path —
+legacy against legacy, or legacy against v1beta1 — fails the render before
+any task runs rather than racing to overwrite during execution.

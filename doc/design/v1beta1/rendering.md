@@ -218,17 +218,16 @@ this framing.
 **Decision: the TaskSet crosses the wire as JSON in a `bytes` field, not as
 a fully modeled protobuf message.**
 
-The TaskSet is born as a CUE export, which is JSON; its normative schema is
-`api/core/v1beta1/types.go` plus the published CUE schema
-([schema.md](schema.md)).  Modeling TaskSet as protobuf messages would
-create a third normative schema for the same shape, and the three would
-drift — the exact duplication disease v1beta1 eliminates by collapsing the
-v1alpha6 wrapper kinds.  With `bytes` + JSON the parent decodes and
-validates the TaskSet with the same code path Phase 1 uses for
-single-component renders, and the CUE-to-wire step in the compiler is a
-straight export with no re-marshaling.  Revisit only if a later phase needs
-partial decode or streaming of very large TaskSets; the `oneof` admits a
-message-modeled variant as a new field without breaking old readers.
+The TaskSet is born as a CUE export, which is JSON; its normative schema
+is `api/core/v1beta1/types.go` plus the published CUE schema
+([schema.md](schema.md)).  Modeling it as protobuf messages would create a
+third normative schema for the same shape, and the three would drift — the
+duplication disease v1beta1 eliminates by collapsing the v1alpha6 wrapper
+kinds.  With `bytes` + JSON the parent decodes and validates the TaskSet
+with the same code path Phase 1 uses, and the compiler's CUE-to-wire step
+is a straight export with no re-marshaling.  Revisit only if a later phase
+needs partial decode or streaming; the `oneof` admits a message-modeled
+variant as a new field without breaking old readers.
 
 ### R3: Versioning and negotiation
 
@@ -337,8 +336,13 @@ directory guarded by a per-path filesystem lock (`vendor/{version}` +
 `onceWithLock`, quoted [above](#the-per-component-chart-cache)), v1beta1
 lifts the same once-only semantics into the graph: the dedup is a node, the
 ordering is an edge, and the scheduler provides the mutual exclusion for
-free.  A component whose chart is already committed inside its module
-(the hermetic-vendoring convention of the
+free.  The key deliberately excludes repository credentials — chart
+identity is content, not access: `Helm` tasks sharing a key MUST declare
+identical `repository.auth` configurations or the graph build fails naming
+the conflicting canonical IDs, and the vendor task pulls with the agreed
+configuration, so credential selection never depends on scan order.  A
+component whose chart is committed inside its module (the hermetic-vendoring
+convention of the
 [README](README.md#normative-the-transparency-principle)) needs no pull:
 its `Helm` task gets no vendor edge and reads the committed chart.
 
@@ -350,14 +354,13 @@ chart name + `-` + the first 12 hex digits of the SHA-256 of the dedup
 key.**
 
 Canonical IDs parse as `<component-path>:<task-name>` (D3), so synthetic
-nodes need a component path that no real component can claim: holos
-validates at platform load that no selected component's path equals or is
-nested under `holos.internal`, making IDs like
-`holos.internal:pull-valkey-3f9ac81b2e44` collision-free.  The task name
-must satisfy D3's RFC 1123 label constraint, so the chart name is sanitized
-(characters outside `[a-z0-9-]` map to `-`, uppercase folds to lowercase)
-and the digest — computed over the key triple joined with `\n` —
-disambiguates distinct keys that sanitize to the same chart name.  A
+nodes need a component path no real component can claim: holos validates
+at platform load that no component path equals or nests under
+`holos.internal`, so IDs like `holos.internal:pull-valkey-3f9ac81b2e44`
+cannot collide.  The task name must satisfy D3's RFC 1123 label
+constraint, so the chart name is sanitized (characters outside `[a-z0-9-]`
+map to `-`, uppercase folds) and the digest — computed over the key triple
+joined with `\n` — disambiguates distinct keys that sanitize alike.  A
 truncated digest cannot guarantee uniqueness, so the parent — which holds
 the complete set of dedup keys when it synthesizes the nodes — MUST verify
 the key-to-ID mapping is injective and fail the render naming both key
@@ -365,7 +368,12 @@ triples on a collision — astronomically unlikely, but a silent collision
 would merge two unrelated chart pulls, so it is checked, not assumed.  The
 full (untruncated) digest keys the platform-level cache directory, so
 repeated renders reuse pulled charts just as the per-component
-`vendor/{version}` cache does today.
+`vendor/{version}` cache does today.  The graph node serializes pulls
+within one render only; shared-cache writes stay guarded by the
+mkdir-based `onceWithLock` mechanism quoted
+[above](#the-per-component-chart-cache), retained at the cache-directory
+level, so concurrent `holos render` processes never collide on a cache
+path.
 
 ### Step 4: topological sort and bounded execution
 
@@ -374,14 +382,12 @@ deterministically ordered ready queue, dispatching to a bounded pool of
 errgroup workers (the worker-pool shape of v1alpha6's `Build`, promoted
 from one component's artifacts to the whole platform):
 
-1. Compute every task's in-degree; insert all in-degree-zero tasks into the
-   ready queue.
-2. Each of N workers pops the minimum ready task, runs it, then atomically
-   decrements the in-degree of its successors, inserting any that reach
-   zero.
-3. The render completes when all tasks have run; if tasks remain but none
-   are ready, the graph has a cycle — reported at graph-build time (D1),
-   before any task runs.
+1. Compute every task's in-degree; insert all in-degree-zero tasks into
+   the ready queue.
+2. Each of N workers pops the minimum ready task, runs it, then decrements
+   its successors' in-degrees, inserting any that reach zero.
+3. The render completes when all tasks have run; cycles are reported at
+   graph-build time (D1), before any task runs.
 
 ### R7: Deterministic ordering
 
@@ -411,26 +417,31 @@ write discipline that makes the decision safe.
 no new tasks dispatch, running tasks are cancelled, and the render exits
 nonzero naming the failed task's canonical ID.**
 
-Compile errors ([R4](#r4-error-propagation)) and task failures get the same
-treatment: the errgroup's context cancellation stops the world, matching
-both current behaviors — `Compile()`'s errgroup and `Build`'s worker pool
-already fail this way.  Final artifacts written by sinks that completed
-before the failure remain on disk; artifacts whose sinks never ran are
-absent; and no sink is ever partially written, because `Artifact` sinks
-write atomically.  The write algorithm is normative — today's store writes
-in place (`(*MapStore).Save` in
+Compile errors ([R4](#r4-error-propagation)) and task failures get the
+same treatment: the errgroup's context cancellation stops the world,
+exactly as `Compile()` and `Build` already fail today.  Final artifacts
+written by sinks that completed before the failure remain on disk;
+artifacts whose sinks never ran are absent; and no sink is ever partially
+written, because `Artifact` sinks write atomically.  The write algorithm
+is normative — today's store writes in place (`(*MapStore).Save` in
 [`internal/artifact/artifact.go`](../../../internal/artifact/artifact.go),
 lines 73–113, calls `os.WriteFile` on the destination), so Phase 2 must
 change it, not inherit it.  A sink materializes the artifact at a
 temporary path under the write-to directory (same filesystem, so rename
-cannot degrade to a copy), then promotes it with `rename(2)`.  For a file
-artifact the rename atomically replaces any existing file.  For a
-directory artifact the sink materializes the complete tree in a temporary
-directory, renames any existing destination aside, renames the new tree
-into place, then deletes the old tree: a crash between the renames leaves
-the destination either absent or complete — never mixed old-and-new — and
-the next render deletes leftover temporary and aside paths before
-executing.  Continue-on-error scheduling of independent subgraphs is
+cannot degrade to a copy), then promotes it with `rename(2)`; for a file
+artifact the rename atomically replaces any existing file.  POSIX offers
+no atomic directory swap, so a directory artifact uses a recoverable
+two-rename sequence with well-known suffixes: materialize the complete
+tree at `<dest>.holos-new`, rename any existing destination to
+`<dest>.holos-old`, rename `<dest>.holos-new` into place, then delete
+`<dest>.holos-old`.  A reader never observes a mixed old-and-new tree, and
+at least one complete copy exists at every instant.  A crash can leave the
+destination absent only between the two renames, and recovery is defined
+so the last complete render is never destroyed: a render that finds
+`<dest>` missing with `<dest>.holos-old` present MUST restore the old tree
+by renaming it back before executing; leftover `.holos-new` paths are
+always deleted, and a `.holos-old` path is deleted only while `<dest>`
+exists.  Continue-on-error scheduling of independent subgraphs is
 deliberately out of scope: a partially rendered deploy tree that *looks*
 complete is a deployment hazard, and CI use cases wanting maximal error
 reporting can re-render per component.  Any future `--keep-going` arrives
