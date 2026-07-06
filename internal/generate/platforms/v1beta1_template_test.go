@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"cuelang.org/go/cue"
@@ -134,28 +135,69 @@ Component: KustomizeConfig: Files: "deployment.yaml": _
 	// A file source the sanitizer cannot convert to an RFC 1123 label fails
 	// evaluation instead of producing an invalid task name.
 	t.Run("InvalidFileTaskName", func(t *testing.T) {
-		badCue := componentCue + `
+		requireTaskSetError(t, root, leaf, componentCue+`
 Component: KustomizeConfig: Files: "patch+prod.yaml": _
-`
-		if err := os.WriteFile(filepath.Join(root, leaf, "example.cue"), []byte(badCue), 0o666); err != nil {
-			t.Fatal(err)
-		}
-		tags := []string{
-			"holos_component_name=example",
-			"holos_component_path=" + leaf,
-		}
-		inst, err := holoscue.BuildInstance(root, leaf, tags)
-		if err != nil {
-			return // load error also satisfies the guard
-		}
-		v, err := inst.HolosValue()
-		if err != nil {
-			return
-		}
-		if err := v.Validate(cue.Concrete(true)); err == nil {
-			t.Fatal("want evaluation error for invalid file task name, got nil")
+`)
+	})
+
+	// A file source producing a task name over the 63 character RFC 1123
+	// label length limit fails evaluation.
+	t.Run("LongFileTaskName", func(t *testing.T) {
+		requireTaskSetError(t, root, leaf, componentCue+`
+Component: KustomizeConfig: Files: "`+strings.Repeat("a", 64)+`.yaml": _
+`)
+	})
+
+	// A custom task mixed in through the Tasks field must use a valid RFC
+	// 1123 label task name per schema.md D3.
+	t.Run("InvalidCustomTaskName", func(t *testing.T) {
+		requireTaskSetError(t, root, leaf, componentCue+`
+Component: Tasks: "bad_key": {
+	kind: "Resources"
+	resources: {}
+	output: "bad.gen.yaml"
+}
+`)
+	})
+
+	// A valid custom task name passes through unchanged.
+	t.Run("ValidCustomTaskName", func(t *testing.T) {
+		ts := buildTaskSet(t, root, leaf, componentCue+`
+Component: Tasks: gitops: {
+	kind: "Resources"
+	resources: {}
+	output: "gitops.gen.yaml"
+}
+`)
+		if _, ok := ts.Spec.Tasks["gitops"]; !ok {
+			t.Fatalf("want task gitops in spec.tasks, got %v", ts.Spec.Tasks)
 		}
 	})
+}
+
+// requireTaskSetError writes componentCue as the example component definition
+// and requires CUE evaluation to fail at load, holos value, or concrete
+// validation.
+func requireTaskSetError(t *testing.T, root, leaf, componentCue string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(root, leaf, "example.cue"), []byte(componentCue), 0o666); err != nil {
+		t.Fatal(err)
+	}
+	tags := []string{
+		"holos_component_name=example",
+		"holos_component_path=" + leaf,
+	}
+	inst, err := holoscue.BuildInstance(root, leaf, tags)
+	if err != nil {
+		return // load error satisfies the guard
+	}
+	v, err := inst.HolosValue()
+	if err != nil {
+		return
+	}
+	if err := v.Validate(cue.Concrete(true)); err == nil {
+		t.Fatal("want evaluation error, got nil")
+	}
 }
 
 // buildTaskSet writes componentCue as the example component definition,

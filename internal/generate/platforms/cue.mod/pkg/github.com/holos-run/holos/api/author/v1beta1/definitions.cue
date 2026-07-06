@@ -37,19 +37,27 @@ import (
 	}
 }
 
-// _TaskName converts a component directory file path into a valid task name.
-// Task names must be RFC 1123 labels per
-// doc/design/v1beta1/schema.md#d3-task-naming-and-namespacing.  The out field
-// is defined only when the converted name matches the RFC 1123 pattern, so a
-// source path this conversion cannot make valid fails evaluation immediately
-// (undefined field: out) instead of producing an invalid task name.  Use the
-// ComponentConfig Tasks field directly for such sources.
-_TaskName: {
-	IN:   string
-	_out: strings.ToLower(strings.Replace(strings.Replace(strings.Replace(IN, "/", "-", -1), ".", "-", -1), "_", "-", -1))
-	if _out =~ "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$" {
-		out: _out
+// _TaskKey validates a task name is an RFC 1123 label per
+// doc/design/v1beta1/schema.md#d3-task-naming-and-namespacing: lowercase
+// alphanumerics and interior hyphens, at most 63 characters.  The out field
+// is defined only when IN is valid, so an invalid task name fails evaluation
+// immediately (undefined field: out) instead of exporting.
+_TaskKey: {
+	IN: string
+	if IN =~ "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$" && len(IN) <= 63 {
+		out: IN
 	}
+}
+
+// _TaskName converts a component directory file path into a valid task name
+// validated by _TaskKey.  A source path this conversion cannot make valid
+// fails evaluation immediately.  Use the ComponentConfig Tasks field directly
+// for such sources.
+_TaskName: {
+	IN: string
+	out: (_TaskKey & {
+		"IN": strings.ToLower(strings.Replace(strings.Replace(strings.Replace(IN, "/", "-", -1), ".", "-", -1), "_", "-", -1))
+	}).out
 }
 
 // Kustomize and Kubernetes are identical.
@@ -194,7 +202,13 @@ _TaskName: {
 		if len(Annotations) != 0 {
 			metadata: annotations: Annotations
 		}
-		spec: "tasks": Tasks
+
+		// Mix in Tasks, validating each task name per schema.md D3.
+		spec: "tasks": {
+			for k, v in Tasks {
+				((_TaskKey & {IN: k}).out): v
+			}
+		}
 		spec: "tasks": deploy: {
 			kind: "Artifact"
 			inputs: ["\(Name).gen.yaml"]
