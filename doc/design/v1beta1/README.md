@@ -243,3 +243,24 @@ site opinion is greppable in the profile and platform layers because the
 component layer structurally has no place to hold one.  The canonical
 worked example — a management-cluster profile — is the subject of
 [use-case.md](use-case.md).
+
+## Acceptance-criteria matrix
+
+The Phase 0 exit gate (HOL-1507): each HOL-1492 acceptance criterion mapped
+to the chapter and section that satisfies it, plus the two HOL-1491
+criteria this document set covers at the design level.
+
+| # | Criterion (abridged) | Satisfied by |
+| -- | -- | -- |
+| HOL-1492 AC 1 | Design document exists at `doc/design/v1beta1/README.md`, split into sibling files where sections exceed ~400 lines | This README ([document map](#document-map)) and the six sibling chapters it indexes |
+| HOL-1492 AC 2 | Layer model Platform → Profile → Role → Component; Profile/Role are pure CUE conventions; the Go tooling knows only Platform → Component | README, [the layer model](#the-layer-model-platform--profile--role--component) and [the normative Go-tooling rule](#normative-the-go-tooling-knows-only-platform--component) |
+| HOL-1492 AC 3 | Deep technical explanation from a Platform: compiler pool, TaskSet collection, one platform-wide DAG, topological sort, concurrent execution, result organized by Profile, Role, Component | [rendering.md](rendering.md), the compiler protocol ([R1](rendering.md#r1-wire-framing)–[R5](rendering.md#r5-proto-toolchain)) and the platform-wide DAG ([steps 1–6](rendering.md#the-platform-wide-dag)) |
+| HOL-1492 AC 4 | Canonical use case: `cilium-vxlan` Role, dependent `service-mesh` Role (Istio Ambient), `management-cluster` Profile, module trees, concrete `#Platform`/`#Profile`/`#Role`/`#Config` definitions, explicit inter-role dependency | [use-case.md](use-case.md), [the canonical target](use-case.md#the-canonical-target), [U1](use-case.md#u1-the-author-layer-and-the-flattening)–[U4](use-case.md#u4-the-inter-role-dependency-becomes-dag-edges) |
+| HOL-1492 AC 5 | Three-module composition at the Role layer (community + Security + SRE Observability) by unification, no overwrite semantics | [use-case.md U5](use-case.md#u5-three-module-composition-by-unification) |
+| HOL-1492 AC 6 | Role-layer transformation: Secret → ExternalSecret knockout without modifying the upstream module | [use-case.md U6](use-case.md#u6-the-secret--externalsecret-knockout) |
+| HOL-1492 AC 7 | First-class `Command` task modeling in the v1beta1 Task schema | [schema.md](schema.md), [Command as a first-class task kind](schema.md#command-as-a-first-class-task-kind) and [Task kinds](schema.md#task-kinds) |
+| HOL-1492 AC 8 | Rendered-resource round-trip structure keyed by file path → GVK → namespace/name, unifiable by other modules | [resources.md](resources.md), [the round-trip structure](resources.md#the-round-trip-structure) and [V1](resources.md#v1-key-formats)–[V6](resources.md#v6-unification-by-downstream-modules) |
+| HOL-1492 AC 9 | CUE module packaging: `cue mod publish` to OCI, `CUE_REGISTRY` routing, MVS, platform-layer pinning, embedded charts under `vendor/charts/`, britney2-style reverse-dependency checking | [modules.md](modules.md), [M1](modules.md#m1-publishing)–[M7](modules.md#m7-reverse-dependency-checking) |
+| HOL-1492 AC 10 | `make lint && make test` pass; docs do not break `make update-docs` | Verified on every chapter PR (#464–#469) and on the HOL-1507 review PR |
+| HOL-1491 AC 7 | Concrete canonical use case designed: Service Mesh Role (Istio Ambient) on a Cilium VXLAN data plane Role, composed by a Management Cluster Profile, with module structure and CUE type definitions | [use-case.md](use-case.md), whole chapter (design level; Phase 5 HOL-1498 implements the fixture) |
+| HOL-1491 AC 8 | `Command` modeled first-class; deep documentation of DAG compilation and execution producing a complete resource listing organized by Profile, Role, Component, suitable for unification by other modules | [schema.md](schema.md#command-as-a-first-class-task-kind), [rendering.md](rendering.md) ([step 6](rendering.md#step-6-the-result)), [use-case.md U5](use-case.md#u5-three-module-composition-by-unification) (design level; schema lands in Phase 1 HOL-1493) |

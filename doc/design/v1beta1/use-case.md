@@ -410,7 +410,7 @@ import core "github.com/holos-run/holos/api/core/v1beta1"
 				// The interposition seam (U5): a default the consuming role
 				// may override to rewire the data path.
 				inputs: [...string] | *["cilium.gen.yaml"]
-				artifact: path: "deploy/components/cilium/cilium.gen.yaml"
+				artifact: path: "components/cilium/cilium.gen.yaml"
 			}
 		}
 	}
@@ -505,7 +505,7 @@ import core "github.com/holos-run/holos/api/core/v1beta1"
 			deploy: {
 				kind: "Artifact"
 				inputs: [...string] | *["istiod.gen.yaml"]
-				artifact: path: "deploy/components/istiod/istiod.gen.yaml"
+				artifact: path: "components/istiod/istiod.gen.yaml"
 			}
 		}
 	}
@@ -780,7 +780,7 @@ import cilium "example.com/holos/cilium"
 			kind: "Artifact"
 			// Sinks a mixin adds follow the same seam convention (U6).
 			inputs: [...string] | *["network-policy.gen.yaml"]
-			artifact: path: "deploy/components/cilium/network-policy.gen.yaml"
+			artifact: path: "components/cilium/network-policy.gen.yaml"
 		}
 	}
 }
@@ -831,7 +831,7 @@ import cilium "example.com/holos/cilium"
 			kind: "Artifact"
 			// Sinks a mixin adds follow the same seam convention (U6).
 			inputs: [...string] | *["dashboards.gen.yaml"]
-			artifact: path: "deploy/components/cilium/dashboards.gen.yaml"
+			artifact: path: "components/cilium/dashboards.gen.yaml"
 		}
 	}
 }
@@ -962,7 +962,7 @@ default:
 deploy: {
 	kind: "Artifact"
 	inputs: [...string] | *["vault.gen.yaml"]
-	artifact: path: "deploy/components/vault/vault.gen.yaml"
+	artifact: path: "components/vault/vault.gen.yaml"
 }
 ```
 

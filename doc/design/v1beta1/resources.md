@@ -146,8 +146,9 @@ sinks declaring the same path already fail at graph-build time
 ([rendering.md step 2](rendering.md#step-2-collect-tasksets-and-merge-into-one-dag)).
 This chapter extends that rule to prefix-freedom: no sink's final path may
 equal *or nest under* another sink's directory path — a file sink at
-`deploy/vault/rbac.yaml` conflicts with a directory sink at `deploy/vault`
-— validated at graph build with an error naming both canonical IDs.
+`components/vault/rbac.yaml` conflicts with a directory sink at
+`components/vault` — validated at graph build with an error naming both
+canonical IDs.
 Prefix-freedom guarantees every FilePath key has exactly one producing
 sink and protects the atomic directory promotion of
 [rendering.md R8](rendering.md#r8-failure-semantics), which could not

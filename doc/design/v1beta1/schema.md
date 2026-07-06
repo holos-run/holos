@@ -169,8 +169,9 @@ type Command struct {
 // has completed successfully (see D2).
 type Artifact struct {
 	// Path represents the final artifact path relative to the write-to
-	// directory, e.g. deploy/.  Defaults to the task's single input path
-	// when empty.
+	// directory (deploy by default; resources.md V1 derives FilePath keys
+	// by joining it under that prefix).  Defaults to the task's single
+	// input path when empty.
 	Path FileOrDirectoryPath `json:"path,omitempty" yaml:"path,omitempty"`
 }
 ```
@@ -407,7 +408,7 @@ TaskSets: "components/vault": spec: tasks: {
 	deploy: {
 		kind:     "Artifact"
 		inputs:   ["vault.gen.yaml"]
-		artifact: path: "deploy/vault.yaml"
+		artifact: path: "components/vault/vault.gen.yaml"
 	}
 }
 ```
@@ -425,7 +426,7 @@ TaskSets: "components/argocd": spec: tasks: {
 	deploy: {
 		kind:     "Artifact"
 		inputs:   ["argocd.gen.yaml"]
-		artifact: path: "deploy/argocd.yaml"
+		artifact: path: "components/argocd/argocd.gen.yaml"
 	}
 }
 ```
