@@ -778,7 +778,8 @@ import cilium "example.com/holos/cilium"
 		}
 		"deploy-network-policy": {
 			kind: "Artifact"
-			inputs: ["network-policy.gen.yaml"]
+			// Sinks a mixin adds follow the same seam convention (U6).
+			inputs: [...string] | *["network-policy.gen.yaml"]
 			artifact: path: "deploy/components/cilium/network-policy.gen.yaml"
 		}
 	}
@@ -828,7 +829,8 @@ import cilium "example.com/holos/cilium"
 		}
 		"deploy-dashboards": {
 			kind: "Artifact"
-			inputs: ["dashboards.gen.yaml"]
+			// Sinks a mixin adds follow the same seam convention (U6).
+			inputs: [...string] | *["dashboards.gen.yaml"]
 			artifact: path: "deploy/components/cilium/dashboards.gen.yaml"
 		}
 	}
