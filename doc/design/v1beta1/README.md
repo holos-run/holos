@@ -51,6 +51,13 @@ is still a list (`spec.artifacts`), and its field naming remains camelCase
 entirely — v1alpha6 still renders one BuildPlan per component with no
 cross-component task graph.
 
+A note on plan item 1: Kubernetes API conventions name JSON fields in
+lowerCamelCase (`apiVersion`, `resourceVersion`), so the design note's
+"k8s style lowerSnakeCase" wording is imprecise as written.  v1beta1 does
+not read item 1 literally; the schema chapter ([schema.md](schema.md))
+fixes the normative field-naming convention, defaulting to the Kubernetes
+lowerCamelCase convention unless it documents an intentional departure.
+
 **v1beta1 implements items 3–5**: BuildPlan is deprecated in favor of the
 TaskSet ([schema.md](schema.md)), TaskSets compose into one platform-wide
 TaskSet, and that composed TaskSet executes by topological sort over the DAG
@@ -180,7 +187,9 @@ keeps it that way.
 ### A Component is a CUE module
 
 A Component is a CUE module exporting a closed `#Config` definition and a
-function from `#Config` to a `TaskSet`:
+function from `#Config` to a `TaskSet`.  The snippet is illustrative: it
+elides the `import` of the `core` schema package that defines `#TaskSet`,
+which [schema.md](schema.md) specifies.
 
 ```cue
 package component
