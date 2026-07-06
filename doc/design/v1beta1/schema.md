@@ -119,10 +119,12 @@ type TaskSetSpec struct {
 type Task struct {
 	// Kind discriminates the task behavior.
 	Kind string `json:"kind" yaml:"kind" cue:"\"Resources\" | \"Helm\" | \"File\" | \"Kustomize\" | \"Join\" | \"Command\" | \"Artifact\""`
-	// DependsOn lists names of tasks that must complete before this task
-	// runs.  Use for ordering constraints with no data flow; data-flow edges
-	// are derived from Inputs and Output (see D1).
-	DependsOn []string `json:"dependsOn,omitempty" yaml:"dependsOn,omitempty"`
+	// DependsOn declares tasks that must complete before this task runs,
+	// keyed by task name or canonical ID (see D3) — a struct, not a list, so
+	// mixins compose ordering edges by unification.  Use for ordering
+	// constraints with no data flow; data-flow edges are derived from Inputs
+	// and Output (see D1).
+	DependsOn map[string]Dependency `json:"dependsOn,omitempty" yaml:"dependsOn,omitempty"`
 	// Inputs are artifact-store paths consumed by the task.
 	Inputs []FileOrDirectoryPath `json:"inputs,omitempty" yaml:"inputs,omitempty"`
 	// Output is the artifact-store path produced by the task.  Output values
@@ -139,6 +141,12 @@ type Task struct {
 	Command   Command   `json:"command,omitempty" yaml:"command,omitempty"`
 	Artifact  Artifact  `json:"artifact,omitempty" yaml:"artifact,omitempty"`
 }
+
+// Dependency represents one explicit ordering edge declared in
+// [Task.DependsOn].  It is deliberately empty — the edge is the struct key —
+// so future fields (for example an optional edge) may be added without
+// breaking composition.
+type Dependency struct{}
 
 // Command is a first-class Task kind in v1beta1.  Commands execute with the
 // working directory set to the platform root.
@@ -233,20 +241,33 @@ inject into (a TaskSet instead of a BuildPlan), not the injection mechanism.
 `dependsOn` adds explicit edges for ordering without data flow.  Both edge
 sets are unioned; cycles are an error.**
 
-For every task *T* with input path *p*, the executor finds the task *S*
-whose `output` is *p* (or whose `output` directory is a prefix of *p*,
-matching the v1alpha6 directory-prefix rule) and adds edge *S* → *T*.  An
-input with no producing task must exist in the component directory or the
-edge is an error naming the task and the unmatched path.  Because outputs
-are write-once, each input matches at most one producer — a second task
-declaring an already-declared output is an error naming both tasks.
+For every task *T* with input path *p*, the executor adds edge *S* → *T*
+for each producing task *S* found by three rules, tried in order:
+
+1. **Exact match** — *S*'s `output` equals *p*.
+2. **Directory input** — when no exact match exists, append `/` to *p* and
+   prefix-match against all task outputs, carrying the v1alpha6 directory
+   rule forward: `inputs: ["out"]` depends on every task producing
+   `out/…`.
+3. **Directory output** — *p* falls under a produced directory: some *S*
+   outputs `d` and *p* begins with `d/`, so a task may consume one file
+   from a directory another task produced.
+
+An exact-match input has exactly one producer, because outputs are
+write-once — a second task declaring an already-declared output is an error
+naming both tasks.  A directory input may legitimately match several
+producers and gains an edge from each.  An input matching no output must
+exist in the component directory, or edge derivation fails with an error
+naming the task and the unmatched path.
 
 `dependsOn` adds edges by task name for constraints the data flow cannot
 express: an artifact sink waiting on a validator that produces no output, or
-a command that must run after another for side-effect ordering.  Names in
-`dependsOn` are resolved within the component's TaskSet; Phase 2 extends
-resolution to canonical IDs ([D3](#d3-task-naming-and-namespacing)) for
-cross-component ordering.
+a command that must run after another for side-effect ordering.  `dependsOn`
+is struct-keyed rather than list-shaped for the same reason `spec.tasks` is:
+two mixins may each unify their own `dependsOn: "validate-x": {}` entry into
+the same task without a positional list conflict.  Keys are resolved within
+the component's TaskSet; Phase 2 extends resolution to canonical IDs
+([D3](#d3-task-naming-and-namespacing)) for cross-component ordering.
 
 A duplicate edge (declared in `dependsOn` and derived from data flow) is
 harmless and legal.  Any cycle in the union is an error reported with the
@@ -284,13 +305,19 @@ platform DAG namespaces tasks by component path with the canonical ID
 format `<component-path>:<task-name>`.**
 
 Within one TaskSet, the struct key in `spec.tasks` is the task name — CUE
-guarantees uniqueness structurally.  When Phase 2 merges all component
+guarantees uniqueness structurally.  Task names MUST match
+`^[a-z0-9]([a-z0-9-]*[a-z0-9])?$` (an RFC 1123 label: lowercase
+alphanumerics and interior hyphens — no colons, no slashes), enforced as a
+pattern constraint on the `tasks` struct key in the CUE schema and
+revalidated by the executor.  Component paths MUST NOT contain a colon,
+validated when the platform loads.  When Phase 2 merges all component
 TaskSets into one platform DAG, each task's canonical ID is its component's
 path relative to the platform root (as injected by `holos_component_path`),
-a colon, and the task name: `components/vault:helm`.  Component paths are
-unique within a platform and never contain a colon, so canonical IDs are
-unique platform-wide.  Bare names in `dependsOn` resolve within the local
-TaskSet; a name containing a colon is a canonical ID referencing another
+a colon, and the task name: `components/vault:helm`.  The two constraints
+above guarantee a canonical ID contains exactly one colon, so it parses
+unambiguously and never collides platform-wide (component paths are unique
+within a platform).  Bare keys in `dependsOn` resolve within the local
+TaskSet; a key containing a colon is a canonical ID referencing another
 component's task.  Phase 2 relies on this format for cross-component edges
 and log labels; Phase 1 uses only the local names.
 
@@ -315,20 +342,26 @@ structs.  Item 2 of the design note is satisfied structurally:
 `spec.tasks` is open (new keys may always be added); a component module's
 `#Config` is closed.**
 
-The CUE definitions generated from these Go types close `#TaskSet`,
-`#TaskSetSpec`, `#Task`, `#Command`, `#Artifact`, and each carried-over
-config struct: a typo like `dependson:` or a field not in the schema fails
-evaluation with an error naming the offending field.  Within `#Task`,
-exactly one kind-specific config field may be set, and it must match `kind`
-— the CUE schema enforces the discriminated union per kind.  The `tasks`
-struct stays open in the sense that unification may always add new task
-names; that openness is the composition mechanism (design item 4).  At the
-author layer, a component module's `#Config` is `close({...})` as specified
-in the [README layer model](README.md#a-component-is-a-cue-module) —
-closedness is what makes the site-variance contract enforceable.  Open maps
-remain only where the schema is intentionally untyped (`Kustomization`,
-`Values`, resource bodies), because typing them would couple holos to
-kubectl and chart versions.
+The published CUE schema closes `#TaskSet`, `#TaskSetSpec`, `#Task`,
+`#Command`, `#Artifact`, and each carried-over config struct: a typo like
+`dependson:` or a field not in the schema fails evaluation with an error
+naming the offending field.  Within `#Task`, exactly one kind-specific
+config field may be set, and it must match `kind`.  `cue get go` generation
+alone does not produce that constraint — it emits independent optional
+fields (`helm?: #Helm`, `command?: #Command`) with no union discrimination —
+so Phase 1 authors the discriminated union explicitly in the published CUE
+schema, guarded per `kind` value (for example, `kind: "Helm"` requires
+`helm` and forbids the other config fields).  A task with `kind: "Helm"`
+and no `helm` config, or with both `helm` and `command` set, fails
+evaluation.  The `tasks` struct stays open in the sense that unification
+may always add new task names; that openness is the composition mechanism
+(design item 4).  At the author layer, a component module's `#Config` is
+`close({...})` as specified in the
+[README layer model](README.md#a-component-is-a-cue-module) — closedness is
+what makes the site-variance contract enforceable.  Open maps remain only
+where the schema is intentionally untyped (`Kustomization`, `Values`,
+resource bodies), because typing them would couple holos to kubectl and
+chart versions.
 
 ## Execution: intra-component now, platform-wide next
 
@@ -398,7 +431,7 @@ TaskSets: "components/vault": spec: tasks: {
 		inputs:  ["vault.gen.yaml"]
 		command: args: ["holos", "cue", "vet", "-f", "vault.gen.yaml"]
 	}
-	deploy: dependsOn: ["validate"]
+	deploy: dependsOn: validate: {}
 }
 ```
 
@@ -409,7 +442,8 @@ the platform DAG holds `components/vault:helm`, `components/vault:validate`,
 `components/vault:deploy`, `components/argocd:helm`, and
 `components/argocd:deploy`.  The mixin's `validate` task slots into vault's
 DAG through its declared input (a derived edge from `helm`) and gates the
-sink by unifying `dependsOn: ["validate"]` into `deploy`, which vault's own
-file left unset ([D2](#d2-artifact-writing)).  Had `spec.tasks` been a list,
-the mixin would have had to append — exactly the CUE conflict this schema
-exists to eliminate.
+sink by unifying `dependsOn: validate: {}` into `deploy`
+([D2](#d2-artifact-writing)) — and because `dependsOn` is itself
+struct-keyed, a second mixin could add its own gate to the same sink
+without conflicting.  Had these fields been lists, the mixins would have
+had to append — exactly the CUE conflict this schema exists to eliminate.
