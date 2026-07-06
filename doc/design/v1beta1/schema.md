@@ -181,17 +181,26 @@ carry over unchanged.
 
 ### Task kinds
 
-The full v1beta1 task kind list, with the v1alpha6 concept each subsumes:
+The full v1beta1 task kind list, with the v1alpha6 concept each subsumes
+and the normative I/O cardinality of each kind:
 
-| Kind | Behavior | v1alpha6 ancestor |
-| -- | -- | -- |
-| `Resources` | export Kubernetes resources defined in CUE | Generator |
-| `Helm` | render a Helm chart | Generator |
-| `File` | read a file from the component directory | Generator |
-| `Kustomize` | patch and transform prior outputs | Transformer |
-| `Join` | concatenate prior outputs | Transformer |
-| `Command` | execute a user-defined command | Generator, Transformer, and Validator leaf config |
-| `Artifact` | write the final artifact (sink; see [D2](#d2-artifact-writing)) | the implicit `artifact:` write |
+| Kind | Behavior | `inputs` | `output` | v1alpha6 ancestor |
+| -- | -- | -- | -- | -- |
+| `Resources` | export Kubernetes resources defined in CUE | none | required | Generator |
+| `Helm` | render a Helm chart | none | required | Generator |
+| `File` | read a file from the component directory | none | required | Generator |
+| `Kustomize` | patch and transform prior outputs | one or more | required | Transformer |
+| `Join` | concatenate prior outputs | one or more | required | Transformer |
+| `Command` | execute a user-defined command | zero or more | optional; required when `isStdoutOutput` | Generator, Transformer, and Validator leaf config |
+| `Artifact` | write the final artifact (sink; see [D2](#d2-artifact-writing)) | exactly one | none | the implicit `artifact:` write |
+
+The `inputs` and `output` columns are normative requiredness and cardinality
+constraints, enforced by the same per-kind CUE guards that enforce the
+config field ([D5](#d5-open-and-closed-structs)) and revalidated by the
+executor so schema and runtime cannot diverge: a `Helm` task declaring
+`inputs`, a `Kustomize` task without them, a `Command` task setting
+`isStdoutOutput: true` without an `output`, or an `Artifact` task with two
+inputs all fail evaluation.
 
 There is no `Validator` kind: a validator is a `Command` task that declares
 `inputs` and no `output`, gating downstream tasks through `dependsOn` edges
@@ -353,7 +362,8 @@ so Phase 1 authors the discriminated union explicitly in the published CUE
 schema, guarded per `kind` value (for example, `kind: "Helm"` requires
 `helm` and forbids the other config fields).  A task with `kind: "Helm"`
 and no `helm` config, or with both `helm` and `command` set, fails
-evaluation.  The `tasks` struct stays open in the sense that unification
+evaluation.  The same per-kind guards enforce the I/O requiredness and
+cardinality table in [Task kinds](#task-kinds).  The `tasks` struct stays open in the sense that unification
 may always add new task names; that openness is the composition mechanism
 (design item 4).  At the author layer, a component module's `#Config` is
 `close({...})` as specified in the

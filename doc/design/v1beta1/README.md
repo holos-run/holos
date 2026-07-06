@@ -8,8 +8,9 @@ independently published CUE modules.
 
 This README owns three things: the document map, the design-inputs digest,
 and the layer model chapter.  Every other chapter lives in a sibling file.
-Any chapter that grows past roughly 400 lines must be split into additional
-sibling files and added to the document map.
+Any chapter that grows past roughly 400 lines of prose — measured excluding
+fenced code listings, which normative schema chapters necessarily carry —
+must be split into additional sibling files and added to the document map.
 
 ## Document map
 
