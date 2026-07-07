@@ -41,9 +41,26 @@ func TestComponents(t *testing.T) {
 
 	t.Run("BuildPlan", func(t *testing.T) {
 		t.Run("Generator", func(t *testing.T) {
-			for _, tc := range []string{"simple", "directory", "helm"} {
+			for _, tc := range []string{"simple", "directory", "helm", "helm-oci"} {
 				testComponent(t, h, "generator", tc)
 			}
+
+			t.Run("RepositoryURLRequired", func(t *testing.T) {
+				// A non-OCI chart with a repository missing the url field must
+				// fail CUE validation.
+				path := "components/generator/helm-no-url"
+				leaf := filepath.Join(h.Base(), path)
+				c := h.Component(path)
+				msg := fmt.Sprintf("Expected %s to fail validation, repository url is required for non-oci charts", path)
+				tm, err := c.TypeMeta()
+				require.NoError(t, err, msg)
+				assert.Equal(t, apiVersion, tm.APIVersion, msg)
+
+				_, err = c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()), holos.TagMap{})
+				require.Error(t, err, msg)
+				assert.ErrorContains(t, err, "repository.url", msg)
+				assert.ErrorContains(t, err, "required", msg)
+			})
 		})
 
 		t.Run("Transformer", func(t *testing.T) {
