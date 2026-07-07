@@ -440,11 +440,11 @@ type Component struct {
 	// Path represents the path of the component relative to the platform root.
 	// Injected as the tag variable "holos_component_path".
 	Path string `json:"path" yaml:"path"`
-	// Parameters represent user defined input variables to produce various
+	// Parameters represent user-defined input variables to produce various
 	// [BuildPlan] resources from one component path.  Injected as CUE @tag
 	// variables.  Parameters with a "holos_" prefix are reserved for use by the
 	// Holos Authors.  Multiple environments are a prime example of an input
-	// parameter that should always be user defined, never defined by Holos.
+	// parameter that should always be user-defined, never defined by Holos.
 	Parameters map[string]string `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	// Labels represent selector labels for the component.  Holos copies Labels
 	// from the Component to the resulting BuildPlan.

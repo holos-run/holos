@@ -127,7 +127,7 @@ package core
 //  3. [File] - Read a file from the component directory.
 //  4. [Kustomize] - Patch and transform prior outputs.
 //  5. [Join] - Concatenate prior outputs.
-//  6. [Command] - Execute a user defined command.
+//  6. [Command] - Execute a user-defined command.
 //  7. [Artifact] - Write the final artifact (sink).
 //
 // The Go type does not enforce the constraint; holos enforces it with
@@ -412,11 +412,11 @@ package core
 	// Injected as the tag variable "holos_component_path".
 	path: string @go(Path)
 
-	// Parameters represent user defined input variables to produce various
+	// Parameters represent user-defined input variables to produce various
 	// [TaskSet] resources from one component path.  Injected as CUE @tag
 	// variables.  Parameters with a "holos_" prefix are reserved for use by the
 	// Holos Authors.  Multiple environments are a prime example of an input
-	// parameter that should always be user defined, never defined by Holos.
+	// parameter that should always be user-defined, never defined by Holos.
 	parameters?: {[string]: string} @go(Parameters,map[string]string)
 
 	// Labels represent selector labels for the component.  Holos copies Labels
