@@ -1,0 +1,57 @@
+# holos render platform with a v1beta1 author.#Kubernetes component
+
+# Start in an empty directory.
+cd $WORK
+
+# Generate the directory structure we're going to work in.
+exec holos init platform v1beta1 --force
+
+# Render the platform with the example component registered.
+exec holos render platform
+stderr -count=1 '^rendered example'
+stderr -count=1 '^rendered platform'
+
+# Assert the rendered manifest.
+exec holos compare yaml deploy/components/example/example.gen.yaml want/example.gen.yaml
+
+-- platform/example.cue --
+package holos
+
+platform: components: example: {
+	name: "example"
+	path: "components/example"
+}
+-- components/example/example.cue --
+package holos
+
+Component: #Kubernetes & {
+	Resources: ConfigMap: example: {
+		apiVersion: "v1"
+		kind:       "ConfigMap"
+		metadata: name: "example"
+		data: greeting: "hello"
+	}
+}
+holos: Component.TaskSet
+-- components/example/typemeta.cue --
+@extern(embed)
+package holos
+
+import "encoding/json"
+
+holos: _ @embed(file=typemeta.yaml)
+
+holos: {
+	_buildContext: string | *"{}" @tag(holos_build_context, type=string)
+	buildContext: json.Unmarshal(_buildContext)
+}
+-- components/example/typemeta.yaml --
+apiVersion: v1beta1
+kind: TaskSet
+-- want/example.gen.yaml --
+apiVersion: v1
+data:
+  greeting: hello
+kind: ConfigMap
+metadata:
+  name: example

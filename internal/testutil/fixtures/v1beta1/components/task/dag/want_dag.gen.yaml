@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: dag-alfa
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: dag-bravo

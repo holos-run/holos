@@ -1,0 +1,19 @@
+# holos init platform v1beta1
+
+# Start in an empty directory.
+cd $WORK
+
+# Generate the directory structure we're going to work in.
+exec holos init platform v1beta1 --force
+
+# Platforms are empty by default.
+exec holos render platform
+stderr -count=1 '^rendered platform'
+
+# The platform resource uses the v1beta1 api version.
+exec holos show platform
+stdout 'kind: Platform'
+stdout 'apiVersion: v1beta1'
+
+# The generated module passes cue vet.
+exec holos cue vet ./...
