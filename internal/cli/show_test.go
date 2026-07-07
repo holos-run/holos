@@ -11,6 +11,7 @@ import (
 
 	v1alpha5 "github.com/holos-run/holos/api/core/v1alpha5"
 	v1alpha6 "github.com/holos-run/holos/api/core/v1alpha6"
+	v1beta1 "github.com/holos-run/holos/api/core/v1beta1"
 	"github.com/holos-run/holos/internal/cli"
 	"github.com/holos-run/holos/internal/generate"
 	"github.com/holos-run/holos/internal/platform"
@@ -115,6 +116,66 @@ func TestShowAlpha6(t *testing.T) {
 		})
 	})
 
+}
+
+// TestShowBeta1 asserts holos show buildplans emits a v1alpha6 BuildPlan and
+// a v1beta1 TaskSet for a mixed platform containing one component of each api
+// version.
+func TestShowBeta1(t *testing.T) {
+	tempDir := t.TempDir()
+
+	// test cancellation
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	// Initialize the platform
+	if err := generate.GeneratePlatform(ctx, tempDir, "v1beta1"); err != nil {
+		t.Fatalf("could not generate platform: %v", err)
+	}
+
+	if err := fs.WalkDir(testutil.Fixtures, "fixtures/v1beta1", util.MakeCopyFunc(ctx, testutil.Fixtures, tempDir)); err != nil {
+		t.Fatalf("could not copy fixtures: %v", err)
+	}
+
+	t.Run("BuildPlans", func(t *testing.T) {
+		t.Run("MixedPlatform", func(t *testing.T) {
+			platformDir := filepath.Join(tempDir, "fixtures", "v1beta1", "platform1")
+			wantBytes, err := testutil.Fixtures.ReadFile("fixtures/v1beta1/platform1/expected_show_buildplans.yaml")
+			require.NoError(t, err)
+			holosExecutable, err := util.Executable()
+			require.NoError(t, err)
+
+			// The expected file contains two documents: a v1alpha6 BuildPlan
+			// followed by a v1beta1 TaskSet.
+			decoder := yaml.NewDecoder(bytes.NewReader(wantBytes))
+			var wantBuildPlan v1alpha6.BuildPlan
+			require.NoError(t, decoder.Decode(&wantBuildPlan))
+			wantBuildPlan.BuildContext.RootDir = tempDir
+			wantBuildPlan.BuildContext.HolosExecutable = holosExecutable
+			wantBuildPlan.BuildContext.LeafDir = "fixtures/v1beta1/components/alpha6/simple"
+			var wantTaskSet v1beta1.TaskSet
+			require.NoError(t, decoder.Decode(&wantTaskSet))
+			wantTaskSet.BuildContext.RootDir = tempDir
+			wantTaskSet.BuildContext.HolosExecutable = holosExecutable
+			wantTaskSet.BuildContext.LeafDir = "fixtures/v1beta1/components/task/command"
+
+			h := newHarness()
+			err = h.Run(ctx, "buildplans", platformDir)
+			require.NoError(t, err)
+
+			haveDecoder := yaml.NewDecoder(bytes.NewReader(h.stdout.Bytes()))
+			var haveBuildPlan v1alpha6.BuildPlan
+			require.NoError(t, haveDecoder.Decode(&haveBuildPlan))
+			var haveTaskSet v1beta1.TaskSet
+			require.NoError(t, haveDecoder.Decode(&haveTaskSet))
+
+			// Compare them in both directions.
+			require.Equal(t, wantBuildPlan, haveBuildPlan)
+			require.Equal(t, haveBuildPlan, wantBuildPlan)
+			require.Equal(t, wantTaskSet, haveTaskSet)
+			require.Equal(t, haveTaskSet, wantTaskSet)
+		})
+	})
 }
 
 func TestShowAlpha5(t *testing.T) {
