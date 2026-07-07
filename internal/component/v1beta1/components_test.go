@@ -1,7 +1,11 @@
 package v1beta1_test
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -9,6 +13,7 @@ import (
 	"github.com/holos-run/holos/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v3"
 )
 
 const apiVersion string = "v1beta1"
@@ -60,10 +65,17 @@ func TestComponents(t *testing.T) {
 					assert.Equal(t, tm.APIVersion, apiVersion)
 
 					t.Run("Build", func(t *testing.T) {
-						bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()), holos.TagMap{})
+						opts := holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir())
+						// Capture stderr to assert on the policy rejection.
+						var stderr bytes.Buffer
+						opts.Stderr = &stderr
+						bp, err := c.BuildPlan(tm, opts, holos.TagMap{})
 						require.NoError(t, err, msg)
 						err = bp.Build(h.Ctx())
 						assert.ErrorContains(t, err, "could not run command", msg)
+						// The validator must fail because the policy forbids
+						// Secret resources, not for an unrelated reason.
+						assert.Contains(t, stderr.String(), "Forbidden: Use an ExternalSecret instead", msg)
 					})
 				})
 			})
@@ -90,15 +102,33 @@ func testComponent(t *testing.T, h *testutil.ComponentHarness, kind, name string
 			err = bp.Build(h.Ctx())
 			require.NoError(t, err, msg)
 
-			// Validate the rendered manifest
-			have, err := h.Load(filepath.Join("deploy", "components", kind, name, fmt.Sprintf("%s.gen.yaml", name)))
-			require.NoError(t, err, msg)
-			want, err := h.Load(filepath.Join(leaf, fmt.Sprintf("want_%s.gen.yaml", name)))
-			require.NoError(t, err, msg)
+			// Validate every document of the rendered manifest.
+			have := loadAll(t, h, filepath.Join("deploy", "components", kind, name, fmt.Sprintf("%s.gen.yaml", name)))
+			want := loadAll(t, h, filepath.Join(leaf, fmt.Sprintf("want_%s.gen.yaml", name)))
+			require.NotEmpty(t, want, msg)
 
 			// Validate in both directions
 			assert.Equal(t, want, have, msg)
 			assert.Equal(t, have, want, msg)
 		})
 	})
+}
+
+// loadAll unmarshals every document in the yaml stream at path relative to
+// the harness root.
+func loadAll(t *testing.T, h *testutil.ComponentHarness, path string) (docs []any) {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(h.Root(), path))
+	require.NoError(t, err)
+	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	for {
+		var doc any
+		err := decoder.Decode(&doc)
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		require.NoError(t, err)
+		docs = append(docs, doc)
+	}
+	return docs
 }
