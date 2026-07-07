@@ -30,6 +30,10 @@ func TestIssues_v1alpha5(t *testing.T) {
 	testscript.Run(t, params(filepath.Join("v1alpha5", "issues")))
 }
 
+func TestSchemas_v1beta1(t *testing.T) {
+	testscript.Run(t, params(filepath.Join("v1beta1", "schemas")))
+}
+
 func TestCLI(t *testing.T) {
 	testscript.Run(t, params("cli"))
 }

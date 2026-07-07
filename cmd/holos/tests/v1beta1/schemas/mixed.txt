@@ -1,0 +1,122 @@
+# One platform renders v1alpha6 and v1beta1 components in one invocation.
+
+# Start in an empty directory.
+cd $WORK
+
+# Generate the directory structure we're going to work in.
+exec holos init platform v1beta1 --force
+
+# Render both components in one invocation.
+exec holos render platform
+stderr -count=1 '^rendered alpha'
+stderr -count=1 '^rendered beta'
+stderr -count=1 '^rendered platform'
+
+# Assert the rendered manifests.
+exec holos compare yaml deploy/components/alpha/alpha.gen.yaml want/alpha.gen.yaml
+exec holos compare yaml deploy/components/beta/beta.gen.yaml want/beta.gen.yaml
+
+# Show buildplans emits one v1alpha6 BuildPlan and one v1beta1 TaskSet.
+exec holos show buildplans
+stdout -count=1 'kind: BuildPlan'
+stdout -count=1 'apiVersion: v1alpha6'
+stdout -count=1 'kind: TaskSet'
+stdout -count=1 'apiVersion: v1beta1'
+
+-- platform/components.cue --
+package holos
+
+platform: components: {
+	alpha: {
+		name: "alpha"
+		path: "components/alpha"
+	}
+	beta: {
+		name: "beta"
+		path: "components/beta"
+	}
+}
+-- components/alpha/buildplan.cue --
+package holos
+
+import "github.com/holos-run/holos/api/core/v1alpha6:core"
+
+holos: core.#BuildPlan & {
+	metadata: name: "alpha"
+	spec: artifacts: [{
+		artifact: "components/alpha/alpha.gen.yaml"
+		generators: [{
+			kind:   "Resources"
+			output: artifact
+			resources: ConfigMap: alpha: {
+				apiVersion: "v1"
+				kind:       "ConfigMap"
+				metadata: name: "alpha"
+			}
+		}]
+	}]
+}
+-- components/alpha/typemeta.cue --
+@extern(embed)
+package holos
+
+import "encoding/json"
+
+holos: _ @embed(file=typemeta.yaml)
+
+holos: {
+	_buildContext: string | *"{}" @tag(holos_build_context, type=string)
+	buildContext: json.Unmarshal(_buildContext)
+}
+-- components/alpha/typemeta.yaml --
+apiVersion: v1alpha6
+kind: BuildPlan
+-- components/beta/taskset.cue --
+package holos
+
+import "github.com/holos-run/holos/api/core/v1beta1:core"
+
+holos: core.#TaskSet & {
+	metadata: name: "beta"
+	spec: tasks: {
+		resources: {
+			kind:   "Resources"
+			output: "beta.gen.yaml"
+			"resources": ConfigMap: beta: {
+				apiVersion: "v1"
+				kind:       "ConfigMap"
+				metadata: name: "beta"
+			}
+		}
+		deploy: {
+			kind: "Artifact"
+			inputs: ["beta.gen.yaml"]
+			artifact: path: "components/beta/beta.gen.yaml"
+		}
+	}
+}
+-- components/beta/typemeta.cue --
+@extern(embed)
+package holos
+
+import "encoding/json"
+
+holos: _ @embed(file=typemeta.yaml)
+
+holos: {
+	_buildContext: string | *"{}" @tag(holos_build_context, type=string)
+	buildContext: json.Unmarshal(_buildContext)
+}
+-- components/beta/typemeta.yaml --
+apiVersion: v1beta1
+kind: TaskSet
+-- want/alpha.gen.yaml --
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alpha
+-- want/beta.gen.yaml --
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: beta
