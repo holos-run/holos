@@ -221,12 +221,8 @@ func (b *TaskSet) graph() (*graph, error) {
 		sinkPaths = append(sinkPaths, path)
 	}
 	sort.Strings(sinkPaths)
-	for _, path := range sinkPaths {
-		for _, other := range sinkPaths {
-			if strings.HasPrefix(other, path+"/") {
-				return nil, errors.Format("artifact path %s declared by task %s overlaps artifact path %s declared by task %s", other, artifactPaths[other], path, artifactPaths[path])
-			}
-		}
+	if err := checkPrefixFree("artifact path", artifactPaths, sinkPaths); err != nil {
+		return nil, err
 	}
 
 	// Sorted outputs for deterministic prefix matching.
@@ -235,6 +231,9 @@ func (b *TaskSet) graph() (*graph, error) {
 		outputs = append(outputs, output)
 	}
 	sort.Strings(outputs)
+	if err := checkPrefixFree("output", producers, outputs); err != nil {
+		return nil, err
+	}
 
 	files := make(map[string]struct{})
 	for _, name := range g.names {
@@ -292,6 +291,20 @@ func (b *TaskSet) graph() (*graph, error) {
 	return g, nil
 }
 
+// checkPrefixFree rejects path sets where one declared path contains another.
+// Outputs and final artifact paths must be prefix-free so a directory producer
+// cannot overlap a nested file producer without a deterministic dependency.
+func checkPrefixFree(kind string, owners map[string]string, paths []string) error {
+	for idx, path := range paths {
+		for _, other := range paths[idx+1:] {
+			if strings.HasPrefix(other, path+"/") {
+				return errors.Format("%s %s declared by task %s overlaps %s %s declared by task %s", kind, other, owners[other], kind, path, owners[path])
+			}
+		}
+	}
+	return nil
+}
+
 // matchProducers finds the tasks producing input path per schema.md D1.
 // Three rules are tried in order; the first rule yielding matches wins.
 func matchProducers(path string, producers map[string]string, outputs []string) []string {
@@ -330,12 +343,12 @@ func validateTask(name string, task core.Task) error {
 	if !taskNamePattern.MatchString(name) {
 		return errors.Format("invalid task name %q: must match %s", name, taskNamePattern)
 	}
-	if output := string(task.Output); output != "" && !filepath.IsLocal(output) {
-		return errors.Format("task %s: output %s: path must be relative and must not traverse outside the build directory", name, output)
+	if output := string(task.Output); output != "" && !validLocalPath(output) {
+		return errors.Format("task %s: output %s: path must be relative, must not traverse outside the build directory, and must not resolve to the build directory", name, output)
 	}
 	for _, input := range task.Inputs {
-		if !filepath.IsLocal(string(input)) {
-			return errors.Format("task %s: input %s: path must be relative and must not traverse outside the build directory", name, input)
+		if !validLocalPath(string(input)) {
+			return errors.Format("task %s: input %s: path must be relative, must not traverse outside the build directory, and must not resolve to the build directory", name, input)
 		}
 	}
 	switch task.Kind {
@@ -346,8 +359,8 @@ func validateTask(name string, task core.Task) error {
 		if task.Output == "" {
 			return errors.Format("task %s: kind %s requires an output", name, task.Kind)
 		}
-		if task.Kind == "File" && !filepath.IsLocal(string(task.File.Source)) {
-			return errors.Format("task %s: file source %s: path must be relative and must not traverse outside the component directory", name, task.File.Source)
+		if task.Kind == "File" && !validLocalPath(string(task.File.Source)) {
+			return errors.Format("task %s: file source %s: path must be relative, must not traverse outside the component directory, and must not resolve to the component directory", name, task.File.Source)
 		}
 	case "Kustomize", "Join":
 		if len(task.Inputs) < 1 {
@@ -357,8 +370,8 @@ func validateTask(name string, task core.Task) error {
 			return errors.Format("task %s: kind %s requires an output", name, task.Kind)
 		}
 		for path := range task.Kustomize.Files {
-			if !filepath.IsLocal(string(path)) {
-				return errors.Format("task %s: kustomize file %s: path must be relative and must not traverse outside the kustomize directory", name, path)
+			if !validLocalPath(string(path)) {
+				return errors.Format("task %s: kustomize file %s: path must be relative, must not traverse outside the kustomize directory, and must not resolve to the kustomize directory", name, path)
 			}
 		}
 	case "Command":
@@ -380,13 +393,17 @@ func validateTask(name string, task core.Task) error {
 		if task.Output != "" {
 			return errors.Format("task %s: kind Artifact must not declare an output", name)
 		}
-		if path := string(task.Artifact.Path); path != "" && !filepath.IsLocal(path) {
-			return errors.Format("task %s: artifact path %s: path must be relative and must not traverse outside the write-to directory", name, path)
+		if path := string(task.Artifact.Path); path != "" && !validLocalPath(path) {
+			return errors.Format("task %s: artifact path %s: path must be relative, must not traverse outside the write-to directory, and must not resolve to the write-to directory", name, path)
 		}
 	default:
 		return errors.Format("task %s: unsupported kind %s", name, task.Kind)
 	}
 	return nil
+}
+
+func validLocalPath(path string) bool {
+	return filepath.IsLocal(path) && filepath.Clean(path) != "."
 }
 
 // checkCycles runs Kahn's algorithm over the graph.  Any cycle is an error

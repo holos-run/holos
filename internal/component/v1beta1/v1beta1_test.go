@@ -224,6 +224,18 @@ func TestBuildDuplicateOutputError(t *testing.T) {
 	assert.ErrorContains(t, err, "bravo")
 }
 
+func TestBuildOverlappingOutputError(t *testing.T) {
+	b := newTestTaskSet(t, map[string]core.Task{
+		"parent": resourcesTask("a", "out"),
+		"nested": resourcesTask("b", "out/file.yaml"),
+	})
+	err := b.Build(t.Context())
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "overlaps output")
+	assert.ErrorContains(t, err, "parent")
+	assert.ErrorContains(t, err, "nested")
+}
+
 func TestBuildDuplicateArtifactPathError(t *testing.T) {
 	b := newTestTaskSet(t, map[string]core.Task{
 		"gen-a": resourcesTask("a", "a.gen.yaml"),
@@ -265,11 +277,49 @@ func TestBuildPathTraversalError(t *testing.T) {
 			errText: "must not traverse outside the write-to directory",
 		},
 		{
+			name: "ArtifactPathDot",
+			tasks: map[string]core.Task{
+				"gen": resourcesTask("a", "a.gen.yaml"),
+				"deploy": {
+					Kind:     "Artifact",
+					Inputs:   []core.FileOrDirectoryPath{"a.gen.yaml"},
+					Artifact: core.Artifact{Path: "."},
+				},
+			},
+			errText: "must not resolve to the write-to directory",
+		},
+		{
+			name: "ArtifactPathCleansToDot",
+			tasks: map[string]core.Task{
+				"gen": resourcesTask("a", "a.gen.yaml"),
+				"deploy": {
+					Kind:     "Artifact",
+					Inputs:   []core.FileOrDirectoryPath{"a.gen.yaml"},
+					Artifact: core.Artifact{Path: "out/.."},
+				},
+			},
+			errText: "must not resolve to the write-to directory",
+		},
+		{
 			name: "OutputEscapes",
 			tasks: map[string]core.Task{
 				"gen": resourcesTask("a", "../a.gen.yaml"),
 			},
 			errText: "must not traverse outside the build directory",
+		},
+		{
+			name: "OutputDot",
+			tasks: map[string]core.Task{
+				"gen": resourcesTask("a", "."),
+			},
+			errText: "must not resolve to the build directory",
+		},
+		{
+			name: "OutputCleansToDot",
+			tasks: map[string]core.Task{
+				"gen": resourcesTask("a", "out/.."),
+			},
+			errText: "must not resolve to the build directory",
 		},
 		{
 			name: "OutputAbsolute",
@@ -290,6 +340,37 @@ func TestBuildPathTraversalError(t *testing.T) {
 			errText: "must not traverse outside the build directory",
 		},
 		{
+			name: "InputDot",
+			tasks: map[string]core.Task{
+				"combine": {
+					Kind:   "Join",
+					Inputs: []core.FileOrDirectoryPath{"."},
+					Output: "combined.gen.yaml",
+				},
+			},
+			errText: "must not resolve to the build directory",
+		},
+		{
+			name: "DefaultArtifactInputDot",
+			tasks: map[string]core.Task{
+				"deploy": {
+					Kind:   "Artifact",
+					Inputs: []core.FileOrDirectoryPath{"."},
+				},
+			},
+			errText: "must not resolve to the build directory",
+		},
+		{
+			name: "DefaultArtifactInputCleansToDot",
+			tasks: map[string]core.Task{
+				"deploy": {
+					Kind:   "Artifact",
+					Inputs: []core.FileOrDirectoryPath{"out/.."},
+				},
+			},
+			errText: "must not resolve to the build directory",
+		},
+		{
 			name: "FileSourceEscapes",
 			tasks: map[string]core.Task{
 				"gen": {
@@ -299,6 +380,17 @@ func TestBuildPathTraversalError(t *testing.T) {
 				},
 			},
 			errText: "must not traverse outside the component directory",
+		},
+		{
+			name: "FileSourceDot",
+			tasks: map[string]core.Task{
+				"gen": {
+					Kind:   "File",
+					File:   core.File{Source: "."},
+					Output: "a.gen.yaml",
+				},
+			},
+			errText: "must not resolve to the component directory",
 		},
 		{
 			name: "KustomizeFileEscapes",
@@ -314,6 +406,21 @@ func TestBuildPathTraversalError(t *testing.T) {
 				},
 			},
 			errText: "must not traverse outside the kustomize directory",
+		},
+		{
+			name: "KustomizeFileDot",
+			tasks: map[string]core.Task{
+				"gen": resourcesTask("a", "a.gen.yaml"),
+				"transform": {
+					Kind:   "Kustomize",
+					Inputs: []core.FileOrDirectoryPath{"a.gen.yaml"},
+					Output: "out.gen.yaml",
+					Kustomize: core.Kustomize{
+						Files: core.FileContentMap{".": "data"},
+					},
+				},
+			},
+			errText: "must not resolve to the kustomize directory",
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
