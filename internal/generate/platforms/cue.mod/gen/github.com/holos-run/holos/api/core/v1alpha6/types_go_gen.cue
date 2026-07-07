@@ -279,12 +279,19 @@ package core
 
 // Repository represents a [Helm] [Chart] repository.
 //
+// The URL field is required unless the [Chart] Name field is an oci://
+// reference, in which case holos pulls the chart directly from the OCI
+// registry and the URL field must be omitted.  An OCI chart specifies a
+// Repository only to configure registry authentication with the Auth field.
+// The CUE schema enforces this contract; the Name and URL fields are optional
+// at the Go level to support OCI auth-only repositories.
+//
 // The Auth field is useful to configure http basic authentication to the Helm
 // repository.  Holos gets the username and password from the environment
 // variables represented by the Auth field.
 #Repository: {
-	name:  string @go(Name)
-	url:   string @go(URL)
+	name?: string @go(Name)
+	url?:  string @go(URL)
 	auth?: #Auth  @go(Auth)
 }
 

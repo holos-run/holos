@@ -1,0 +1,6 @@
+---
+# Source: mychart/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-secret
