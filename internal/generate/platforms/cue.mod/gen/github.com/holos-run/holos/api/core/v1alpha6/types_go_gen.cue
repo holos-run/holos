@@ -176,7 +176,7 @@ package core
 //  1. [Resources] - Generates resources from CUE code.
 //  2. [Helm] - Generates rendered yaml from a [Chart].
 //  3. [File] - Generates data by reading a file from the component directory.
-//  4. [Command] - Generates data by executing an user defined command.
+//  4. [Command] - Generates data by executing a user-defined command.
 #Generator: {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
 	kind: string & ("Resources" | "Helm" | "File" | "Command") @go(Kind)
@@ -227,7 +227,7 @@ package core
 	// rendering the chart.  Values follow ValueFiles when both are provided.
 	values: #Values @go(Values)
 
-	// ValueFiles represents hierarchial value files passed in order to the helm
+	// ValueFiles represents hierarchical value files passed in order to the helm
 	// template -f flag.  Useful for migration from an ApplicationSet.  Use Values
 	// instead.  ValueFiles precede Values when both are provided.
 	valueFiles?: [...#ValueFile] @go(ValueFiles,[]ValueFile)
@@ -282,8 +282,8 @@ package core
 // repository.  Holos gets the username and password from the environment
 // variables represented by the Auth field.
 #Repository: {
-	name:  string @go(Name)
-	url:   string @go(URL)
+	name?: string @go(Name)
+	url?:  string @go(URL)
 	auth?: #Auth  @go(Auth)
 }
 
@@ -306,7 +306,7 @@ package core
 //  1. [Kustomize] - Patch and transform the output from prior generators or
 //     transformers.  See [Introduction to Kustomize].
 //  2. [Join] - Concatenate multiple prior outputs into one output.
-//  3. [Command] - Transforms data by executing an user defined command.
+//  3. [Command] - Transforms data by executing a user-defined command.
 //
 // [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
 #Transformer: {

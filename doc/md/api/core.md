@@ -198,7 +198,7 @@ type Chart struct {
 <a name="Command"></a>
 ## type Command {#Command}
 
-Command represents a [Task](<#Task>) implemented by executing an user defined system command. Command is a first\-class Task kind in v1beta1. Commands execute with the working directory set to the platform root.
+Command represents a [Task](<#Task>) implemented by executing a user\-defined system command. Command is a first\-class Task kind in v1beta1. Commands execute with the working directory set to the platform root.
 
 A command with an output generates or transforms; a command with only inputs validates, gating downstream tasks through \[Task.DependsOn\] edges.
 
@@ -314,7 +314,7 @@ type Helm struct {
     // Values represents values for holos to marshal into values.yaml when
     // rendering the chart.  Values follow ValueFiles when both are provided.
     Values Values `json:"values" yaml:"values"`
-    // ValueFiles represents hierarchial value files passed in order to the helm
+    // ValueFiles represents hierarchical value files passed in order to the helm
     // template -f flag.  Useful for migration from an ApplicationSet.  Use Values
     // instead.  ValueFiles precede Values when both are provided.
     ValueFiles []ValueFile `json:"valueFiles,omitempty" yaml:"valueFiles,omitempty"`

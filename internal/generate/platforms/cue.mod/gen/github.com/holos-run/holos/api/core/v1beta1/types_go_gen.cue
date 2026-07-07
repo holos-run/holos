@@ -180,7 +180,7 @@ package core
 // breaking composition.
 #Dependency: {}
 
-// Command represents a [Task] implemented by executing an user defined system
+// Command represents a [Task] implemented by executing a user-defined system
 // command.  Command is a first-class Task kind in v1beta1.  Commands execute
 // with the working directory set to the platform root.
 //
@@ -240,7 +240,7 @@ package core
 	// rendering the chart.  Values follow ValueFiles when both are provided.
 	values: #Values @go(Values)
 
-	// ValueFiles represents hierarchial value files passed in order to the helm
+	// ValueFiles represents hierarchical value files passed in order to the helm
 	// template -f flag.  Useful for migration from an ApplicationSet.  Use Values
 	// instead.  ValueFiles precede Values when both are provided.
 	valueFiles?: [...#ValueFile] @go(ValueFiles,[]ValueFile)

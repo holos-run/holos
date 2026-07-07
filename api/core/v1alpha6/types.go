@@ -184,7 +184,7 @@ type Artifact struct {
 //  1. [Resources] - Generates resources from CUE code.
 //  2. [Helm] - Generates rendered yaml from a [Chart].
 //  3. [File] - Generates data by reading a file from the component directory.
-//  4. [Command] - Generates data by executing an user defined command.
+//  4. [Command] - Generates data by executing a user-defined command.
 type Generator struct {
 	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
 	Kind string `json:"kind" yaml:"kind" cue:"\"Resources\" | \"Helm\" | \"File\" | \"Command\""`
@@ -228,7 +228,7 @@ type Helm struct {
 	// Values represents values for holos to marshal into values.yaml when
 	// rendering the chart.  Values follow ValueFiles when both are provided.
 	Values Values `json:"values" yaml:"values"`
-	// ValueFiles represents hierarchial value files passed in order to the helm
+	// ValueFiles represents hierarchical value files passed in order to the helm
 	// template -f flag.  Useful for migration from an ApplicationSet.  Use Values
 	// instead.  ValueFiles precede Values when both are provided.
 	ValueFiles []ValueFile `json:"valueFiles,omitempty" yaml:"valueFiles,omitempty"`
@@ -298,7 +298,7 @@ type AuthSource struct {
 //  1. [Kustomize] - Patch and transform the output from prior generators or
 //     transformers.  See [Introduction to Kustomize].
 //  2. [Join] - Concatenate multiple prior outputs into one output.
-//  3. [Command] - Transforms data by executing an user defined command.
+//  3. [Command] - Transforms data by executing a user-defined command.
 //
 // [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
 type Transformer struct {
