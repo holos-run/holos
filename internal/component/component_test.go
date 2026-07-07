@@ -51,6 +51,44 @@ func TestComponentAlpha6(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestComponentBeta1(t *testing.T) {
+	h := newHarness(t, "components/v1beta1")
+	err := h.c.Render(h.ctx, holos.WriteToDefault, os.Stderr, 1, nil)
+	assert.NoError(t, err)
+
+	// Verify the artifact was written to the expected path
+	expectedPath := filepath.Join(h.c.Root, holos.WriteToDefault, "v1beta1/example/example.gen.yaml")
+	data, err := os.ReadFile(expectedPath)
+	assert.NoError(t, err, "Expected manifest file to exist at %s", expectedPath)
+	assert.Contains(t, string(data), "kind: ConfigMap")
+}
+
+// TestComponentTypeMetaDefault asserts a component without a typemeta.yaml
+// file defaults to a v1alpha5 BuildPlan.
+func TestComponentTypeMetaDefault(t *testing.T) {
+	h := newHarness(t, "components/v1alpha5")
+	tm, err := h.c.TypeMeta()
+	assert.NoError(t, err)
+	assert.Equal(t, "v1alpha5", tm.APIVersion)
+	assert.Equal(t, "BuildPlan", tm.Kind)
+}
+
+// TestComponentUnsupportedVersion asserts unsupported api versions produce an
+// error instead of silently falling through to another version.
+func TestComponentUnsupportedVersion(t *testing.T) {
+	h := newHarness(t, "components/unsupported")
+	dir := filepath.Join(h.c.Root, h.c.Path)
+	if err := os.MkdirAll(dir, 0o777); err != nil {
+		t.Fatalf("could not make component directory: %v", err)
+	}
+	data := []byte("apiVersion: v1alpha4\nkind: BuildPlan\n")
+	if err := os.WriteFile(filepath.Join(dir, "typemeta.yaml"), data, 0o666); err != nil {
+		t.Fatalf("could not write typemeta.yaml: %v", err)
+	}
+	err := h.c.Render(h.ctx, holos.WriteToDefault, os.Stderr, 1, nil)
+	assert.ErrorContains(t, err, "unsupported version: v1alpha4")
+}
+
 type harness struct {
 	c   *component.Component
 	ctx context.Context
