@@ -10,6 +10,7 @@ import (
 
 	v1alpha5 "github.com/holos-run/holos/api/core/v1alpha5"
 	v1alpha6 "github.com/holos-run/holos/api/core/v1alpha6"
+	v1beta1 "github.com/holos-run/holos/api/core/v1beta1"
 	"github.com/holos-run/holos/internal/cli/command"
 	"github.com/holos-run/holos/internal/compile"
 	"github.com/holos-run/holos/internal/errors"
@@ -116,8 +117,13 @@ func (s *showBuildPlans) Run(ctx context.Context, p *platform.Platform) error {
 		if err := json.Unmarshal(buildPlanResponse.RawMessage, &tm); err != nil {
 			return errors.Format("could not discriminate type meta: %w", err)
 		}
-		if tm.Kind != "BuildPlan" {
-			return errors.Format("invalid kind %s: must be BuildPlan", tm.Kind)
+		// v1beta1 replaces the BuildPlan kind with TaskSet.
+		wantKind := "BuildPlan"
+		if tm.APIVersion == "v1beta1" {
+			wantKind = "TaskSet"
+		}
+		if tm.Kind != wantKind {
+			return errors.Format("invalid kind %s: must be %s", tm.Kind, wantKind)
 		}
 
 		var buildPlan any
@@ -126,6 +132,8 @@ func (s *showBuildPlans) Run(ctx context.Context, p *platform.Platform) error {
 			buildPlan = &v1alpha5.BuildPlan{}
 		case "v1alpha6":
 			buildPlan = &v1alpha6.BuildPlan{}
+		case "v1beta1":
+			buildPlan = &v1beta1.TaskSet{}
 		default:
 			slog.WarnContext(ctx, fmt.Sprintf("unknown BuildPlan APIVersion %s: assuming v1alpha6 schema", tm.APIVersion))
 			buildPlan = &v1alpha6.BuildPlan{}

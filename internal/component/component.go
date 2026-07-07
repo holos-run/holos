@@ -10,6 +10,7 @@ import (
 
 	"github.com/holos-run/holos/internal/component/v1alpha5"
 	"github.com/holos-run/holos/internal/component/v1alpha6"
+	"github.com/holos-run/holos/internal/component/v1beta1"
 	"github.com/holos-run/holos/internal/errors"
 	"github.com/holos-run/holos/internal/holos"
 	"github.com/holos-run/holos/internal/logger"
@@ -70,7 +71,7 @@ func (c *Component) Render(ctx context.Context, writeTo string, stderr io.Writer
 	}
 
 	switch tm.APIVersion {
-	case "v1alpha6":
+	case "v1alpha6", "v1beta1":
 		if err := c.render(ctx, tm, writeTo, stderr, concurrency, tagMap); err != nil {
 			return errors.Format("could not render component: %w", err)
 		}
@@ -92,6 +93,22 @@ func (c *Component) BuildPlan(tm holos.TypeMeta, opts holos.BuildOpts, tagMap ho
 	tags := tagMap.Tags()
 	// discriminate the version.
 	switch tm.APIVersion {
+	case "v1beta1":
+		// Prepare runtime build context for injection as a cue tag.
+		bc, err := v1beta1.NewBuildContext(opts)
+		if err != nil {
+			return bp, errors.Format("invalid build context: %w", err)
+		}
+		buildContextTags, err := bc.Tags()
+		if err != nil {
+			return bp, errors.Format("could not get build context tag: %w", err)
+		}
+		// Append the standard tags for the component name, labels, annotations.
+		tags = append(tags, opts.Tags...)
+		// Append build context tags such as the holos managed temp directory.
+		tags = append(tags, buildContextTags...)
+		// the version specific task set itself embedded into the wrapper.
+		bp = BuildPlan{BuildPlan: &v1beta1.TaskSet{Opts: opts}}
 	case "v1alpha6":
 		// Prepare runtime build context for injection as a cue tag.
 		bc, err := v1alpha6.NewBuildContext(opts)
@@ -141,8 +158,13 @@ func (c *Component) BuildPlan(tm holos.TypeMeta, opts holos.BuildOpts, tagMap ho
 // building the CUE instance.  Useful to determine which build tags need to be
 // injected depending on the apiVersion of the component.
 func (c *Component) render(ctx context.Context, tm holos.TypeMeta, writeTo string, stderr io.Writer, concurrency int, tagMap holos.TagMap) error {
-	if tm.Kind != "BuildPlan" {
-		return errors.Format("unsupported kind: %s, want BuildPlan", tm.Kind)
+	// v1beta1 replaces the BuildPlan kind with TaskSet.
+	wantKind := "BuildPlan"
+	if tm.APIVersion == "v1beta1" {
+		wantKind = "TaskSet"
+	}
+	if tm.Kind != wantKind {
+		return errors.Format("unsupported kind: %s, want %s", tm.Kind, wantKind)
 	}
 	// temp directory is an important part of the build context.
 	tempDir, err := os.MkdirTemp("", "holos.render")

@@ -135,7 +135,10 @@ func (p *Platform) Load(ctx context.Context) error {
 	}
 
 	switch tm.APIVersion {
-	case "v1alpha6":
+	// The v1beta1 platform schema is structurally identical to v1alpha6, so
+	// v1beta1 platforms load with the v1alpha6 loader.  Dispatch is explicit
+	// to avoid a silent fall-through.  See doc/design/v1beta1/README.md.
+	case "v1alpha6", "v1beta1":
 		p.Platform = &v1alpha6.Platform{}
 	default:
 		p.Platform = &v1alpha5.Platform{}
