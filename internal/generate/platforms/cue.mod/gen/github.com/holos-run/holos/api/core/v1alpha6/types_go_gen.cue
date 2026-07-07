@@ -178,7 +178,8 @@ package core
 //  3. [File] - Generates data by reading a file from the component directory.
 //  4. [Command] - Generates data by executing a user-defined command.
 #Generator: {
-	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
+	// Kind represents the kind of generator.  Must be Resources, Helm, File, or
+	// Command.
 	kind: string & ("Resources" | "Helm" | "File" | "Command") @go(Kind)
 
 	// Output represents a file for a Transformer or Artifact to consume.
@@ -310,7 +311,8 @@ package core
 //
 // [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
 #Transformer: {
-	// Kind represents the kind of transformer. Must be Kustomize, or Join.
+	// Kind represents the kind of transformer.  Must be Kustomize, Join, or
+	// Command.
 	kind: string & ("Kustomize" | "Join" | "Command") @go(Kind)
 
 	// Inputs represents the files to transform. The Output of prior Generators
@@ -374,7 +376,7 @@ package core
 //
 // [validators]: https://holos.run/docs/v1alpha6/tutorial/validators/
 #Validator: {
-	// Kind represents the kind of transformer. Must be Kustomize, or Join.
+	// Kind represents the kind of validator.  Must be Command.
 	kind: string & "Command" @go(Kind)
 
 	// Inputs represents the files to validate.  Usually the final Artifact.
@@ -384,10 +386,10 @@ package core
 	command?: #Command @go(Command)
 }
 
-// Command represents a [BuildPlan] task implemented by executing an user
-// defined system command.  A task is defined as a [Generator], [Transformer],
-// or [Validator].  Commands are executed with the working directory set to the
-// platform root.
+// Command represents a [BuildPlan] task implemented by executing a
+// user-defined system command.  A task is defined as a [Generator],
+// [Transformer], or [Validator].  Commands are executed with the working
+// directory set to the platform root.
 #Command: {
 	// DisplayName of the command.  The basename of args[0] is used if empty.
 	displayName?: string @go(DisplayName)
