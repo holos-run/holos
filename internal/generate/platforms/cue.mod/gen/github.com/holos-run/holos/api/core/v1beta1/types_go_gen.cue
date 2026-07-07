@@ -127,7 +127,7 @@ package core
 //  3. [File] - Read a file from the component directory.
 //  4. [Kustomize] - Patch and transform prior outputs.
 //  5. [Join] - Concatenate prior outputs.
-//  6. [Command] - Execute a user defined command.
+//  6. [Command] - Execute a user-defined command.
 //  7. [Artifact] - Write the final artifact (sink).
 //
 // The Go type does not enforce the constraint; holos enforces it with
@@ -180,7 +180,7 @@ package core
 // breaking composition.
 #Dependency: {}
 
-// Command represents a [Task] implemented by executing an user defined system
+// Command represents a [Task] implemented by executing a user-defined system
 // command.  Command is a first-class Task kind in v1beta1.  Commands execute
 // with the working directory set to the platform root.
 //
@@ -240,7 +240,7 @@ package core
 	// rendering the chart.  Values follow ValueFiles when both are provided.
 	values: #Values @go(Values)
 
-	// ValueFiles represents hierarchial value files passed in order to the helm
+	// ValueFiles represents hierarchical value files passed in order to the helm
 	// template -f flag.  Useful for migration from an ApplicationSet.  Use Values
 	// instead.  ValueFiles precede Values when both are provided.
 	valueFiles?: [...#ValueFile] @go(ValueFiles,[]ValueFile)
@@ -412,11 +412,11 @@ package core
 	// Injected as the tag variable "holos_component_path".
 	path: string @go(Path)
 
-	// Parameters represent user defined input variables to produce various
+	// Parameters represent user-defined input variables to produce various
 	// [TaskSet] resources from one component path.  Injected as CUE @tag
 	// variables.  Parameters with a "holos_" prefix are reserved for use by the
 	// Holos Authors.  Multiple environments are a prime example of an input
-	// parameter that should always be user defined, never defined by Holos.
+	// parameter that should always be user-defined, never defined by Holos.
 	parameters?: {[string]: string} @go(Parameters,map[string]string)
 
 	// Labels represent selector labels for the component.  Holos copies Labels

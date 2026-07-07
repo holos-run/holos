@@ -176,9 +176,10 @@ package core
 //  1. [Resources] - Generates resources from CUE code.
 //  2. [Helm] - Generates rendered yaml from a [Chart].
 //  3. [File] - Generates data by reading a file from the component directory.
-//  4. [Command] - Generates data by executing an user defined command.
+//  4. [Command] - Generates data by executing a user-defined command.
 #Generator: {
-	// Kind represents the kind of generator.  Must be Resources, Helm, or File.
+	// Kind represents the kind of generator.  Must be Resources, Helm, File, or
+	// Command.
 	kind: string & ("Resources" | "Helm" | "File" | "Command") @go(Kind)
 
 	// Output represents a file for a Transformer or Artifact to consume.
@@ -227,7 +228,7 @@ package core
 	// rendering the chart.  Values follow ValueFiles when both are provided.
 	values: #Values @go(Values)
 
-	// ValueFiles represents hierarchial value files passed in order to the helm
+	// ValueFiles represents hierarchical value files passed in order to the helm
 	// template -f flag.  Useful for migration from an ApplicationSet.  Use Values
 	// instead.  ValueFiles precede Values when both are provided.
 	valueFiles?: [...#ValueFile] @go(ValueFiles,[]ValueFile)
@@ -306,11 +307,12 @@ package core
 //  1. [Kustomize] - Patch and transform the output from prior generators or
 //     transformers.  See [Introduction to Kustomize].
 //  2. [Join] - Concatenate multiple prior outputs into one output.
-//  3. [Command] - Transforms data by executing an user defined command.
+//  3. [Command] - Transforms data by executing a user-defined command.
 //
 // [Introduction to Kustomize]: https://kubectl.docs.kubernetes.io/guides/config_management/introduction/
 #Transformer: {
-	// Kind represents the kind of transformer. Must be Kustomize, or Join.
+	// Kind represents the kind of transformer.  Must be Kustomize, Join, or
+	// Command.
 	kind: string & ("Kustomize" | "Join" | "Command") @go(Kind)
 
 	// Inputs represents the files to transform. The Output of prior Generators
@@ -374,7 +376,7 @@ package core
 //
 // [validators]: https://holos.run/docs/v1alpha6/tutorial/validators/
 #Validator: {
-	// Kind represents the kind of transformer. Must be Kustomize, or Join.
+	// Kind represents the kind of validator.  Must be Command.
 	kind: string & "Command" @go(Kind)
 
 	// Inputs represents the files to validate.  Usually the final Artifact.
@@ -384,10 +386,10 @@ package core
 	command?: #Command @go(Command)
 }
 
-// Command represents a [BuildPlan] task implemented by executing an user
-// defined system command.  A task is defined as a [Generator], [Transformer],
-// or [Validator].  Commands are executed with the working directory set to the
-// platform root.
+// Command represents a [BuildPlan] task implemented by executing a
+// user-defined system command.  A task is defined as a [Generator],
+// [Transformer], or [Validator].  Commands are executed with the working
+// directory set to the platform root.
 #Command: {
 	// DisplayName of the command.  The basename of args[0] is used if empty.
 	displayName?: string @go(DisplayName)
@@ -462,11 +464,11 @@ package core
 	// Injected as the tag variable "holos_component_path".
 	path: string @go(Path)
 
-	// Parameters represent user defined input variables to produce various
+	// Parameters represent user-defined input variables to produce various
 	// [BuildPlan] resources from one component path.  Injected as CUE @tag
 	// variables.  Parameters with a "holos_" prefix are reserved for use by the
 	// Holos Authors.  Multiple environments are a prime example of an input
-	// parameter that should always be user defined, never defined by Holos.
+	// parameter that should always be user-defined, never defined by Holos.
 	parameters?: {[string]: string} @go(Parameters,map[string]string)
 
 	// Labels represent selector labels for the component.  Holos copies Labels
