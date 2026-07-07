@@ -283,8 +283,8 @@ package core
 // repository.  Holos gets the username and password from the environment
 // variables represented by the Auth field.
 #Repository: {
-	name?: string @go(Name)
-	url?:  string @go(URL)
+	name:  string @go(Name)
+	url:   string @go(URL)
 	auth?: #Auth  @go(Auth)
 }
 
