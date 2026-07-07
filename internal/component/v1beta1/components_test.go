@@ -62,7 +62,7 @@ func TestComponents(t *testing.T) {
 					msg := fmt.Sprintf("Expected %s with %s to fail validation", path, kind)
 					tm, err := c.TypeMeta()
 					require.NoError(t, err, msg)
-					assert.Equal(t, tm.APIVersion, apiVersion)
+					assert.Equal(t, apiVersion, tm.APIVersion)
 
 					t.Run("Build", func(t *testing.T) {
 						opts := holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir())
@@ -94,7 +94,7 @@ func testComponent(t *testing.T, h *testutil.ComponentHarness, kind, name string
 		msg := fmt.Sprintf("Expected %s with %s to render config manifests", path, kind)
 		tm, err := c.TypeMeta()
 		require.NoError(t, err, msg)
-		assert.Equal(t, tm.APIVersion, apiVersion)
+		assert.Equal(t, apiVersion, tm.APIVersion)
 
 		t.Run("Build", func(t *testing.T) {
 			bp, err := c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()), holos.TagMap{})
