@@ -1,0 +1,48 @@
+kind: BuildPlan
+apiVersion: v1alpha6
+metadata:
+  name: simple
+  labels:
+    holos.run/component.name: simple
+  annotations:
+    app.holos.run/description: simple command generator
+spec:
+  artifacts:
+    - artifact: components/alpha6/simple/simple.gen.yaml
+      generators:
+        - kind: Command
+          output: components/alpha6/simple/simple.gen.yaml
+          command:
+            args:
+              - /bin/echo
+              - '{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"simple"}}'
+            isStdoutOutput: true
+buildContext:
+  tempDir: "${TMPDIR_PLACEHOLDER}"
+---
+kind: TaskSet
+apiVersion: v1beta1
+metadata:
+  name: command
+  labels:
+    holos.run/component.name: command
+  annotations:
+    app.holos.run/description: command command task
+spec:
+  tasks:
+    echo:
+      kind: Command
+      output: command.gen.yaml
+      command:
+        args:
+          - /bin/echo
+          - '{"apiVersion":"v1","kind":"ConfigMap","metadata":{"name":"command"}}'
+        isStdoutOutput: true
+    deploy:
+      kind: Artifact
+      inputs:
+        - command.gen.yaml
+      artifact:
+        path: components/task/command/command.gen.yaml
+buildContext:
+  tempDir: "${TMPDIR_PLACEHOLDER}"
