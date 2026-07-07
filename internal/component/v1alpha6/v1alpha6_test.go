@@ -61,6 +61,23 @@ func TestComponents(t *testing.T) {
 				assert.ErrorContains(t, err, "repository.url", msg)
 				assert.ErrorContains(t, err, "required", msg)
 			})
+
+			t.Run("RepositoryURLForbiddenForOCI", func(t *testing.T) {
+				// An OCI chart with a repository url must fail CUE validation,
+				// OCI charts pull directly from the registry.
+				path := "components/generator/helm-oci-url"
+				leaf := filepath.Join(h.Base(), path)
+				c := h.Component(path)
+				msg := fmt.Sprintf("Expected %s to fail validation, repository url must be omitted for oci charts", path)
+				tm, err := c.TypeMeta()
+				require.NoError(t, err, msg)
+				assert.Equal(t, apiVersion, tm.APIVersion, msg)
+
+				_, err = c.BuildPlan(tm, holos.NewBuildOpts(h.Root(), leaf, "deploy", t.TempDir()), holos.TagMap{})
+				require.Error(t, err, msg)
+				assert.ErrorContains(t, err, "repository.url", msg)
+				assert.ErrorContains(t, err, "not allowed", msg)
+			})
 		})
 
 		t.Run("Transformer", func(t *testing.T) {
