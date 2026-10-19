@@ -35,6 +35,26 @@ func TestV1Beta1InitPlatformTemplate(t *testing.T) {
 	if err := generate.GeneratePlatform(ctx, root, "v1beta1"); err != nil {
 		t.Fatalf("could not generate platform: %v", err)
 	}
+	var cueModuleFiles []string
+	err := filepath.WalkDir(filepath.Join(root, "cue.mod"), func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !entry.IsDir() {
+			rel, err := filepath.Rel(root, path)
+			if err != nil {
+				return err
+			}
+			cueModuleFiles = append(cueModuleFiles, filepath.ToSlash(rel))
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("could not list generated cue module: %v", err)
+	}
+	if got, want := cueModuleFiles, []string{"cue.mod/module.cue"}; !slices.Equal(got, want) {
+		t.Fatalf("generated platform must not copy the Holos CUE SDK: got %v, want %v", got, want)
+	}
 
 	leaf := filepath.Join("components", "example")
 	dir := filepath.Join(root, leaf)

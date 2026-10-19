@@ -154,6 +154,14 @@ import "github.com/holos-run/holos/api/core/v1beta1:core"
 //
 // [kustomize]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
 #KustomizeConfig: {
+	// BasePath optionally names an existing kustomization directory relative to
+	// the platform root. It is rendered in place without a component wrapper.
+	BasePath?: string
+
+	// LoadRestrictor controls external resources used by BasePath. The empty
+	// value keeps kustomize's default restrictive behavior.
+	LoadRestrictor?: string
+
 	// Kustomization represents the kustomization used to transform resources.
 	// Note the resources field is internally managed from the Files and Resources fields.
 	Kustomization?: {...} @go(,map[string]any)

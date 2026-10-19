@@ -1,10 +1,22 @@
 package holos
 
-import "github.com/holos-run/holos/api/author/v1beta1:author"
-
-// holos represents the field holos render platform evaluates, the resource
-// field of the author.#Platform definition constructed from a components
-// struct.
+// holos represents the platform resource constructed from registered
+// components. The platform runtime stays local so init does not vendor the
+// Holos CUE SDK.
 holos: platform.resource
 
-platform: author.#Platform
+platform: {
+	name: string | *"default"
+	components: {[string]: {
+		name: string
+		path: string
+		labels?: {[string]: string}
+		annotations?: {[string]: string}
+	}} | *{}
+	let platformName = name
+	let registeredComponents = components
+	resource: {
+		metadata: name: platformName
+		spec: components: [for _, component in registeredComponents {component}]
+	}
+}

@@ -325,6 +325,15 @@ package core
 // Kustomize represents a kustomization [Task] to patch and transform prior
 // task outputs.
 #Kustomize: {
+	// BasePath optionally names an existing kustomization directory relative to
+	// the platform root. Holos runs kustomize in place and writes only its output
+	// to the artifact store.
+	basePath?: string @go(BasePath)
+
+	// LoadRestrictor is passed to kubectl kustomize for BasePath builds. The
+	// empty value keeps kubectl's default restrictive behavior.
+	loadRestrictor?: string @go(LoadRestrictor)
+
 	// Kustomization represents the decoded kustomization.yaml file
 	kustomization: #Kustomization @go(Kustomization)
 

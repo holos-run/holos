@@ -48,14 +48,22 @@ package core
 	}
 
 	if kind == "Kustomize" {
-		kustomize!: #Kustomize
+		kustomize!: #Kustomize & {basePath: string | *""}
 		resources?: _|_
 		helm?:      _|_
 		file?:      _|_
 		join?:      _|_
 		command?:   _|_
 		artifact?:  _|_
-		inputs!: [#FileOrDirectoryPath, ...#FileOrDirectoryPath]
+		// A BasePath Kustomize task renders an existing base directly from the
+		// platform root, so it has no artifact-store input. The usual generated
+		// kustomization still needs at least one input to transform.
+		if kustomize.basePath != "" {
+			inputs?: _|_
+		}
+		if kustomize.basePath == "" {
+			inputs!: [#FileOrDirectoryPath, ...#FileOrDirectoryPath]
+		}
 		output!: #FileOrDirectoryPath
 	}
 

@@ -105,6 +105,41 @@ func TestBuildLinearChain(t *testing.T) {
 	assert.Contains(t, string(data), "kind: ConfigMap")
 }
 
+func TestBuildKustomizeBaseAtPlatformRoot(t *testing.T) {
+	b := newTestTaskSet(t, map[string]core.Task{
+		"base": {
+			Kind:   "Kustomize",
+			Output: "base.gen.yaml",
+			Kustomize: core.Kustomize{
+				BasePath:       "vendor/mediastorage",
+				LoadRestrictor: "LoadRestrictionsNone",
+			},
+		},
+	})
+	base := filepath.Join(b.Opts.Root(), "vendor", "mediastorage")
+	require.NoError(t, os.MkdirAll(base, 0o777))
+	require.NoError(t, os.WriteFile(filepath.Join(base, "kustomization.yaml"), []byte("resources:\n- deployment.yaml\n"), 0o666))
+	require.NoError(t, os.WriteFile(filepath.Join(base, "deployment.yaml"), []byte("apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: media\n"), 0o666))
+
+	require.NoError(t, b.Build(t.Context()))
+	data, ok := b.Opts.Store.Get("base.gen.yaml")
+	require.True(t, ok)
+	assert.Contains(t, string(data), "name: media")
+}
+
+func TestBuildKustomizeBaseRejectsTraversal(t *testing.T) {
+	b := newTestTaskSet(t, map[string]core.Task{
+		"base": {
+			Kind:      "Kustomize",
+			Output:    "base.gen.yaml",
+			Kustomize: core.Kustomize{BasePath: "../outside"},
+		},
+	})
+	err := b.Build(t.Context())
+	require.Error(t, err)
+	assert.ErrorContains(t, err, "kustomize base path ../outside")
+}
+
 func TestBuildDiamondDependency(t *testing.T) {
 	b := newTestTaskSet(t, map[string]core.Task{
 		"gen": resourcesTask("a", "a.gen.yaml"),

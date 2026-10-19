@@ -129,7 +129,7 @@ func TestShowBeta1(t *testing.T) {
 	t.Cleanup(cancel)
 
 	// Initialize the platform
-	if err := generate.GeneratePlatform(ctx, tempDir, "v1beta1"); err != nil {
+	if err := generate.GeneratePlatformWithSDK(ctx, tempDir, "v1beta1"); err != nil {
 		t.Fatalf("could not generate platform: %v", err)
 	}
 

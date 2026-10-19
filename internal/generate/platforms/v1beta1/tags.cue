@@ -2,14 +2,12 @@ package holos
 
 import (
 	"encoding/json"
-
-	"github.com/holos-run/holos/api/core/v1beta1:core"
 )
 
 // Note: tags should have a reasonable default value for cue export.
 _Tags: {
 	// Standardized parameters
-	component: core.#Component & {
+	component: {
 		name: string | *"no-name" @tag(holos_component_name, type=string)
 		path: string | *"no-path" @tag(holos_component_path, type=string)
 

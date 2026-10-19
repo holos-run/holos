@@ -1,0 +1,62 @@
+# holos render a local Helm chart with a generated values map and no CUE SDK.
+
+cd $WORK
+exec holos init platform v1beta1 --force
+
+exec holos render platform
+stderr -count=1 '^rendered chart'
+exec holos compare yaml deploy/components/chart/chart.gen.yaml want/chart.gen.yaml
+
+-- platform/chart.cue --
+package holos
+
+platform: components: chart: {
+	name: "chart"
+	path: "components/chart"
+}
+-- components/chart/chart.cue --
+package holos
+
+Component: #Helm & {
+	Resources: {}
+	Chart: {
+		name:    "mychart"
+		version: "0.1.0"
+		release: "chart"
+	}
+	Values: greeting: "hello"
+}
+holos: Component.TaskSet
+-- components/chart/typemeta.cue --
+@extern(embed)
+package holos
+
+import "encoding/json"
+
+holos: _ @embed(file=typemeta.yaml)
+
+holos: {
+	_buildContext: string | *"{}" @tag(holos_build_context, type=string)
+	buildContext: json.Unmarshal(_buildContext)
+}
+-- components/chart/typemeta.yaml --
+apiVersion: v1beta1
+kind: TaskSet
+-- components/chart/vendor/0.1.0/mychart/Chart.yaml --
+apiVersion: v2
+name: mychart
+version: 0.1.0
+-- components/chart/vendor/0.1.0/mychart/templates/configmap.yaml --
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chart
+data:
+  greeting: {{ .Values.greeting | quote }}
+-- want/chart.gen.yaml --
+apiVersion: v1
+data:
+  greeting: hello
+kind: ConfigMap
+metadata:
+  name: chart

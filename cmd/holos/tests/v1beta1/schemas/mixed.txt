@@ -1,4 +1,5 @@
-# One platform renders v1alpha6 and v1beta1 components in one invocation.
+# One platform renders v1alpha6 and local v1beta1 components without a copied
+# CUE SDK.
 
 # Start in an empty directory.
 cd $WORK
@@ -39,9 +40,7 @@ platform: components: {
 -- components/alpha/buildplan.cue --
 package holos
 
-import "github.com/holos-run/holos/api/core/v1alpha6:core"
-
-holos: core.#BuildPlan & {
+holos: {
 	metadata: name: "alpha"
 	spec: artifacts: [{
 		artifact: "components/alpha/alpha.gen.yaml"
@@ -74,27 +73,14 @@ kind: BuildPlan
 -- components/beta/taskset.cue --
 package holos
 
-import "github.com/holos-run/holos/api/core/v1beta1:core"
-
-holos: core.#TaskSet & {
-	metadata: name: "beta"
-	spec: tasks: {
-		resources: {
-			kind:   "Resources"
-			output: "beta.gen.yaml"
-			"resources": ConfigMap: beta: {
-				apiVersion: "v1"
-				kind:       "ConfigMap"
-				metadata: name: "beta"
-			}
-		}
-		deploy: {
-			kind: "Artifact"
-			inputs: ["beta.gen.yaml"]
-			artifact: path: "components/beta/beta.gen.yaml"
-		}
+Component: #Kubernetes & {
+	Resources: ConfigMap: beta: {
+		apiVersion: "v1"
+		kind:       "ConfigMap"
+		metadata: name: "beta"
 	}
 }
+holos: Component.TaskSet
 -- components/beta/typemeta.cue --
 @extern(embed)
 package holos

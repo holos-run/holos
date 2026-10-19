@@ -138,6 +138,12 @@ type Kustomize struct {
 //
 // [kustomize]: https://kubectl.docs.kubernetes.io/references/kustomize/kustomization/
 type KustomizeConfig struct {
+	// BasePath optionally names an existing kustomization directory relative to
+	// the platform root. It is rendered in place without a component wrapper.
+	BasePath string `json:",omitempty"`
+	// LoadRestrictor controls external resources used by BasePath. The empty
+	// value keeps kustomize's default restrictive behavior.
+	LoadRestrictor string `json:",omitempty"`
 	// Kustomization represents the kustomization used to transform resources.
 	// Note the resources field is internally managed from the Files and Resources fields.
 	Kustomization map[string]any `json:",omitempty"`

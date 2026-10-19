@@ -30,7 +30,11 @@ func SetupPlatform(t testing.TB, apiVersion string) (tempDir string) {
 	tempDir = t.TempDir()
 
 	// Initialize the platform
-	if err := generate.GeneratePlatform(ctx, tempDir, apiVersion); err != nil {
+	generatePlatform := generate.GeneratePlatform
+	if apiVersion == "v1beta1" {
+		generatePlatform = generate.GeneratePlatformWithSDK
+	}
+	if err := generatePlatform(ctx, tempDir, apiVersion); err != nil {
 		t.Fatalf("could not generate platform: %v", err)
 	}
 

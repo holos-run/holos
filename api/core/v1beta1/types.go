@@ -305,6 +305,13 @@ type Join struct {
 // Kustomize represents a kustomization [Task] to patch and transform prior
 // task outputs.
 type Kustomize struct {
+	// BasePath optionally names an existing kustomization directory relative to
+	// the platform root. Holos runs kustomize in place and writes only its output
+	// to the artifact store.
+	BasePath string `json:"basePath,omitempty" yaml:"basePath,omitempty"`
+	// LoadRestrictor is passed to kubectl kustomize for BasePath builds. The
+	// empty value keeps kubectl's default restrictive behavior.
+	LoadRestrictor string `json:"loadRestrictor,omitempty" yaml:"loadRestrictor,omitempty"`
 	// Kustomization represents the decoded kustomization.yaml file
 	Kustomization Kustomization `json:"kustomization" yaml:"kustomization"`
 	// Files holds file contents for kustomize, e.g. patch files.

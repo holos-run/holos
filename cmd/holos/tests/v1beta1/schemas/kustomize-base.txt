@@ -1,0 +1,60 @@
+# holos render follows a Kustomize base below the platform root.
+
+# The base deliberately reaches a vendored bundle outside its own directory.
+# This mirrors a component slice that owns patches while vendir owns upstream
+# manifests. The task needs exactly Kustomize's documented escape hatch, not a
+# copied bundle or an intermediate wrapper.
+cd $WORK
+exec holos init platform v1beta1 --force
+
+exec holos render platform
+stderr -count=1 '^rendered mediastorage'
+stderr -count=1 '^rendered platform'
+exec holos compare yaml deploy/components/mediastorage/mediastorage.gen.yaml want/mediastorage.gen.yaml
+
+-- platform/mediastorage.cue --
+package holos
+
+platform: components: mediastorage: {
+	name: "mediastorage"
+	path: "components/mediastorage"
+}
+-- components/mediastorage/mediastorage.cue --
+package holos
+
+Component: #Kustomize & {
+	Resources: {}
+	KustomizeConfig: {
+		BasePath:       "kluctl/platform/20-media/20-workload"
+		LoadRestrictor: "LoadRestrictionsNone"
+	}
+}
+holos: Component.TaskSet
+-- components/mediastorage/typemeta.cue --
+@extern(embed)
+package holos
+
+import "encoding/json"
+
+holos: _ @embed(file=typemeta.yaml)
+
+holos: {
+	_buildContext: string | *"{}" @tag(holos_build_context, type=string)
+	buildContext: json.Unmarshal(_buildContext)
+}
+-- components/mediastorage/typemeta.yaml --
+apiVersion: v1beta1
+kind: TaskSet
+-- kluctl/platform/20-media/20-workload/kustomization.yaml --
+resources:
+- ../../../../vendor/mediastorage/deployment.yaml
+-- vendor/mediastorage/deployment.yaml --
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediastorage
+-- want/mediastorage.gen.yaml --
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mediastorage

@@ -363,7 +363,14 @@ func validateTask(name string, task core.Task) error {
 			return errors.Format("task %s: file source %s: path must be relative, must not traverse outside the component directory, and must not resolve to the component directory", name, task.File.Source)
 		}
 	case "Kustomize", "Join":
-		if len(task.Inputs) < 1 {
+		if task.Kind == "Kustomize" && task.Kustomize.BasePath != "" {
+			if !validLocalPath(task.Kustomize.BasePath) {
+				return errors.Format("task %s: kustomize base path %s: path must be relative and stay inside the platform root", name, task.Kustomize.BasePath)
+			}
+			if task.Kustomize.LoadRestrictor != "" && task.Kustomize.LoadRestrictor != "LoadRestrictionsNone" {
+				return errors.Format("task %s: unsupported kustomize load restrictor %s", name, task.Kustomize.LoadRestrictor)
+			}
+		} else if len(task.Inputs) < 1 {
 			return errors.Format("task %s: kind %s requires at least one input", name, task.Kind)
 		}
 		if task.Output == "" {
@@ -776,6 +783,32 @@ func (t *taskRunner) helm(ctx context.Context) error {
 func (t *taskRunner) kustomize(ctx context.Context) error {
 	store := t.opts.Store
 	msg := fmt.Sprintf("could not transform %s for %s", t.task.Output, t.id())
+	if basePath := t.task.Kustomize.BasePath; basePath != "" {
+		base, err := filepath.EvalSymlinks(filepath.Join(t.opts.Root(), basePath))
+		if err != nil {
+			return errors.Format("%s: could not resolve base path: %w", msg, err)
+		}
+		root, err := filepath.EvalSymlinks(t.opts.Root())
+		if err != nil {
+			return errors.Format("%s: could not resolve platform root: %w", msg, err)
+		}
+		rel, err := filepath.Rel(root, base)
+		if err != nil || !validLocalPath(rel) {
+			return errors.Format("%s: base path %s escapes platform root", msg, basePath)
+		}
+		args := []string{"kustomize", base}
+		if t.task.Kustomize.LoadRestrictor == "LoadRestrictionsNone" {
+			args = append(args, "--load-restrictor=LoadRestrictionsNone")
+		}
+		r, err := util.RunCmdW(ctx, t.opts.Stderr, "kubectl", args...)
+		if err != nil {
+			return errors.Format("%s: could not run kustomize base: %w", msg, err)
+		}
+		if err := store.Set(string(t.task.Output), r.Stdout.Bytes()); err != nil {
+			return errors.Format("%s: %w", msg, err)
+		}
+		return nil
+	}
 
 	// Unlike other tasks, kustomize operates in a dedicated temporary directory.
 	tempDir, err := os.MkdirTemp("", "holos.kustomize")
